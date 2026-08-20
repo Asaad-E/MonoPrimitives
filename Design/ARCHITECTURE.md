@@ -21,7 +21,7 @@ Shared foundation used by both 2D and 3D — nothing here is 2D- or 3D-specific.
 
 | File | Purpose |
 |---|---|
-| `Primitives2D.cs` | `PrimitiveBatch` — all shape drawing (Fill/Border/Draw per shape, rounded-corner and gradient variants), outline/fillet engine, points/lines/splines/`DrawArrow`/`DrawGrid`/`DrawAxis`. Large; grep, don't read linearly. |
+| `Primitives2D.cs` | `PrimitiveBatch` — all shape drawing (Fill/Border/Draw per shape, rounded-corner and gradient variants), outline/fillet engine, points/lines/splines/`DrawArrow`/`DrawGrid` (`showMajorLines: bool = true`)/`DrawAxis`. Large; grep, don't read linearly. |
 | `Camera2D.cs` | Transform matrix, screen↔world, bounds/padding, smooth-follow/zoom, `ReadDefaultInput`/`Update` (WASD pan, left-drag pan, wheel zoom, both have `GameTime` overloads) via `PrimitiveInput` — same input-driven-update shape as `Camera3D`. |
 | `ViewportAdapter2D.cs` (+ `Boxing`/`Scaling`/`Default`/`Window` variants) | MonoGame.Extended-parity viewport adapter family: `BoxingViewportAdapter2D` (letterbox/pillarbox, uniform scale), `ScalingViewportAdapter2D` (stretch to fill, non-uniform scale), `DefaultViewportAdapter2D` (1:1, tracks device viewport), `WindowViewportAdapter2D` (1:1, tracks `GameWindow.ClientBounds`). All expose the same `GetScaleMatrix()`/`PointToVirtual`/`VirtualToPoint` surface — compose with `Camera2D` the same way regardless of which one's in use. Also usable by 3D via `Primitive3DBatch.Begin(camera, viewportAdapter)`. See `Design/2D/ViewportAdapter_Guide.md`. |
 | `Collision2D.cs` | Overlap tests + 3 raycasts. Detection only. |
@@ -33,12 +33,12 @@ Shared foundation used by both 2D and 3D — nothing here is 2D- or 3D-specific.
 | File | Purpose |
 |---|---|
 | `Primitive3DBatch.cs` | Core batch: `Begin`/`End`/`Flush`, opt-in flat shading, `BuildBasis` (orthonormal basis), `ResolveSegments` (auto-LOD). `Begin(camera, viewportAdapter)` letterboxes the 3D projection into a `ViewportAdapter2D`'s boxed rectangle instead of the full backbuffer. |
-| `Primitive3DBatchShapes.cs` | Cube/Sphere/Cylinder/Capsule/Torus/Heightmap/Plane/Grid/`DrawAxis`/splines/`DrawArrow`. Every shape is `Fill`/`Border`/`Draw` overloads of one name (no `Ex`/`V`-suffixed siblings — a two-endpoint cylinder, a vector-size cube, etc. are just another overload). `DrawGridXY/XZ/YZ` draw the grid only; `DrawAxis` is separate. Large; grep, don't read linearly. |
+| `Primitive3DBatchShapes.cs` | Cube/Sphere/Cylinder/Capsule/Torus/Heightmap/Plane/Grid/`DrawAxis`/splines/`DrawArrow`. Every shape is `Fill`/`Border`/`Draw` overloads of one name (no `Ex`/`V`-suffixed siblings — a two-endpoint cylinder, a vector-size cube, etc. are just another overload). `DrawGridXY/XZ/YZ` draw the grid only (`showMajorLines: bool = true` toggles the every-5th-line emphasis); `DrawAxis` is separate. Large; grep, don't read linearly. |
 | `Camera3D.cs` | View/projection, multiple modes, bounds/padding/follow/zoom, `ReadDefaultInput`/`Update` (both have `GameTime` overloads) (uses `PrimitiveInput`). Camera + controller merged into one class. Movement/rotation/sensitivity speeds are editable properties (`MoveSpeed`, `RotationSpeed`, etc.), not constants. |
 | `Collision3D.cs` | Wraps `BoundingSphere`/`BoundingBox`/`Ray`, plus capsule support and plane raycasts. |
 | `TrigLut.cs` | Precomputed sin/cos table for per-vertex trig. |
 | `Trail3D.cs` | 3D counterpart to `Trail2D`. |
-| `DebugFont5x7.cs` | `DrawString3D`/`MeasureText3D`/`GetBillboardAxes` — billboarded text, cylindrical facing, never lit. |
+| `DebugFont5x7.cs` | `DrawString3D`/`MeasureText3D`/`GetBillboardAxes` — billboarded text (cylindrical facing) by default; an overload taking an explicit `right`/`up` basis opts out of billboarding for text that should hold a fixed orientation. Never lit. |
 
 ## `samples/MonoPrimitives.Sample/`
 

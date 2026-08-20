@@ -23,10 +23,25 @@ namespace MonoPrimitives.Primitives3D
         /// </summary>
         public void DrawString3D(string text, Vector3 position, float pixelSize, Color color, float glyphSpacing = 1f, float lineSpacing = 2f)
         {
+            GetBillboardAxes(position, out Vector3 right, out Vector3 up);
+            DrawString3D(text, position, right, up, pixelSize, color, glyphSpacing, lineSpacing);
+        }
+
+        /// <summary>
+        /// Draws 3D debug text with a caller-supplied, fixed <paramref name="right"/>/
+        /// <paramref name="up"/> basis instead of always facing the camera — the opt-out for
+        /// when billboarding isn't wanted (a label painted onto a specific surface, text that
+        /// should visibly rotate away as the camera orbits past it, matching a fixed HUD-in-world
+        /// panel). Same glyph data and world-space <paramref name="pixelSize"/> as the billboarded
+        /// overload; <paramref name="right"/>/<paramref name="up"/> need not be unit length or
+        /// exactly orthogonal — each glyph pixel is simply offset by <c>col * pixelSize</c> along
+        /// <paramref name="right"/> and <c>row * pixelSize</c> along <paramref name="up"/>, so a
+        /// scaled or sheared basis skews the text the same way it would skew any other quad.
+        /// </summary>
+        public void DrawString3D(string text, Vector3 position, Vector3 right, Vector3 up, float pixelSize, Color color, float glyphSpacing = 1f, float lineSpacing = 2f)
+        {
             ThrowIfNotBegun();
             if (string.IsNullOrEmpty(text) || pixelSize <= 0f) return;
-
-            GetBillboardAxes(position, out Vector3 right, out Vector3 up);
 
             Vector3 lineStart = position;
             Vector3 cursor = position;

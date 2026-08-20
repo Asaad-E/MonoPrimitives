@@ -223,7 +223,7 @@ namespace MonoPrimitives.Primitives2D
         // input directly outside of ReadDefaultInput.
 
         private const float DefaultMoveSpeed = 700f;
-        private const float DefaultMouseWheelZoomSensitivity = 0.03f;
+        private const float DefaultMouseWheelZoomSensitivity = 0.06f;
 
         /// <summary>Keyboard pan speed in world units per second (before the 1/<see cref="Zoom"/> scaling <see cref="ReadDefaultInput(float)"/> applies, so panning feels the same screen-space speed at any zoom level). Editable; defaults to <see cref="DefaultMoveSpeed"/>.</summary>
         public float MoveSpeed { get; set; } = DefaultMoveSpeed;

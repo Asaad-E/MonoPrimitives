@@ -3603,17 +3603,28 @@ namespace MonoPrimitives.Primitives2D
         private const int MajorGridLineInterval = 5;
 
         // Low alpha by default so a reference grid reads as a subtle backdrop
-        // rather than competing with whatever's drawn on top of it.
+        // rather than competing with whatever's drawn on top of it. Major lines are made
+        // *brighter* (not darker) than minor ones — this library's default backgrounds
+        // (Palette.Background, etc.) skew dark, so a lighter, more opaque line is what actually
+        // reads as "emphasized" against them; a literally darker line would have LESS contrast.
         private static readonly Color DefaultGridLineColor = new(0.75f, 0.75f, 0.75f, 0.35f);
-        private static readonly Color DefaultGridMajorLineColor = new(0.45f, 0.45f, 0.45f, 0.4f);
+        private static readonly Color DefaultGridMajorLineColor = new(0.9f, 0.9f, 0.95f, 0.55f);
         private static readonly Color DefaultAxisColor = new(0.15f, 0.15f, 0.15f, 0.65f);
 
         /// <summary>Draws a grid centered at the origin, using the default subtle grid colors.</summary>
         public void DrawGrid(int slices, float spacing)
             => DrawGrid(slices, spacing, Vector2.Zero, DefaultGridLineColor, DefaultGridMajorLineColor);
 
-        /// <summary>Draws a grid with an explicit origin and colors (every 5th line drawn as a darker, wider "major" line).</summary>
-        public void DrawGrid(int slices, float spacing, Vector2 origin, Color lineColor, Color majorLineColor)
+        /// <summary>
+        /// Draws a grid with an explicit origin and colors.
+        /// </summary>
+        /// <param name="showMajorLines">
+        /// When true (default), every <see cref="MajorGridLineInterval"/>th division uses
+        /// <paramref name="majorLineColor"/> and a wider stroke. When false, every line is drawn
+        /// uniformly with <paramref name="lineColor"/> — <paramref name="majorLineColor"/> is
+        /// ignored.
+        /// </param>
+        public void DrawGrid(int slices, float spacing, Vector2 origin, Color lineColor, Color majorLineColor, bool showMajorLines = true)
         {
             EnsureStarted();
             int halfSlices = slices / 2;
@@ -3621,7 +3632,7 @@ namespace MonoPrimitives.Primitives2D
 
             for (int i = -halfSlices; i <= halfSlices; i++)
             {
-                bool major = i % MajorGridLineInterval == 0;
+                bool major = showMajorLines && i % MajorGridLineInterval == 0;
                 float offset = i * spacing;
                 float thickness = major ? 2f : 1f;
                 Color color = major ? majorLineColor : lineColor;

@@ -1015,32 +1015,32 @@ namespace MonoPrimitives.Primitives3D
         public void DrawGrid(int slices, float spacing) => DrawGridXZ(slices, spacing);
 
         /// <summary>Draws a grid on the XZ plane with an explicit origin and colors.</summary>
-        public void DrawGrid(int slices, float spacing, Vector3 origin, Color lineColor, Color majorLineColor)
-            => DrawGridXZ(slices, spacing, origin, lineColor, majorLineColor);
+        public void DrawGrid(int slices, float spacing, Vector3 origin, Color lineColor, Color majorLineColor, bool showMajorLines = true)
+            => DrawGridXZ(slices, spacing, origin, lineColor, majorLineColor, showMajorLines);
 
         /// <summary>Draws a grid on the XZ plane (the ground), centered at the origin.</summary>
         public void DrawGridXZ(int slices, float spacing)
             => DrawGridXZ(slices, spacing, Vector3.Zero, DefaultGridLineColor, DefaultGridMajorLineColor);
 
         /// <summary>Draws a grid on the XZ plane with an explicit origin and colors.</summary>
-        public void DrawGridXZ(int slices, float spacing, Vector3 origin, Color lineColor, Color majorLineColor)
-            => DrawGridPlane(slices, spacing, origin, Vector3.UnitX, Vector3.UnitZ, lineColor, majorLineColor);
+        public void DrawGridXZ(int slices, float spacing, Vector3 origin, Color lineColor, Color majorLineColor, bool showMajorLines = true)
+            => DrawGridPlane(slices, spacing, origin, Vector3.UnitX, Vector3.UnitZ, lineColor, majorLineColor, showMajorLines);
 
         /// <summary>Draws a grid on the XY plane (a wall facing +Z/-Z), centered at the origin.</summary>
         public void DrawGridXY(int slices, float spacing)
             => DrawGridXY(slices, spacing, Vector3.Zero, DefaultGridLineColor, DefaultGridMajorLineColor);
 
         /// <summary>Draws a grid on the XY plane with an explicit origin and colors.</summary>
-        public void DrawGridXY(int slices, float spacing, Vector3 origin, Color lineColor, Color majorLineColor)
-            => DrawGridPlane(slices, spacing, origin, Vector3.UnitX, Vector3.UnitY, lineColor, majorLineColor);
+        public void DrawGridXY(int slices, float spacing, Vector3 origin, Color lineColor, Color majorLineColor, bool showMajorLines = true)
+            => DrawGridPlane(slices, spacing, origin, Vector3.UnitX, Vector3.UnitY, lineColor, majorLineColor, showMajorLines);
 
         /// <summary>Draws a grid on the YZ plane (a wall facing +X/-X), centered at the origin.</summary>
         public void DrawGridYZ(int slices, float spacing)
             => DrawGridYZ(slices, spacing, Vector3.Zero, DefaultGridLineColor, DefaultGridMajorLineColor);
 
         /// <summary>Draws a grid on the YZ plane with an explicit origin and colors.</summary>
-        public void DrawGridYZ(int slices, float spacing, Vector3 origin, Color lineColor, Color majorLineColor)
-            => DrawGridPlane(slices, spacing, origin, Vector3.UnitY, Vector3.UnitZ, lineColor, majorLineColor);
+        public void DrawGridYZ(int slices, float spacing, Vector3 origin, Color lineColor, Color majorLineColor, bool showMajorLines = true)
+            => DrawGridPlane(slices, spacing, origin, Vector3.UnitY, Vector3.UnitZ, lineColor, majorLineColor, showMajorLines);
 
         // Low alpha by default so a reference grid reads as a subtle backdrop for a moving
         // camera/simulation rather than competing with whatever's being drawn on top of it.
@@ -1049,7 +1049,8 @@ namespace MonoPrimitives.Primitives3D
         private static readonly Color DefaultGridLineColor = new(0.75f, 0.75f, 0.75f, 0.35f);
         private static readonly Color DefaultGridMajorLineColor = new(0.45f, 0.45f, 0.45f, 0.4f);
 
-        private void DrawGridPlane(int slices, float spacing, in Vector3 origin, in Vector3 axisA, in Vector3 axisB, Color lineColor, Color majorLineColor)
+        /// <param name="showMajorLines">When true (default), every <see cref="MajorGridLineInterval"/>th division uses <paramref name="majorLineColor"/> and a wider stroke. When false, every line is drawn uniformly with <paramref name="lineColor"/>.</param>
+        private void DrawGridPlane(int slices, float spacing, in Vector3 origin, in Vector3 axisA, in Vector3 axisB, Color lineColor, Color majorLineColor, bool showMajorLines = true)
         {
             ThrowIfNotBegun();
             int halfSlices = slices / 2;
@@ -1057,7 +1058,7 @@ namespace MonoPrimitives.Primitives3D
 
             for (int i = -halfSlices; i <= halfSlices; i++)
             {
-                bool major = i % MajorGridLineInterval == 0;
+                bool major = showMajorLines && i % MajorGridLineInterval == 0;
                 Vector3 offsetA = axisA * (i * spacing);
                 Vector3 extentB = axisB * extent;
                 Vector3 offsetB = axisB * (i * spacing);
