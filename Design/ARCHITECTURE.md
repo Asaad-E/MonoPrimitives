@@ -23,7 +23,7 @@ Shared foundation used by both 2D and 3D — nothing here is 2D- or 3D-specific.
 |---|---|
 | `Primitives2D.cs` | `PrimitiveBatch` — all shape drawing (Fill/Border/Draw per shape, rounded-corner and gradient variants), outline/fillet engine, points/lines/splines/`DrawArrow`/`DrawGrid`/`DrawAxis`. Large; grep, don't read linearly. |
 | `Camera2D.cs` | Transform matrix, screen↔world, bounds/padding, smooth-follow/zoom. |
-| `ViewportAdapter2D.cs` (+ `Boxing`/`Scaling`/`Default`/`Window` variants) | MonoGame.Extended-parity viewport adapter family: `BoxingViewportAdapter2D` (letterbox/pillarbox, uniform scale), `ScalingViewportAdapter2D` (stretch to fill, non-uniform scale), `DefaultViewportAdapter2D` (1:1, tracks device viewport), `WindowViewportAdapter2D` (1:1, tracks `GameWindow.ClientBounds`). All expose the same `GetScaleMatrix()`/`PointToVirtual`/`VirtualToPoint` surface — compose with `Camera2D` the same way regardless of which one's in use. |
+| `ViewportAdapter2D.cs` (+ `Boxing`/`Scaling`/`Default`/`Window` variants) | MonoGame.Extended-parity viewport adapter family: `BoxingViewportAdapter2D` (letterbox/pillarbox, uniform scale), `ScalingViewportAdapter2D` (stretch to fill, non-uniform scale), `DefaultViewportAdapter2D` (1:1, tracks device viewport), `WindowViewportAdapter2D` (1:1, tracks `GameWindow.ClientBounds`). All expose the same `GetScaleMatrix()`/`PointToVirtual`/`VirtualToPoint` surface — compose with `Camera2D` the same way regardless of which one's in use. Also usable by 3D via `Primitive3DBatch.Begin(camera, viewportAdapter)`. See `Design/2D/ViewportAdapter_Guide.md`. |
 | `Collision2D.cs` | Overlap tests + 3 raycasts. Detection only. |
 | `DebugFont5x7.cs` | `DrawString`/`MeasureText` on `PrimitiveBatch`, via `FillRectangle`. |
 | `Trail2D.cs` | Fixed-capacity fading position history. |
@@ -32,7 +32,7 @@ Shared foundation used by both 2D and 3D — nothing here is 2D- or 3D-specific.
 
 | File | Purpose |
 |---|---|
-| `Primitive3DBatch.cs` | Core batch: `Begin`/`End`/`Flush`, opt-in flat shading, `BuildBasis` (orthonormal basis), `ResolveSegments` (auto-LOD). |
+| `Primitive3DBatch.cs` | Core batch: `Begin`/`End`/`Flush`, opt-in flat shading, `BuildBasis` (orthonormal basis), `ResolveSegments` (auto-LOD). `Begin(camera, viewportAdapter)` letterboxes the 3D projection into a `ViewportAdapter2D`'s boxed rectangle instead of the full backbuffer. |
 | `Primitive3DBatchShapes.cs` | Cube/Sphere/Cylinder/Capsule/Torus/Heightmap/Plane/Grid/`DrawAxis`/splines/`DrawArrow`. Every shape is `Fill`/`Border`/`Draw` overloads of one name (no `Ex`/`V`-suffixed siblings — a two-endpoint cylinder, a vector-size cube, etc. are just another overload). `DrawGridXY/XZ/YZ` draw the grid only; `DrawAxis` is separate. Large; grep, don't read linearly. |
 | `Camera3D.cs` | View/projection, multiple modes, bounds/padding/follow/zoom, `ReadDefaultInput`/`Update` (both have `GameTime` overloads) (uses `PrimitiveInput`). Camera + controller merged into one class. Movement/rotation/sensitivity speeds are editable properties (`MoveSpeed`, `RotationSpeed`, etc.), not constants. |
 | `Collision3D.cs` | Wraps `BoundingSphere`/`BoundingBox`/`Ray`, plus capsule support and plane raycasts. |

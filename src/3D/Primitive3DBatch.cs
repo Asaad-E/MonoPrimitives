@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoPrimitives.Primitives2D;
 
 namespace MonoPrimitives.Primitives3D
 {
@@ -240,6 +241,30 @@ namespace MonoPrimitives.Primitives3D
 
             BeginInternal(view, proj, camera.Position, camera.GetPixelScale(_device.Viewport.Height),
                           blendState, depthStencilState, rasterizerState, transform);
+        }
+
+        /// <summary>
+        /// Starts a batch using a <see cref="Camera3D"/>, letterboxed/pillarboxed into
+        /// <paramref name="viewportAdapter"/>'s <see cref="ViewportAdapter2D.BoundingRectangle"/>
+        /// instead of the full backbuffer. Without this, <see cref="Begin(Camera3D,BlendState,DepthStencilState,RasterizerState,Matrix?)"/>
+        /// always projects using the full window's aspect ratio — if the window is letterboxed
+        /// (e.g. a fixed-aspect game inside a resizable window, sharing a <see cref="ViewportAdapter2D"/>
+        /// with 2D content), the 3D scene would stretch into the bars instead of matching them.
+        /// Calls <see cref="ViewportAdapter2D.Apply"/> first, so this also clips hardware
+        /// clears/draws to the boxed rectangle.
+        /// </summary>
+        public void Begin(
+            Camera3D camera,
+            ViewportAdapter2D viewportAdapter,
+            BlendState blendState = null,
+            DepthStencilState depthStencilState = null,
+            RasterizerState rasterizerState = null,
+            Matrix? transform = null)
+        {
+            if (viewportAdapter is null) throw new ArgumentNullException(nameof(viewportAdapter));
+
+            viewportAdapter.Apply();
+            Begin(camera, blendState, depthStencilState, rasterizerState, transform);
         }
 
         /// <summary>

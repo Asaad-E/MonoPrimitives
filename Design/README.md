@@ -11,6 +11,7 @@ For a fresh session (AI or human) to pick up this project without reading the wh
 These five are kept short on purpose — current state only, no narrative. Deeper reference (pull into context only when actually working in that area):
 
 - **[2D/Primitives2D_Guide.md](2D/Primitives2D_Guide.md)** — full 2D API reference.
+- **[2D/ViewportAdapter_Guide.md](2D/ViewportAdapter_Guide.md)** — the 4 viewport adapters, when to use each, and how 3D scenes share them for letterbox-aware projection.
 - **[2D/Primitives2D_Audit_Report.md](2D/Primitives2D_Audit_Report.md)**, **[2D/Overnight_Changes_2026-08-19.md](2D/Overnight_Changes_2026-08-19.md)**, **[3D/Primitive3D_Changes.md](3D/Primitive3D_Changes.md)** — historical session logs. Archaeology only ("why does this bug fix exist") — the five docs above already capture current state. Long; don't load by default.
 
 ## Repo layout
