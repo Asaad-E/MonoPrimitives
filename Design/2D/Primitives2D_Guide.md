@@ -4,10 +4,10 @@ A 2D immediate-mode primitive renderer for MonoGame. This guide explains every p
 
 ## Getting started
 
-Everything lives on one class, `PrimitiveBatch`, in namespace `Primitives2D`. Create one per `GraphicsDevice` (reuse it — don't allocate a new one per frame) and wrap your drawing in `Begin`/`End`, same as `SpriteBatch`:
+Everything lives on one class, `PrimitiveBatch`, in namespace `MonoPrimitives.Primitives2D`. Create one per `GraphicsDevice` (reuse it — don't allocate a new one per frame) and wrap your drawing in `Begin`/`End`, same as `SpriteBatch`:
 
 ```csharp
-using Primitives2D;
+using MonoPrimitives.Primitives2D;
 
 var batch = new PrimitiveBatch(GraphicsDevice);
 
@@ -190,7 +190,7 @@ Smooth curves through a set of control points, drawn as a single shared-vertex s
 A separate, standalone file (`DebugFont5x7.cs`) — a 5×7 dot-matrix pixel font drawn entirely with `FillRectangle` calls, no textures or `SpriteFont`. Covers full ASCII (32–126) plus Spanish characters (`ñ Ñ á é í ó ú Á É Í Ó Ú ü Ü ¿ ¡`). Intended for debug/test text (HUD counters, labels), not production typography — lowercase descenders are compressed to fit the same cell as everything else, and unknown characters draw as a hollow box instead of vanishing silently.
 
 ```csharp
-using Primitives2D; // DrawString/MeasureText are extension methods on PrimitiveBatch
+using MonoPrimitives.Primitives2D; // DrawString/MeasureText are extension methods on PrimitiveBatch
 
 batch.DrawString("FPS: 60", new Vector2(10, 10), pixelSize: 4, Color.White);
 ```

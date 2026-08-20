@@ -4,7 +4,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Primitives2D
+namespace MonoPrimitives.Primitives2D
 {
     /// <summary>
     /// 1:1 with the game window's own client area (<see cref="GameWindow.ClientBounds"/>), not

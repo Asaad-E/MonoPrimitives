@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoPrimitives3D;
+using MonoPrimitives.Primitives3D;
 
 namespace MonoPrimitives.Tests
 {
@@ -32,7 +32,7 @@ namespace MonoPrimitives.Tests
                 device.Clear(Color.Black);
 
                 litBatch.Begin(camera);
-                litBatch.FillSphereEx(Vector3.Zero, 3f, 16, 16, Color.Red);
+                litBatch.FillSphere(Vector3.Zero, 3f, 16, 16, Color.Red);
                 litBatch.End();
 
                 device.SetRenderTarget(null);

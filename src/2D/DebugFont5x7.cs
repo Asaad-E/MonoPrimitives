@@ -4,7 +4,7 @@ using System;
 using Microsoft.Xna.Framework;
 using MonoPrimitives;
 
-namespace Primitives2D
+namespace MonoPrimitives.Primitives2D
 {
     /// <summary>
     /// Standalone 5x7 dot-matrix "pixel art" debug font, drawn entirely with

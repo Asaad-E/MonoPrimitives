@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace MonoPrimitives3D
+namespace MonoPrimitives.Primitives3D
 {
     /// <summary>
     /// Precomputed unit-circle lookup tables to avoid per-frame trigonometry.

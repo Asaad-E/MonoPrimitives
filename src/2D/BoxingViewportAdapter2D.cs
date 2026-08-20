@@ -4,7 +4,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Primitives2D
+namespace MonoPrimitives.Primitives2D
 {
     /// <summary>
     /// Letterboxes/pillarboxes a fixed virtual resolution into the window: uniform scale (the

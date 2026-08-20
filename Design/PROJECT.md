@@ -2,7 +2,7 @@
 
 ## What this is
 
-Fast-prototype helpers for MonoGame in 2D and 3D — primitive drawing plus camera, input, easing, color, and noise, so you don't need several external libraries for those. **One package, one assembly** (`MonoPrimitives.dll`, raylib/MonoGame.Extended-style). Internally organized into three namespaces (`MonoPrimitives`/`Primitives2D`/`MonoPrimitives3D`, matching `Core/`/`2D/`/`3D/` source folders) so nothing is duplicated, but there's only ever one thing to install.
+Fast-prototype helpers for MonoGame in 2D and 3D — primitive drawing plus camera, input, easing, color, and noise, so you don't need several external libraries for those. **One package, one assembly** (`MonoPrimitives.dll`, raylib/MonoGame.Extended-style). Internally organized into three namespaces under one root (`MonoPrimitives`/`MonoPrimitives.Primitives2D`/`MonoPrimitives.Primitives3D`, matching `Core/`/`2D/`/`3D/` source folders) so nothing is duplicated, but there's only ever one thing to install.
 
 Target use: simulations (boids, cellular automata, predator-prey, pandemic models, terrain) and small retro-style game demos. Not a game engine, not aimed at a finished commercial game, not a charting library (use ScottPlot or similar for real data plots — a `Plot2D` was built and removed here for exactly that reason, see DECISIONS.md).
 
@@ -21,7 +21,7 @@ Shared (`Core/`, namespace `MonoPrimitives`):
 
 Per-namespace (not shared — genuinely different code):
 
-| | 2D (`Primitives2D`) | 3D (`MonoPrimitives3D`) |
+| | 2D (`MonoPrimitives.Primitives2D`) | 3D (`MonoPrimitives.Primitives3D`) |
 |---|---|---|
 | Shape drawing | `PrimitiveBatch` | `Primitive3DBatch` |
 | Camera | `Camera2D` | `Camera3D` |

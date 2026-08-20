@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace MonoPrimitives3D
+namespace MonoPrimitives.Primitives3D
 {
     /// <summary>
     /// Immediate-mode 3D primitive batcher. Every primitive (including lines and points) is
@@ -21,7 +21,7 @@ namespace MonoPrimitives3D
         // ---------------------------------------------------------------------
 
         /// <summary>Default vertex capacity (must be a multiple of 3).</summary>
-        public const int DefaultMaxVertices = 24576*2; // 8192 triangles
+        public const int DefaultMaxVertices = 24576 * 2; // 8192 triangles
 
         /// <summary>Minimum segment count used by the automatic LOD estimator.</summary>
         public const int AutoSegmentsMin = 8;
@@ -354,7 +354,7 @@ namespace MonoPrimitives3D
             // Re-apply state in case the user changed the device between draws.
             ApplyDeviceState();
 
-            _device.DrawUserPrimitives(PrimitiveType.LineList, _verticesLines, 0, _vertexCountLine/2);
+            _device.DrawUserPrimitives(PrimitiveType.LineList, _verticesLines, 0, _vertexCountLine / 2);
 
             DrawCalls++;
             LinesSubmitted += _vertexCountLine;

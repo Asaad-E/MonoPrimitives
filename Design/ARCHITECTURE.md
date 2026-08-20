@@ -2,7 +2,7 @@
 
 Read PROJECT.md first. This is *what exists now*; DECISIONS.md is *why*.
 
-One project/assembly (`src/MonoPrimitives.csproj` → `MonoPrimitives.dll`). `Core/`, `2D/`, `3D/` under `src/` are organization only — what matters is the namespace (`MonoPrimitives`/`Primitives2D`/`MonoPrimitives3D`).
+One project/assembly (`src/MonoPrimitives.csproj` → `MonoPrimitives.dll`). `Core/`, `2D/`, `3D/` under `src/` are organization only — what matters is the namespace (`MonoPrimitives`/`MonoPrimitives.Primitives2D`/`MonoPrimitives.Primitives3D`, all nested under the one root namespace).
 
 ## `src/Core/` — namespace `MonoPrimitives`
 
@@ -17,7 +17,7 @@ Shared foundation used by both 2D and 3D — nothing here is 2D- or 3D-specific.
 | `PrimitiveInput.cs` | Keyboard/mouse/gamepad polling, `GetAxis`/`GetVector2`, mouse drag/double-click/hit-test. `Update(GameTime)` once per frame. |
 | `FontGlyphs5x7.cs` | Raw 5×7 glyph bitmap data + layout math for the debug font. No rendering (2D and 3D each draw it differently). |
 
-## `src/2D/` — namespace `Primitives2D`
+## `src/2D/` — namespace `MonoPrimitives.Primitives2D`
 
 | File | Purpose |
 |---|---|
@@ -28,7 +28,7 @@ Shared foundation used by both 2D and 3D — nothing here is 2D- or 3D-specific.
 | `DebugFont5x7.cs` | `DrawString`/`MeasureText` on `PrimitiveBatch`, via `FillRectangle`. |
 | `Trail2D.cs` | Fixed-capacity fading position history. |
 
-## `src/3D/` — namespace `MonoPrimitives3D`
+## `src/3D/` — namespace `MonoPrimitives.Primitives3D`
 
 | File | Purpose |
 |---|---|

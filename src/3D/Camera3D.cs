@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoPrimitives;
 
-namespace MonoPrimitives3D
+namespace MonoPrimitives.Primitives3D
 {
     /// <summary>Camera projection type.</summary>
     public enum CameraProjection

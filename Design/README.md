@@ -19,8 +19,8 @@ These five are kept short on purpose — current state only, no narrative. Deepe
 MonogameLibs/
 ├── src/
 │   ├── Core/        — shared (namespace MonoPrimitives)
-│   ├── 2D/          — namespace Primitives2D
-│   ├── 3D/          — namespace MonoPrimitives3D
+│   ├── 2D/          — namespace MonoPrimitives.Primitives2D
+│   ├── 3D/          — namespace MonoPrimitives.Primitives3D
 │   └── MonoPrimitives.csproj   — one project → one MonoPrimitives.dll
 ├── samples/MonoPrimitives.Sample/
 ├── Design/          — you are here

@@ -3,7 +3,7 @@
 using System;
 using Microsoft.Xna.Framework;
 
-namespace Primitives2D
+namespace MonoPrimitives.Primitives2D
 {
     /// <summary>
     /// Pure geometry overlap/intersection tests (circle, rectangle, triangle, polygon,

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
 using MonoPrimitives;
-using Primitives2D;
+using MonoPrimitives.Primitives2D;
 
 namespace MonogameLibs;
 
@@ -281,7 +281,7 @@ internal static class Gallery2D
         cells.Add(new Cell("Fill star (ear-clipped)", (b, p) => b.FillPolygon(Star(p), FillColor)));
         cells.Add(new Cell("Draw star", (b, p) => b.DrawPolygon(Star(p), FillColor, BorderColor, 4f)));
         cells.Add(new Cell("Gradient star", (b, p) => b.FillPolygonGradient(Star(p), GradientFrom, GradientTo)));
-        cells.Add(new Cell("Gradient star round", (b, p) => b.DrawPolygonRounded(Star(p), 10f,GradientTo, GradientFrom, 5)));
+        cells.Add(new Cell("Gradient star round", (b, p) => b.DrawPolygonRounded(Star(p), 10f, GradientTo, GradientFrom, 5)));
 
         return cells;
     }

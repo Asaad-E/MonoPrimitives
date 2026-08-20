@@ -3,7 +3,7 @@
 using System;
 using Microsoft.Xna.Framework;
 
-namespace MonoPrimitives3D
+namespace MonoPrimitives.Primitives3D
 {
     /// <summary>
     /// A fixed-capacity history of recent positions, drawn as a line that fades out toward the

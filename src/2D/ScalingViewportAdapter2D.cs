@@ -4,7 +4,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Primitives2D
+namespace MonoPrimitives.Primitives2D
 {
     /// <summary>
     /// Stretches a fixed virtual resolution to exactly fill the window — independent X/Y scale

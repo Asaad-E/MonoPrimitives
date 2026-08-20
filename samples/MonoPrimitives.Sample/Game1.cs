@@ -6,8 +6,8 @@ using MonoGame.Extended;
 using MonoGame.Extended.ViewportAdapters;
 
 using MonoPrimitives;
-using MonoPrimitives3D;
-using Primitives2D;
+using MonoPrimitives.Primitives3D;
+using MonoPrimitives.Primitives2D;
 
 namespace MonogameLibs;
 

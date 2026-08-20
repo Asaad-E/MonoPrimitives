@@ -3,7 +3,7 @@
 using Microsoft.Xna.Framework;
 using MonoPrimitives;
 
-namespace MonoPrimitives3D
+namespace MonoPrimitives.Primitives3D
 {
     public sealed partial class Primitive3DBatch
     {

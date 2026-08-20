@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoPrimitives3D;
+using MonoPrimitives.Primitives3D;
 
 namespace MonoPrimitives.Tests
 {
@@ -16,20 +16,20 @@ namespace MonoPrimitives.Tests
             Check(results, "BorderCube", batch, camera, () =>
                 batch.BorderCube(Vector3.Zero, 2f, 2f, 2f, Color.Black), expectTriangles: true);
 
-            Check(results, "DrawCubeV (fill+border)", batch, camera, () =>
-                batch.DrawCubeV(Vector3.Zero, Vector3.One * 2f, Color.Red, Color.Black), expectTriangles: true);
+            Check(results, "DrawCube (fill+border)", batch, camera, () =>
+                batch.DrawCube(Vector3.Zero, Vector3.One * 2f, Color.Red, Color.Black), expectTriangles: true);
 
-            Check(results, "FillSphereEx", batch, camera, () =>
-                batch.FillSphereEx(Vector3.Zero, 3f, 16, 16, Color.Red), expectTriangles: true);
+            Check(results, "FillSphere (rings/slices overload)", batch, camera, () =>
+                batch.FillSphere(Vector3.Zero, 3f, 16, 16, Color.Red), expectTriangles: true);
 
-            Check(results, "BorderSphereEx", batch, camera, () =>
-                batch.BorderSphereEx(Vector3.Zero, 3f, 16, 16, Color.Black), expectTriangles: true);
+            Check(results, "BorderSphere (rings/slices overload)", batch, camera, () =>
+                batch.BorderSphere(Vector3.Zero, 3f, 16, 16, Color.Black), expectTriangles: true);
 
-            Check(results, "FillCylinderEx", batch, camera, () =>
-                batch.FillCylinderEx(new Vector3(0, -2, 0), new Vector3(0, 2, 0), 1.5f, 1.5f, 20, Color.Blue), expectTriangles: true);
+            Check(results, "FillCylinder (start/end overload)", batch, camera, () =>
+                batch.FillCylinder(new Vector3(0, -2, 0), new Vector3(0, 2, 0), 1.5f, 1.5f, 20, Color.Blue), expectTriangles: true);
 
-            Check(results, "BorderCylinderEx", batch, camera, () =>
-                batch.BorderCylinderEx(new Vector3(0, -2, 0), new Vector3(0, 2, 0), 1.5f, 1.5f, 20, Color.Black), expectTriangles: true);
+            Check(results, "BorderCylinder (start/end overload)", batch, camera, () =>
+                batch.BorderCylinder(new Vector3(0, -2, 0), new Vector3(0, 2, 0), 1.5f, 1.5f, 20, Color.Black), expectTriangles: true);
 
             Check(results, "FillCapsule", batch, camera, () =>
                 batch.FillCapsule(new Vector3(0, -2, 0), new Vector3(0, 2, 0), 1f, 16, 8, Color.Green), expectTriangles: true);

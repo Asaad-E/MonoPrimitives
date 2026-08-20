@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Xna.Framework;
 
-namespace MonoPrimitives3D
+namespace MonoPrimitives.Primitives3D
 {
     /// <summary>
     /// Result of a ray-vs-shape test (<c>Hit</c>/<c>Distance</c>/<c>Point</c>/<c>Normal</c>),

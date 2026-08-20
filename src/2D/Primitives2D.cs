@@ -6,7 +6,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace Primitives2D
+namespace MonoPrimitives.Primitives2D
 {
     /// <summary>How consecutive segments of a thick outline meet at a vertex.</summary>
     public enum LineJoin
@@ -83,7 +83,7 @@ namespace Primitives2D
         private const int MinCircleSegments = 48;
 
         /// <summary>Maximum segments used for a full circle.</summary>
-        public const int MaxCircleSegments = 128*4;
+        public const int MaxCircleSegments = 128 * 4;
 
         /// <summary>
         /// Largest element count any single call stack-allocates a point/joint buffer for.
