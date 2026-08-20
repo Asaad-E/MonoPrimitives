@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    One assembly, raylib/MonoGame.Extended-style: 2D, 3D, and the shared Core pieces all live
+    here (see the Core/, 2D/, 3D/ subfolders — same source, still organized the same way, just
+    compiled into one DLL instead of three). Namespaces stay as they were (MonoPrimitives,
+    Primitives2D, MonoPrimitives3D) — nothing about how you reference a type changes, only how
+    many separate assemblies you needed to install to get it.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <!-- NuGet metadata: placeholders, filled in for real before the first publish. -->
+  <PropertyGroup>
+    <PackageId>MonoPrimitives</PackageId>
+    <Version>0.1.0</Version>
+    <Description>Immediate-mode 2D and 3D primitive drawing for MonoGame, plus the small set of helpers a fast prototype usually needs — camera, input, easing, color, noise, and collision/raycast tests — in one package.</Description>
+    <PackageTags>monogame;2d;3d;primitives;drawing;prototyping</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.*" />
+  </ItemGroup>
+
+</Project>
