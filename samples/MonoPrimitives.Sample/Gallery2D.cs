@@ -99,6 +99,7 @@ internal static class Gallery2D
         cells.Add(new Cell("Draw rounded r=20", (b, p) => { var (v1, v2, v3) = Tri(p); b.DrawTriangleRounded(v1, v2, v3, 20f, FillColor, BorderColor, 4f); }));
 
         cells.Add(new Cell("Gradient", (b, p) => { var (v1, v2, v3) = Tri(p); b.FillTriangleGradient(v1, v2, v3, GradientFrom, GradientTo); }));
+        cells.Add(new Cell("Tricolor", (b, p) => { var (v1, v2, v3) = Tri(p); b.FillTriangle(v1, GradientFrom, v2, GradientTo, v3, AltFillColor); }));
         cells.Add(new Cell("Gradient rounded r=20", (b, p) => { var (v1, v2, v3) = Tri(p); b.FillTriangleGradientRounded(v1, v2, v3, 20f, GradientFrom, GradientTo); }));
         cells.Add(new Cell("Draw gradient", (b, p) => { var (v1, v2, v3) = Tri(p); b.DrawTriangleGradient(v1, v2, v3, GradientFrom2, GradientTo2, BorderColor, 4f); }));
         cells.Add(new Cell("Draw gradient rounded", (b, p) => { var (v1, v2, v3) = Tri(p); b.DrawTriangleGradientRounded(v1, v2, v3, 20f, GradientFrom2, GradientTo2, BorderColor, 4f); }));
@@ -121,6 +122,7 @@ internal static class Gallery2D
         cells.Add(new Cell("Fill rounded r=20", (b, p) => b.FillRectangleRounded(TopLeft(p), size, 20f, FillColor)));
         cells.Add(new Cell("Fill rounded per-corner", (b, p) => b.FillRectangleRounded(TopLeft(p), size, new RectCorners(0f, 12f, 24f, 36f), FillColor)));
         cells.Add(new Cell("Fill chamfer r=20", (b, p) => b.FillRectangleChamfer(TopLeft(p), size, 20f, FillColor)));
+        cells.Add(new Cell("Fill chamfer per-corner", (b, p) => b.FillRectangleChamfer(TopLeft(p), size, new RectCorners(0f, 12f, 24f, 36f), FillColor)));
 
         foreach (var (suffix, join, radius) in JoinAxis())
             cells.Add(new Cell($"Border {suffix}", (b, p) => b.BorderRectangle(TopLeft(p), size, BorderColor, 4f, 0f, null, join, radius)));
@@ -132,6 +134,7 @@ internal static class Gallery2D
         cells.Add(new Cell("Draw rounded r=20", (b, p) => b.DrawRectangleRounded(TopLeft(p), size, 20f, FillColor, BorderColor, 4f)));
         cells.Add(new Cell("Draw chamfer r=20", (b, p) => b.DrawRectangleChamfer(TopLeft(p), size, 20f, FillColor, BorderColor, 4f)));
 
+        cells.Add(new Cell("4-corner color", (b, p) => b.FillRectangle(new Rectangle((int)TopLeft(p).X, (int)TopLeft(p).Y, (int)size.X, (int)size.Y), GradientFrom, GradientTo, GradientFrom2, GradientTo2)));
         cells.Add(new Cell("Gradient horizontal", (b, p) => b.FillRectangleGradient(TopLeft(p), size, GradientFrom, GradientTo, horizontal: true)));
         cells.Add(new Cell("Gradient vertical", (b, p) => b.FillRectangleGradient(TopLeft(p), size, GradientFrom, GradientTo, horizontal: false)));
         cells.Add(new Cell("Gradient offset", (b, p) => b.FillRectangleGradient(TopLeft(p), size, GradientFrom, GradientTo, horizontal: true, rotation: 0f, origin: null, innerOffset: 0.2f, outerOffset: 0.2f)));
