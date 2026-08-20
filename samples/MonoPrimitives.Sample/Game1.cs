@@ -139,6 +139,8 @@ public class Game1 : Game
             GraphicsDevice.Clear(Palette.Background);
 
             _primitiveBatch.Begin(_camera2d.GetTransformMatrix());
+            _primitiveBatch.DrawGrid(80, 40f);
+            _primitiveBatch.DrawAxis(2000f);
             _gallery2DSize = Gallery2D.Draw(_primitiveBatch);
             _primitiveBatch.End();
         }

@@ -21,7 +21,7 @@ Shared foundation used by both 2D and 3D — nothing here is 2D- or 3D-specific.
 
 | File | Purpose |
 |---|---|
-| `Primitives2D.cs` | `PrimitiveBatch` — all shape drawing (Fill/Border/Draw per shape, rounded-corner and gradient variants), outline/fillet engine, points/lines/splines/`DrawArrow`. Large; grep, don't read linearly. |
+| `Primitives2D.cs` | `PrimitiveBatch` — all shape drawing (Fill/Border/Draw per shape, rounded-corner and gradient variants), outline/fillet engine, points/lines/splines/`DrawArrow`/`DrawGrid`/`DrawAxis`. Large; grep, don't read linearly. |
 | `Camera2D.cs` | Transform matrix, screen↔world, bounds/padding, smooth-follow/zoom. |
 | `ViewportAdapter2D.cs` (+ `Boxing`/`Scaling`/`Default`/`Window` variants) | MonoGame.Extended-parity viewport adapter family: `BoxingViewportAdapter2D` (letterbox/pillarbox, uniform scale), `ScalingViewportAdapter2D` (stretch to fill, non-uniform scale), `DefaultViewportAdapter2D` (1:1, tracks device viewport), `WindowViewportAdapter2D` (1:1, tracks `GameWindow.ClientBounds`). All expose the same `GetScaleMatrix()`/`PointToVirtual`/`VirtualToPoint` surface — compose with `Camera2D` the same way regardless of which one's in use. |
 | `Collision2D.cs` | Overlap tests + 3 raycasts. Detection only. |

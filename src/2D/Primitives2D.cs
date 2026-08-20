@@ -3589,6 +3589,62 @@ namespace MonoPrimitives.Primitives2D
             BuildOutlineGeometry(samples, thickness, color, closed: false);
         }
 
+        // ==================================================================
+        // GRID / AXES
+        // ==================================================================
+        // 2D counterpart to Primitive3DBatchShapes' DrawGridXY/XZ/YZ + DrawAxis: a
+        // reference grid and an X/Y axis cross, kept as separate methods so callers
+        // can combine/omit/style them independently. There's only one plane in 2D,
+        // so (unlike the 3D per-axis-pair split) a single DrawGrid covers it.
+        //
+        // Every 5th division is a "major" line: a darker color and one pixel wider,
+        // matching common CAD/DCC grid conventions so large grids stay readable.
+
+        private const int MajorGridLineInterval = 5;
+
+        // Low alpha by default so a reference grid reads as a subtle backdrop
+        // rather than competing with whatever's drawn on top of it.
+        private static readonly Color DefaultGridLineColor = new(0.75f, 0.75f, 0.75f, 0.35f);
+        private static readonly Color DefaultGridMajorLineColor = new(0.45f, 0.45f, 0.45f, 0.4f);
+        private static readonly Color DefaultAxisColor = new(0.15f, 0.15f, 0.15f, 0.65f);
+
+        /// <summary>Draws a grid centered at the origin, using the default subtle grid colors.</summary>
+        public void DrawGrid(int slices, float spacing)
+            => DrawGrid(slices, spacing, Vector2.Zero, DefaultGridLineColor, DefaultGridMajorLineColor);
+
+        /// <summary>Draws a grid with an explicit origin and colors (every 5th line drawn as a darker, wider "major" line).</summary>
+        public void DrawGrid(int slices, float spacing, Vector2 origin, Color lineColor, Color majorLineColor)
+        {
+            EnsureStarted();
+            int halfSlices = slices / 2;
+            float extent = halfSlices * spacing;
+
+            for (int i = -halfSlices; i <= halfSlices; i++)
+            {
+                bool major = i % MajorGridLineInterval == 0;
+                float offset = i * spacing;
+                float thickness = major ? 2f : 1f;
+                Color color = major ? majorLineColor : lineColor;
+
+                DrawLine(origin + new Vector2(offset, -extent), origin + new Vector2(offset, extent), thickness, color);
+                DrawLine(origin + new Vector2(-extent, offset), origin + new Vector2(extent, offset), thickness, color);
+            }
+        }
+
+        /// <summary>Draws an X/Y axis cross of length <paramref name="size"/> (in each direction) through the origin, using a dark, grid-like default color.</summary>
+        public void DrawAxis(float size) => DrawAxis(Vector2.Zero, size, DefaultAxisColor);
+
+        /// <summary>Draws an X/Y axis cross of length <paramref name="size"/> (in each direction) through the origin.</summary>
+        public void DrawAxis(float size, Color color) => DrawAxis(Vector2.Zero, size, color);
+
+        /// <summary>Draws an X/Y axis cross of length <paramref name="size"/> (in each direction) through <paramref name="origin"/>.</summary>
+        public void DrawAxis(Vector2 origin, float size, Color color)
+        {
+            EnsureStarted();
+            DrawLine(origin - Vector2.UnitX * size, origin + Vector2.UnitX * size, color);
+            DrawLine(origin - Vector2.UnitY * size, origin + Vector2.UnitY * size, color);
+        }
+
         // ------------------------------------------------------------------
         // Disposal
         // ------------------------------------------------------------------
