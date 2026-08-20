@@ -26,9 +26,8 @@ public class Game1 : Game
 
     private OrthographicCamera _camera;
 
-    // 2D shape gallery — separate camera/input from the 3D one above, toggled with Tab.
+    // 2D shape gallery — separate camera from the 3D one above, toggled with Tab.
     private Camera2D _camera2d;
-    private PrimitiveInput _input2d;
     private bool _show2DGallery = true;
     private Vector2 _gallery2DSize;
     private bool _tabWasDown;
@@ -84,7 +83,6 @@ public class Game1 : Game
         );
 
         _camera2d = new Camera2D(target: Vector2.Zero, offset: Vector2.Zero, zoom: 1f);
-        _input2d = new PrimitiveInput();
         // TODO: use this.Content to load your game content here
     }
 
@@ -108,25 +106,14 @@ public class Game1 : Game
         base.Update(gameTime);
     }
 
-    // WASD pans, mouse wheel zooms, left-click-drag pans — panning is clamped to
-    // [0,0]..gallery size so you can't scroll past the content (Camera2D.Offset stays at
-    // zero, so Target itself is the world point shown at the screen's top-left corner).
+    // WASD pans, mouse wheel zooms, left-click-drag pans, all via Camera2D's own built-in
+    // input reader — panning is clamped to [0,0]..gallery size so you can't scroll past the
+    // content (Camera2D.Offset stays at zero, so Target itself is the world point shown at
+    // the screen's top-left corner).
     private void UpdateGallery2DCamera(float deltaTime)
     {
-        _input2d.Update(deltaTime);
-
-        float panSpeed = 700f * deltaTime / MathF.Max(_camera2d.Zoom, 0.05f);
-        Vector2 move = _input2d.GetVector2(Keys.A, Keys.D, Keys.W, Keys.S) * panSpeed;
-        _camera2d.Target += move;
-
-        if (_input2d.MouseScrollDelta != 0)
-            _camera2d.Zoom += _input2d.MouseScrollDelta * 0.03f * deltaTime;
-
-        if (_input2d.IsMouseButtonDown(MouseButton.Left))
-            _camera2d.Target -= _input2d.MouseDelta / MathF.Max(_camera2d.Zoom, 0.05f);
-
         _camera2d.TargetBounds = new Rectangle(0, 0, (int)MathF.Max(_gallery2DSize.X, 1f), (int)MathF.Max(_gallery2DSize.Y, 1f));
-        _camera2d.ClampToBounds();
+        _camera2d.Update(deltaTime);
     }
 
     protected override void Draw(GameTime gameTime)

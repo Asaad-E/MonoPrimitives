@@ -3,15 +3,34 @@
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using MonoPrimitives;
 
 namespace MonoPrimitives.Primitives2D
 {
     /// <summary>
+    /// Per-frame pan/zoom request for <see cref="Camera2D.Update(in CameraInput2D, float)"/>.
+    /// Filling this yourself (instead of always going through
+    /// <see cref="Camera2D.ReadDefaultInput(float)"/>) keeps the camera logic input-agnostic,
+    /// which matters for replays, network play and tests. Named with a "2D" suffix (unlike
+    /// <c>Camera2D</c> itself) because <c>Primitives3D.CameraInput</c> is commonly imported
+    /// alongside this namespace and an unsuffixed <c>CameraInput</c> here would collide.
+    /// </summary>
+    public struct CameraInput2D
+    {
+        /// <summary>World-space pan request, already scaled by speed and delta time.</summary>
+        public Vector2 Pan;
+
+        /// <summary>Zoom delta (mouse wheel), fed into <see cref="Camera2D.SmoothZoom"/>.</summary>
+        public float Zoom;
+    }
+
+    /// <summary>
     /// A 2D camera: <see cref="Target"/>/<see cref="Offset"/>/<see cref="Rotation"/>/
-    /// <see cref="Zoom"/>, plus the same bounds/padding/smooth-follow/smooth-zoom/easing
-    /// <c>Camera3D</c> has in the companion 3D library — a 2D prototype (a platformer, an
-    /// asteroids clone, a pan-and-zoom plot) starts from a camera that already does the
-    /// common things. Pass <see cref="GetTransformMatrix"/> into
+    /// <see cref="Zoom"/>, plus the same bounds/padding/smooth-follow/smooth-zoom/easing/
+    /// input-driven-update <c>Camera3D</c> has in the companion 3D library — a 2D prototype (a
+    /// platformer, an asteroids clone, a pan-and-zoom plot) starts from a camera that already
+    /// does the common things. Pass <see cref="GetTransformMatrix"/> into
     /// <see cref="PrimitiveBatch.Begin(Matrix?,BlendState?,DepthStencilState?,RasterizerState?,Effect?)"/>'s
     /// <c>transformMatrix</c> each frame.
     /// </summary>
@@ -194,6 +213,74 @@ namespace MonoPrimitives.Primitives2D
             if (MathF.Abs(Zoom - target) < 0.0005f)
                 _pendingZoomTarget = float.NaN;
         }
+
+        // ---------------------------------------------------------------------
+        // Input-driven update
+        // ---------------------------------------------------------------------
+        // Same shape as Camera3D's ReadDefaultInput/Update split: build a CameraInput2D from
+        // whatever source you like (the built-in keyboard/mouse reader below, a gamepad, a
+        // network packet, a replay file) and feed it to Update — the camera itself never reads
+        // input directly outside of ReadDefaultInput.
+
+        private const float DefaultMoveSpeed = 700f;
+        private const float DefaultMouseWheelZoomSensitivity = 0.03f;
+
+        /// <summary>Keyboard pan speed in world units per second (before the 1/<see cref="Zoom"/> scaling <see cref="ReadDefaultInput(float)"/> applies, so panning feels the same screen-space speed at any zoom level). Editable; defaults to <see cref="DefaultMoveSpeed"/>.</summary>
+        public float MoveSpeed { get; set; } = DefaultMoveSpeed;
+
+        /// <summary>Mouse-wheel-to-zoom scale, used by <see cref="ReadDefaultInput(float)"/>. Editable; defaults to <see cref="DefaultMouseWheelZoomSensitivity"/>.</summary>
+        public float MouseWheelZoomSensitivity { get; set; } = DefaultMouseWheelZoomSensitivity;
+
+        private readonly PrimitiveInput _input = new();
+
+        /// <summary>Advances the camera one frame using <see cref="ReadDefaultInput(float)"/> — the simplest way to get a working pan/zoom camera with no input code of your own.</summary>
+        public void Update(float deltaSeconds) => Update(ReadDefaultInput(deltaSeconds), deltaSeconds);
+
+        /// <inheritdoc cref="Update(float)"/>
+        public void Update(GameTime gameTime) => Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+
+        /// <summary>Advances the camera one frame using an explicit <see cref="CameraInput2D"/>, taking the frame delta from a MonoGame <see cref="GameTime"/> instead of a raw float.</summary>
+        public void Update(GameTime gameTime, in CameraInput2D input) => Update(input, (float)gameTime.ElapsedGameTime.TotalSeconds);
+
+        /// <summary>Applies <paramref name="input"/>'s pan to <see cref="Target"/> and zoom to <see cref="SmoothZoom"/>, then re-clamps to <see cref="TargetBounds"/> if set.</summary>
+        public void Update(in CameraInput2D input, float deltaSeconds)
+        {
+            Target += input.Pan;
+            if (input.Zoom != 0f)
+                SmoothZoom(input.Zoom, deltaSeconds);
+            ClampToBounds();
+        }
+
+        /// <summary>Builds a <see cref="CameraInput2D"/> from the current keyboard and mouse state, taking the frame delta straight from a MonoGame <see cref="GameTime"/> instead of a raw float.</summary>
+        public CameraInput2D ReadDefaultInput(GameTime gameTime) => ReadDefaultInput((float)gameTime.ElapsedGameTime.TotalSeconds);
+
+        /// <summary>
+        /// Builds a <see cref="CameraInput2D"/> from the current keyboard and mouse state
+        /// (W/A/S/D pan, left-mouse-drag pan, wheel zoom) via the shared <see cref="PrimitiveInput"/>.
+        /// Pan speed is divided by <see cref="Zoom"/> so keyboard panning covers the same amount
+        /// of *screen* space per second regardless of zoom level, matching how the mouse-drag
+        /// pan already behaves (a drag always tracks the cursor 1:1 on screen).
+        /// </summary>
+        public CameraInput2D ReadDefaultInput(float deltaSeconds)
+        {
+            _input.Update(deltaSeconds);
+
+            float safeZoom = MathF.Max(Zoom, 1e-4f);
+            float speed = MoveSpeed * deltaSeconds / safeZoom;
+
+            CameraInput2D input = default;
+            input.Pan = _input.GetVector2(Keys.A, Keys.D, Keys.W, Keys.S) * speed;
+
+            if (_input.IsMouseButtonDown(MouseButton.Left))
+                input.Pan -= _input.MouseDelta / safeZoom;
+
+            input.Zoom = _input.MouseScrollDelta * (MouseWheelZoomSensitivity / 120f);
+
+            return input;
+        }
+
+        /// <summary>Resets <see cref="ReadDefaultInput(float)"/>'s internal mouse-delta tracking — call after teleporting the camera or repositioning the mouse to avoid a one-frame pan jump.</summary>
+        public void ResetMouseTracking() => _input.ResetMouseDelta();
 
         // ---------------------------------------------------------------------
         // Easing
