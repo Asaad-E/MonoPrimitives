@@ -137,8 +137,9 @@ public class Game1 : Game
 
             _primitive3DBatch.Begin(_camera3d);
 
-            int slices = 40;
-            float spacing = 1f;
+            // Large enough to cover Gallery3D's full extent (13 rows deep, up to 6 cells wide).
+            int slices = 140;
+            float spacing = 2f;
             _primitive3DBatch.DrawGridXZ(slices, spacing);
             _primitive3DBatch.DrawAxis(slices * spacing * 0.5f);
 

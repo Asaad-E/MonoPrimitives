@@ -48,9 +48,15 @@ internal static class Gallery3D
         DrawRow(batch, "SPLINES", SplineCells(), ref z);
     }
 
+    // Dark text on purpose: the 3D sample clears to white (unlike the 2D gallery's dark
+    // Palette.Background), so the light Palette.Clouds/Silver captions Gallery2D uses would be
+    // unreadable here.
+    private static readonly Color LabelTextColor = Palette.MidnightBlue;
+    private static readonly Color CaptionTextColor = Palette.WetAsphalt;
+
     private static void DrawRow(Primitive3DBatch batch, string title, IReadOnlyList<Cell> cells, ref float z)
     {
-        batch.DrawString3D(title, new Vector3(0f, 4.5f, z), LabelPixelSize, Palette.Clouds);
+        batch.DrawString3D(title, new Vector3(0f, 4.5f, z), LabelPixelSize, LabelTextColor);
 
         float x = 0f;
         foreach (Cell cell in cells)
@@ -71,7 +77,7 @@ internal static class Gallery3D
     {
         batch.GetBillboardAxes(anchor, out Vector3 right, out _);
         Vector2 size = Primitive3DBatch.MeasureText3D(text, CaptionPixelSize);
-        batch.DrawString3D(text, anchor - right * (size.X * 0.5f), CaptionPixelSize, Palette.Silver);
+        batch.DrawString3D(text, anchor - right * (size.X * 0.5f), CaptionPixelSize, CaptionTextColor);
     }
 
     // ==================================================================

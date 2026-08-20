@@ -246,8 +246,11 @@ namespace MonoPrimitives.Primitives2D
         public void Update(in CameraInput2D input, float deltaSeconds)
         {
             Target += input.Pan;
-            if (input.Zoom != 0f)
-                SmoothZoom(input.Zoom, deltaSeconds);
+            // Unconditional, matching SmoothZoom's own "call every frame, most calls no-op"
+            // contract: a wheel tick only makes input.Zoom nonzero for one frame, but the easing
+            // toward that tick's target has to keep advancing on every frame after it too — a
+            // guard here would let it take one small step and then freeze.
+            SmoothZoom(input.Zoom, deltaSeconds);
             ClampToBounds();
         }
 
