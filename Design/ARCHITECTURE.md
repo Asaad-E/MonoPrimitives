@@ -42,7 +42,7 @@ Shared foundation used by both 2D and 3D — nothing here is 2D- or 3D-specific.
 
 ## `samples/MonoPrimitives.Sample/`
 
-Minimal runnable MonoGame game referencing `MonoPrimitives`, plus `MonoGame.Extended` (sample-only). Proves the package works end-to-end; not a real game.
+Minimal runnable MonoGame game referencing `MonoPrimitives`, plus `MonoGame.Extended` (sample-only). Proves the package works end-to-end; not a real game. Tab toggles between two visual-regression galleries — `Gallery2D.cs` (2D, camera-controlled) and `Gallery3D.cs` (3D, free-fly camera) — both the same row-per-shape-family/cell-per-Fill-Border-Draw-variant/text-caption structure, so a change to either library can be eyeballed the same way.
 
 ## Machinery worth knowing before you touch nearby code
 

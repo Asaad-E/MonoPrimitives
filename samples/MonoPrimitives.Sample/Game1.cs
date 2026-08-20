@@ -142,55 +142,11 @@ public class Game1 : Game
             _primitive3DBatch.DrawGridXZ(slices, spacing);
             _primitive3DBatch.DrawAxis(slices * spacing * 0.5f);
 
-            DrawShapeGallery();
+            Gallery3D.Draw(_primitive3DBatch);
 
             _primitive3DBatch.End();
         }
 
         base.Draw(gameTime);
-    }
-
-    // One of every shape in a grid on top of the ground plane, for visual regression
-    // checking after a library change — run the sample and eyeball each cell.
-    private static readonly float[,] _heightmapPatch =
-    {
-        { 0f, 0.4f, 0.2f },
-        { 0.3f, 0.9f, 0.1f },
-        { 0f, 0.5f, 0f }
-    };
-
-    private void DrawShapeGallery()
-    {
-        const float cellSize = 6f;
-        const int columns = 6;
-
-        (string Name, Action<Vector3> Draw)[] shapes =
-        {
-            ("Cube", p => _primitive3DBatch.DrawCube(p + Vector3.UnitY * 1f, Vector3.One * 2f, Color.Red, Color.Black)),
-            ("Sphere", p => _primitive3DBatch.DrawSphere(p + Vector3.UnitY * 1.5f, 1.5f, 24, 24, Color.Orange, Color.Black)),
-            ("Cylinder", p => _primitive3DBatch.DrawCylinder(p, 1.2f, 1.2f, 3f, 24, Color.Blue, Color.Black)),
-            ("Cone", p => _primitive3DBatch.DrawCylinder(p, 0f, 1.2f, 3f, 24, Color.Purple, Color.Black)),
-            ("Capsule", p => _primitive3DBatch.DrawCapsule(p + Vector3.UnitY * 1f, p + Vector3.UnitY * 3f, 1f, 24, 12, Color.Green, Color.Black)),
-            ("Torus", p => _primitive3DBatch.DrawTorus(p + Vector3.UnitY * 1.5f, 1.3f, 0.5f, 24, 24, Color.MediumPurple, Color.Black)),
-            ("BoundingBox", p => _primitive3DBatch.DrawBoundingBox(new BoundingBox(p, p + new Vector3(2f, 2f, 2f)), Color.Yellow, Color.Black)),
-            ("Plane", p => _primitive3DBatch.DrawPlane(p + Vector3.UnitY * 1.5f, new Vector2(2.5f, 2.5f), Color.Gray, Color.Black)),
-            ("Circle3D", p => _primitive3DBatch.DrawCircle3D(p + Vector3.UnitY * 1.5f, 1.5f, Vector3.UnitX, 90f, 32, Color.Teal, Color.Black)),
-            ("Triangle3D", p => _primitive3DBatch.DrawTriangle3D(p, p + new Vector3(2f, 0, 0), p + new Vector3(1f, 2.5f, 0), Color.Gold, Color.Black)),
-            ("Heightmap", p => _primitive3DBatch.DrawHeightmap(_heightmapPatch, p, new Vector2(1f, 1f), Color.SaddleBrown, Color.Black)),
-            ("Arrow3D", p => _primitive3DBatch.DrawArrow3D(p, p + Vector3.UnitY * 3f, 0.35f, 12, Color.Crimson)),
-        };
-
-        int columnsUsed = Math.Min(columns, shapes.Length);
-        int rows = (shapes.Length + columnsUsed - 1) / columnsUsed;
-        float originX = -(columnsUsed - 1) * cellSize * 0.5f;
-        float originZ = -(rows - 1) * cellSize * 0.5f;
-
-        for (int i = 0; i < shapes.Length; i++)
-        {
-            int col = i % columnsUsed;
-            int row = i / columnsUsed;
-            Vector3 cellPos = new(originX + col * cellSize, 0f, originZ + row * cellSize);
-            shapes[i].Draw(cellPos);
-        }
     }
 }
