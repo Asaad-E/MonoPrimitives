@@ -194,7 +194,7 @@ public class Game1 : Game
             string hitText = hit.Hit ? $"{hit.Point.X:F1}, {hit.Point.Z:F1}" : "(no hit)";
             _batch2d.DrawString($"Mouse -> ground-plane world (X,Z): {hitText}", new Vector2(16, 112), 1.5f, Palette.PeterRiver);
 
-            Vector2 fixedScreen = _camera3d.GetWorldToScreen(new Vector3(100, 0, -100), GraphicsDevice.Viewport);
+            Vector2 fixedScreen = _camera3d.WorldToScreen(new Vector3(100, 0, -100), GraphicsDevice.Viewport);
             _batch2d.FillCircle(fixedScreen, 5f, Palette.Amethyst);
             _batch2d.DrawString($"Fixed world (100,0,-100) -> screen: {fixedScreen.X:F0}, {fixedScreen.Y:F0}", new Vector2(16, 134), 1.5f, Palette.Amethyst);
             _batch2d.DrawString("(the purple dot here should sit exactly on the purple sphere in the scene)", new Vector2(16, 152), 1.2f, Palette.Silver);

@@ -10,5 +10,4 @@ Known gaps and queued ideas. Check before proposing something "obviously missing
 ## Real gaps, not yet built
 
 - **NuGet publish finalization**: `src/MonoPrimitives.csproj` needs `Authors`, `PackageLicenseExpression`, `RepositoryUrl`, and a real starting version before an actual publish — a deliberate decision, not something to fill in speculatively.
-- **No automated tests.** All verification so far is manual (standalone render checks + `dotnet build`). A `tests/` project covering the pure-math pieces (`Collision2D`/`3D`, `ClampCornerRadiusToFit`, `Noise`, `ColorUtil`'s HSV round-trip) would be a real improvement, not yet requested.
 - **No CI** — no GitHub remote yet either.

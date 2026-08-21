@@ -661,17 +661,14 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
-        /// <summary>Draws an arrow from <paramref name="start"/> to <paramref name="end"/> — a line shaft plus a triangular head, sized automatically from the arrow's own length and <paramref name="thickness"/>.</summary>
-        public void DrawArrow(Vector2 start, Vector2 end, Color color, float thickness = 2f)
-            => DrawArrow(start, end, thickness, color, null, null);
-
         /// <summary>
-        /// Draws an arrow with an explicit head size. The head's length/width scale with both
-        /// the arrow's own length and <paramref name="thickness"/> by default, capped so a short
-        /// arrow doesn't grow a head bigger than the arrow itself; pass <paramref name="headLength"/>/
-        /// <paramref name="headWidth"/> to size it exactly instead.
+        /// Draws an arrow from <paramref name="start"/> to <paramref name="end"/> — a line shaft
+        /// plus a triangular head, sized automatically from the arrow's own length and
+        /// <paramref name="thickness"/>. The head's length/width scale with both by default,
+        /// capped so a short arrow doesn't grow a head bigger than the arrow itself; pass
+        /// <paramref name="headLength"/>/<paramref name="headWidth"/> to size it exactly instead.
         /// </summary>
-        public void DrawArrow(Vector2 start, Vector2 end, float thickness, Color color, float? headLength, float? headWidth)
+        public void DrawArrow(Vector2 start, Vector2 end, Color color, float thickness = 2f, float? headLength = null, float? headWidth = null)
         {
             ThrowIfNotBegun();
             Vector2 delta = end - start;

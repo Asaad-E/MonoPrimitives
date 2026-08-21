@@ -61,11 +61,11 @@ namespace MonoPrimitives.Primitives3D
         /// <c>DrawLineStrip3D</c> can't fade along its own length) — keep <see cref="Capacity"/> no
         /// bigger than the trail actually needs to look right, especially with many trails on screen.
         /// </summary>
-        /// <param name="width">Line width; &lt;= 0 (the default) uses <see cref="Primitive3DBatch.DefaultLineWidth"/> — the same sentinel convention as the rest of this library's <c>Border*</c>/<c>Draw*</c> methods.</param>
-        public void Draw(Primitive3DBatch batch, Color color, float width = -1f, float fadeToAlpha = 0f)
+        /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="Primitive3DBatch.DefaultLineThickness"/> — the same sentinel convention as the rest of this library's <c>Border*</c>/<c>Draw*</c> methods.</param>
+        public void Draw(Primitive3DBatch batch, Color color, float thickness = -1f, float fadeToAlpha = 0f)
         {
             if (Count < 2) return;
-            if (width <= 0f) width = batch.DefaultLineWidth;
+            if (thickness <= 0f) thickness = batch.DefaultLineThickness;
             fadeToAlpha = Math.Clamp(fadeToAlpha, 0f, 1f);
             float denom = Count - 1;
             for (int i = 1; i < Count; i++)
@@ -73,7 +73,7 @@ namespace MonoPrimitives.Primitives3D
                 float t = (i - 0.5f) / denom; // segment midpoint's position along the trail, 0=oldest..1=newest
                 float alphaFrac = fadeToAlpha + (1f - fadeToAlpha) * t;
                 Color segColor = new(color.R, color.G, color.B, (byte)(color.A * alphaFrac));
-                batch.DrawLine3D(this[i - 1], this[i], width, segColor);
+                batch.DrawLine3D(this[i - 1], this[i], thickness, segColor);
             }
         }
     }

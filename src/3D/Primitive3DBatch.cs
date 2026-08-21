@@ -124,7 +124,7 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>
         /// When <c>true</c>, line primitives are expanded into screen-facing quads
         /// (billboarded ribbons) which are noticeably smoother than 1px hardware
-        /// lines and honour <see cref="DefaultLineWidth"/>. When <c>false</c>,
+        /// lines and honour <see cref="DefaultLineThickness"/>. When <c>false</c>,
         /// lines are drawn as thin camera-facing quads of a fixed world width.
         /// </summary>
         public bool SmoothLines { get; set; } = true;
@@ -133,7 +133,7 @@ namespace MonoPrimitives.Primitives3D
         /// Line thickness in *pixels* when <see cref="SmoothLines"/> is enabled,
         /// or in world units otherwise.
         /// </summary>
-        public float DefaultLineWidth { get; set; } = 0.5f;
+        public float DefaultLineThickness { get; set; } = 0.5f;
 
         /// <summary>Camera position used to orient line quads. Set by <see cref="Begin"/>.</summary>
         private Vector3 _cameraPosition;

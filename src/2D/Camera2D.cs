@@ -267,8 +267,11 @@ namespace MonoPrimitives.Primitives2D
         // owns input state of its own, so the same session's input can drive UI, gameplay and
         // the camera without the three stepping on each other's delta tracking.
 
-        private const float DefaultMoveSpeed = 700f;
-        private const float DefaultMouseWheelZoomSensitivity = 0.06f;
+        /// <summary><see cref="MoveSpeed"/>'s default value.</summary>
+        public const float DefaultMoveSpeed = 700f;
+
+        /// <summary><see cref="MouseWheelZoomSensitivity"/>'s default value.</summary>
+        public const float DefaultMouseWheelZoomSensitivity = 0.06f;
 
         /// <summary>Keyboard pan speed in world units per second (before the 1/<see cref="Zoom"/> scaling <see cref="UpdateWithInput(PrimitiveInput, float)"/> applies, so panning feels the same screen-space speed at any zoom level). Editable; defaults to <see cref="DefaultMoveSpeed"/>.</summary>
         public float MoveSpeed { get; set; } = DefaultMoveSpeed;

@@ -80,7 +80,7 @@ namespace MonoPrimitives.Tests
                 batch.DrawLine3DFast(Vector3.Zero, Vector3.One * 5f, Color.Black), expectLines: true);
 
             Check(results, "DrawPoint3D", batch, camera, () =>
-                batch.DrawPoint3D(Vector3.Zero, Color.Black), expectTriangles: true);
+                batch.DrawPoint3D(Vector3.Zero, Color.Black), expectLines: true);
 
             Check(results, "DrawArrow3D", batch, camera, () =>
                 batch.DrawArrow3D(Vector3.Zero, new Vector3(0, 5, 0), 0.3f, 8, Color.Black), expectTriangles: true);

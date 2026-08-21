@@ -79,7 +79,7 @@ namespace MonoPrimitives.Primitives3D
         /// Viewport adapter this camera was constructed with, if any — same MonoGame.Extended-style
         /// dependency <see cref="Primitives2D.Camera2D"/> takes: set once, then
         /// <see cref="Primitive3DBatch.Begin(Camera3D,BlendState,DepthStencilState,RasterizerState,Matrix?)"/>
-        /// and <see cref="GetWorldToScreen(Vector3,Viewport?)"/>/<see cref="GetScreenToWorld"/>/
+        /// and <see cref="WorldToScreen(Vector3,Viewport?)"/>/<see cref="ScreenToWorld"/>/
         /// <see cref="GetScreenToWorldRay"/> all use it automatically instead of requiring it
         /// passed in again at every call site. <c>null</c> for the plain constructor — those
         /// methods then need an explicit <see cref="Viewport"/> argument, or fall back to the
@@ -351,7 +351,7 @@ namespace MonoPrimitives.Primitives3D
 
         /// <summary>Projects a world position to screen coordinates (pixels, origin top-left).</summary>
         /// <param name="viewport">Explicit viewport to project with; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
-        public Vector2 GetWorldToScreen(Vector3 position, Viewport? viewport = null)
+        public Vector2 WorldToScreen(Vector3 position, Viewport? viewport = null)
         {
             Viewport vp = ResolveViewport(viewport);
             Vector3 projected = vp.Project(position, GetProjectionMatrix(vp.AspectRatio), GetViewMatrix(), Matrix.Identity);
@@ -360,7 +360,7 @@ namespace MonoPrimitives.Primitives3D
 
         /// <summary>Projects a world position to screen coordinates, also returning normalized depth (0 near, 1 far; outside [0,1] means outside the frustum).</summary>
         /// <param name="viewport">Explicit viewport to project with; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
-        public Vector2 GetWorldToScreen(Vector3 position, out float depth, Viewport? viewport = null)
+        public Vector2 WorldToScreen(Vector3 position, out float depth, Viewport? viewport = null)
         {
             Viewport vp = ResolveViewport(viewport);
             Vector3 projected = vp.Project(position, GetProjectionMatrix(vp.AspectRatio), GetViewMatrix(), Matrix.Identity);
@@ -370,7 +370,7 @@ namespace MonoPrimitives.Primitives3D
 
         /// <summary>Unprojects a screen position at the given depth back into world space.</summary>
         /// <param name="viewport">Explicit viewport to unproject with; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
-        public Vector3 GetScreenToWorld(Vector2 screenPosition, float depth, Viewport? viewport = null)
+        public Vector3 ScreenToWorld(Vector2 screenPosition, float depth, Viewport? viewport = null)
         {
             Viewport vp = ResolveViewport(viewport);
             return vp.Unproject(new Vector3(screenPosition, depth), GetProjectionMatrix(vp.AspectRatio), GetViewMatrix(), Matrix.Identity);
@@ -422,7 +422,7 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>Current behaviour mode.</summary>
         public CameraMode Mode { get; set; } = CameraMode.Free;
 
-        /// <summary>Movement speed multiplier in world units per second.</summary>
+        /// <summary>Unitless multiplier applied on top of <see cref="MoveSpeed"/> (which is the one in world units per second).</summary>
         public float MoveSpeedScale { get; set; } = 1f;
 
         /// <summary>Mouse look sensitivity multiplier.</summary>
@@ -751,7 +751,8 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>Resets <see cref="FollowTarget"/>'s internal smoothing velocity — call after teleporting the camera or its subject to avoid a lingering swoop.</summary>
         public void ResetFollowVelocity() { _followVelocity = Vector3.Zero; _followTargetVelocity = Vector3.Zero; }
 
-        private void ClampToBounds()
+        /// <summary>Clamps <see cref="Position"/> into <see cref="PositionBounds"/> (shrunk by <see cref="BoundsPadding"/>) if set, keeping <see cref="Target"/>'s relative offset. Called automatically by <see cref="UpdateWithInput(PrimitiveInput,float)"/> and <see cref="FollowTarget"/>; call it yourself after setting <see cref="Position"/> directly if you want the same clamp.</summary>
+        public void ClampToBounds()
         {
             if (!PositionBounds.HasValue)
                 return;

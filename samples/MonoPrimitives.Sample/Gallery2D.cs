@@ -393,7 +393,7 @@ internal static class Gallery2D
             new("Spline Catmull-Rom", (b, p) => b.DrawSplineCatmullRom(ZigZag(p), 5f, FillColor)),
             new("Spline Bezier cubic", (b, p) => b.DrawSplineBezierCubic(FourPointBezier(p), 5f, FillColor)),
             new("Arrow default", (b, p) => b.DrawArrow(p + new Vector2(-60, 0), p + new Vector2(60, 0), FillColor)),
-            new("Arrow thick head", (b, p) => b.DrawArrow(p + new Vector2(-60, 0), p + new Vector2(60, 0), 6f, FillColor, headLength: 40f, headWidth: 40f)),
+            new("Arrow thick head", (b, p) => b.DrawArrow(p + new Vector2(-60, 0), p + new Vector2(60, 0), FillColor, 6f, headLength: 40f, headWidth: 40f)),
             new("Triangle fan", (b, p) => b.DrawTriangleFan(Fan(p), FillColor)),
             new("Triangle strip", (b, p) => b.DrawTriangleStrip(Strip(p), FillColor)),
         };
