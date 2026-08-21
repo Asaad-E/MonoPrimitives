@@ -47,7 +47,7 @@ Minimal runnable MonoGame game referencing `MonoPrimitives`, plus `MonoGame.Exte
 
 ## `examples/`
 
-Small standalone MonoGame apps (each its own `.csproj` referencing `MonoPrimitives.csproj` directly, not the sample) demonstrating library usage beyond the gallery. `examples/test/` holds one visual test per non-primitive-drawing component (`ViewportTest/` — every `ViewportAdapter2D` mode, 2D and 3D, verified via a `ScreenToWorld(WorldToScreen(x))` round-trip plus a rendered-marker-position check; more test folders land here as they're built). `examples/demos/` holds small non-menu/non-pause playable demos built directly on `PrimitiveInput` (not a camera's `UpdateWithInput` convenience) to prove the library at "real game" scale.
+Small standalone MonoGame apps (each its own `.csproj` referencing `MonoPrimitives.csproj` directly, not the sample) demonstrating library usage beyond the gallery. `examples/test/` holds one visual test per non-primitive-drawing component (`ViewportTest/` — every `ViewportAdapter2D` mode, 2D and 3D, verified via a `ScreenToWorld(WorldToScreen(x))` round-trip plus a rendered-marker-position check; `NoiseTest/` — `Noise`'s 1D/2D/3D samples, keys 1-3: an Fbm1D terrain silhouette, an Fbm2D heightmap terrain via `FillHeightmap`, and a live `Sample3D` field with Z as time; more test folders land here as they're built). `examples/demos/` holds small non-menu/non-pause playable demos built directly on `PrimitiveInput` (not a camera's `UpdateWithInput` convenience) to prove the library at "real game" scale.
 
 ## Machinery worth knowing before you touch nearby code
 
