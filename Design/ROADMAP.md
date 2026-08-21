@@ -10,4 +10,4 @@ Known gaps and queued ideas. Check before proposing something "obviously missing
 ## Real gaps, not yet built
 
 - **NuGet: not yet published.** `src/MonoPrimitives.csproj` metadata (`Authors`, `PackageLicenseExpression: MIT`, `RepositoryUrl`/`PackageProjectUrl`, root `LICENSE`) is filled in and `MonoPrimitives` is confirmed free on nuget.org as of this check — remaining steps (nuget.org account, API key, `dotnet pack` + `dotnet nuget push`) require the repo owner's own credentials, so they're not something to run unattended.
-- **No CI**, though a GitHub remote now exists (`github.com/Asaad-E/MonoPrimitives`).
+- **No CI**, though a GitHub remote now exists (`github.com/Asaad-E/MonoPrimitives`). If a publish workflow gets built later, use NuGet's Trusted Publishing (OIDC from the Action run) instead of a long-lived API key secret — GitHub Actions is the one CI provider it currently supports.
