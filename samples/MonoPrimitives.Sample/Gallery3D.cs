@@ -23,7 +23,7 @@ internal static class Gallery3D
     private const float LabelPixelSize = 0.12f;
 
     private static readonly Color FillColor = Palette.PeterRiver;
-    private static readonly Color BorderColor = Palette.Clouds;
+    private static readonly Color BorderColor = Palette.Amethyst;
     private static readonly Color AltFillColor = Palette.Alizarin;
 
     private readonly record struct Cell(string Label, Action<Primitive3DBatch, Vector3> Draw);
@@ -46,6 +46,7 @@ internal static class Gallery3D
         DrawRow(batch, "HEIGHTMAP", HeightmapCells(), ref z);
         DrawRow(batch, "LINES / POINTS / ARROW", LineCells(), ref z);
         DrawRow(batch, "SPLINES", SplineCells(), ref z);
+        DrawRow(batch, "TEXT: BILLBOARDED VS FIXED", TextCells(), ref z);
     }
 
     // Dark text on purpose: the 3D sample clears to white (unlike the 2D gallery's dark
@@ -219,9 +220,9 @@ internal static class Gallery3D
         new("Line thin", (b, p) => b.DrawLine3D(p + new Vector3(-1.5f, 0.5f, 0), p + new Vector3(1.5f, 3f, 0), FillColor)),
         new("Line thick", (b, p) => b.DrawLine3D(p + new Vector3(-1.5f, 0.5f, 0), p + new Vector3(1.5f, 3f, 0), 6f, FillColor)),
         new("Line dashed", (b, p) => b.DrawLine3DDashed(p + new Vector3(-1.5f, 1.5f, 0), p + new Vector3(1.5f, 1.5f, 0), 0.4f, 0.2f, FillColor)),
-        new("Point", (b, p) => b.DrawPoint3D(p + Vector3.UnitY * 1.5f, 0.3f, BorderColor)),
-        new("Point cross", (b, p) => b.DrawPoint3DCross(p + Vector3.UnitY * 1.5f, 0.3f, BorderColor)),
-        new("Arrow", (b, p) => b.DrawArrow3D(p, p + Vector3.UnitY * 3f, 0.3f, 8, AltFillColor)),
+        new("Point", (b, p) => b.DrawPoint3D(p + Vector3.UnitY * 1.5f, 0.3f, Color.Black)),
+        new("Point cross", (b, p) => b.DrawPoint3DCross(p + Vector3.UnitY * 1.5f, 0.3f, Color.Black)),
+        new("Arrow", (b, p) => b.DrawArrow3D(p, p + Vector3.UnitY * 3f, 0.3f, 8, Color.Black)),
     };
 
     // ==================================================================
@@ -232,9 +233,26 @@ internal static class Gallery3D
     {
         new("Catmull-Rom", (b, p) => b.DrawSplineCatmullRom3D(
             new[] { p + new Vector3(-2, 0.5f, 0), p + new Vector3(-1, 2f, 0), p + new Vector3(1, -1f, 0), p + new Vector3(2, 0.5f, 0) },
-            0.1f, FillColor)),
+            1f, FillColor)),
         new("Bezier cubic", (b, p) => b.DrawSplineBezierCubic3D(
             new[] { p + new Vector3(-2, 0.5f, 0), p + new Vector3(-1, 3f, 0), p + new Vector3(1, -2f, 0), p + new Vector3(2, 0.5f, 0) },
-            0.1f, FillColor)),
+            1f, FillColor)),
+    };
+
+    // ==================================================================
+    // TEXT: BILLBOARDED VS FIXED
+    // ==================================================================
+    // DrawString3D(text, position, pixelSize, color) always faces the camera (billboarded) —
+    // that's what every row label/caption in this gallery uses. The overload that also takes an
+    // explicit right/up basis opts out: the text holds that orientation regardless of where the
+    // camera moves, the same way any other quad in the scene would. Orbit the free camera around
+    // this row to see the difference — "Billboarded" stays readable from every angle, the two
+    // "Fixed" cells rotate out of view / foreshorten like a sign painted onto a surface would.
+
+    private static List<Cell> TextCells() => new()
+    {
+        new("Billboarded", (b, p) => b.DrawString3D("HELLO", p + Vector3.UnitY * 1.5f, 0.18f, FillColor)),
+        new("Fixed: facing +Z", (b, p) => b.DrawString3D("HELLO", p + Vector3.UnitY * 1.5f, Vector3.UnitX, Vector3.UnitY, 0.18f, AltFillColor)),
+        new("Fixed: lying flat", (b, p) => b.DrawString3D("HELLO", p + Vector3.UnitY * 0.05f, Vector3.UnitX, Vector3.UnitZ, 0.18f, Palette.Nephritis)),
     };
 }
