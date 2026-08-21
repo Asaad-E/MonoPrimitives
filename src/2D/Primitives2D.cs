@@ -3123,6 +3123,56 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>
+        /// Draws a regular polygon with a rounded-corner radial gradient fill (see
+        /// <see cref="FillPolyGradientRounded"/>) and a solid rounded-corner border. The
+        /// gradient's own boundary is the true rounded outline inset by <paramref name="thickness"/>
+        /// (via <see cref="BuildRoundedCornerBoundary"/> + <see cref="InsetConvexPolygon"/>, same
+        /// as <see cref="DrawPolygonGradient"/>'s Round-join branch) — stops exactly where the
+        /// border begins. Deliberately NOT built as two independently-clamped regular polygons
+        /// (full-size for the border, radius-minus-thickness for the fill): the same absolute
+        /// corner radius that's safe on the larger polygon isn't guaranteed safe on a uniformly
+        /// smaller one (its edges are shorter too), so insetting the ALREADY-rounded boundary
+        /// avoids re-deriving — and re-clamping — a second polygon from scratch. Radius
+        /// pre-clamped so neighboring corners can't overlap.
+        /// </summary>
+        public void DrawPolyGradientRounded(Vector2 center, int sides, float radius, float cornerRadius, Color innerFill, Color outerFill, Color borderColor, float thickness = 1f, float rotation = 0f)
+        {
+            ThrowIfNotBegun();
+            if (sides < 3) { DrawPolyGradient(center, sides, radius, innerFill, outerFill, borderColor, thickness, rotation); return; }
+
+            float rotationTurns = rotation / MathHelper.TwoPi;
+            float step = 1f / sides;
+            Span<Vector2> pts = sides <= MaxStackAllocElements ? stackalloc Vector2[sides] : new Vector2[sides];
+            for (int i = 0; i < sides; i++)
+                pts[i] = SampleUnitCircle(rotationTurns + i * step) * radius + center;
+            float safeRadius = ClampCornerRadiusToFit(pts, cornerRadius);
+
+            if (thickness > 0f)
+            {
+                Span<Vector2> boundary = sides <= MaxStackAllocElements / (MaxCircleSegments + 1)
+                    ? stackalloc Vector2[sides * (MaxCircleSegments + 1)]
+                    : new Vector2[sides * (MaxCircleSegments + 1)];
+                int count = BuildRoundedCornerBoundary(pts, safeRadius, LineJoin.Round, thickness, boundary);
+                Span<Vector2> inset = count <= MaxStackAllocElements ? stackalloc Vector2[count] : new Vector2[count];
+                InsetConvexPolygon(boundary[..count], MathF.Min(thickness, safeRadius), inset, closed: true);
+
+                // Radial gradient: distance from `center`, same as FillPolyGradient/FillPolyGradientRounded.
+                int b = Reserve(count + 1, count * 3);
+                PushVertex(center, innerFill);
+                for (int i = 0; i < count; i++)
+                    PushVertex(inset[i], outerFill);
+                for (int i = 0; i < count; i++)
+                    PushTriangleIndices(b, b + 1 + i, b + 1 + (i + 1) % count);
+            }
+            else
+            {
+                FillPolyGradientRounded(center, sides, radius, safeRadius, innerFill, outerFill, rotation);
+            }
+
+            if (thickness > 0f) BorderPolyRounded(center, sides, radius, safeRadius, borderColor, thickness, rotation);
+        }
+
+        /// <summary>
         /// Draws a filled arbitrary polygon, no border. Convex input (or a triangle) uses a
         /// cheap triangle fan from the first point; anything else — a concave/reflex shape like
         /// a 5-point star — goes through ear-clipping triangulation instead, since a plain fan

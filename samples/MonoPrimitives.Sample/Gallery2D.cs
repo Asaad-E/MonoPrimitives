@@ -379,6 +379,7 @@ internal static class Gallery2D
         cells.Add(new Cell("Gradient offset", (b, p) => b.FillPolyGradient(p, 6, 60f, GradientFrom2, GradientTo2, innerOffset: 0.2f, outerOffset: 0.2f)));
         cells.Add(new Cell("Gradient rounded r=20", (b, p) => b.FillPolyGradientRounded(p, 6, 60f, 20f, GradientFrom2, GradientTo2)));
         cells.Add(new Cell("Draw gradient", (b, p) => b.DrawPolyGradient(p, 6, 60f, GradientFrom, GradientTo, BorderColor, 4f)));
+        cells.Add(new Cell("Draw gradient rounded r=20", (b, p) => b.DrawPolyGradientRounded(p, 6, 60f, 20f, GradientFrom2, GradientTo2, BorderColor, 4f)));
 
         return cells;
     }
