@@ -28,6 +28,7 @@ Shared foundation used by both 2D and 3D — nothing here is 2D- or 3D-specific.
 | `DebugFont5x7.cs` | `DrawString`/`MeasureText` on `PrimitiveBatch`, via `FillRectangle`. |
 | `Trail2D.cs` | Fixed-capacity fading position history. `fadeToAlpha` is clamped to [0,1]. |
 | `UnitCircleLut.cs` | Public precomputed unit-circle table — the 2D counterpart to the 3D library's `TrigLut`, for your own curved geometry. `PrimitiveBatch` uses it internally instead of keeping a private duplicate. |
+| `GridRenderer2D.cs` | Texture-backed grid/heatmap renderer (`SetCell`/`Fill`/`Apply`/`Draw`) — one `Texture2D.SetData` + one `SpriteBatch` draw, ~1000x faster than per-cell `FillRectangle` once more than ~1% of the grid is visible (see DECISIONS.md). Deliberately separate from `PrimitiveBatch` (texture-less by design) rather than a mode of it. |
 
 ## `src/3D/` — namespace `MonoPrimitives.Primitives3D`
 
