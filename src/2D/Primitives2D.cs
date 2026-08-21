@@ -1785,6 +1785,107 @@ namespace MonoPrimitives.Primitives2D
             => DrawRectangleChamferGradient(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), chamfer, from, to, horizontal, borderColor, thickness, rotation, origin, innerOffset, outerOffset);
 
         // ==================================================================
+        // SHADOWS
+        // ==================================================================
+        // A soft drop shadow without a shader: solid color for the shape's own interior
+        // (reusing the matching Fill* method exactly, so there's no seam), fading to fully
+        // transparent over `spread` world units beyond its boundary — a 2D "9-slice" in
+        // spirit (straight edges fade in one direction, corners fade radially) but built as
+        // one continuous vertex-colored ring around the shape's actual boundary rather than
+        // 9 independently-scaled pieces, so it works for any per-corner radius/chamfer/
+        // rotation combination the shape itself supports, with no extra bookkeeping to keep
+        // the two in sync.
+
+        /// <summary>
+        /// Circular drop shadow: solid <paramref name="color"/> out to <paramref name="radius"/>,
+        /// fading to fully transparent over <paramref name="spread"/> world units beyond it.
+        /// </summary>
+        public void FillCircleShadow(Vector2 center, float radius, Color color, float spread = 20f)
+        {
+            if (radius <= 0f) return;
+            spread = MathF.Max(0f, spread);
+            Color transparent = new(color.R, color.G, color.B, (byte)0);
+            FillCircleGradient(center, radius + spread, color, transparent, innerOffset: radius);
+        }
+
+        /// <summary>
+        /// Rounded-rectangle drop shadow: solid <paramref name="color"/> filling the exact
+        /// same shape <see cref="FillRectangleRounded(Rectangle,RectCorners,Color,float,Vector2?)"/>
+        /// would draw, fading to fully transparent over <paramref name="spread"/> world units
+        /// beyond its boundary (including around the rounded corners).
+        /// </summary>
+        /// <param name="radius">Corner radius, per corner — same as <see cref="FillRectangleRounded(Rectangle,RectCorners,Color,float,Vector2?)"/>.</param>
+        /// <param name="spread">How far the fade extends beyond the rectangle's own edge.</param>
+        public void FillRectangleShadow(Rectangle rect, RectCorners radius, Color color, float spread = 20f, float rotation = 0f, Vector2? origin = null)
+        {
+            EnsureStarted();
+            FillRectangleRounded(rect, radius, color, rotation, origin);
+            if (spread <= 0f) return;
+
+            Span<Vector2> buffer = stackalloc Vector2[4 * (MaxCircleSegments + 1)];
+            int count = GenerateRoundedRectBoundary(rect, radius, rotation, origin, buffer);
+            Color transparent = new(color.R, color.G, color.B, (byte)0);
+            FillOutsetGradientRing(buffer[..count], spread, color, transparent);
+        }
+
+        /// <inheritdoc cref="FillRectangleShadow(Rectangle,RectCorners,Color,float,float,Vector2?)"/>
+        /// <remarks><paramref name="position"/>/<paramref name="size"/> are truncated to <see cref="Rectangle"/>'s integer fields.</remarks>
+        public void FillRectangleShadow(Vector2 position, Vector2 size, RectCorners radius, Color color, float spread = 20f, float rotation = 0f, Vector2? origin = null)
+            => FillRectangleShadow(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), radius, color, spread, rotation, origin);
+
+        /// <summary>
+        /// Chamfered-rectangle drop shadow — same idea as
+        /// <see cref="FillRectangleShadow(Rectangle,RectCorners,Color,float,float,Vector2?)"/>
+        /// but matching <see cref="FillRectangleChamfer(Rectangle,RectCorners,Color,float,Vector2?)"/>'s
+        /// straight-cut corners instead of rounded ones.
+        /// </summary>
+        public void FillRectangleChamferShadow(Rectangle rect, RectCorners chamfer, Color color, float spread = 20f, float rotation = 0f, Vector2? origin = null)
+        {
+            EnsureStarted();
+            FillRectangleChamfer(rect, chamfer, color, rotation, origin);
+            if (spread <= 0f) return;
+
+            Span<Vector2> buffer = stackalloc Vector2[8];
+            int count = GenerateChamferRectBoundary(rect, chamfer, rotation, origin, buffer);
+            Color transparent = new(color.R, color.G, color.B, (byte)0);
+            FillOutsetGradientRing(buffer[..count], spread, color, transparent);
+        }
+
+        /// <inheritdoc cref="FillRectangleChamferShadow(Rectangle,RectCorners,Color,float,float,Vector2?)"/>
+        /// <remarks><paramref name="position"/>/<paramref name="size"/> are truncated to <see cref="Rectangle"/>'s integer fields.</remarks>
+        public void FillRectangleChamferShadow(Vector2 position, Vector2 size, RectCorners chamfer, Color color, float spread = 20f, float rotation = 0f, Vector2? origin = null)
+            => FillRectangleChamferShadow(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), chamfer, color, spread, rotation, origin);
+
+        /// <summary>
+        /// Fills the ring between <paramref name="boundary"/> (a closed polygon, <paramref name="opaque"/>)
+        /// and that same boundary offset outward by <paramref name="spread"/> (<paramref name="transparent"/>)
+        /// via <see cref="OutsetConvexPolygon"/> — the shared "halo" geometry behind every
+        /// <c>Fill*Shadow</c> method. A no-op if <paramref name="spread"/> is 0 or the boundary
+        /// has fewer than 3 points.
+        /// </summary>
+        private void FillOutsetGradientRing(ReadOnlySpan<Vector2> boundary, float spread, Color opaque, Color transparent)
+        {
+            int n = boundary.Length;
+            if (n < 3 || spread <= 0f) return;
+
+            Span<Vector2> outer = n <= MaxStackAllocElements ? stackalloc Vector2[n] : new Vector2[n];
+            OutsetConvexPolygon(boundary, spread, outer, closed: true);
+
+            int b = Reserve(n * 2, n * 6);
+            for (int i = 0; i < n; i++)
+            {
+                PushVertex(boundary[i], opaque);
+                PushVertex(outer[i], transparent);
+            }
+            for (int i = 0; i < n; i++)
+            {
+                int i0 = b + i * 2, i1 = b + ((i + 1) % n) * 2;
+                PushTriangleIndices(i0, i0 + 1, i1 + 1);
+                PushTriangleIndices(i0, i1 + 1, i1);
+            }
+        }
+
+        // ==================================================================
         // CIRCLES & ELLIPSES
         // ==================================================================
 
@@ -2927,6 +3028,51 @@ namespace MonoPrimitives.Primitives2D
                 Vector2 plus = curr + offset;
                 Vector2 minus = curr - offset;
                 result[i] = Vector2.DistanceSquared(plus, centroid) < Vector2.DistanceSquared(minus, centroid) ? plus : minus;
+            }
+        }
+
+        /// <summary>
+        /// <see cref="InsetConvexPolygon"/>'s mirror image: grows a convex polygon outward by
+        /// <paramref name="distance"/> instead of shrinking it — same miter-offset math, just
+        /// picking the candidate point FARTHER from the centroid instead of closer. Used to
+        /// build a drop shadow's outer (fully transparent) edge from a shape's own boundary —
+        /// see the <c>Fill*Shadow</c> methods.
+        /// </summary>
+        private static void OutsetConvexPolygon(ReadOnlySpan<Vector2> points, float distance, Span<Vector2> result, bool closed)
+        {
+            int n = points.Length;
+            if (n == 0) return;
+
+            Vector2 centroid = Vector2.Zero;
+            for (int i = 0; i < n; i++) centroid += points[i];
+            centroid /= n;
+
+            for (int i = 0; i < n; i++)
+            {
+                Vector2 curr = points[i];
+                Vector2 dirIn, dirOut;
+
+                if (closed)
+                {
+                    Vector2 prev = points[(i - 1 + n) % n];
+                    Vector2 next = points[(i + 1) % n];
+                    dirIn = SafeNormalize(curr - prev);
+                    dirOut = SafeNormalize(next - curr);
+                }
+                else
+                {
+                    dirOut = (i < n - 1) ? SafeNormalize(points[i + 1] - curr) : Vector2.Zero;
+                    dirIn = (i > 0) ? SafeNormalize(curr - points[i - 1]) : Vector2.Zero;
+                    if (i == 0) dirIn = dirOut;
+                    if (i == n - 1) dirOut = dirIn;
+                }
+
+                if (dirIn == Vector2.Zero && dirOut == Vector2.Zero) { result[i] = curr; continue; }
+
+                Vector2 offset = ComputeMiterOffset(dirIn, dirOut, distance);
+                Vector2 plus = curr + offset;
+                Vector2 minus = curr - offset;
+                result[i] = Vector2.DistanceSquared(plus, centroid) > Vector2.DistanceSquared(minus, centroid) ? plus : minus;
             }
         }
 
