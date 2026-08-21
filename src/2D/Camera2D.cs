@@ -42,6 +42,11 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public ViewportAdapter2D? ViewportAdapter { get; }
 
+        private readonly Vector2 _initialTarget;
+        private readonly Vector2 _initialOffset;
+        private readonly float _initialRotation;
+        private readonly float _initialZoom;
+
         /// <summary>Creates a camera with no <see cref="ViewportAdapter"/> — <paramref name="offset"/> is assumed to already be in the same raw pixel space as screen/mouse coordinates.</summary>
         public Camera2D(Vector2 target, Vector2 offset, float rotation = 0f, float zoom = 1f)
         {
@@ -49,6 +54,11 @@ namespace MonoPrimitives.Primitives2D
             Offset = offset;
             Rotation = rotation;
             Zoom = zoom;
+
+            _initialTarget = target;
+            _initialOffset = offset;
+            _initialRotation = rotation;
+            _initialZoom = zoom;
         }
 
         /// <summary>
@@ -65,6 +75,11 @@ namespace MonoPrimitives.Primitives2D
             Offset = new Vector2(viewportAdapter.VirtualWidth * 0.5f, viewportAdapter.VirtualHeight * 0.5f);
             Rotation = rotation;
             Zoom = zoom;
+
+            _initialTarget = Target;
+            _initialOffset = Offset;
+            _initialRotation = rotation;
+            _initialZoom = zoom;
         }
 
         /// <summary>Creates a camera centered on the device's current viewport, looking at <paramref name="target"/> (world origin by default). No <see cref="ViewportAdapter"/> — prefer <see cref="Camera2D(ViewportAdapter2D,Vector2,float,float)"/> if you have one.</summary>
@@ -73,6 +88,26 @@ namespace MonoPrimitives.Primitives2D
 
         /// <summary>Creates a camera with every field at its identity default (no pan, no zoom, world origin at the screen's top-left corner) — a placeholder to construct with before a real target/viewport is known. Matches <see cref="Primitives3D.Camera3D.CreateDefault"/>'s role; deliberately no bare parameterless constructor so every <see cref="Camera2D"/> is either explicit about its setup or explicit that it's a placeholder.</summary>
         public static Camera2D CreateDefault() => new(Vector2.Zero, Vector2.Zero);
+
+        /// <summary>
+        /// Restores <see cref="Target"/>/<see cref="Offset"/>/<see cref="Rotation"/>/<see cref="Zoom"/>
+        /// to the values passed at construction, and clears smooth-zoom/smooth-follow/shake state
+        /// so there's no lingering velocity or trauma to swoop/shake through afterward. Matches
+        /// <see cref="Primitives3D.Camera3D.Reset"/>; bound to <c>R</c> by default in
+        /// <see cref="UpdateWithInput(PrimitiveInput, float)"/> — call directly if you're not using that.
+        /// </summary>
+        public void Reset()
+        {
+            Target = _initialTarget;
+            Offset = _initialOffset;
+            Rotation = _initialRotation;
+            Zoom = _initialZoom;
+
+            _pendingZoomTarget = float.NaN;
+            _zoomVelocity = 0f;
+            ResetFollowVelocity();
+            ResetTrauma();
+        }
 
         /// <summary>
         /// Builds the matrix to pass into <c>PrimitiveBatch.Begin</c>'s <c>transformMatrix</c>:
@@ -318,10 +353,17 @@ namespace MonoPrimitives.Primitives2D
         /// always real window pixels, so without this a drag would pan the wrong amount whenever
         /// the adapter's scale isn't 1:1 (letterbox scaling, a virtual resolution that doesn't
         /// match the window). Keyboard pan doesn't need this — its speed is defined directly in
-        /// world units, not screen pixels.
+        /// world units, not screen pixels. <c>R</c> calls <see cref="Reset"/> directly and skips
+        /// movement for that frame, so a same-frame WASD/mouse delta doesn't immediately fight the reset.
         /// </summary>
         public void UpdateWithInput(PrimitiveInput input, float deltaSeconds)
         {
+            if (input.IsKeyPressed(Keys.R))
+            {
+                Reset();
+                return;
+            }
+
             float safeZoom = MathF.Max(Zoom, 1e-4f);
             float speed = MoveSpeed * deltaSeconds / safeZoom;
 
@@ -332,6 +374,15 @@ namespace MonoPrimitives.Primitives2D
                 Vector2 mouseDelta = input.MouseDelta;
                 if (ViewportAdapter is not null)
                     mouseDelta /= ViewportAdapter.Scale;
+                // Undo the camera's own rotation before scaling into world space, matching
+                // GetCameraMatrix's ROT * Zoom composition — without this, a rotated camera's
+                // drag pans along screen axes instead of tracking the cursor (verified: a 90°
+                // rotation turned a pure-X drag into pan drift on the Y axis instead).
+                if (Rotation != 0f)
+                {
+                    float cos = MathF.Cos(-Rotation), sin = MathF.Sin(-Rotation);
+                    mouseDelta = new Vector2(mouseDelta.X * cos - mouseDelta.Y * sin, mouseDelta.X * sin + mouseDelta.Y * cos);
+                }
                 pan -= mouseDelta / safeZoom;
             }
 

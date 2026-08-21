@@ -42,7 +42,7 @@ namespace MonoPrimitives.Primitives2D
             {
                 Vector2 offset = Offset;
                 Vector2 scale = Scale;
-                return new Rectangle((int)offset.X, (int)offset.Y, (int)MathF.Round(VirtualWidth * scale.X), (int)MathF.Round(VirtualHeight * scale.Y));
+                return new Rectangle((int)MathF.Round(offset.X), (int)MathF.Round(offset.Y), (int)MathF.Round(VirtualWidth * scale.X), (int)MathF.Round(VirtualHeight * scale.Y));
             }
         }
 
