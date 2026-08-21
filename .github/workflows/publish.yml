@@ -1,0 +1,41 @@
+name: Publish to NuGet
+
+# Only runs when a GitHub Release is published -- never on a routine push, so publishing to
+# NuGet always requires the deliberate step of drafting and publishing a release first.
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # required for NuGet Trusted Publishing (OIDC -> short-lived API key)
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore src/MonoPrimitives.csproj
+
+      - name: Pack
+        run: dotnet pack src/MonoPrimitives.csproj -c Release -o ./nupkg
+
+      # Exchanges this run's GitHub OIDC token for a NuGet API key valid for ~1 hour and
+      # usable only for this single push -- no long-lived secret stored in the repo.
+      # NUGET_USER is the nuget.org profile/username, not an email address.
+      - name: NuGet login (OIDC -> temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: NuGet push
+        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
