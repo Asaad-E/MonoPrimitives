@@ -25,6 +25,7 @@ These five are kept short on purpose — current state only, no narrative. Deepe
   - **[TrigLut_Guide.md](../Guide/TrigLut_Guide.md)** — `TrigLut`: the 3D counterpart (`out float` sin/cos pairs), `SinCosStep`'s ring/slice-building shape, and `Sample`/`SampleRadians`/`SampleDegrees` for a continuous angle.
   - **[DebugFont5x7_Guide.md](../Guide/DebugFont5x7_Guide.md)** — `DebugFont5x7`/`FontGlyphs5x7` (2D and 3D): `DrawString`/`MeasureText`, 3D's billboarded `DrawString3D`/`GetBillboardAxes`, the row-span convention every glyph follows, and the glyph bugs found and fixed this session.
   - **[Collision2D_Guide.md](../Guide/Collision2D_Guide.md)** — `Collision2D`: every overlap/ray check by shape, and which ones need convex input (SAT) vs. work on any simple polygon.
+  - **[Collision3D_Guide.md](../Guide/Collision3D_Guide.md)** — `Collision3D`: sphere/box/capsule/plane/triangle/quad overlap and raycasts, and the `RayCollision3D` result struct every raycast returns.
 - **[2D/Primitives2D_Audit_Report.md](2D/Primitives2D_Audit_Report.md)**, **[2D/Overnight_Changes_2026-08-19.md](2D/Overnight_Changes_2026-08-19.md)**, **[3D/Primitive3D_Changes.md](3D/Primitive3D_Changes.md)** — historical session logs. Archaeology only ("why does this bug fix exist") — the five docs above already capture current state. Long; don't load by default.
 
 ## Repo layout
