@@ -164,12 +164,24 @@ public class Game1 : Game
 
     // Separate-axis AABB resolution: move+resolve X, then move+resolve Y -- standard platformer
     // approach, avoids the corner-catching a combined-axis resolve can produce.
+    //
+    // Uses a float overlap check (PlayerOverlaps), not Collision2D.CheckCollisionRecs(PlayerRect(), ...)
+    // -- PlayerRect() truncates _playerPos to an int Rectangle, and since PlayerHalfHeight*2 has
+    // no fractional part, that truncated rect stays byte-for-byte identical across almost a full
+    // pixel of vertical movement. Combined with Rectangle.Intersects' strict (non-inclusive)
+    // comparison, resting exactly on a platform after landing needed nearly a full pixel of
+    // gravity-driven interpenetration to register as touching again -- confirmed by simulation:
+    // _grounded cycled false/false/true while standing still, not true every frame. Space only
+    // triggers a jump on the single-frame IsKeyPressed edge, so two out of every three presses
+    // landed on a "not grounded" frame and were silently dropped -- reported as "jump randomly
+    // doesn't work". Float precision removes the dead zone: any nonzero interpenetration (even
+    // the ~0.25px one frame of gravity introduces) now registers immediately.
     private void MoveAndCollide(float dt)
     {
         _playerPos.X += _velocity.X * dt;
         foreach (Rectangle plat in _platforms)
         {
-            if (!Collision2D.CheckCollisionRecs(PlayerRect(), plat)) continue;
+            if (!PlayerOverlaps(plat)) continue;
             if (_velocity.X > 0f) _playerPos.X = plat.Left - PlayerHalfWidth;
             else if (_velocity.X < 0f) _playerPos.X = plat.Right + PlayerHalfWidth;
             _velocity.X = 0f;
@@ -179,12 +191,16 @@ public class Game1 : Game
         _grounded = false;
         foreach (Rectangle plat in _platforms)
         {
-            if (!Collision2D.CheckCollisionRecs(PlayerRect(), plat)) continue;
+            if (!PlayerOverlaps(plat)) continue;
             if (_velocity.Y > 0f) { _playerPos.Y = plat.Top - PlayerHalfHeight; _grounded = true; }
             else if (_velocity.Y < 0f) { _playerPos.Y = plat.Bottom + PlayerHalfHeight; }
             _velocity.Y = 0f;
         }
     }
+
+    private bool PlayerOverlaps(Rectangle plat)
+        => _playerPos.X - PlayerHalfWidth < plat.Right && _playerPos.X + PlayerHalfWidth > plat.Left
+        && _playerPos.Y - PlayerHalfHeight < plat.Bottom && _playerPos.Y + PlayerHalfHeight > plat.Top;
 
     private void UpdateEnemies(float dt)
     {
