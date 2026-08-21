@@ -134,6 +134,29 @@ namespace MonoPrimitives.Primitives3D
             FillCylinder(headBase, end, hr, 0f, sides, color);
         }
 
+        /// <summary>
+        /// Draws an arrow with a fixed shaft width (<see cref="DefaultLineThickness"/>) and a head
+        /// sized purely from <paramref name="headRadius"/> (length <c>headRadius * 3</c>, capped
+        /// so a short arrow doesn't grow a head bigger than the arrow itself) — a simpler,
+        /// fewer-argument overload for when you don't need control over the shaft width or head
+        /// length independently.
+        /// </summary>
+        public void DrawArrow(Vector3 start, Vector3 end, float headRadius, int sides, Color color)
+        {
+            ThrowIfNotBegun();
+            Vector3 delta = end - start;
+            float len = delta.Length();
+            if (len < 1e-6f)
+                return;
+            Vector3 dir = delta / len;
+
+            float hl = MathF.Min(headRadius * 3f, len * 0.5f);
+            Vector3 headBase = end - dir * hl;
+
+            DrawLine3D(start, headBase, color);
+            FillCylinder(headBase, end, headRadius, 0f, sides, color);
+        }
+
         // =====================================================================
         // CIRCLES (flat disc in an arbitrary 3D plane)
         // =====================================================================
@@ -258,7 +281,7 @@ namespace MonoPrimitives.Primitives3D
             BorderTriangle3D(v1, v2, v3, borderColor, rotation, origin, thickness);
         }
 
-        /// <summary>Draws a triangle strip as a raw mesh (no Fill/Border split — like <see cref="FillPolygon"/>'s 2D sibling, this submits geometry as given).</summary>
+        /// <summary>Draws a triangle strip as a raw mesh (no Fill/Border split — like the 2D library's own <c>DrawTriangleStrip</c>, this submits vertices as given, with no triangulation).</summary>
         public void DrawTriangleStrip3D(Vector3[] points, Color color) => DrawTriangleStrip3D(points.AsSpan(), color);
 
         /// <summary>Draws a triangle strip from a span of points, alternating winding to keep a consistent facing direction.</summary>
@@ -1205,17 +1228,98 @@ namespace MonoPrimitives.Primitives3D
                 for (int s = 1; s <= segmentsPerPiece; s++)
                 {
                     float t = s / (float)segmentsPerPiece;
-                    Vector3 cur = CubicBezier(points[b], points[b + 1], points[b + 2], points[b + 3], t);
+                    Vector3 cur = GetSplinePointBezierCubic3D(points[b], points[b + 1], points[b + 2], points[b + 3], t);
                     DrawLine3D(prev, cur, thickness, color);
                     prev = cur;
                 }
             }
         }
 
-        private static Vector3 CubicBezier(in Vector3 p0, in Vector3 c1, in Vector3 c2, in Vector3 p3, float t)
+        /// <summary>Draws a quadratic Bezier spline: <c>[p1, c2, p3, c4, p5, ...]</c> — needs <c>2n + 1</c> points for <c>n</c> segments, the same piece-window shape as <see cref="DrawSplineBezierCubic3D(ReadOnlySpan{Vector3},Color,int)"/>, just 2 points per segment instead of 3.</summary>
+        public void DrawSplineBezierQuadratic3D(ReadOnlySpan<Vector3> points, Color color, int segmentsPerPiece = 16)
+            => DrawSplineBezierQuadratic3D(points, DefaultLineThickness, color, segmentsPerPiece);
+
+        /// <summary>Draws a quadratic Bezier spline with an explicit line thickness.</summary>
+        public void DrawSplineBezierQuadratic3D(ReadOnlySpan<Vector3> points, float thickness, Color color, int segmentsPerPiece = 16)
+        {
+            ThrowIfNotBegun();
+            if (points.Length < 3 || (points.Length - 1) % 2 != 0 || segmentsPerPiece < 1)
+                return;
+
+            Vector3 prev = points[0];
+            for (int i = 0; i + 2 < points.Length; i += 2)
+            {
+                for (int s = 1; s <= segmentsPerPiece; s++)
+                {
+                    float t = s / (float)segmentsPerPiece;
+                    Vector3 cur = GetSplinePointBezierQuadratic3D(points[i], points[i + 1], points[i + 2], t);
+                    DrawLine3D(prev, cur, thickness, color);
+                    prev = cur;
+                }
+            }
+        }
+
+        /// <summary>Draws a uniform cubic B-spline through the given control points — same 4-point sliding-window shape as <see cref="DrawSplineCatmullRom3D(ReadOnlySpan{Vector3},Color,int)"/> (requires at least 4 points), but the curve does NOT pass through them; see <see cref="GetSplinePointBasis3D"/> for why.</summary>
+        public void DrawSplineBasis3D(ReadOnlySpan<Vector3> points, Color color, int segmentsPerPiece = 16)
+            => DrawSplineBasis3D(points, DefaultLineThickness, color, segmentsPerPiece);
+
+        /// <summary>Draws a uniform cubic B-spline with an explicit line thickness.</summary>
+        public void DrawSplineBasis3D(ReadOnlySpan<Vector3> points, float thickness, Color color, int segmentsPerPiece = 16)
+        {
+            ThrowIfNotBegun();
+            if (points.Length < 4 || segmentsPerPiece < 1)
+                return;
+
+            // Unlike Catmull-Rom, t=0 of the first piece is NOT points[1] -- this spline never
+            // passes through a raw control point, so the true starting position has to be
+            // evaluated from the formula like every other sample (same as the 2D sibling).
+            Vector3 prev = GetSplinePointBasis3D(points[0], points[1], points[2], points[3], 0f);
+            for (int i = 1; i < points.Length - 2; i++)
+            {
+                for (int s = 1; s <= segmentsPerPiece; s++)
+                {
+                    float t = s / (float)segmentsPerPiece;
+                    Vector3 cur = GetSplinePointBasis3D(points[i - 1], points[i], points[i + 1], points[i + 2], t);
+                    DrawLine3D(prev, cur, thickness, color);
+                    prev = cur;
+                }
+            }
+        }
+
+        /// <summary>Evaluates a point on a Catmull-Rom spline segment.</summary>
+        public static Vector3 GetSplinePointCatmullRom3D(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4, float t)
+            => Vector3.CatmullRom(p1, p2, p3, p4, t);
+
+        /// <summary>Evaluates a point on a cubic Bezier spline segment.</summary>
+        public static Vector3 GetSplinePointBezierCubic3D(Vector3 p1, Vector3 c2, Vector3 c3, Vector3 p4, float t)
         {
             float u = 1f - t;
-            return u * u * u * p0 + 3f * u * u * t * c1 + 3f * u * t * t * c2 + t * t * t * p3;
+            return u * u * u * p1 + 3f * u * u * t * c2 + 3f * u * t * t * c3 + t * t * t * p4;
+        }
+
+        /// <summary>Evaluates a point on a quadratic Bezier spline segment.</summary>
+        public static Vector3 GetSplinePointBezierQuadratic3D(Vector3 p1, Vector3 c2, Vector3 p3, float t)
+        {
+            float u = 1f - t;
+            return u * u * p1 + 2f * u * t * c2 + t * t * p3;
+        }
+
+        /// <summary>
+        /// Evaluates a point on a uniform cubic B-spline segment, using the same 4-point sliding
+        /// window as <see cref="GetSplinePointCatmullRom3D"/> (<paramref name="p1"/>/<paramref name="p4"/>
+        /// are the window's outer points, <paramref name="p2"/>/<paramref name="p3"/> the inner ones
+        /// this segment runs between). Unlike Catmull-Rom, this does NOT pass through any of the
+        /// four points — an approximating curve that stays inside their shape, trading exact
+        /// interpolation for extra (C2) smoothness.
+        /// </summary>
+        public static Vector3 GetSplinePointBasis3D(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4, float t)
+        {
+            float t2 = t * t, t3 = t2 * t;
+            float b1 = (-t3 + 3f * t2 - 3f * t + 1f) / 6f;
+            float b2 = (3f * t3 - 6f * t2 + 4f) / 6f;
+            float b3 = (-3f * t3 + 3f * t2 + 3f * t + 1f) / 6f;
+            float b4 = t3 / 6f;
+            return b1 * p1 + b2 * p2 + b3 * p3 + b4 * p4;
         }
 
         // =====================================================================
@@ -1346,30 +1450,8 @@ namespace MonoPrimitives.Primitives3D
             DrawLine3D(origin, origin + Vector3.UnitZ * length, Color.Blue);
         }
 
-        /// <summary>
-        /// Draws an arrow from <paramref name="start"/> to <paramref name="end"/> with a fixed
-        /// shaft width (<see cref="DefaultLineThickness"/>, via <see cref="DrawLine3D(Vector3,Vector3,Color)"/>)
-        /// and a head sized purely from <paramref name="headRadius"/> — a simpler, fewer-argument
-        /// alternative to <see cref="DrawArrow(Vector3,Vector3,Color)"/>'s overload family for
-        /// when you don't need control over the shaft width or head length independently.
-        /// </summary>
-        public void DrawArrow3D(Vector3 start, Vector3 end, float headRadius, int sides, Color color)
-        {
-            Vector3 dir = end - start;
-            float length = dir.Length();
-            if (length < 1e-6f)
-                return;
-
-            dir *= 1f / length;
-            float headLength = MathF.Min(headRadius * 3f, length * 0.5f);
-            Vector3 headBase = end - dir * headLength;
-
-            DrawLine3D(start, headBase, color);
-            FillCylinder(headBase, end, headRadius, 0f, sides, color);
-        }
-
         /// <summary>Draws the wireframe of a view frustum, useful for debugging cameras.</summary>
-        public void DrawFrustumWires(BoundingFrustum frustum, Color color)
+        public void BorderFrustum(BoundingFrustum frustum, Color color)
         {
             Vector3[] corners = new Vector3[8]; // corner order documented by MonoGame: near 0..3 then far 4..7
             frustum.GetCorners(corners);

@@ -478,7 +478,7 @@ namespace MonoPrimitives.Primitives3D
             return Math.Clamp(segments, AutoSegmentsMin, AutoSegmentsMax);
         }
 
-        /// <summary>Overload without an explicit center (uses origin distance heuristics off).</summary>
+        /// <summary>Same as above, but measures the automatic-LOD distance from the world origin instead of an explicit center — for a primitive whose exact center doesn't matter, or isn't known yet.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int ResolveSegments(int requested, float radius, int fallback)
             => ResolveSegments(requested, radius, Vector3.Zero, fallback);
