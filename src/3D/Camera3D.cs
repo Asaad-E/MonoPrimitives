@@ -1,9 +1,12 @@
+#nullable enable
+
 using System;
 using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoPrimitives;
+using MonoPrimitives.Primitives2D;
 
 namespace MonoPrimitives.Primitives3D
 {
@@ -88,6 +91,27 @@ namespace MonoPrimitives.Primitives3D
         public const float DefaultNear = 0.1f;
         public const float DefaultFar = 1000f;
 
+        /// <summary>
+        /// Viewport adapter this camera was constructed with, if any — same MonoGame.Extended-style
+        /// dependency <see cref="Primitives2D.Camera2D"/> takes: set once, then
+        /// <see cref="Primitive3DBatch.Begin(Camera3D,BlendState,DepthStencilState,RasterizerState,Matrix?)"/>
+        /// and <see cref="GetWorldToScreen(Vector3,Viewport?)"/>/<see cref="GetScreenToWorld"/>/
+        /// <see cref="GetScreenToWorldRay"/> all use it automatically instead of requiring it
+        /// passed in again at every call site. <c>null</c> for the plain constructor — those
+        /// methods then need an explicit <see cref="Viewport"/> argument, or fall back to the
+        /// full device viewport in <c>Begin</c>'s case.
+        /// </summary>
+        public ViewportAdapter2D? ViewportAdapter { get; }
+
+        // Captured at construction so Reset() has something to restore to.
+        private readonly Vector3 _initialPosition;
+        private readonly Vector3 _initialTarget;
+        private readonly Vector3 _initialUp;
+        private readonly float _initialFovy;
+        private readonly CameraProjection _initialProjection;
+        private readonly float _initialNearPlane;
+        private readonly float _initialFarPlane;
+
         public Camera3D(Vector3 position, Vector3 target, Vector3 up, float fovy = 45f,
                         CameraProjection projection = CameraProjection.Perspective,
                         float nearPlane = DefaultNear, float farPlane = DefaultFar)
@@ -99,10 +123,53 @@ namespace MonoPrimitives.Primitives3D
             Projection = projection;
             NearPlane = nearPlane;
             FarPlane = farPlane;
+
+            _initialPosition = position;
+            _initialTarget = target;
+            _initialUp = up;
+            _initialFovy = fovy;
+            _initialProjection = projection;
+            _initialNearPlane = nearPlane;
+            _initialFarPlane = farPlane;
+        }
+
+        /// <summary>Same as the plain constructor, but also stores <paramref name="viewportAdapter"/> on <see cref="ViewportAdapter"/> — see its doc comment.</summary>
+        public Camera3D(ViewportAdapter2D viewportAdapter, Vector3 position, Vector3 target, Vector3 up, float fovy = 45f,
+                        CameraProjection projection = CameraProjection.Perspective,
+                        float nearPlane = DefaultNear, float farPlane = DefaultFar)
+            : this(position, target, up, fovy, projection, nearPlane, farPlane)
+        {
+            ViewportAdapter = viewportAdapter ?? throw new ArgumentNullException(nameof(viewportAdapter));
         }
 
         /// <summary>Creates a camera with sensible defaults looking at the origin.</summary>
         public static Camera3D CreateDefault() => new(new Vector3(10f, 10f, 10f), Vector3.Zero, Vector3.Up, 45f);
+
+        /// <summary>
+        /// Restores <see cref="Position"/>/<see cref="Target"/>/<see cref="Up"/>/<see cref="Fovy"/>/
+        /// <see cref="Projection"/>/<see cref="NearPlane"/>/<see cref="FarPlane"/> to the values
+        /// passed at construction, and clears smooth-zoom/smooth-follow/head-bobbing state so
+        /// there's no lingering velocity to swoop through afterward. Bound to <c>R</c> by default
+        /// via <see cref="ReadDefaultInput(float)"/>; call directly if you're not using that.
+        /// Deliberately leaves <see cref="Mode"/> alone — that's a control-scheme choice, not part
+        /// of the camera's pose.
+        /// </summary>
+        public void Reset()
+        {
+            Position = _initialPosition;
+            Target = _initialTarget;
+            Up = _initialUp;
+            Fovy = _initialFovy;
+            Projection = _initialProjection;
+            NearPlane = _initialNearPlane;
+            FarPlane = _initialFarPlane;
+
+            _pendingZoomTarget = float.NaN;
+            _zoomVelocity = 0f;
+            ResetFollowVelocity();
+            ResetHeadBobbing();
+            _input.ResetMouseDelta();
+        }
 
         // ---------------------------------------------------------------------
         // Basis vectors (rcamera.h parity)
@@ -281,32 +348,52 @@ namespace MonoPrimitives.Primitives3D
         // Projection utilities
         // ---------------------------------------------------------------------
 
+        /// <summary>
+        /// Resolves the <see cref="Viewport"/> to project/unproject with: the explicit
+        /// <paramref name="viewport"/> if given, otherwise <see cref="ViewportAdapter"/>'s
+        /// <see cref="ViewportAdapter2D.BoundingRectangle"/>. Throws if neither is available.
+        /// </summary>
+        private Viewport ResolveViewport(Viewport? viewport)
+            => viewport
+            ?? (ViewportAdapter is not null ? new Viewport(ViewportAdapter.BoundingRectangle) : (Viewport?)null)
+            ?? throw new InvalidOperationException($"Needs either a {nameof(ViewportAdapter)} (set at construction) or an explicit {nameof(Viewport)} argument.");
+
         /// <summary>Projects a world position to screen coordinates (pixels, origin top-left).</summary>
-        public Vector2 GetWorldToScreen(Vector3 position, Viewport viewport)
+        /// <param name="viewport">Explicit viewport to project with; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
+        public Vector2 GetWorldToScreen(Vector3 position, Viewport? viewport = null)
         {
-            Vector3 projected = viewport.Project(position, GetProjectionMatrix(viewport.AspectRatio), GetViewMatrix(), Matrix.Identity);
+            Viewport vp = ResolveViewport(viewport);
+            Vector3 projected = vp.Project(position, GetProjectionMatrix(vp.AspectRatio), GetViewMatrix(), Matrix.Identity);
             return new Vector2(projected.X, projected.Y);
         }
 
         /// <summary>Projects a world position to screen coordinates, also returning normalized depth (0 near, 1 far; outside [0,1] means outside the frustum).</summary>
-        public Vector2 GetWorldToScreen(Vector3 position, Viewport viewport, out float depth)
+        /// <param name="viewport">Explicit viewport to project with; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
+        public Vector2 GetWorldToScreen(Vector3 position, out float depth, Viewport? viewport = null)
         {
-            Vector3 projected = viewport.Project(position, GetProjectionMatrix(viewport.AspectRatio), GetViewMatrix(), Matrix.Identity);
+            Viewport vp = ResolveViewport(viewport);
+            Vector3 projected = vp.Project(position, GetProjectionMatrix(vp.AspectRatio), GetViewMatrix(), Matrix.Identity);
             depth = projected.Z;
             return new Vector2(projected.X, projected.Y);
         }
 
         /// <summary>Unprojects a screen position at the given depth back into world space.</summary>
-        public Vector3 GetScreenToWorld(Vector2 screenPosition, float depth, Viewport viewport)
-            => viewport.Unproject(new Vector3(screenPosition, depth), GetProjectionMatrix(viewport.AspectRatio), GetViewMatrix(), Matrix.Identity);
+        /// <param name="viewport">Explicit viewport to unproject with; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
+        public Vector3 GetScreenToWorld(Vector2 screenPosition, float depth, Viewport? viewport = null)
+        {
+            Viewport vp = ResolveViewport(viewport);
+            return vp.Unproject(new Vector3(screenPosition, depth), GetProjectionMatrix(vp.AspectRatio), GetViewMatrix(), Matrix.Identity);
+        }
 
         /// <summary>Builds a picking ray from a screen position (e.g. the mouse cursor).</summary>
-        public Ray GetScreenToWorldRay(Vector2 screenPosition, Viewport viewport)
+        /// <param name="viewport">Explicit viewport to unproject with; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
+        public Ray GetScreenToWorldRay(Vector2 screenPosition, Viewport? viewport = null)
         {
-            Matrix proj = GetProjectionMatrix(viewport.AspectRatio);
+            Viewport vp = ResolveViewport(viewport);
+            Matrix proj = GetProjectionMatrix(vp.AspectRatio);
             Matrix view = GetViewMatrix();
-            Vector3 nearPoint = viewport.Unproject(new Vector3(screenPosition, 0f), proj, view, Matrix.Identity);
-            Vector3 farPoint = viewport.Unproject(new Vector3(screenPosition, 1f), proj, view, Matrix.Identity);
+            Vector3 nearPoint = vp.Unproject(new Vector3(screenPosition, 0f), proj, view, Matrix.Identity);
+            Vector3 farPoint = vp.Unproject(new Vector3(screenPosition, 1f), proj, view, Matrix.Identity);
 
             Vector3 direction = farPoint - nearPoint;
             float lenSq = direction.LengthSquared();
@@ -442,10 +529,23 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>Builds a <see cref="CameraInput"/> from the current keyboard and mouse state, taking the frame delta straight from a MonoGame <see cref="GameTime"/> instead of a raw float.</summary>
         public CameraInput ReadDefaultInput(GameTime gameTime) => ReadDefaultInput((float)gameTime.ElapsedGameTime.TotalSeconds);
 
-        /// <summary>Builds a <see cref="CameraInput"/> from the current keyboard and mouse state (W/A/S/D, Q/E roll, right-mouse-drag look, wheel zoom) via the shared <see cref="PrimitiveInput"/>.</summary>
+        /// <summary>
+        /// Builds a <see cref="CameraInput"/> from the current keyboard and mouse state (W/A/S/D,
+        /// Q/E roll, right-mouse-drag look, wheel zoom) via the shared <see cref="PrimitiveInput"/>.
+        /// <c>R</c> calls <see cref="Reset"/> directly (a discrete "snap to initial pose" action
+        /// doesn't fit the incremental movement/rotation/zoom shape <see cref="CameraInput"/>
+        /// represents) and returns a zeroed input for that frame, so a same-frame WASD/mouse
+        /// delta doesn't immediately fight the reset.
+        /// </summary>
         public CameraInput ReadDefaultInput(float deltaSeconds)
         {
             _input.Update(deltaSeconds);
+
+            if (_input.IsKeyPressed(Keys.R))
+            {
+                Reset();
+                return default;
+            }
 
             float speed = MoveSpeed * MoveSpeedScale * deltaSeconds;
             float sensitivity = MouseMoveSensitivity * LookSensitivity;

@@ -51,18 +51,22 @@ Vector2 mouseWorld = camera2d.ScreenToWorld(rawMousePosition);
 
 A 3D scene doesn't have a "virtual resolution" the way 2D content does — what it needs from
 a boxed viewport is just the aspect ratio and the on-screen sub-rectangle, so the same
-adapter instance a 2D layer uses for letterboxing also works for 3D:
+adapter instance a 2D layer uses for letterboxing also works for 3D. `Camera3D` takes it the
+same way `Camera2D` does — at construction:
 
 ```csharp
-Primitive3DBatch.Begin(Camera3D camera, ViewportAdapter2D viewportAdapter, ...)
+var camera3d = new Camera3D(adapter, position: ..., target: ..., up: Vector3.Up, fovy: 50f);
+
+primitive3DBatch.Begin(camera3d); // applies adapter automatically, no separate parameter
 ```
 
-This calls `viewportAdapter.Apply()` first (narrowing `Device.Viewport` to
-`BoundingRectangle`), then proceeds exactly like the plain `Begin(camera)` overload — which
-already derives its projection aspect ratio from `Device.Viewport.AspectRatio`. Without this
-overload (or an equivalent manual `Apply()` + `Begin(camera)`), a 3D scene always projects
-using the full backbuffer's aspect ratio, so if the window is letterboxed for 2D content, the
-3D scene stretches into the bars instead of matching them. See DECISIONS.md.
+`Begin(camera)` calls `camera.ViewportAdapter?.Apply()` first (narrowing `Device.Viewport` to
+`BoundingRectangle`) before deriving its projection aspect ratio from `Device.Viewport.AspectRatio`.
+Without an adapter, a 3D scene always projects using the full backbuffer's aspect ratio, so if
+the window is letterboxed for 2D content, an adapter-less 3D scene stretches into the bars
+instead of matching them. `GetWorldToScreen`/`GetScreenToWorld`/`GetScreenToWorldRay` (picking,
+mouse rays) also resolve the stored adapter automatically — pass an explicit `Viewport` argument
+only to override it for one call. See DECISIONS.md.
 
 ## Coexisting 2D + 3D in one window
 

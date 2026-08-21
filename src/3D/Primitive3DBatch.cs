@@ -219,7 +219,15 @@ namespace MonoPrimitives.Primitives3D
         // ---------------------------------------------------------------------
 
         /// <summary>
-        /// Starts a batch using a <see cref="Camera3D"/>.
+        /// Starts a batch using a <see cref="Camera3D"/>. If <paramref name="camera"/> was
+        /// constructed with a <see cref="ViewportAdapter2D"/> (<see cref="Camera3D.ViewportAdapter"/>),
+        /// it's applied first — letterboxing/pillarboxing the 3D projection into
+        /// <see cref="ViewportAdapter2D.BoundingRectangle"/> instead of the full backbuffer, the
+        /// same way <see cref="Primitives2D.Camera2D"/> uses its own stored adapter. Without one,
+        /// this always projects using the full window's aspect ratio — if the window is
+        /// letterboxed (e.g. a fixed-aspect game inside a resizable window, sharing an adapter
+        /// with 2D content), an adapter-less 3D scene would stretch into the bars instead of
+        /// matching them.
         /// </summary>
         /// <param name="camera">Camera providing view and projection matrices.</param>
         /// <param name="blendState">Blend state, defaults to <see cref="BlendState.NonPremultiplied"/> — every color here is straight (non-premultiplied) RGBA, so this is the blend state that actually matches them.</param>
@@ -235,36 +243,14 @@ namespace MonoPrimitives.Primitives3D
         {
             if (camera is null) throw new ArgumentNullException(nameof(camera));
 
+            camera.ViewportAdapter?.Apply();
+
             float aspect = _device.Viewport.AspectRatio;
             Matrix view = camera.GetViewMatrix();
             Matrix proj = camera.GetProjectionMatrix(aspect);
 
             BeginInternal(view, proj, camera.Position, camera.GetPixelScale(_device.Viewport.Height),
                           blendState, depthStencilState, rasterizerState, transform);
-        }
-
-        /// <summary>
-        /// Starts a batch using a <see cref="Camera3D"/>, letterboxed/pillarboxed into
-        /// <paramref name="viewportAdapter"/>'s <see cref="ViewportAdapter2D.BoundingRectangle"/>
-        /// instead of the full backbuffer. Without this, <see cref="Begin(Camera3D,BlendState,DepthStencilState,RasterizerState,Matrix?)"/>
-        /// always projects using the full window's aspect ratio — if the window is letterboxed
-        /// (e.g. a fixed-aspect game inside a resizable window, sharing a <see cref="ViewportAdapter2D"/>
-        /// with 2D content), the 3D scene would stretch into the bars instead of matching them.
-        /// Calls <see cref="ViewportAdapter2D.Apply"/> first, so this also clips hardware
-        /// clears/draws to the boxed rectangle.
-        /// </summary>
-        public void Begin(
-            Camera3D camera,
-            ViewportAdapter2D viewportAdapter,
-            BlendState blendState = null,
-            DepthStencilState depthStencilState = null,
-            RasterizerState rasterizerState = null,
-            Matrix? transform = null)
-        {
-            if (viewportAdapter is null) throw new ArgumentNullException(nameof(viewportAdapter));
-
-            viewportAdapter.Apply();
-            Begin(camera, blendState, depthStencilState, rasterizerState, transform);
         }
 
         /// <summary>

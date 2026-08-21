@@ -79,14 +79,19 @@ public class Game1 : Game
 
         _viweport = new BoxingViewportAdapter(Window, GraphicsDevice, 800, 720);
         _camera = new OrthographicCamera(_viweport);
+
+        // Shared between both cameras below: same window, same boxed rect either way, so there's
+        // no reason for the 2D and 3D galleries to each carry their own adapter instance.
+        _viewportAdapter2d = new BoxingViewportAdapter2D(GraphicsDevice, ScreenSizeX, SCreenSizeY);
+
         _camera3d = new Camera3D(
+            _viewportAdapter2d,
             position: new Vector3(0, 22, 38),
             target: Vector3.Zero,
             up: Vector3.Up,
             fovy: 50
         );
 
-        _viewportAdapter2d = new BoxingViewportAdapter2D(GraphicsDevice, ScreenSizeX, SCreenSizeY);
         // Offset overridden back to zero after construction: the ctor defaults it to the
         // adapter's virtual center (Extended's own convention), but this gallery's pan/clamp
         // design (see UpdateGallery2DCamera) wants Target itself to be the world point drawn at
@@ -143,10 +148,9 @@ public class Game1 : Game
         }
         else
         {
-            // Undo any letterboxing DrawGallery2D's ViewportAdapter2D.Apply() left in place on a
-            // previous frame — 3D isn't composited through that adapter, so it wants the full
-            // device viewport back.
-            _viewportAdapter2d.Reset();
+            // No manual Apply()/Reset() needed here: _camera3d was constructed with the same
+            // _viewportAdapter2d instance the 2D branch uses, so Begin(_camera3d) re-applies the
+            // same boxed rect automatically (Camera3D.ViewportAdapter).
             GraphicsDevice.Clear(Color.White);
 
             _primitive3DBatch.Begin(_camera3d);
