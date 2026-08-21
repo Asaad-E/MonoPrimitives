@@ -77,6 +77,40 @@ namespace MonoPrimitives.Primitives3D
             return Vector3.DistanceSquared(closest, sphereCenter) <= radiusSum * radiusSum;
         }
 
+        /// <summary>
+        /// Capsule vs axis-aligned box overlap (new — no MonoGame equivalent, and not in raylib
+        /// either, which has no capsule collision math at all beyond drawing). True if the
+        /// shortest distance between the capsule's own central segment and <paramref name="box"/>
+        /// is within <paramref name="radius"/>. The segment-to-box distance itself has no simple
+        /// closed form (unlike point-to-box, which is a single per-axis clamp) — minimized here
+        /// via ternary search over the segment's parameter <c>t</c>, valid because distance from
+        /// a fixed point on the segment to the box is convex in <c>t</c> (a sum of per-axis
+        /// clamped-linear terms, each convex), so the whole function has one minimum, no local
+        /// traps to fall into.
+        /// </summary>
+        public static bool CheckCollisionCapsuleBox(Vector3 start, Vector3 end, float radius, BoundingBox box)
+        {
+            float radiusSq = radius * radius;
+            Vector3 d = end - start;
+
+            float DistSquaredAt(float t)
+            {
+                Vector3 p = start + d * t;
+                Vector3 c = Vector3.Clamp(p, box.Min, box.Max);
+                return Vector3.DistanceSquared(p, c);
+            }
+
+            float lo = 0f, hi = 1f;
+            for (int i = 0; i < 32; i++) // shrinks the bracket by 2/3 each step -- (2/3)^32 is far below float precision
+            {
+                float m1 = lo + (hi - lo) / 3f;
+                float m2 = hi - (hi - lo) / 3f;
+                if (DistSquaredAt(m1) < DistSquaredAt(m2)) hi = m2; else lo = m1;
+            }
+
+            return DistSquaredAt((lo + hi) * 0.5f) <= radiusSq;
+        }
+
         // ---------------------------------------------------------------------
         // Raycasts
         // ---------------------------------------------------------------------
@@ -111,6 +145,49 @@ namespace MonoPrimitives.Primitives3D
 
             Vector3 point = ray.Position + ray.Direction * t;
             return new RayCollision3D(true, t, point, denom < 0f ? n : -n); // normal faces back toward the ray origin
+        }
+
+        /// <summary>
+        /// Ray vs triangle, via the standard Möller–Trumbore algorithm. Useful for mesh/terrain
+        /// picking against triangles you already have on hand (e.g. one cell of a heightmap).
+        /// </summary>
+        public static RayCollision3D GetRayCollisionTriangle(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3)
+        {
+            const float epsilon = 1e-8f;
+            Vector3 edge1 = p2 - p1;
+            Vector3 edge2 = p3 - p1;
+            Vector3 h = Vector3.Cross(ray.Direction, edge2);
+            float a = Vector3.Dot(edge1, h);
+            if (MathF.Abs(a) < epsilon) return default; // ray parallel to the triangle's plane
+
+            float f = 1f / a;
+            Vector3 s = ray.Position - p1;
+            float u = f * Vector3.Dot(s, h);
+            if (u < 0f || u > 1f) return default;
+
+            Vector3 q = Vector3.Cross(s, edge1);
+            float v = f * Vector3.Dot(ray.Direction, q);
+            if (v < 0f || u + v > 1f) return default;
+
+            float t = f * Vector3.Dot(edge2, q);
+            if (t < 0f) return default;
+
+            Vector3 point = ray.Position + ray.Direction * t;
+            Vector3 normal = SafeNormalize(Vector3.Cross(edge1, edge2), Vector3.Up);
+            if (Vector3.Dot(normal, ray.Direction) > 0f) normal = -normal; // face back toward the ray origin, same convention as GetRayCollisionPlane
+            return new RayCollision3D(true, t, point, normal);
+        }
+
+        /// <summary>
+        /// Ray vs a planar quad, given its 4 corners in order (<c>p1 -&gt; p2 -&gt; p3 -&gt; p4</c>,
+        /// same winding <see cref="Primitive3DBatch.FillPlane(Vector3,Vector2,Color)"/> uses). Tested
+        /// as two triangles (<c>p1,p2,p3</c> and <c>p1,p3,p4</c>); returns whichever one the ray
+        /// actually hits.
+        /// </summary>
+        public static RayCollision3D GetRayCollisionQuad(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4)
+        {
+            RayCollision3D hit = GetRayCollisionTriangle(ray, p1, p2, p3);
+            return hit.Hit ? hit : GetRayCollisionTriangle(ray, p1, p3, p4);
         }
 
         /// <summary>
