@@ -144,6 +144,25 @@ namespace MonoPrimitives
             return FromHSV(h + 0.5f, s, v, color.A);
         }
 
+        /// <summary>Inverts each RGB channel (255 minus the value) — a photographic-negative effect, e.g. a hit-flash. Alpha is unchanged.</summary>
+        public static Color Invert(Color color) => new((byte)(255 - color.R), (byte)(255 - color.G), (byte)(255 - color.B), color.A);
+
+        /// <summary>
+        /// Adjusts contrast around each RGB channel's midpoint (127.5) — <paramref name="amount"/>
+        /// in [-1,1]: 0 leaves the color unchanged, 1 doubles every channel's distance from the
+        /// midpoint (clamped), -1 flattens every channel to exactly mid-gray. Unlike
+        /// <see cref="Saturate"/>/<see cref="Desaturate"/>, this operates directly on RGB, not
+        /// hue/value — a contrast pull can shift a color's apparent hue slightly, which is expected.
+        /// </summary>
+        public static Color Contrast(Color color, float amount)
+        {
+            float factor = 1f + Math.Clamp(amount, -1f, 1f);
+            return new Color(ContrastChannel(color.R, factor), ContrastChannel(color.G, factor), ContrastChannel(color.B, factor), color.A);
+        }
+
+        private static byte ContrastChannel(byte channel, float factor)
+            => (byte)Math.Clamp((channel / 255f - 0.5f) * factor * 255f + 127.5f, 0f, 255f);
+
         /// <summary>Straight per-channel RGB lerp — a thin, discoverable pass-through to <see cref="Color.Lerp(Color,Color,float)"/>. For vivid hue-to-hue transitions instead of muddying through gray, use <see cref="LerpHSV"/>.</summary>
         public static Color Lerp(Color a, Color b, float t) => Color.Lerp(a, b, t);
 
