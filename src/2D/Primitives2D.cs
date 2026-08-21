@@ -3648,6 +3648,28 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>
+        /// Evaluates a point on a uniform cubic B-spline segment, using the same 4-point
+        /// sliding window as <see cref="GetSplinePointCatmullRom"/> (<paramref name="p1"/>/
+        /// <paramref name="p4"/> are the window's outer points, <paramref name="p2"/>/<paramref name="p3"/>
+        /// the inner ones this segment runs between). Unlike Catmull-Rom, this does NOT pass
+        /// through any of the four points -- a B-spline is an approximating curve that stays
+        /// inside their shape, only ever touching a control point if several coincide, trading
+        /// exact interpolation for extra (C2) smoothness.
+        /// </summary>
+        public static Vector2 GetSplinePointBasis(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float t)
+        {
+            // Standard uniform cubic B-spline basis functions (sum to 1 for any t -- e.g. at
+            // t=0: 1/6, 4/6, 1/6, 0; at t=1: 0, 1/6, 4/6, 1/6 -- which is also why consecutive
+            // pieces already agree exactly at their shared t=0/t=1, needing no extra blending).
+            float t2 = t * t, t3 = t2 * t;
+            float b1 = (-t3 + 3f * t2 - 3f * t + 1f) / 6f;
+            float b2 = (3f * t3 - 6f * t2 + 4f) / 6f;
+            float b3 = (-3f * t3 + 3f * t2 + 3f * t + 1f) / 6f;
+            float b4 = t3 / 6f;
+            return b1 * p1 + b2 * p2 + b3 * p3 + b4 * p4;
+        }
+
+        /// <summary>
         /// Draws a Catmull-Rom spline through the given control points. Requires at
         /// least 4 points; the curve passes through points[1..length-2]. Samples the
         /// curve once into a single shared-vertex strip (proper miter joins, no seams
@@ -3679,6 +3701,46 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>
+        /// Draws a uniform cubic B-spline through the given control points -- same 4-point
+        /// sliding-window shape as <see cref="DrawSplineCatmullRom"/> (requires at least 4
+        /// points), but the curve does NOT pass through them; see
+        /// <see cref="GetSplinePointBasis"/> for why. Exposes <paramref name="join"/>/
+        /// <paramref name="cap"/>/<paramref name="jointRadius"/> the same way
+        /// <see cref="DrawSplineLinear(ReadOnlySpan{Vector2},float,Color,LineJoin,LineCap,float?)"/>
+        /// does, unlike <see cref="DrawSplineCatmullRom"/>/<see cref="DrawSplineBezierCubic"/>
+        /// (which only ever use the Miter default) -- with a smooth sampled curve, Round/Bevel
+        /// joins matter far less than on a sharp-angled polyline, but there's no reason not to
+        /// allow it since <see cref="BuildOutlineGeometry"/> already supports it either way.
+        /// </summary>
+        public void DrawSplineBasis(ReadOnlySpan<Vector2> points, float thickness, Color color, int segmentsPerPiece = 16,
+            LineJoin join = LineJoin.Miter, LineCap cap = LineCap.Butt, float? jointRadius = null)
+        {
+            ThrowIfNotBegun();
+            if (points.Length < 4 || segmentsPerPiece < 1) return;
+
+            int pieceCount = points.Length - 3;
+            int sampleCount = pieceCount * segmentsPerPiece + 1;
+
+            Span<Vector2> samples = sampleCount <= MaxStackAllocElements ? stackalloc Vector2[sampleCount] : new Vector2[sampleCount];
+            // Unlike CatmullRom, t=0 of the first piece is NOT points[1] -- this spline never
+            // passes through a raw control point, so the true starting position has to be
+            // evaluated from the formula like every other sample.
+            samples[0] = GetSplinePointBasis(points[0], points[1], points[2], points[3], 0f);
+
+            int idx = 1;
+            for (int i = 1; i < points.Length - 2; i++)
+            {
+                for (int s = 1; s <= segmentsPerPiece; s++)
+                {
+                    float t = s / (float)segmentsPerPiece;
+                    samples[idx++] = GetSplinePointBasis(points[i - 1], points[i], points[i + 1], points[i + 2], t);
+                }
+            }
+
+            BuildOutlineGeometry(samples, thickness, color, closed: false, join, cap, jointRadius);
+        }
+
+        /// <summary>
         /// Draws a cubic Bezier spline: [p1, c2, c3, p4, c5, c6, p7...].
         /// Requires 3n+1 points for n cubic segments. Samples the curve once into a
         /// single shared-vertex strip (proper miter joins, no seams between
@@ -3707,6 +3769,38 @@ namespace MonoPrimitives.Primitives2D
             }
 
             BuildOutlineGeometry(samples, thickness, color, closed: false);
+        }
+
+        /// <summary>
+        /// Draws a quadratic Bezier spline: [p1, c2, p3, c4, p5...]. Requires 2n+1 points for n
+        /// quadratic segments -- the same piece-window shape as
+        /// <see cref="DrawSplineBezierCubic"/>, just 2 points per segment instead of 3. Exposes
+        /// <paramref name="join"/>/<paramref name="cap"/>/<paramref name="jointRadius"/> the same
+        /// way <see cref="DrawSplineBasis"/> does.
+        /// </summary>
+        public void DrawSplineBezierQuadratic(ReadOnlySpan<Vector2> points, float thickness, Color color, int segmentsPerPiece = 16,
+            LineJoin join = LineJoin.Miter, LineCap cap = LineCap.Butt, float? jointRadius = null)
+        {
+            ThrowIfNotBegun();
+            if (points.Length < 3 || (points.Length - 1) % 2 != 0 || segmentsPerPiece < 1) return;
+
+            int segmentCount = (points.Length - 1) / 2;
+            int sampleCount = segmentCount * segmentsPerPiece + 1;
+
+            Span<Vector2> samples = sampleCount <= MaxStackAllocElements ? stackalloc Vector2[sampleCount] : new Vector2[sampleCount];
+            samples[0] = points[0];
+
+            int idx = 1;
+            for (int i = 0; i + 2 < points.Length; i += 2)
+            {
+                for (int s = 1; s <= segmentsPerPiece; s++)
+                {
+                    float t = s / (float)segmentsPerPiece;
+                    samples[idx++] = GetSplinePointBezierQuad(points[i], points[i + 1], points[i + 2], t);
+                }
+            }
+
+            BuildOutlineGeometry(samples, thickness, color, closed: false, join, cap, jointRadius);
         }
 
         // ==================================================================
