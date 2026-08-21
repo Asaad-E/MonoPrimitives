@@ -137,11 +137,13 @@ public class Game1 : Game
 
         if (_show2DGallery)
         {
-            _viewportAdapter2d.Apply();
+            // No Apply() here: GetScaleMatrix() already maps virtual space onto the full window
+            // (scale AND offset), so narrowing the device viewport too would double-apply the
+            // letterbox offset. Clear the whole window so the letterbox bars show this color too.
             GraphicsDevice.Clear(Palette.Background);
 
             _primitiveBatch.Begin(_camera2d.GetTransformMatrix() * _viewportAdapter2d.GetScaleMatrix());
-            _primitiveBatch.DrawGrid(80, 40f);
+            _primitiveBatch.DrawGrid(80*4, 40f);
             _primitiveBatch.DrawAxis(2000f);
             _gallery2DSize = Gallery2D.Draw(_primitiveBatch);
             _primitiveBatch.End();

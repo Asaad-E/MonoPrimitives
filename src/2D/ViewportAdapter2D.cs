@@ -60,6 +60,13 @@ namespace MonoPrimitives.Primitives2D
         /// Sets the <see cref="GraphicsDevice"/>'s active viewport to <see cref="BoundingRectangle"/>,
         /// so hardware clears/clips stop at the virtual viewport's edge instead of covering the
         /// full window. Call once after resizing (or once per frame before drawing, if simplest).
+        /// Don't combine this with <see cref="GetScaleMatrix"/> for 2D drawing — the matrix already
+        /// bakes in <see cref="Offset"/>, so narrowing the device viewport too double-applies it
+        /// (only visible for adapters with a nonzero Offset, e.g. <see cref="BoxingViewportAdapter2D"/>).
+        /// Use one or the other: either skip Apply() and draw with the full <see cref="GetScaleMatrix"/>
+        /// against the whole window, or call Apply() and drop Offset from the draw transform
+        /// (<c>Matrix.CreateScale(Scale.X, Scale.Y, 1f)</c> only). <see cref="Primitive3DBatch"/>'s
+        /// camera-driven 3D path uses Apply() this second way internally and is unaffected.
         /// </summary>
         public virtual void Apply() => Device.Viewport = new Viewport(BoundingRectangle);
 

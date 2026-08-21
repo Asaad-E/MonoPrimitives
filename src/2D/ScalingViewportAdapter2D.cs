@@ -30,8 +30,15 @@ namespace MonoPrimitives.Primitives2D
         {
             get
             {
-                Viewport vp = Device.Viewport;
-                return new Vector2((float)vp.Width / VirtualWidth, (float)vp.Height / VirtualHeight);
+                // Stable backbuffer size, not Device.Viewport directly — see
+                // BoxingViewportAdapter2D.Scale's doc comment for why (same fix, same reason).
+                // Doesn't currently misrender for this adapter specifically (Apply() narrows to
+                // exactly the full backbuffer size here, since Offset is always 0 and Scale
+                // already fills it exactly, so re-reading after Apply() happens to still agree)
+                // but reading the stable reference either way removes the fragility instead of
+                // relying on that coincidence.
+                PresentationParameters pp = Device.PresentationParameters;
+                return new Vector2((float)pp.BackBufferWidth / VirtualWidth, (float)pp.BackBufferHeight / VirtualHeight);
             }
         }
 
