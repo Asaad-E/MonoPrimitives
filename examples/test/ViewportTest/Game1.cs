@@ -44,6 +44,7 @@ public class Game1 : Game
     {
         _graphics = new GraphicsDeviceManager(this) { PreferredBackBufferWidth = WindowWidth, PreferredBackBufferHeight = WindowHeight };
         IsMouseVisible = true;
+        Window.AllowUserResizing = true;
     }
 
     protected override void Initialize()
@@ -117,14 +118,14 @@ public class Game1 : Game
         // doc comment.
         Matrix transform = _adapter is not null ? _camera2d.GetTransformMatrix() * _adapter.GetScaleMatrix() : _camera2d.GetTransformMatrix();
 
-        _batch2d.Begin(transform);
+        _batch2d.Begin(transform); 
 
         _batch2d.DrawGrid(24, 20f, new Vector2(VirtualWidth * 0.5f, VirtualHeight * 0.5f), new Color(0.6f, 0.6f, 0.65f, 0.4f), new Color(0.85f, 0.85f, 0.9f, 0.6f));
         _batch2d.BorderRectangle(0, 0, VirtualWidth, VirtualHeight, Color.White, 3f);
 
         _batch2d.FillCircle(new Vector2(VirtualWidth * 0.5f, VirtualHeight * 0.5f), 10f, Palette.Sunflower);
         _batch2d.FillCircle(Vector2.Zero, 8f, Palette.Emerald);
-        _batch2d.DrawString($"(0,0)", new Vector2(12, 8), 2f, Palette.Emerald);
+        _batch2d.DrawString($"(0,0)", new Vector2(12, 8), 3f, Palette.Emerald);
         _batch2d.FillCircle(new Vector2(VirtualWidth, VirtualHeight), 8f, Palette.Alizarin);
 
         Vector2 mouseWorld = _adapter is not null ? _camera2d.ScreenToWorld(rawMouse) : _camera2d.ScreenToWorld(rawMouse);

@@ -28,8 +28,16 @@ public class Game1 : Game
 
     public Game1()
     {
-        _graphics = new GraphicsDeviceManager(this) { PreferredBackBufferWidth = WindowWidth, PreferredBackBufferHeight = WindowHeight };
-        IsMouseVisible = true;
+_graphics = new GraphicsDeviceManager(this) { 
+            PreferredBackBufferWidth = WindowWidth,
+            PreferredBackBufferHeight = WindowHeight,
+            PreferMultiSampling = false,
+            GraphicsProfile= GraphicsProfile.HiDef };
+
+        _graphics.PreparingDeviceSettings += (sender, e) =>
+        {
+            e.GraphicsDeviceInformation.PresentationParameters.MultiSampleCount = 0;
+        };        IsMouseVisible = true;
     }
 
     protected override void Initialize()

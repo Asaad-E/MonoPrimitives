@@ -77,6 +77,7 @@ public class Game1 : Game
     {
         _graphics = new GraphicsDeviceManager(this) { PreferredBackBufferWidth = WindowWidth, PreferredBackBufferHeight = WindowHeight };
         IsMouseVisible = true;
+        _graphics.HardwareModeSwitch = false;
     }
 
     protected override void Initialize()

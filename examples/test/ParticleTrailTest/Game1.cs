@@ -37,7 +37,16 @@ public class Game1 : Game
 
     public Game1()
     {
-        _graphics = new GraphicsDeviceManager(this) { PreferredBackBufferWidth = WindowWidth, PreferredBackBufferHeight = WindowHeight };
+        _graphics = new GraphicsDeviceManager(this) { 
+            PreferredBackBufferWidth = WindowWidth,
+            PreferredBackBufferHeight = WindowHeight,
+            PreferMultiSampling = true,
+            GraphicsProfile= GraphicsProfile.HiDef };
+
+        _graphics.PreparingDeviceSettings += (sender, e) =>
+        {
+            e.GraphicsDeviceInformation.PresentationParameters.MultiSampleCount = 4;
+        };
         IsMouseVisible = true;
     }
 
@@ -52,6 +61,8 @@ public class Game1 : Game
     // range of looks Trail2D.Draw supports is easy to compare at a glance.
     private void BuildParticles()
     {
+
+        _graphics.ApplyChanges();
         var rng = new Random(12345);
         (int capacity, float thickness, float fadeToAlpha)[] styles =
         {
@@ -155,7 +166,7 @@ public class Game1 : Game
             _batch2d.BorderCircle(p.Position, p.Radius, Color.White, 1.5f);
         }
 
-        _batch2d.DrawString("Particles bounce off walls and each other -- each drags a differently-styled Trail2D", new Vector2(16, 16), 1.5f, Color.White);
+        _batch2d.DrawString("Particles bounce off walls and each other -- each drags a differently-styled Trail2D", new Vector2(16, 16), 2f, Color.White);
 
         _batch2d.End();
         base.Draw(gameTime);
