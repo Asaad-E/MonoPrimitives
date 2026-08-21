@@ -18,6 +18,7 @@ Shared (`Core/`, namespace `MonoPrimitives`):
 | Easing | `Easing` |
 | Color | `Palette`, `ColorUtil` |
 | Noise | `Noise` |
+| Random | `RandomUtil` (+ static `RandomUtil.Shared`) |
 
 Per-namespace (not shared — genuinely different code):
 
