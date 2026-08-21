@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
@@ -32,7 +33,7 @@ namespace MonoPrimitives
     /// `if (IsKeyDown(...))` checks. Call <see cref="Update"/> once per frame (before reading
     /// anything else this frame) — typically the first line of your own <c>Game.Update</c>.
     /// </summary>
-    public sealed class PrimitiveInput
+    public sealed class PrimitiveInput : IDisposable
     {
         private KeyboardState _keyboard;
         private KeyboardState _prevKeyboard;
@@ -49,11 +50,70 @@ namespace MonoPrimitives
         private readonly float[] _timeSinceLastClick = { float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue };
         private readonly bool[] _doubleClickedThisFrame = new bool[5];
 
+        private readonly GameWindow? _window;
+
+        // Fixed-capacity ring buffer fed by GameWindow.TextInput -- bounded (not a growable
+        // Queue<char>) so a caller that never drains it can't leak memory, same "no unbounded
+        // per-frame growth" spirit as Trail2D's own ring buffer.
+        private readonly char[] _textInputQueue = new char[64];
+        private int _textInputHead;
+        private int _textInputCount;
+
         /// <summary>Max seconds between two presses of the same button for <see cref="IsMouseButtonDoubleClicked"/> to report one.</summary>
         public float DoubleClickTime { get; set; } = 0.35f;
 
         /// <summary>Max pixels between two presses of the same button for <see cref="IsMouseButtonDoubleClicked"/> to report one — without this, two clicks in unrelated corners of the screen within <see cref="DoubleClickTime"/> would still count as a double-click.</summary>
         public float DoubleClickDistance { get; set; } = 6f;
+
+        /// <summary>Creates an input poller with no typed-text support — <see cref="GetCharPressed"/> always returns <c>'\0'</c>, since there's no <see cref="GameWindow"/> to subscribe to. Use <see cref="PrimitiveInput(GameWindow)"/> instead if you need real typed text.</summary>
+        public PrimitiveInput() { }
+
+        /// <summary>
+        /// Creates an input poller that also subscribes to <paramref name="window"/>'s
+        /// <c>TextInput</c> event, enabling <see cref="GetCharPressed"/> — the only correct way to
+        /// get typed characters. Keyboard-state polling (everything else in this class) can't
+        /// produce them correctly: <see cref="Keys"/> is physical key identity, not the character a
+        /// layout/shift/dead-key combination actually produces (e.g. this library's own
+        /// <c>DebugFont5x7</c> supports Spanish accents like 'á', which are typically composed from
+        /// a dead-key sequence only the OS can resolve), and OS key-repeat timing can't be
+        /// reconstructed by guessing at settings the OS already knows. Call <see cref="Dispose"/>
+        /// when done to unsubscribe.
+        /// </summary>
+        public PrimitiveInput(GameWindow window)
+        {
+            _window = window ?? throw new ArgumentNullException(nameof(window));
+            _window.TextInput += OnTextInput;
+        }
+
+        /// <summary>Unsubscribes from <see cref="GameWindow"/>'s <c>TextInput</c> event, if this instance was constructed with one. Safe to call even if it wasn't.</summary>
+        public void Dispose()
+        {
+            if (_window is not null) _window.TextInput -= OnTextInput;
+        }
+
+        private void OnTextInput(object? sender, TextInputEventArgs e)
+        {
+            if (_textInputCount >= _textInputQueue.Length) return; // full -- caller isn't draining; drop rather than grow unbounded
+            int tail = (_textInputHead + _textInputCount) % _textInputQueue.Length;
+            _textInputQueue[tail] = e.Character;
+            _textInputCount++;
+        }
+
+        /// <summary>
+        /// Dequeues the next typed character since the last call, or <c>'\0'</c> if none are
+        /// queued — call in a loop (<c>while ((c = input.GetCharPressed()) != '\0') ...</c>) to
+        /// drain everything typed since you last checked, same shape as raylib's own
+        /// <c>GetCharPressed</c>. Always <c>'\0'</c> if this instance was constructed without a
+        /// <see cref="GameWindow"/> (the parameterless constructor).
+        /// </summary>
+        public char GetCharPressed()
+        {
+            if (_textInputCount == 0) return '\0';
+            char c = _textInputQueue[_textInputHead];
+            _textInputHead = (_textInputHead + 1) % _textInputQueue.Length;
+            _textInputCount--;
+            return c;
+        }
 
         /// <summary>Refreshes keyboard/mouse/gamepad state for this frame — the usual call from inside your own <c>Game.Update(GameTime gameTime)</c>, so <see cref="IsMouseButtonDoubleClicked"/>'s timing window uses the real elapsed time automatically.</summary>
         public void Update(GameTime gameTime) => Update((float)gameTime.ElapsedGameTime.TotalSeconds);
@@ -129,6 +189,16 @@ namespace MonoPrimitives
         /// <summary>True on the frame <paramref name="key"/> went from down to up.</summary>
         public bool IsKeyReleased(Keys key) => _keyboard.IsKeyUp(key) && _prevKeyboard.IsKeyDown(key);
 
+        private static readonly Keys[] AllKeys = (Keys[])Enum.GetValues(typeof(Keys));
+
+        /// <summary>True on the frame any key went from up to down — for a "press any key to continue" prompt, one call instead of listing every key yourself.</summary>
+        public bool IsAnyKeyPressed()
+        {
+            foreach (Keys key in AllKeys)
+                if (IsKeyPressed(key)) return true;
+            return false;
+        }
+
         // ---------------------------------------------------------------------
         // Mouse
         // ---------------------------------------------------------------------
@@ -161,6 +231,16 @@ namespace MonoPrimitives
 
         /// <summary>True on the frame <paramref name="button"/> is pressed again within <see cref="DoubleClickTime"/> seconds AND <see cref="DoubleClickDistance"/> pixels of its previous press.</summary>
         public bool IsMouseButtonDoubleClicked(MouseButton button) => _doubleClickedThisFrame[(int)button];
+
+        private static readonly MouseButton[] AllMouseButtons = (MouseButton[])Enum.GetValues(typeof(MouseButton));
+
+        /// <summary>True on the frame any mouse button went from up to down — same idea as <see cref="IsAnyKeyPressed"/>, for the mouse.</summary>
+        public bool IsAnyMouseButtonPressed()
+        {
+            foreach (MouseButton button in AllMouseButtons)
+                if (IsMouseButtonPressed(button)) return true;
+            return false;
+        }
 
         /// <summary>
         /// Total movement since <paramref name="button"/> was last pressed — live-tracking
