@@ -413,11 +413,12 @@ namespace MonoPrimitives.Primitives2D
             Effect effect = _customEffect ?? _effect;
             effect.CurrentTechnique.Passes[0].Apply();
 
-            // NOTE: PrimitiveType.PointListEXT is NOT part of stock MonoGame (DesktopGL /
-            // WindowsDX NuGet packages) — it requires a MonoGame build/fork with GL_POINTS
-            // support added to PrimitiveType. If this project ever moves to stock MonoGame,
-            // this line will fail to compile; DrawPixelFast/FlushPoint would need to fall
-            // back to something else (e.g. 1x1 quads via DrawPixel) in that case.
+            // NOTE: PrimitiveType.PointList IS the stock MonoGame member name (verified against
+            // the actual referenced MonoGame.Framework.DesktopGL 3.8.5.1 package) -- this line
+            // builds fine as-is. FNA is the one XNA-compatible runtime where this would NOT
+            // compile: FNA calls the same primitive PrimitiveType.PointListEXT instead. If this
+            // project ever targets FNA, DrawPixelFast/FlushPoint is the one call site that needs
+            // a conditional-compile swap (or a fallback to 1x1 quads via DrawPixel).
             _device.DrawUserIndexedPrimitives(
                     PrimitiveType.PointList,
                     _verticesPoint,
