@@ -1280,7 +1280,7 @@ namespace MonoPrimitives.Primitives2D
         /// <paramref name="to"/>, no border. <paramref name="horizontal"/> picks the fade
         /// axis (true = left→right, false = top→bottom). <paramref name="rotation"/> (radians)
         /// turns that axis about <paramref name="origin"/> (rect center if null) — same
-        /// convention as <see cref="FillRectangleRoundedGradient"/>. <paramref name="innerOffset"/>
+        /// convention as <see cref="FillRectangleGradientRounded"/>. <paramref name="innerOffset"/>
         /// holds solid <paramref name="from"/> color for that many pixels along the fade axis
         /// before the gradient starts; <paramref name="outerOffset"/> holds solid
         /// <paramref name="to"/> color for that many pixels at the far end. If they'd
@@ -1360,7 +1360,7 @@ namespace MonoPrimitives.Primitives2D
         /// stops exactly where the border begins — and <paramref name="innerOffset"/>/
         /// <paramref name="outerOffset"/> are then measured from that inset area's own edges,
         /// same "stops at the border" rule as <see cref="DrawCircleGradient"/>. <paramref name="rotation"/>
-        /// turns both the fill and the border together, same convention as <see cref="DrawRectangleRoundedGradient"/>.
+        /// turns both the fill and the border together, same convention as <see cref="DrawRectangleGradientRounded"/>.
         /// </summary>
         public void DrawRectangleGradient(float x, float y, float width, float height, Color from, Color to, bool horizontal, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
         {
@@ -1580,7 +1580,7 @@ namespace MonoPrimitives.Primitives2D
         /// (rotates with the shape), no border. <paramref name="innerOffset"/>/
         /// <paramref name="outerOffset"/> work exactly as in <see cref="FillRectangleGradient(float,float,float,float,Color,Color,bool,float,float)"/>.
         /// </summary>
-        public void FillRectangleRoundedGradient(Rectangle rect, RectCorners radius, Color from, Color to, bool horizontal, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
+        public void FillRectangleGradientRounded(Rectangle rect, RectCorners radius, Color from, Color to, bool horizontal, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
         {
             ThrowIfNotBegun();
             Span<Vector2> buffer = stackalloc Vector2[4 * (MaxCircleSegments + 1)];
@@ -1588,10 +1588,10 @@ namespace MonoPrimitives.Primitives2D
             FillAxisGradientBoundary(buffer[..count], rect.X, rect.Y, rect.Width, rect.Height, rotation, origin, from, to, horizontal, innerOffset, outerOffset);
         }
 
-        /// <inheritdoc cref="FillRectangleRoundedGradient(Rectangle,RectCorners,Color,Color,bool,float,Vector2?,float,float)"/>
+        /// <inheritdoc cref="FillRectangleGradientRounded(Rectangle,RectCorners,Color,Color,bool,float,Vector2?,float,float)"/>
         /// <remarks><paramref name="position"/>/<paramref name="size"/> are truncated to <see cref="Rectangle"/>'s integer fields.</remarks>
-        public void FillRectangleRoundedGradient(Vector2 position, Vector2 size, RectCorners radius, Color from, Color to, bool horizontal, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
-            => FillRectangleRoundedGradient(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), radius, from, to, horizontal, rotation, origin, innerOffset, outerOffset);
+        public void FillRectangleGradientRounded(Vector2 position, Vector2 size, RectCorners radius, Color from, Color to, bool horizontal, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
+            => FillRectangleGradientRounded(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), radius, from, to, horizontal, rotation, origin, innerOffset, outerOffset);
 
         /// <summary>
         /// Draws a rounded rectangle with a linear gradient fill and a solid border. The
@@ -1600,7 +1600,7 @@ namespace MonoPrimitives.Primitives2D
         /// straight edges and the corner arcs together, concentrically) — stops exactly
         /// where the border begins, same rule as the other shapes' gradients.
         /// </summary>
-        public void DrawRectangleRoundedGradient(Rectangle rect, RectCorners radius, Color from, Color to, bool horizontal, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
+        public void DrawRectangleGradientRounded(Rectangle rect, RectCorners radius, Color from, Color to, bool horizontal, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
         {
             ThrowIfNotBegun();
             Span<Vector2> buffer = stackalloc Vector2[4 * (MaxCircleSegments + 1)];
@@ -1620,10 +1620,10 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
-        /// <inheritdoc cref="DrawRectangleRoundedGradient(Rectangle,RectCorners,Color,Color,bool,Color,float,float,Vector2?,float,float)"/>
+        /// <inheritdoc cref="DrawRectangleGradientRounded(Rectangle,RectCorners,Color,Color,bool,Color,float,float,Vector2?,float,float)"/>
         /// <remarks><paramref name="position"/>/<paramref name="size"/> are truncated to <see cref="Rectangle"/>'s integer fields.</remarks>
-        public void DrawRectangleRoundedGradient(Vector2 position, Vector2 size, RectCorners radius, Color from, Color to, bool horizontal, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
-            => DrawRectangleRoundedGradient(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), radius, from, to, horizontal, borderColor, thickness, rotation, origin, innerOffset, outerOffset);
+        public void DrawRectangleGradientRounded(Vector2 position, Vector2 size, RectCorners radius, Color from, Color to, bool horizontal, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
+            => DrawRectangleGradientRounded(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), radius, from, to, horizontal, borderColor, thickness, rotation, origin, innerOffset, outerOffset);
 
         // ==================================================================
         // CHAMFERED RECTANGLES
@@ -1748,7 +1748,7 @@ namespace MonoPrimitives.Primitives2D
         /// (rotates with the shape), no border. <paramref name="innerOffset"/>/
         /// <paramref name="outerOffset"/> work exactly as in <see cref="FillRectangleGradient(float,float,float,float,Color,Color,bool,float,float)"/>.
         /// </summary>
-        public void FillRectangleChamferGradient(Rectangle rect, RectCorners chamfer, Color from, Color to, bool horizontal, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
+        public void FillRectangleGradientChamfer(Rectangle rect, RectCorners chamfer, Color from, Color to, bool horizontal, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
         {
             ThrowIfNotBegun();
             Span<Vector2> buffer = stackalloc Vector2[8];
@@ -1756,10 +1756,10 @@ namespace MonoPrimitives.Primitives2D
             FillAxisGradientBoundary(buffer[..count], rect.X, rect.Y, rect.Width, rect.Height, rotation, origin, from, to, horizontal, innerOffset, outerOffset);
         }
 
-        /// <inheritdoc cref="FillRectangleChamferGradient(Rectangle,RectCorners,Color,Color,bool,float,Vector2?,float,float)"/>
+        /// <inheritdoc cref="FillRectangleGradientChamfer(Rectangle,RectCorners,Color,Color,bool,float,Vector2?,float,float)"/>
         /// <remarks><paramref name="position"/>/<paramref name="size"/> are truncated to <see cref="Rectangle"/>'s integer fields.</remarks>
-        public void FillRectangleChamferGradient(Vector2 position, Vector2 size, RectCorners chamfer, Color from, Color to, bool horizontal, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
-            => FillRectangleChamferGradient(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), chamfer, from, to, horizontal, rotation, origin, innerOffset, outerOffset);
+        public void FillRectangleGradientChamfer(Vector2 position, Vector2 size, RectCorners chamfer, Color from, Color to, bool horizontal, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
+            => FillRectangleGradientChamfer(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), chamfer, from, to, horizontal, rotation, origin, innerOffset, outerOffset);
 
         /// <summary>
         /// Draws a chamfered rectangle with a linear gradient fill and a solid border. The
@@ -1767,7 +1767,7 @@ namespace MonoPrimitives.Primitives2D
         /// <paramref name="thickness"/> via <see cref="InsetConvexPolygon"/> — stops exactly
         /// where the border begins, same rule as the other shapes' gradients.
         /// </summary>
-        public void DrawRectangleChamferGradient(Rectangle rect, RectCorners chamfer, Color from, Color to, bool horizontal, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
+        public void DrawRectangleGradientChamfer(Rectangle rect, RectCorners chamfer, Color from, Color to, bool horizontal, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
         {
             ThrowIfNotBegun();
             Span<Vector2> buffer = stackalloc Vector2[8];
@@ -1787,10 +1787,10 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
-        /// <inheritdoc cref="DrawRectangleChamferGradient(Rectangle,RectCorners,Color,Color,bool,Color,float,float,Vector2?,float,float)"/>
+        /// <inheritdoc cref="DrawRectangleGradientChamfer(Rectangle,RectCorners,Color,Color,bool,Color,float,float,Vector2?,float,float)"/>
         /// <remarks><paramref name="position"/>/<paramref name="size"/> are truncated to <see cref="Rectangle"/>'s integer fields.</remarks>
-        public void DrawRectangleChamferGradient(Vector2 position, Vector2 size, RectCorners chamfer, Color from, Color to, bool horizontal, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
-            => DrawRectangleChamferGradient(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), chamfer, from, to, horizontal, borderColor, thickness, rotation, origin, innerOffset, outerOffset);
+        public void DrawRectangleGradientChamfer(Vector2 position, Vector2 size, RectCorners chamfer, Color from, Color to, bool horizontal, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
+            => DrawRectangleGradientChamfer(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), chamfer, from, to, horizontal, borderColor, thickness, rotation, origin, innerOffset, outerOffset);
 
         // ==================================================================
         // SHADOWS
@@ -4456,7 +4456,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Evaluates a point on a quadratic Bezier spline segment.</summary>
-        public static Vector2 GetSplinePointBezierQuad(Vector2 p1, Vector2 c2, Vector2 p3, float t)
+        public static Vector2 GetSplinePointBezierQuadratic(Vector2 p1, Vector2 c2, Vector2 p3, float t)
         {
             float u = 1f - t;
             return u * u * p1 + 2f * u * t * c2 + t * t * p3;
@@ -4611,7 +4611,7 @@ namespace MonoPrimitives.Primitives2D
                 for (int s = 1; s <= segmentsPerPiece; s++)
                 {
                     float t = s / (float)segmentsPerPiece;
-                    samples[idx++] = GetSplinePointBezierQuad(points[i], points[i + 1], points[i + 2], t);
+                    samples[idx++] = GetSplinePointBezierQuadratic(points[i], points[i + 1], points[i + 2], t);
                 }
             }
 
