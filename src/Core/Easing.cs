@@ -35,6 +35,24 @@ namespace MonoPrimitives
         /// <summary>Quartic ease-in-out — a stronger curve at both ends than <see cref="CubicInOut"/>.</summary>
         public static float QuartInOut(float t) { float f = t - 1f; return t < 0.5f ? 8f * t * t * t * t : 1f - 8f * f * f * f * f; }
 
+        /// <summary>Quintic ease-in — an even more pronounced slow start than <see cref="QuartIn"/>, the strongest polynomial curve here.</summary>
+        public static float QuintIn(float t) => t * t * t * t * t;
+        /// <summary>Quintic ease-out — an even more pronounced slow finish than <see cref="QuartOut"/>.</summary>
+        public static float QuintOut(float t) { float f = t - 1f; return 1f + f * f * f * f * f; }
+        /// <summary>Quintic ease-in-out — a stronger curve at both ends than <see cref="QuartInOut"/>.</summary>
+        public static float QuintInOut(float t) => t < 0.5f ? 16f * t * t * t * t * t : 1f - MathF.Pow(-2f * t + 2f, 5f) * 0.5f;
+
+        /// <summary>Circular ease-in: a quarter-circle arc — starts slower than <see cref="QuadIn"/> but with a distinctly rounder, less "mathematical" feel than the polynomial curves.</summary>
+        public static float CircIn(float t) => 1f - MathF.Sqrt(1f - t * t);
+        /// <summary>Circular ease-out: the mirror quarter-circle arc — a rounder alternative to <see cref="QuadOut"/>.</summary>
+        public static float CircOut(float t) { float f = t - 1f; return MathF.Sqrt(1f - f * f); }
+        /// <summary>Circular ease-in-out — <see cref="CircIn"/> and <see cref="CircOut"/> combined into one motion.</summary>
+        public static float CircInOut(float t)
+        {
+            if (t < 0.5f) { float f = 2f * t; return (1f - MathF.Sqrt(1f - f * f)) * 0.5f; }
+            else { float f = -2f * t + 2f; return (MathF.Sqrt(1f - f * f) + 1f) * 0.5f; }
+        }
+
         /// <summary>Exponential ease-in: barely moves at first, then accelerates sharply right at the end — the most dramatic slow-start curve here.</summary>
         public static float ExpoIn(float t) => t <= 0f ? 0f : MathF.Pow(2f, 10f * (t - 1f));
         /// <summary>Exponential ease-out: a sharp initial burst that quickly decelerates and coasts to the end — the most dramatic fast-start curve here.</summary>
