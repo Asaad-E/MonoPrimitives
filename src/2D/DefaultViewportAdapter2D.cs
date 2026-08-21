@@ -15,11 +15,16 @@ namespace MonoPrimitives.Primitives2D
     /// </summary>
     public sealed class DefaultViewportAdapter2D : ViewportAdapter2D
     {
+        /// <summary>Wraps <paramref name="device"/> — no virtual resolution to configure, since this adapter always tracks the device's own viewport.</summary>
         public DefaultViewportAdapter2D(GraphicsDevice device) : base(device) { }
 
+        /// <inheritdoc/>
         public override int VirtualWidth => Device.Viewport.Width;
+        /// <inheritdoc/>
         public override int VirtualHeight => Device.Viewport.Height;
+        /// <inheritdoc/>
         public override Vector2 Scale => Vector2.One;
+        /// <inheritdoc/>
         public override Vector2 Offset => Vector2.Zero;
     }
 }

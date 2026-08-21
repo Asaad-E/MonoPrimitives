@@ -6,6 +6,7 @@ namespace MonoPrimitives.Primitives3D
 {
     public sealed partial class Primitive3DBatch
     {
+        /// <summary><see cref="DrawPoint3D(Vector3,Color)"/>/<see cref="DrawPoint3DCross(Vector3,Color)"/>'s default size.</summary>
         public const float DefaultPointSize = 0.1f;
 
         // =====================================================================
@@ -64,17 +65,17 @@ namespace MonoPrimitives.Primitives3D
                 DrawLine3D(points[i - 1], points[i], DefaultLineThickness, color);
         }
 
-        /// <summary>Draws a point in 3D space as a short line.</summary>
+        /// <summary>Draws a point in 3D space as a short line, sized from <see cref="DefaultPointSize"/>.</summary>
         public void DrawPoint3D(Vector3 position, Color color)
-            => DrawPoint3D(position, DefaultLineThickness, color);
+            => DrawPoint3D(position, DefaultPointSize, color);
 
         /// <summary>Draws a point in 3D space as a short line of length <paramref name="size"/> along local X.</summary>
         public void DrawPoint3D(Vector3 position, float size, Color color)
             => DrawLine3DFast(position, new Vector3(position.X + size, position.Y, position.Z), color);
 
-        /// <summary>Draws a point as a 3-axis cross, for readable debug visualization.</summary>
+        /// <summary>Draws a point as a 3-axis cross, sized from <see cref="DefaultPointSize"/>, for readable debug visualization.</summary>
         public void DrawPoint3DCross(Vector3 position, Color color)
-            => DrawPoint3DCross(position, DefaultLineThickness, color);
+            => DrawPoint3DCross(position, DefaultPointSize, color);
 
         /// <summary>Draws a point as a 3-axis cross of total length <paramref name="size"/>.</summary>
         public void DrawPoint3DCross(Vector3 position, float size, Color color)

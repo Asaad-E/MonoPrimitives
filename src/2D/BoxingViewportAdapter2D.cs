@@ -13,9 +13,12 @@ namespace MonoPrimitives.Primitives2D
     /// </summary>
     public sealed class BoxingViewportAdapter2D : ViewportAdapter2D
     {
+        /// <inheritdoc/>
         public override int VirtualWidth { get; }
+        /// <inheritdoc/>
         public override int VirtualHeight { get; }
 
+        /// <summary>Wraps <paramref name="device"/>, letterboxing a <paramref name="virtualWidth"/>×<paramref name="virtualHeight"/> virtual resolution into it.</summary>
         public BoxingViewportAdapter2D(GraphicsDevice device, int virtualWidth, int virtualHeight) : base(device)
         {
             if (virtualWidth <= 0 || virtualHeight <= 0)
@@ -48,6 +51,7 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
+        /// <summary>Pixel offset of the letterbox bars — half the leftover space on whichever axis isn't fully filled by the uniform <see cref="Scale"/>.</summary>
         public override Vector2 Offset
         {
             get

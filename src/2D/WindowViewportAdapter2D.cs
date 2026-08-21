@@ -17,12 +17,17 @@ namespace MonoPrimitives.Primitives2D
     {
         private readonly GameWindow _window;
 
+        /// <summary>Wraps <paramref name="device"/>, tracking <paramref name="window"/>'s client-area size instead of the device viewport.</summary>
         public WindowViewportAdapter2D(GraphicsDevice device, GameWindow window) : base(device)
             => _window = window ?? throw new ArgumentNullException(nameof(window));
 
+        /// <inheritdoc/>
         public override int VirtualWidth => _window.ClientBounds.Width;
+        /// <inheritdoc/>
         public override int VirtualHeight => _window.ClientBounds.Height;
+        /// <inheritdoc/>
         public override Vector2 Scale => Vector2.One;
+        /// <inheritdoc/>
         public override Vector2 Offset => Vector2.Zero;
     }
 }

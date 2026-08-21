@@ -14,6 +14,7 @@ namespace MonoPrimitives
     {
         private readonly int[] _perm = new int[512];
 
+        /// <summary>Creates a noise generator whose permutation table is shuffled from <paramref name="seed"/> — same seed always gives the same sequence of samples.</summary>
         public Noise(int seed = 0)
         {
             var p = new int[256];

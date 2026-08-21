@@ -8,10 +8,19 @@ namespace MonoPrimitives
     /// <summary>Mouse buttons, named rather than inferred from a raw <see cref="MouseState"/> field.</summary>
     public enum MouseButton
     {
+        /// <summary>Primary (usually left) button.</summary>
         Left,
+
+        /// <summary>Secondary (usually right) button.</summary>
         Right,
+
+        /// <summary>Middle button, typically the scroll wheel click.</summary>
         Middle,
+
+        /// <summary>First extra "thumb" button, if the mouse has one.</summary>
         XButton1,
+
+        /// <summary>Second extra "thumb" button, if the mouse has one.</summary>
         XButton2
     }
 
@@ -220,7 +229,9 @@ namespace MonoPrimitives
         /// <summary>Raw right thumbstick, same convention as <see cref="LeftStick"/>.</summary>
         public Vector2 RightStick(int player = 0) => _gamePads[player].ThumbSticks.Right;
 
+        /// <summary>Left trigger pull, [0,1] — 0 released, 1 fully pressed.</summary>
         public float LeftTrigger(int player = 0) => _gamePads[player].Triggers.Left;
+        /// <summary>Right trigger pull, [0,1] — 0 released, 1 fully pressed.</summary>
         public float RightTrigger(int player = 0) => _gamePads[player].Triggers.Right;
 
         /// <summary><see cref="LeftStick"/> with a circular deadzone applied — snaps to zero within <paramref name="deadzone"/> of center instead of reporting idle stick drift as movement.</summary>

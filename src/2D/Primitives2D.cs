@@ -38,16 +38,25 @@ namespace MonoPrimitives.Primitives2D
     /// </summary>
     public struct RectCorners
     {
+        /// <summary>Value for the top-left corner.</summary>
         public float TopLeft;
+
+        /// <summary>Value for the top-right corner.</summary>
         public float TopRight;
+
+        /// <summary>Value for the bottom-right corner.</summary>
         public float BottomRight;
+
+        /// <summary>Value for the bottom-left corner.</summary>
         public float BottomLeft;
 
+        /// <summary>Same value for all four corners.</summary>
         public RectCorners(float all)
         {
             TopLeft = TopRight = BottomRight = BottomLeft = all;
         }
 
+        /// <summary>A different value per corner, clockwise from top-left.</summary>
         public RectCorners(float topLeft, float topRight, float bottomRight, float bottomLeft)
         {
             TopLeft = topLeft;
@@ -56,6 +65,7 @@ namespace MonoPrimitives.Primitives2D
             BottomLeft = bottomLeft;
         }
 
+        /// <summary>Applies <paramref name="uniform"/> to all four corners — lets a plain <see cref="float"/> be passed anywhere a <see cref="RectCorners"/> is expected.</summary>
         public static implicit operator RectCorners(float uniform) => new RectCorners(uniform);
     }
 
@@ -3769,6 +3779,7 @@ namespace MonoPrimitives.Primitives2D
         // Disposal
         // ------------------------------------------------------------------
 
+        /// <inheritdoc />
         public void Dispose() => _effect?.Dispose();
     }
 }

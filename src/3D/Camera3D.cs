@@ -72,7 +72,10 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>Far clip distance.</summary>
         public float FarPlane;
 
+        /// <summary><see cref="NearPlane"/>'s default value.</summary>
         public const float DefaultNear = 0.1f;
+
+        /// <summary><see cref="FarPlane"/>'s default value.</summary>
         public const float DefaultFar = 1000f;
 
         /// <summary>
@@ -96,6 +99,7 @@ namespace MonoPrimitives.Primitives3D
         private readonly float _initialNearPlane;
         private readonly float _initialFarPlane;
 
+        /// <summary>Creates a camera with no <see cref="ViewportAdapter"/> — <see cref="ScreenToWorld"/>/<see cref="WorldToScreen(Vector3,Viewport?)"/>/<see cref="GetScreenToWorldRay"/> then need an explicit <see cref="Viewport"/> argument.</summary>
         public Camera3D(Vector3 position, Vector3 target, Vector3 up, float fovy = 45f,
                         CameraProjection projection = CameraProjection.Perspective,
                         float nearPlane = DefaultNear, float farPlane = DefaultFar)

@@ -15,7 +15,10 @@ namespace MonoPrimitives
     /// </summary>
     public static class FontGlyphs5x7
     {
+        /// <summary>Every glyph is 5 columns wide, before any <c>pixelSize</c> scaling a caller applies.</summary>
         public const int GlyphWidth = 5;
+
+        /// <summary>Every glyph is 7 rows tall, before any <c>pixelSize</c> scaling a caller applies.</summary>
         public const int GlyphHeight = 7;
 
         // Each glyph: 7 rows, top to bottom. Each row's lowest 5 bits are the columns,
@@ -154,7 +157,7 @@ namespace MonoPrimitives
         private static readonly byte[] Fallback = { 0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b11111 };
 
         /// <summary>Width of <c>' '</c>, as a fraction of a normal glyph's width. Set once to change it globally (shared by both libraries' renderers).</summary>
-        public static float SpaceWidthScale = 0.3f;
+        public static float SpaceWidthScale { get; set; } = 0.3f;
 
         /// <summary>The 7-row bitmap for <paramref name="c"/>, or a hollow-box fallback if it has no glyph.</summary>
         public static byte[] GetGlyph(char c) => Glyphs.TryGetValue(c, out byte[]? found) ? found : Fallback;
@@ -169,7 +172,7 @@ namespace MonoPrimitives
         /// libraries' <c>MeasureText</c>. Width is in the same unit as height (screen pixels for
         /// the 2D renderer, world units along a billboard's own axes for the 3D one).
         /// </summary>
-        public static (float width, float height) MeasureText(string text, float pixelSize, float glyphSpacing, float lineSpacing)
+        public static (float Width, float Height) MeasureText(string text, float pixelSize, float glyphSpacing, float lineSpacing)
         {
             if (string.IsNullOrEmpty(text) || pixelSize <= 0f) return (0f, 0f);
 

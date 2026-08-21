@@ -11,22 +11,35 @@ namespace MonoPrimitives
     /// </summary>
     public static class Easing
     {
+        /// <summary>No easing — passes <paramref name="t"/> through unchanged. The baseline every other curve bends away from.</summary>
         public static float Linear(float t) => t;
 
+        /// <summary>Quadratic ease-in: slow start, accelerating toward the end.</summary>
         public static float QuadIn(float t) => t * t;
+        /// <summary>Quadratic ease-out: fast start, decelerating into the end — the everyday default for "settle into place."</summary>
         public static float QuadOut(float t) => t * (2f - t);
+        /// <summary>Quadratic ease-in-out: slow start and end, faster through the middle.</summary>
         public static float QuadInOut(float t) => t < 0.5f ? 2f * t * t : -1f + (4f - 2f * t) * t;
 
+        /// <summary>Cubic ease-in — like <see cref="QuadIn"/> but with a more pronounced slow start.</summary>
         public static float CubicIn(float t) => t * t * t;
+        /// <summary>Cubic ease-out — like <see cref="QuadOut"/> but with a more pronounced slow finish.</summary>
         public static float CubicOut(float t) { float f = t - 1f; return f * f * f + 1f; }
+        /// <summary>Cubic ease-in-out — like <see cref="QuadInOut"/> but with a stronger curve at both ends.</summary>
         public static float CubicInOut(float t) => t < 0.5f ? 4f * t * t * t : 1f - MathF.Pow(-2f * t + 2f, 3f) * 0.5f;
 
+        /// <summary>Quartic ease-in — even more pronounced slow start than <see cref="CubicIn"/>.</summary>
         public static float QuartIn(float t) => t * t * t * t;
+        /// <summary>Quartic ease-out — even more pronounced slow finish than <see cref="CubicOut"/>.</summary>
         public static float QuartOut(float t) { float f = t - 1f; return 1f - f * f * f * f; }
+        /// <summary>Quartic ease-in-out — a stronger curve at both ends than <see cref="CubicInOut"/>.</summary>
         public static float QuartInOut(float t) { float f = t - 1f; return t < 0.5f ? 8f * t * t * t * t : 1f - 8f * f * f * f * f; }
 
+        /// <summary>Exponential ease-in: barely moves at first, then accelerates sharply right at the end — the most dramatic slow-start curve here.</summary>
         public static float ExpoIn(float t) => t <= 0f ? 0f : MathF.Pow(2f, 10f * (t - 1f));
+        /// <summary>Exponential ease-out: a sharp initial burst that quickly decelerates and coasts to the end — the most dramatic fast-start curve here.</summary>
         public static float ExpoOut(float t) => t >= 1f ? 1f : 1f - MathF.Pow(2f, -10f * t);
+        /// <summary>Exponential ease-in-out — <see cref="ExpoIn"/> and <see cref="ExpoOut"/> combined into one motion.</summary>
         public static float ExpoInOut(float t)
         {
             if (t <= 0f) return 0f;
@@ -34,8 +47,11 @@ namespace MonoPrimitives
             return t < 0.5f ? MathF.Pow(2f, 20f * t - 10f) * 0.5f : (2f - MathF.Pow(2f, -20f * t + 10f)) * 0.5f;
         }
 
+        /// <summary>Sine ease-in: a gentle, smooth slow start — softer than <see cref="QuadIn"/>.</summary>
         public static float SineIn(float t) => 1f - MathF.Cos(t * MathF.PI * 0.5f);
+        /// <summary>Sine ease-out: a gentle, smooth slow finish — softer than <see cref="QuadOut"/>.</summary>
         public static float SineOut(float t) => MathF.Sin(t * MathF.PI * 0.5f);
+        /// <summary>Sine ease-in-out: the gentlest, smoothest curve here — good as a default when you want easing to be felt rather than noticed.</summary>
         public static float SineInOut(float t) => -(MathF.Cos(MathF.PI * t) - 1f) * 0.5f;
 
         /// <summary>Eases in with a slight pull backward first — a small "wind-up" before moving.</summary>

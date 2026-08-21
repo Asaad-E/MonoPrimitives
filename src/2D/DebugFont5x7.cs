@@ -16,7 +16,10 @@ namespace MonoPrimitives.Primitives2D
     /// </summary>
     public static class DebugFont5x7
     {
+        /// <summary>Glyph width in pixels before <c>pixelSize</c> scaling — see <see cref="FontGlyphs5x7.GlyphWidth"/>.</summary>
         public const int GlyphWidth = FontGlyphs5x7.GlyphWidth;
+
+        /// <summary>Glyph height in pixels before <c>pixelSize</c> scaling — see <see cref="FontGlyphs5x7.GlyphHeight"/>.</summary>
         public const int GlyphHeight = FontGlyphs5x7.GlyphHeight;
 
         /// <summary>Width of <c>' '</c>, as a fraction of a normal glyph's width. Set once to change it globally (shared with the 3D library's text renderer).</summary>

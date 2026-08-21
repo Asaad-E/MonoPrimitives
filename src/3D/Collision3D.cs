@@ -10,11 +10,19 @@ namespace MonoPrimitives.Primitives3D
     /// </summary>
     public readonly struct RayCollision3D
     {
+        /// <summary>Whether the ray actually hit anything. When <c>false</c>, the other three fields are meaningless (typically <c>default</c>) — always check this first.</summary>
         public readonly bool Hit;
+
+        /// <summary>Distance from the ray's origin to <see cref="Point"/>, in the same units as the ray's direction (world units for a normalized direction).</summary>
         public readonly float Distance;
+
+        /// <summary>World-space point where the ray hit.</summary>
         public readonly Vector3 Point;
+
+        /// <summary>Surface normal at <see cref="Point"/>, pointing away from the shape.</summary>
         public readonly Vector3 Normal;
 
+        /// <summary>Builds a result directly — normally returned by a <see cref="Collision3D"/> raycast method rather than constructed by hand.</summary>
         public RayCollision3D(bool hit, float distance, Vector3 point, Vector3 normal)
         {
             Hit = hit;

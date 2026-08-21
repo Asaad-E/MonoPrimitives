@@ -42,6 +42,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public ViewportAdapter2D? ViewportAdapter { get; }
 
+        /// <summary>Creates a camera with no <see cref="ViewportAdapter"/> — <paramref name="offset"/> is assumed to already be in the same raw pixel space as screen/mouse coordinates.</summary>
         public Camera2D(Vector2 target, Vector2 offset, float rotation = 0f, float zoom = 1f)
         {
             Target = target;

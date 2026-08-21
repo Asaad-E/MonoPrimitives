@@ -23,6 +23,7 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>How many points are actually recorded so far (grows to <see cref="Capacity"/>, then stays there).</summary>
         public int Count { get; private set; }
 
+        /// <summary>Creates an empty trail holding up to <paramref name="capacity"/> points.</summary>
         public Trail3D(int capacity)
         {
             if (capacity < 2)

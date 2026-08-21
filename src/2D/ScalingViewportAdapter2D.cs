@@ -14,9 +14,12 @@ namespace MonoPrimitives.Primitives2D
     /// </summary>
     public sealed class ScalingViewportAdapter2D : ViewportAdapter2D
     {
+        /// <inheritdoc/>
         public override int VirtualWidth { get; }
+        /// <inheritdoc/>
         public override int VirtualHeight { get; }
 
+        /// <summary>Wraps <paramref name="device"/>, stretching a <paramref name="virtualWidth"/>×<paramref name="virtualHeight"/> virtual resolution to exactly fill it.</summary>
         public ScalingViewportAdapter2D(GraphicsDevice device, int virtualWidth, int virtualHeight) : base(device)
         {
             if (virtualWidth <= 0 || virtualHeight <= 0)
