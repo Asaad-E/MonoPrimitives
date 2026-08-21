@@ -39,6 +39,14 @@ namespace MonoPrimitives.Primitives2D
         public static bool CheckCollisionCircleLine(Vector2 center, float radius, Vector2 p1, Vector2 p2)
             => CheckCollisionPointLine(center, p1, p2, radius);
 
+        /// <summary>
+        /// Circle vs capsule overlap — a capsule is just a thick line segment, so this is exactly
+        /// <see cref="CheckCollisionCircleLine"/> with the two radii combined into one threshold
+        /// instead of just the circle's own.
+        /// </summary>
+        public static bool CheckCollisionCircleCapsule(Vector2 circleCenter, float circleRadius, Vector2 capsuleStart, Vector2 capsuleEnd, float capsuleRadius)
+            => CheckCollisionPointLine(circleCenter, capsuleStart, capsuleEnd, circleRadius + capsuleRadius);
+
         /// <summary>Point inside (or on the edge of) a rectangle. Thin wrapper over <see cref="Rectangle.Contains(Point)"/>, included here for naming consistency with the rest of this class.</summary>
         public static bool CheckCollisionPointRec(Vector2 point, Rectangle rec)
             => point.X >= rec.Left && point.X <= rec.Right && point.Y >= rec.Top && point.Y <= rec.Bottom;
@@ -210,6 +218,65 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Circle vs triangle overlap (see <see cref="CheckCollisionCirclePoly"/>).</summary>
         public static bool CheckCollisionCircleTriangle(Vector2 center, float radius, Vector2 p1, Vector2 p2, Vector2 p3)
             => CheckCollisionCirclePoly(center, radius, [p1, p2, p3]);
+
+        /// <summary>
+        /// Capsule vs capsule overlap — the standard "cheap, robust hitbox" check both shapes
+        /// exist for: distance between their two axis SEGMENTS (not points), compared against the
+        /// sum of both radii, via <see cref="SegmentSegmentDistanceSquared"/>.
+        /// </summary>
+        public static bool CheckCollisionCapsuleCapsule(Vector2 aStart, Vector2 aEnd, float aRadius, Vector2 bStart, Vector2 bEnd, float bRadius)
+        {
+            float radiusSum = aRadius + bRadius;
+            return SegmentSegmentDistanceSquared(aStart, aEnd, bStart, bEnd) <= radiusSum * radiusSum;
+        }
+
+        /// <summary>
+        /// Squared distance between the closest points of two line segments — the standard
+        /// closest-point-between-segments algorithm (Ericson, "Real-Time Collision Detection"),
+        /// handling every degenerate case (either or both segments collapsed to a point, parallel
+        /// segments) without branching on them explicitly. <c>s</c>/<c>t</c> are each segment's
+        /// own parametric position of its closest point, clamped to [0,1] (i.e. always actually
+        /// ON the segment, never the infinite line through it).
+        /// </summary>
+        private static float SegmentSegmentDistanceSquared(Vector2 p1, Vector2 q1, Vector2 p2, Vector2 q2)
+        {
+            Vector2 d1 = q1 - p1, d2 = q2 - p2, r = p1 - p2;
+            float a = Vector2.Dot(d1, d1), e = Vector2.Dot(d2, d2), f = Vector2.Dot(d2, r);
+
+            float s, t;
+            if (a <= 1e-12f && e <= 1e-12f)
+            {
+                return Vector2.DistanceSquared(p1, p2); // both segments are points
+            }
+            if (a <= 1e-12f)
+            {
+                s = 0f;
+                t = Math.Clamp(f / e, 0f, 1f);
+            }
+            else
+            {
+                float c = Vector2.Dot(d1, r);
+                if (e <= 1e-12f)
+                {
+                    t = 0f;
+                    s = Math.Clamp(-c / a, 0f, 1f);
+                }
+                else
+                {
+                    float b = Vector2.Dot(d1, d2);
+                    float denom = a * e - b * b;
+                    s = denom > 1e-12f ? Math.Clamp((b * f - c * e) / denom, 0f, 1f) : 0f;
+                    t = (b * s + f) / e;
+
+                    if (t < 0f) { t = 0f; s = Math.Clamp(-c / a, 0f, 1f); }
+                    else if (t > 1f) { t = 1f; s = Math.Clamp((b - c) / a, 0f, 1f); }
+                }
+            }
+
+            Vector2 closest1 = p1 + d1 * s;
+            Vector2 closest2 = p2 + d2 * t;
+            return Vector2.DistanceSquared(closest1, closest2);
+        }
 
         // =====================================================================
         // RAYCASTS — the 2D counterpart to Camera3D's GetScreenToWorldRay and
