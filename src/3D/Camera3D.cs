@@ -136,8 +136,8 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>
         /// Restores <see cref="Position"/>/<see cref="Target"/>/<see cref="Up"/>/<see cref="Fovy"/>/
         /// <see cref="Projection"/>/<see cref="NearPlane"/>/<see cref="FarPlane"/> to the values
-        /// passed at construction, and clears smooth-zoom/smooth-follow/head-bobbing state so
-        /// there's no lingering velocity to swoop through afterward. Bound to <c>R</c> by default
+        /// passed at construction, and clears smooth-zoom/smooth-follow/head-bobbing/screen-shake
+        /// state so there's no lingering velocity (or trauma) to swoop through afterward. Bound to <c>R</c> by default
         /// in <see cref="UpdateWithInput(PrimitiveInput, float)"/>; call directly if you're not
         /// using that. Deliberately leaves <see cref="Mode"/> alone — that's a control-scheme
         /// choice, not part of the camera's pose.
@@ -156,6 +156,7 @@ namespace MonoPrimitives.Primitives3D
             _zoomVelocity = 0f;
             ResetFollowVelocity();
             ResetHeadBobbing();
+            ResetTrauma();
         }
 
         // ---------------------------------------------------------------------
