@@ -28,7 +28,7 @@ Shared foundation used by both 2D and 3D — nothing here is 2D- or 3D-specific.
 | `Collision2D.cs` | Overlap tests + 3 raycasts. Detection only. Includes convex-polygon overlaps (`PolyPoly`/`RecPoly`/`RecTriangle`/`TriangleTriangle`, SAT-based — require convex input) and circle-vs-any-simple-polygon (`CirclePoly`/`CircleTriangle`, NOT SAT — correct for concave polygons too, same generality as `CheckCollisionPointPoly`). `CheckCollisionCircleCapsule`/`CheckCollisionCapsuleCapsule` cover the Capsule shape — the latter via a private `SegmentSegmentDistanceSquared` closest-point-between-segments core (Ericson's standard algorithm). |
 | `DebugFont5x7.cs` | `DrawString`/`MeasureText` on `PrimitiveBatch`, via `FillRectangle`. |
 | `Trail2D.cs` | Fixed-capacity fading position history. `fadeToAlpha` is clamped to [0,1]. |
-| `UnitCircleLut.cs` | Public precomputed unit-circle table — the 2D counterpart to the 3D library's `TrigLut`, for your own curved geometry. `PrimitiveBatch` uses it internally instead of keeping a private duplicate. |
+| `UnitCircleLut.cs` | Public precomputed unit-circle table — the 2D counterpart to the 3D library's `TrigLut`, for your own curved geometry. `PrimitiveBatch` uses it internally instead of keeping a private duplicate. `Sample` floors before casting to an index (not a raw truncating `(int)` cast), so negative/out-of-`[0,1)` input wraps exactly instead of within a curvature-sized error. |
 
 ## `src/3D/` — namespace `MonoPrimitives.Primitives3D`
 
