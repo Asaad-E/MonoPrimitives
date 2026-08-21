@@ -9,5 +9,5 @@ Known gaps and queued ideas. Check before proposing something "obviously missing
 
 ## Real gaps, not yet built
 
-- **NuGet publish finalization**: `src/MonoPrimitives.csproj` needs `Authors`, `PackageLicenseExpression`, `RepositoryUrl`, and a real starting version before an actual publish — a deliberate decision, not something to fill in speculatively.
-- **No CI** — no GitHub remote yet either.
+- **NuGet: not yet published.** `src/MonoPrimitives.csproj` metadata (`Authors`, `PackageLicenseExpression: MIT`, `RepositoryUrl`/`PackageProjectUrl`, root `LICENSE`) is filled in and `MonoPrimitives` is confirmed free on nuget.org as of this check — remaining steps (nuget.org account, API key, `dotnet pack` + `dotnet nuget push`) require the repo owner's own credentials, so they're not something to run unattended.
+- **No CI**, though a GitHub remote now exists (`github.com/Asaad-E/MonoPrimitives`).

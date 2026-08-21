@@ -14,12 +14,17 @@
     <Nullable>disable</Nullable>
   </PropertyGroup>
 
-  <!-- NuGet metadata: placeholders, filled in for real before the first publish. -->
+  <!-- NuGet metadata -->
   <PropertyGroup>
     <PackageId>MonoPrimitives</PackageId>
     <Version>0.1.0</Version>
+    <Authors>Asaad-E</Authors>
     <Description>Immediate-mode 2D and 3D primitive drawing for MonoGame, plus the small set of helpers a fast prototype usually needs — camera, input, easing, color, noise, and collision/raycast tests — in one package.</Description>
     <PackageTags>monogame;2d;3d;primitives;drawing;prototyping</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Asaad-E/MonoPrimitives</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Asaad-E/MonoPrimitives</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
