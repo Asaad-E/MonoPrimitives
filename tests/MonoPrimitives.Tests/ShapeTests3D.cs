@@ -82,13 +82,26 @@ namespace MonoPrimitives.Tests
             Check(results, "DrawPoint3D", batch, camera, () =>
                 batch.DrawPoint3D(Vector3.Zero, Color.Black), expectLines: true);
 
-            Check(results, "DrawArrow3D", batch, camera, () =>
-                batch.DrawArrow3D(Vector3.Zero, new Vector3(0, 5, 0), 0.3f, 8, Color.Black), expectTriangles: true);
+            Check(results, "DrawArrow (headRadius/sides overload)", batch, camera, () =>
+                batch.DrawArrow(Vector3.Zero, new Vector3(0, 5, 0), 0.3f, 8, Color.Black), expectTriangles: true);
 
             Check(results, "DrawSplineCatmullRom3D", batch, camera, () =>
                 batch.DrawSplineCatmullRom3D(
                     new[] { new Vector3(-2, 0, 0), new Vector3(-1, 1, 0), new Vector3(1, -1, 0), new Vector3(2, 0, 0) },
                     Color.Black), expectTriangles: true);
+
+            Check(results, "DrawSplineBasis3D", batch, camera, () =>
+                batch.DrawSplineBasis3D(
+                    new[] { new Vector3(-2, 0, 0), new Vector3(-1, 1, 0), new Vector3(1, -1, 0), new Vector3(2, 0, 0) },
+                    Color.Black), expectTriangles: true);
+
+            Check(results, "DrawSplineBezierQuadratic3D", batch, camera, () =>
+                batch.DrawSplineBezierQuadratic3D(
+                    new[] { new Vector3(-2, 0, 0), new Vector3(-1, 2, 0), new Vector3(0, 0, 0), new Vector3(1, -2, 0), new Vector3(2, 0, 0) },
+                    Color.Black), expectTriangles: true);
+
+            Check(results, "BorderFrustum", batch, camera, () =>
+                batch.BorderFrustum(camera.GetFrustum(1.0f), Color.Black), expectLines: true);
 
             Check(results, "DrawSplineBezierCubic3D", batch, camera, () =>
                 batch.DrawSplineBezierCubic3D(
