@@ -222,7 +222,7 @@ internal static class Gallery3D
         new("Line dashed", (b, p) => b.DrawLine3DDashed(p + new Vector3(-1.5f, 1.5f, 0), p + new Vector3(1.5f, 1.5f, 0), 0.4f, 0.2f, FillColor)),
         new("Point", (b, p) => b.DrawPoint3D(p + Vector3.UnitY * 1.5f, 0.3f, Color.Black)),
         new("Point cross", (b, p) => b.DrawPoint3DCross(p + Vector3.UnitY * 1.5f, 0.3f, Color.Black)),
-        new("Arrow", (b, p) => b.DrawArrow3D(p, p + Vector3.UnitY * 3f, 0.3f, 8, Color.Black)),
+        new("Arrow", (b, p) => b.DrawArrow(p, p + Vector3.UnitY * 3f, 0.3f, 8, Color.Black)),
     };
 
     // ==================================================================
@@ -235,6 +235,12 @@ internal static class Gallery3D
             new[] { p + new Vector3(-2, 0.5f, 0), p + new Vector3(-1, 2f, 0), p + new Vector3(1, -1f, 0), p + new Vector3(2, 0.5f, 0) },
             1f, FillColor)),
         new("Bezier cubic", (b, p) => b.DrawSplineBezierCubic3D(
+            new[] { p + new Vector3(-2, 0.5f, 0), p + new Vector3(-1, 3f, 0), p + new Vector3(1, -2f, 0), p + new Vector3(2, 0.5f, 0) },
+            1f, FillColor)),
+        new("Bezier quadratic", (b, p) => b.DrawSplineBezierQuadratic3D(
+            new[] { p + new Vector3(-2, 0.5f, 0), p + new Vector3(-1, 3f, 0), p + new Vector3(0, 0.5f, 0), p + new Vector3(1, -2f, 0), p + new Vector3(2, 0.5f, 0) },
+            1f, FillColor)),
+        new("Basis (B-spline)", (b, p) => b.DrawSplineBasis3D(
             new[] { p + new Vector3(-2, 0.5f, 0), p + new Vector3(-1, 3f, 0), p + new Vector3(1, -2f, 0), p + new Vector3(2, 0.5f, 0) },
             1f, FillColor)),
     };
