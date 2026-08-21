@@ -224,5 +224,6 @@ protected override void Draw(GameTime gameTime)
 ## See also
 
 - [`Guide/PrimitiveBatch_Guide.md`](PrimitiveBatch_Guide.md) — everything `Camera2D.GetTransformMatrix()` feeds into.
+- [`Guide/PrimitiveInput_Guide.md`](PrimitiveInput_Guide.md) — the `PrimitiveInput` instance `UpdateWithInput` reads from.
 - [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the mouse-drag rotation fix, `Reset()` parity with `Camera3D`, the `Offset` live-tracking decision (including the direct comparison against MonoGame.Extended's actual `OrthographicCamera` source), and `BoundingRectangle`'s rounding fix.
 - `examples/test/ViewportTest` — every adapter mode, 2D and 3D, verified via round-trip `ScreenToWorld(WorldToScreen(x))` checks and a rendered-marker-position check; the best place to see all of the above running side by side.
