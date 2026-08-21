@@ -64,6 +64,7 @@ namespace MonoPrimitives.Primitives2D
         public void Draw(PrimitiveBatch batch, Color color, float thickness = 2f, float fadeToAlpha = 0f)
         {
             if (Count < 2) return;
+            fadeToAlpha = Math.Clamp(fadeToAlpha, 0f, 1f);
             float denom = Count - 1;
             for (int i = 1; i < Count; i++)
             {
