@@ -314,4 +314,5 @@ Circles/arcs/ellipses pick their own triangle-fan segment count automatically fr
 - [`Design/ROADMAP.md`](../Design/ROADMAP.md) — known gaps, including the reflex-vertex offsetting limitation above.
 - [`Collision2D`](../src/2D/Collision2D.cs) — a separate static class in the same namespace with `CheckCollision*` methods (Rec/Circle/Triangle/Poly/Capsule, including mixed-shape pairs) for hit-testing the shapes this guide draws. Not part of `PrimitiveBatch` itself.
 - [`Camera2D_Guide.md`](Camera2D_Guide.md) — `Camera2D` and the letterbox/scaling `ViewportAdapter2D` family for keeping a `PrimitiveBatch` scene correctly projected across resolutions.
+- [`Color_Guide.md`](Color_Guide.md) — `Palette`/`ColorUtil`, the colors this guide's shapes are drawn with.
 - [`Trail2D_Guide.md`](Trail2D_Guide.md) — a fading position-history trail built on `DrawLine`.
