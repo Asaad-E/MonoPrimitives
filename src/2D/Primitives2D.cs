@@ -2572,6 +2572,35 @@ namespace MonoPrimitives.Primitives2D
                 PushTriangleIndices(b, b + 1 + i, b + 2 + i);
         }
 
+        /// <summary>
+        /// Draws a filled circle sector (pie slice) with a radial gradient from
+        /// <paramref name="inner"/> (center) to <paramref name="outer"/> (rim) — the sector
+        /// counterpart to <see cref="FillCircleGradient"/>.
+        /// </summary>
+        public void DrawCircleSectorGradient(Vector2 center, float radius, float startAngle, float endAngle, Color inner, Color outer)
+            => DrawCircleSectorGradient(center, radius, startAngle, endAngle,
+                   SegmentsForArc(radius, (endAngle - startAngle) * MathHelper.TwoPi), inner, outer);
+
+        /// <inheritdoc cref="DrawCircleSectorGradient(Vector2,float,float,float,Color,Color)"/>
+        public void DrawCircleSectorGradient(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color inner, Color outer)
+        {
+            ThrowIfNotBegun();
+            if (segments < 1 || radius <= 0f) return;
+
+            int b = Reserve(segments + 2, segments * 3);
+            PushVertex(center, inner);
+
+            float step = (endAngle - startAngle) / segments;
+            for (int i = 0; i <= segments; i++)
+            {
+                Vector2 u = SampleUnitCircle(startAngle + i * step);
+                PushVertex(center.X + u.X * radius, center.Y + u.Y * radius, outer);
+            }
+
+            for (int i = 0; i < segments; i++)
+                PushTriangleIndices(b, b + 1 + i, b + 2 + i);
+        }
+
         /// <summary>Draws the outline of a circle sector, including the two radii.</summary>
         public void DrawCircleSectorLines(Vector2 center, float radius, float startAngle, float endAngle, float thickness, Color color)
         {
@@ -2624,6 +2653,43 @@ namespace MonoPrimitives.Primitives2D
         public void DrawRing(Vector2 center, float innerRadius, float outerRadius, Color color)
             => DrawRing(center, innerRadius, outerRadius, 0f, 1f,
                         SegmentsForArc(outerRadius, MathHelper.TwoPi), color);
+
+        /// <summary>
+        /// Draws a filled ring (or partial arc band) with a radial gradient from
+        /// <paramref name="innerColor"/> at <paramref name="innerRadius"/> to <paramref name="outerColor"/>
+        /// at <paramref name="outerRadius"/> — the ring counterpart to <see cref="FillCircleGradient"/>,
+        /// except the fade runs across the band's own width rather than from a center point (a
+        /// ring has no center within its own filled area).
+        /// </summary>
+        public void DrawRingGradient(Vector2 center, float innerRadius, float outerRadius,
+            float startAngle, float endAngle, int segments, Color innerColor, Color outerColor)
+        {
+            ThrowIfNotBegun();
+            if (segments < 1 || outerRadius <= 0f) return;
+            if (innerRadius < 0f) innerRadius = 0f;
+
+            int b = Reserve((segments + 1) * 2, segments * 2 * 3);
+            float step = (endAngle - startAngle) / segments;
+
+            for (int i = 0; i <= segments; i++)
+            {
+                Vector2 u = SampleUnitCircle(startAngle + i * step);
+                PushVertex(center.X + u.X * outerRadius, center.Y + u.Y * outerRadius, outerColor);
+                PushVertex(center.X + u.X * innerRadius, center.Y + u.Y * innerRadius, innerColor);
+            }
+
+            for (int i = 0; i < segments; i++)
+            {
+                int i0 = b + i * 2, i1 = b + (i + 1) * 2;
+                PushTriangleIndices(i0, i0 + 1, i1 + 1);
+                PushTriangleIndices(i0, i1 + 1, i1);
+            }
+        }
+
+        /// <inheritdoc cref="DrawRingGradient(Vector2,float,float,float,float,int,Color,Color)"/>
+        public void DrawRingGradient(Vector2 center, float innerRadius, float outerRadius, Color innerColor, Color outerColor)
+            => DrawRingGradient(center, innerRadius, outerRadius, 0f, 1f,
+                                 SegmentsForArc(outerRadius, MathHelper.TwoPi), innerColor, outerColor);
 
         /// <summary>
         /// Draws a ring's outline: the outer and inner arcs, plus (for a partial ring) the
