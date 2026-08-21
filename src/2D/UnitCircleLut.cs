@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 
@@ -37,7 +38,12 @@ namespace MonoPrimitives.Primitives2D
         public static Vector2 Sample(float t01)
         {
             float f = t01 * Resolution;
-            int i0 = (int)f;
+            // Floor, not a raw (int) cast -- (int)f truncates toward zero, which is wrong for
+            // negative f (e.g. (int)(-51.2f) is -51, not -52) and left frac negative, extrapolating
+            // from the wrong side of the wrapped index instead of interpolating within it. Harmless
+            // in practice (the lerp is linear, so it still lands within a curvature-sized error of
+            // the correct point), but exact is free here -- same fix as Noise.cs's lattice wrap.
+            int i0 = (int)MathF.Floor(f);
             float frac = f - i0;
 
             i0 &= Resolution - 1; // Resolution is a power of two
