@@ -12,7 +12,7 @@ These five are kept short on purpose — current state only, no narrative. Deepe
 
 - **[../Guide/](../Guide/)** — the current, actively-maintained per-topic guides, one file per topic, being built up incrementally (not all topics are migrated here yet — see below). Start here for anything it already covers.
   - **[RandomUtil_Guide.md](../Guide/RandomUtil_Guide.md)** — `RandomUtil`: every method, what it computes and when to reach for it, the algorithms behind Gaussian/Poisson/Binomial sampling, and single-threaded vs. multi-threaded usage.
-- **[2D/Primitives2D_Guide.md](2D/Primitives2D_Guide.md)** — full 2D API reference.
+  - **[PrimitiveBatch_Guide.md](../Guide/PrimitiveBatch_Guide.md)** — `PrimitiveBatch`: every 2D shape method grouped by family, the Fill/Border/Draw/Gradient/Shadow conventions, and how shadows/gradients/segment counts actually work.
 - **[2D/ViewportAdapter_Guide.md](2D/ViewportAdapter_Guide.md)** — the 4 viewport adapters, when to use each, and how 3D scenes share them for letterbox-aware projection.
 - **[2D/Primitives2D_Audit_Report.md](2D/Primitives2D_Audit_Report.md)**, **[2D/Overnight_Changes_2026-08-19.md](2D/Overnight_Changes_2026-08-19.md)**, **[3D/Primitive3D_Changes.md](3D/Primitive3D_Changes.md)** — historical session logs. Archaeology only ("why does this bug fix exist") — the five docs above already capture current state. Long; don't load by default.
 

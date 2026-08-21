@@ -20,7 +20,7 @@ See [`samples/MonoPrimitives.Sample`](samples/MonoPrimitives.Sample) for a minim
 
 ## Documentation
 
-Start at **[`Design/README.md`](Design/README.md)** — project brief, architecture map, conventions, and the reasoning behind non-obvious choices. The full 2D API reference is at [`Design/2D/Primitives2D_Guide.md`](Design/2D/Primitives2D_Guide.md).
+Start at **[`Design/README.md`](Design/README.md)** — project brief, architecture map, conventions, and the reasoning behind non-obvious choices. The full 2D API reference is at [`Guide/PrimitiveBatch_Guide.md`](Guide/PrimitiveBatch_Guide.md).
 
 ## Status
 
