@@ -26,7 +26,11 @@ public class Game1 : Game
 
     private OrthographicCamera _camera;
 
-    // 2D shape gallery — separate camera from the 3D one above, toggled with Tab.
+    // 2D shape gallery — separate camera from the 3D one above, toggled with Tab. Camera2D is
+    // constructed with its own ViewportAdapter2D (MonoGame.Extended-style: the adapter is a
+    // constructor dependency, not a parameter threaded through every call) so screen<->world
+    // conversions and mouse-drag panning stay correct if the window is resized/letterboxed.
+    private ViewportAdapter2D _viewportAdapter2d;
     private Camera2D _camera2d;
     private bool _show2DGallery = true;
     private Vector2 _gallery2DSize;
@@ -82,7 +86,12 @@ public class Game1 : Game
             fovy: 50
         );
 
-        _camera2d = new Camera2D(target: Vector2.Zero, offset: Vector2.Zero, zoom: 1f);
+        _viewportAdapter2d = new BoxingViewportAdapter2D(GraphicsDevice, ScreenSizeX, SCreenSizeY);
+        // Offset overridden back to zero after construction: the ctor defaults it to the
+        // adapter's virtual center (Extended's own convention), but this gallery's pan/clamp
+        // design (see UpdateGallery2DCamera) wants Target itself to be the world point drawn at
+        // the screen's top-left corner instead.
+        _camera2d = new Camera2D(_viewportAdapter2d, target: Vector2.Zero, zoom: 1f) { Offset = Vector2.Zero };
         // TODO: use this.Content to load your game content here
     }
 
@@ -123,9 +132,10 @@ public class Game1 : Game
 
         if (_show2DGallery)
         {
+            _viewportAdapter2d.Apply();
             GraphicsDevice.Clear(Palette.Background);
 
-            _primitiveBatch.Begin(_camera2d.GetTransformMatrix());
+            _primitiveBatch.Begin(_camera2d.GetTransformMatrix() * _viewportAdapter2d.GetScaleMatrix());
             _primitiveBatch.DrawGrid(80, 40f);
             _primitiveBatch.DrawAxis(2000f);
             _gallery2DSize = Gallery2D.Draw(_primitiveBatch);
@@ -133,6 +143,10 @@ public class Game1 : Game
         }
         else
         {
+            // Undo any letterboxing DrawGallery2D's ViewportAdapter2D.Apply() left in place on a
+            // previous frame — 3D isn't composited through that adapter, so it wants the full
+            // device viewport back.
+            _viewportAdapter2d.Reset();
             GraphicsDevice.Clear(Color.White);
 
             _primitive3DBatch.Begin(_camera3d);

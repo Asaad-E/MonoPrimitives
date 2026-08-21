@@ -26,9 +26,15 @@ next to actual draw calls.
 
 ## Using it with 2D content
 
+Pass the adapter to `Camera2D`'s constructor (MonoGame.Extended's own `OrthographicCamera(ViewportAdapter)`
+shape) rather than threading it through every call — once stored, `ScreenToWorld`/`WorldToScreen`/
+`GetVisibleWorldBounds`/the mouse-drag part of `ReadDefaultInput` all use it automatically:
+
 ```csharp
 var adapter = new BoxingViewportAdapter2D(GraphicsDevice, virtualWidth: 480, virtualHeight: 270);
-var camera2d = new Camera2D(...);
+var camera2d = new Camera2D(adapter, target: Vector2.Zero, zoom: 1f);
+// camera2d.Offset now defaults to the adapter's virtual center (240, 135) — override it if you
+// want a different anchor (e.g. Vector2.Zero so Target is the point drawn at the top-left corner).
 
 // once per frame, before drawing:
 adapter.Apply(); // narrows Device.Viewport to the boxed rect; clears/draws stop at its edge
@@ -36,8 +42,9 @@ primitiveBatch.Begin(camera2d.GetTransformMatrix() * adapter.GetScaleMatrix());
 // ... draw in virtual (480x270) coordinates ...
 primitiveBatch.End();
 
-// mouse input: convert window pixels to virtual coordinates before hit-testing
-Vector2 virtualMouse = adapter.PointToVirtual(rawMousePosition);
+// mouse input: ScreenToWorld/WorldToScreen take raw window pixels and handle the adapter mapping
+// internally — no manual PointToVirtual call needed once the camera owns the adapter.
+Vector2 mouseWorld = camera2d.ScreenToWorld(rawMousePosition);
 ```
 
 ## Using it with 3D content

@@ -48,6 +48,17 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Scale factor: 1 = no zoom, &gt;1 = zoomed in, &lt;1 = zoomed out.</summary>
         public float Zoom = 1f;
 
+        /// <summary>
+        /// Viewport adapter this camera was constructed with, if any — MonoGame.Extended-style:
+        /// set once at construction, then every viewport-dependent method (<see cref="ScreenToWorld"/>,
+        /// <see cref="WorldToScreen"/>, <see cref="GetVisibleWorldBounds"/>,
+        /// <see cref="ReadDefaultInput(float)"/>'s mouse-drag pan) uses it automatically instead
+        /// of requiring it passed in again at every call site. <c>null</c> for the raw-screen-space
+        /// constructors — those methods then fall back to assuming <see cref="Offset"/> is
+        /// already in the same pixel space as raw device/mouse coordinates.
+        /// </summary>
+        public ViewportAdapter2D? ViewportAdapter { get; }
+
         public Camera2D() { }
 
         public Camera2D(Vector2 target, Vector2 offset, float rotation = 0f, float zoom = 1f)
@@ -58,14 +69,33 @@ namespace MonoPrimitives.Primitives2D
             Zoom = zoom;
         }
 
-        /// <summary>Creates a camera centered on the device's current viewport, looking at <paramref name="target"/> (world origin by default).</summary>
+        /// <summary>
+        /// MonoGame.Extended's own <c>OrthographicCamera(ViewportAdapter)</c> constructor shape:
+        /// <see cref="Offset"/> defaults to the adapter's virtual center, and <see cref="ViewportAdapter"/>
+        /// is stored so screen↔world conversions and mouse-drag panning account for letterbox
+        /// bars/scaling automatically. Prefer this over the raw <see cref="Camera2D(Vector2,Vector2,float,float)"/>
+        /// constructor whenever a <see cref="ViewportAdapter2D"/> is in play.
+        /// </summary>
+        public Camera2D(ViewportAdapter2D viewportAdapter, Vector2 target = default, float rotation = 0f, float zoom = 1f)
+        {
+            ViewportAdapter = viewportAdapter ?? throw new ArgumentNullException(nameof(viewportAdapter));
+            Target = target;
+            Offset = new Vector2(viewportAdapter.VirtualWidth * 0.5f, viewportAdapter.VirtualHeight * 0.5f);
+            Rotation = rotation;
+            Zoom = zoom;
+        }
+
+        /// <summary>Creates a camera centered on the device's current viewport, looking at <paramref name="target"/> (world origin by default). No <see cref="ViewportAdapter"/> — prefer <see cref="Camera2D(ViewportAdapter2D,Vector2,float,float)"/> if you have one.</summary>
         public static Camera2D CreateCentered(GraphicsDevice device, Vector2 target = default)
             => new(target, new Vector2(device.Viewport.Width * 0.5f, device.Viewport.Height * 0.5f));
 
         /// <summary>
         /// Builds the matrix to pass into <c>PrimitiveBatch.Begin</c>'s <c>transformMatrix</c>:
         /// translate by <c>-Target</c>, rotate, scale by <see cref="Zoom"/>, then translate to
-        /// <see cref="Offset"/> — the standard 2D camera composition.
+        /// <see cref="Offset"/> — the standard 2D camera composition. Does NOT include
+        /// <see cref="ViewportAdapter"/>'s own scale/offset — compose with
+        /// <c>ViewportAdapter.GetScaleMatrix()</c> yourself (per <c>Design/2D/ViewportAdapter_Guide.md</c>)
+        /// the same way you would with any other <see cref="ViewportAdapter2D"/> user.
         /// </summary>
         public Matrix GetTransformMatrix()
             => Matrix.CreateTranslation(-Target.X, -Target.Y, 0f)
@@ -73,11 +103,24 @@ namespace MonoPrimitives.Primitives2D
              * Matrix.CreateScale(Zoom, Zoom, 1f)
              * Matrix.CreateTranslation(Offset.X, Offset.Y, 0f);
 
-        /// <summary>Converts a screen-space position (e.g. mouse coordinates) to world space.</summary>
-        public Vector2 ScreenToWorld(Vector2 screenPosition) => Vector2.Transform(screenPosition, Matrix.Invert(GetTransformMatrix()));
+        /// <summary>
+        /// Converts a screen-space position (e.g. mouse coordinates) to world space. When
+        /// <see cref="ViewportAdapter"/> is set, <paramref name="screenPosition"/> is real window
+        /// pixels — mapped through the adapter into its virtual space first. Without one, it's
+        /// assumed to already be in the same pixel space as <see cref="Offset"/>.
+        /// </summary>
+        public Vector2 ScreenToWorld(Vector2 screenPosition)
+        {
+            Vector2 pos = ViewportAdapter?.PointToVirtual(screenPosition) ?? screenPosition;
+            return Vector2.Transform(pos, Matrix.Invert(GetTransformMatrix()));
+        }
 
-        /// <summary>Converts a world-space position to screen space.</summary>
-        public Vector2 WorldToScreen(Vector2 worldPosition) => Vector2.Transform(worldPosition, GetTransformMatrix());
+        /// <summary>Converts a world-space position to screen space — the inverse of <see cref="ScreenToWorld"/>, including the same <see cref="ViewportAdapter"/> mapping back to real window pixels when one is set.</summary>
+        public Vector2 WorldToScreen(Vector2 worldPosition)
+        {
+            Vector2 pos = Vector2.Transform(worldPosition, GetTransformMatrix());
+            return ViewportAdapter?.VirtualToPoint(pos) ?? pos;
+        }
 
         /// <summary>
         /// The world-space rectangle currently visible on screen, as its (min, max) corners —
@@ -86,16 +129,29 @@ namespace MonoPrimitives.Primitives2D
         /// points) that are off-screen. Returns corners rather than a framework <c>Rectangle</c>
         /// (whose fields are integers) since world space is floating-point.
         /// </summary>
-        public (Vector2 Min, Vector2 Max) GetVisibleWorldBounds(GraphicsDevice device)
+        /// <param name="device">
+        /// Only used as a fallback when this camera has no <see cref="ViewportAdapter"/> — pass
+        /// <c>null</c> (or omit) when constructed with one, since its virtual resolution is used
+        /// instead. Required (throws if both are missing) when there's no adapter.
+        /// </param>
+        public (Vector2 Min, Vector2 Max) GetVisibleWorldBounds(GraphicsDevice? device = null)
+        {
+            int width = ViewportAdapter?.VirtualWidth ?? device?.Viewport.Width
+                ?? throw new ArgumentNullException(nameof(device), $"{nameof(GetVisibleWorldBounds)} needs either a {nameof(ViewportAdapter)} (set at construction) or a {nameof(GraphicsDevice)} argument.");
+            int height = ViewportAdapter?.VirtualHeight ?? device!.Viewport.Height;
+            return GetVisibleWorldBounds(width, height);
+        }
+
+        private (Vector2 Min, Vector2 Max) GetVisibleWorldBounds(int width, int height)
         {
             if (Rotation != 0f)
             {
                 // Axis-aligned bound around all 4 rotated screen corners' world positions.
                 Matrix inv = Matrix.Invert(GetTransformMatrix());
                 Vector2 tl = Vector2.Transform(Vector2.Zero, inv);
-                Vector2 tr = Vector2.Transform(new Vector2(device.Viewport.Width, 0), inv);
-                Vector2 bl = Vector2.Transform(new Vector2(0, device.Viewport.Height), inv);
-                Vector2 br = Vector2.Transform(new Vector2(device.Viewport.Width, device.Viewport.Height), inv);
+                Vector2 tr = Vector2.Transform(new Vector2(width, 0), inv);
+                Vector2 bl = Vector2.Transform(new Vector2(0, height), inv);
+                Vector2 br = Vector2.Transform(new Vector2(width, height), inv);
                 float minX = MathF.Min(MathF.Min(tl.X, tr.X), MathF.Min(bl.X, br.X));
                 float maxX = MathF.Max(MathF.Max(tl.X, tr.X), MathF.Max(bl.X, br.X));
                 float minY = MathF.Min(MathF.Min(tl.Y, tr.Y), MathF.Min(bl.Y, br.Y));
@@ -108,7 +164,7 @@ namespace MonoPrimitives.Primitives2D
             // corner instead of its middle. Matches the rotated path's full-inverse result.
             float safeZoom = MathF.Max(Zoom, 1e-6f);
             Vector2 topLeftWorld = -Offset / safeZoom + Target;
-            Vector2 bottomRightWorld = (new Vector2(device.Viewport.Width, device.Viewport.Height) - Offset) / safeZoom + Target;
+            Vector2 bottomRightWorld = (new Vector2(width, height) - Offset) / safeZoom + Target;
             return (Vector2.Min(topLeftWorld, bottomRightWorld), Vector2.Max(topLeftWorld, bottomRightWorld));
         }
 
@@ -262,7 +318,13 @@ namespace MonoPrimitives.Primitives2D
         /// (W/A/S/D pan, left-mouse-drag pan, wheel zoom) via the shared <see cref="PrimitiveInput"/>.
         /// Pan speed is divided by <see cref="Zoom"/> so keyboard panning covers the same amount
         /// of *screen* space per second regardless of zoom level, matching how the mouse-drag
-        /// pan already behaves (a drag always tracks the cursor 1:1 on screen).
+        /// pan already behaves (a drag always tracks the cursor 1:1 on screen). When
+        /// <see cref="ViewportAdapter"/> is set, mouse-drag pan is also divided by its
+        /// <see cref="ViewportAdapter2D.Scale"/> — <see cref="PrimitiveInput.MouseDelta"/> is
+        /// always real window pixels, so without this a drag would pan the wrong amount whenever
+        /// the adapter's scale isn't 1:1 (letterbox scaling, a virtual resolution that doesn't
+        /// match the window). Keyboard pan doesn't need this — its speed is defined directly in
+        /// world units, not screen pixels.
         /// </summary>
         public CameraInput2D ReadDefaultInput(float deltaSeconds)
         {
@@ -275,7 +337,12 @@ namespace MonoPrimitives.Primitives2D
             input.Pan = _input.GetVector2(Keys.A, Keys.D, Keys.W, Keys.S) * speed;
 
             if (_input.IsMouseButtonDown(MouseButton.Left))
-                input.Pan -= _input.MouseDelta / safeZoom;
+            {
+                Vector2 mouseDelta = _input.MouseDelta;
+                if (ViewportAdapter is not null)
+                    mouseDelta /= ViewportAdapter.Scale;
+                input.Pan -= mouseDelta / safeZoom;
+            }
 
             input.Zoom = _input.MouseScrollDelta * (MouseWheelZoomSensitivity / 120f);
 
