@@ -13,11 +13,14 @@ using MonoPrimitives.Primitives3D;
 namespace Asteroids3D;
 
 /// <summary>
-/// Small 3D Asteroids demo: no menus, no pause, no music -- a free-flying ship (yaw/pitch/roll
-/// + thrust), splitting asteroids drifting in a wrapped cube of space, a chase camera. Movement
-/// reads <see cref="PrimitiveInput"/> directly; the camera is hand-driven via <see cref="Camera3D.FollowTarget"/>
-/// every frame (called by this demo, not <c>UpdateWithInput</c>) for a lag-behind chase feel.
-/// Colorful asteroids on purpose, matching the 2D version.
+/// Small 3D Asteroids demo: no menus, no pause, no music -- a free-flying ship (yaw/pitch +
+/// thrust), splitting asteroids drifting in a wrapped cube of space, a chase camera. Yaw/pitch
+/// are always relative to world Up (not the ship's own drifting up vector) so turning stays
+/// predictable no matter how the ship is currently oriented; Q/E roll is purely a cosmetic
+/// camera bank and never feeds back into flight. Movement reads <see cref="PrimitiveInput"/>
+/// directly; the camera is hand-driven via <see cref="Camera3D.FollowTarget"/> every frame
+/// (called by this demo, not <c>UpdateWithInput</c>) for a lag-behind chase feel. Colorful
+/// asteroids on purpose, matching the 2D version.
 /// </summary>
 public class Game1 : Game
 {
@@ -43,6 +46,7 @@ public class Game1 : Game
     private Vector3 _shipForward;
     private Vector3 _shipUp;
     private Vector3 _shipVelocity;
+    private float _bankAngle; // cosmetic only -- see RotateShip
     private int _lives;
     private bool _gameOver;
     private float _fireCooldown;
@@ -183,20 +187,38 @@ public class Game1 : Game
         if (_asteroids.Count == 0) SpawnWave();
     }
 
+    // Yaw and pitch are always relative to world Up, not the ship's own (drifting) up vector --
+    // the earlier version rotated yaw around _shipUp and let pitch tilt _shipUp too, so after any
+    // combined maneuver "turn left/right" stopped meaning the same thing and the ship spiraled
+    // unpredictably (reported as "controls feel super weird", reproduced by combining pitch and
+    // yaw and watching the turn axis drift). Pitch is clamped so the ship can't fly exactly
+    // straight up/down, where Forward and world Up go parallel and Right degenerates to zero.
+    // Roll (Q/E) no longer touches flight at all -- it's purely a cosmetic camera bank now, so it
+    // can never feed back into which way "turn" turns.
+    private const float MaxPitchFromWorldUp = 5f * (MathF.PI / 180f);
+
     private void RotateShip(float yaw, float pitch, float roll)
     {
         if (yaw != 0f)
-            _shipForward = Vector3.Normalize(Vector3.Transform(_shipForward, Matrix.CreateFromAxisAngle(_shipUp, yaw)));
+            _shipForward = Vector3.Normalize(Vector3.Transform(_shipForward, Matrix.CreateFromAxisAngle(Vector3.Up, yaw)));
 
-        Vector3 right = Vector3.Normalize(Vector3.Cross(_shipForward, _shipUp));
         if (pitch != 0f)
         {
-            Matrix pitchRot = Matrix.CreateFromAxisAngle(right, pitch);
-            _shipForward = Vector3.Normalize(Vector3.Transform(_shipForward, pitchRot));
-            _shipUp = Vector3.Normalize(Vector3.Transform(_shipUp, pitchRot));
+            Vector3 rightForPitch = Vector3.Normalize(Vector3.Cross(_shipForward, Vector3.Up));
+            Vector3 candidate = Vector3.Normalize(Vector3.Transform(_shipForward, Matrix.CreateFromAxisAngle(rightForPitch, pitch)));
+
+            float angleFromUp = MathF.Acos(Math.Clamp(Vector3.Dot(candidate, Vector3.Up), -1f, 1f));
+            if (angleFromUp > MaxPitchFromWorldUp && angleFromUp < MathF.PI - MaxPitchFromWorldUp)
+                _shipForward = candidate;
         }
+
+        Vector3 right = Vector3.Normalize(Vector3.Cross(_shipForward, Vector3.Up));
+        _shipUp = Vector3.Normalize(Vector3.Cross(right, _shipForward));
+
         if (roll != 0f)
-            _shipUp = Vector3.Normalize(Vector3.Transform(_shipUp, Matrix.CreateFromAxisAngle(_shipForward, roll)));
+            _bankAngle += roll;
+        else
+            _bankAngle *= 0.9f; // auto-level back toward zero once Q/E is released
     }
 
     private void UpdateBullets(float dt)
@@ -250,7 +272,10 @@ public class Game1 : Game
 
     private void UpdateCamera(float dt)
     {
-        Vector3 desiredCamPos = _shipPos - _shipForward * 70f + _shipUp * 22f;
+        // _bankAngle is cosmetic only (see RotateShip) -- tilting the chase offset around
+        // Forward by it gives Q/E a visible "banking turn" lean without ever touching flight.
+        Vector3 bankedUp = Vector3.Transform(_shipUp, Matrix.CreateFromAxisAngle(_shipForward, _bankAngle));
+        Vector3 desiredCamPos = _shipPos - _shipForward * 70f + bankedUp * 22f;
         Vector3 desiredLookAt = _shipPos + _shipForward * 30f;
         _camera3d.FollowTarget(desiredCamPos, dt, desiredLookAt);
         _camera3d.Update(dt); // decays screen-shake trauma
