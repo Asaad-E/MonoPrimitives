@@ -22,8 +22,36 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>World point the camera centers on.</summary>
         public Vector2 Target;
 
-        /// <summary>Screen-space point <see cref="Target"/> is drawn at — typically the viewport center.</summary>
-        public Vector2 Offset;
+        private Vector2 _offset;
+        private bool _offsetOverridden;
+
+        /// <summary>
+        /// Screen-space point <see cref="Target"/> is drawn at — typically the viewport center.
+        /// When this camera was constructed with a <see cref="ViewportAdapter"/> and <see cref="Offset"/>
+        /// has never been assigned directly, it tracks that adapter's virtual center **live**
+        /// (<c>VirtualWidth/2, VirtualHeight/2</c>, re-read on every access) rather than freezing the
+        /// value seen at construction — this matters specifically for <see cref="DefaultViewportAdapter2D"/>/
+        /// <see cref="WindowViewportAdapter2D"/>, whose virtual size tracks the live device/window size and
+        /// changes across a resize (for <see cref="BoxingViewportAdapter2D"/>/<see cref="ScalingViewportAdapter2D"/>,
+        /// whose virtual size is fixed for their lifetime, this is indistinguishable from the old
+        /// snapshot-once behavior). Assigning <see cref="Offset"/> at all — even to the same value —
+        /// pins it from then on, matching plain-field behavior exactly; <see cref="Reset"/> un-pins it
+        /// again. MonoGame.Extended's own <c>OrthographicCamera.Origin</c> never re-tracks like this
+        /// (it's a snapshot for the camera's whole lifetime, confirmed directly against its source) —
+        /// this goes one step further, in the same "recompute live, no cache to invalidate" spirit
+        /// this library's own <see cref="ViewportAdapter2D"/> family already uses for <c>Scale</c>/<c>Offset</c>.
+        /// </summary>
+        public Vector2 Offset
+        {
+            get => !_offsetOverridden && ViewportAdapter is not null
+                ? new Vector2(ViewportAdapter.VirtualWidth * 0.5f, ViewportAdapter.VirtualHeight * 0.5f)
+                : _offset;
+            set
+            {
+                _offset = value;
+                _offsetOverridden = true;
+            }
+        }
 
         /// <summary>Rotation in radians.</summary>
         public float Rotation;
@@ -72,12 +100,13 @@ namespace MonoPrimitives.Primitives2D
         {
             ViewportAdapter = viewportAdapter ?? throw new ArgumentNullException(nameof(viewportAdapter));
             Target = target;
-            Offset = new Vector2(viewportAdapter.VirtualWidth * 0.5f, viewportAdapter.VirtualHeight * 0.5f);
             Rotation = rotation;
             Zoom = zoom;
+            // Offset deliberately left un-pinned (_offsetOverridden stays false) so it live-tracks
+            // the adapter's virtual center from here on — see Offset's own doc comment.
 
             _initialTarget = Target;
-            _initialOffset = Offset;
+            _initialOffset = Offset; // snapshot of the live value right now, for Reset()'s bookkeeping only
             _initialRotation = rotation;
             _initialZoom = zoom;
         }
@@ -95,11 +124,15 @@ namespace MonoPrimitives.Primitives2D
         /// so there's no lingering velocity or trauma to swoop/shake through afterward. Matches
         /// <see cref="Primitives3D.Camera3D.Reset"/>; bound to <c>R</c> by default in
         /// <see cref="UpdateWithInput(PrimitiveInput, float)"/> — call directly if you're not using that.
+        /// Also un-pins <see cref="Offset"/> if it had been assigned directly since construction,
+        /// restoring construction-time behavior exactly — live tracking again, when constructed
+        /// with a <see cref="ViewportAdapter"/>.
         /// </summary>
         public void Reset()
         {
             Target = _initialTarget;
-            Offset = _initialOffset;
+            _offset = _initialOffset;
+            _offsetOverridden = false;
             Rotation = _initialRotation;
             Zoom = _initialZoom;
 
