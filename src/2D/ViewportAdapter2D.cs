@@ -13,9 +13,8 @@ namespace MonoPrimitives.Primitives2D
     /// Extended package just for resolution independence. Game logic and drawing work in
     /// <see cref="VirtualWidth"/>×<see cref="VirtualHeight"/> coordinates regardless of the
     /// actual window size; <see cref="GetScaleMatrix"/> maps that virtual space onto the window.
-    /// Compose with a <see cref="Camera2D"/>'s own transform the same way across every subclass:
-    /// pass <c>camera.GetTransformMatrix() * adapter.GetScaleMatrix()</c> into
-    /// <c>PrimitiveBatch.Begin</c>.
+    /// <see cref="Camera2D"/> folds this in automatically when constructed with an adapter —
+    /// <c>camera.GetTransformMatrix()</c> alone is enough to pass into <c>PrimitiveBatch.Begin</c>.
     /// </summary>
     public abstract class ViewportAdapter2D
     {

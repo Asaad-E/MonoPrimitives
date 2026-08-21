@@ -33,8 +33,8 @@ namespace MonoPrimitives.Primitives2D
 
         /// <summary>
         /// Viewport adapter this camera was constructed with, if any — MonoGame.Extended-style:
-        /// set once at construction, then every viewport-dependent method (<see cref="ScreenToWorld"/>,
-        /// <see cref="WorldToScreen"/>, <see cref="GetVisibleWorldBounds"/>,
+        /// set once at construction, then every viewport-dependent method (<see cref="GetTransformMatrix"/>,
+        /// <see cref="ScreenToWorld"/>, <see cref="WorldToScreen"/>, <see cref="GetVisibleWorldBounds"/>,
         /// <see cref="UpdateWithInput(PrimitiveInput, float)"/>'s mouse-drag pan) uses it
         /// automatically instead of requiring it passed in again at every call site. <c>null</c> for the raw-screen-space
         /// constructors — those methods then fall back to assuming <see cref="Offset"/> is
@@ -79,12 +79,18 @@ namespace MonoPrimitives.Primitives2D
         /// translate by <c>-Target</c>, rotate (<see cref="Rotation"/> plus any screen-shake
         /// rotation — see <see cref="AddTrauma"/>), scale by <see cref="Zoom"/>, then translate
         /// to <see cref="Offset"/> plus any screen-shake offset — the standard 2D camera
-        /// composition. Does NOT include <see cref="ViewportAdapter"/>'s own scale/offset —
-        /// compose with <c>ViewportAdapter.GetScaleMatrix()</c> yourself (per
-        /// <c>Design/2D/ViewportAdapter_Guide.md</c>) the same way you would with any other
-        /// <see cref="ViewportAdapter2D"/> user.
+        /// composition. When <see cref="ViewportAdapter"/> is set, its own <c>GetScaleMatrix()</c>
+        /// (virtual → window pixels) is folded in automatically, matching MonoGame.Extended's
+        /// <c>OrthographicCamera.GetViewMatrix()</c> — don't multiply by it again at the call site.
         /// </summary>
         public Matrix GetTransformMatrix()
+        {
+            Matrix cameraMatrix = GetCameraMatrix();
+            return ViewportAdapter is not null ? cameraMatrix * ViewportAdapter.GetScaleMatrix() : cameraMatrix;
+        }
+
+        /// <summary>The camera's own world↔virtual transform, without <see cref="ViewportAdapter"/>'s virtual↔window mapping — used internally by conversions that need to compose with the adapter differently than <see cref="GetTransformMatrix"/> does.</summary>
+        private Matrix GetCameraMatrix()
         {
             (Vector2 shakeOffset, float shakeRotation) = GetShakeOffset();
             return Matrix.CreateTranslation(-Target.X, -Target.Y, 0f)
@@ -102,13 +108,13 @@ namespace MonoPrimitives.Primitives2D
         public Vector2 ScreenToWorld(Vector2 screenPosition)
         {
             Vector2 pos = ViewportAdapter?.PointToVirtual(screenPosition) ?? screenPosition;
-            return Vector2.Transform(pos, Matrix.Invert(GetTransformMatrix()));
+            return Vector2.Transform(pos, Matrix.Invert(GetCameraMatrix()));
         }
 
         /// <summary>Converts a world-space position to screen space — the inverse of <see cref="ScreenToWorld"/>, including the same <see cref="ViewportAdapter"/> mapping back to real window pixels when one is set.</summary>
         public Vector2 WorldToScreen(Vector2 worldPosition)
         {
-            Vector2 pos = Vector2.Transform(worldPosition, GetTransformMatrix());
+            Vector2 pos = Vector2.Transform(worldPosition, GetCameraMatrix());
             return ViewportAdapter?.VirtualToPoint(pos) ?? pos;
         }
 
@@ -137,7 +143,7 @@ namespace MonoPrimitives.Primitives2D
             if (Rotation != 0f)
             {
                 // Axis-aligned bound around all 4 rotated screen corners' world positions.
-                Matrix inv = Matrix.Invert(GetTransformMatrix());
+                Matrix inv = Matrix.Invert(GetCameraMatrix());
                 Vector2 tl = Vector2.Transform(Vector2.Zero, inv);
                 Vector2 tr = Vector2.Transform(new Vector2(width, 0), inv);
                 Vector2 bl = Vector2.Transform(new Vector2(0, height), inv);

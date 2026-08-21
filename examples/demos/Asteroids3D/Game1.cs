@@ -199,8 +199,11 @@ public class Game1 : Game
 
     private void RotateShip(float yaw, float pitch, float roll)
     {
+        // Negated: rotating Forward around +Up by a positive angle moves it toward Up x Forward,
+        // which is -(Forward x Up) -- i.e. the ship's own LEFT (Right, below, is Forward x Up).
+        // Without the negation, holding Right (positive yaw from GetAxis) turned the nose left.
         if (yaw != 0f)
-            _shipForward = Vector3.Normalize(Vector3.Transform(_shipForward, Matrix.CreateFromAxisAngle(Vector3.Up, yaw)));
+            _shipForward = Vector3.Normalize(Vector3.Transform(_shipForward, Matrix.CreateFromAxisAngle(Vector3.Up, -yaw)));
 
         if (pitch != 0f)
         {

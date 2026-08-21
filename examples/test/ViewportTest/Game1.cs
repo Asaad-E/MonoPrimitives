@@ -112,13 +112,11 @@ public class Game1 : Game
 
     private void Draw2DScene(Vector2 rawMouse)
     {
-        // No Apply() here: GetScaleMatrix() already scales AND offsets virtual space onto the
-        // full window, so narrowing the device viewport too would double-apply the offset (only
-        // visible for adapters with a nonzero Offset, i.e. Boxing). See ViewportAdapter2D.Apply's
-        // doc comment.
-        Matrix transform = _adapter is not null ? _camera2d.GetTransformMatrix() * _adapter.GetScaleMatrix() : _camera2d.GetTransformMatrix();
-
-        _batch2d.Begin(transform); 
+        // No Apply() here: Camera2D.GetTransformMatrix() already folds in the adapter's
+        // GetScaleMatrix() (scale + offset) when one is set, so narrowing the device viewport
+        // too would double-apply the offset (only visible for adapters with a nonzero Offset,
+        // i.e. Boxing). See ViewportAdapter2D.Apply's doc comment.
+        _batch2d.Begin(_camera2d.GetTransformMatrix());
 
         _batch2d.DrawGrid(24, 20f, new Vector2(VirtualWidth * 0.5f, VirtualHeight * 0.5f), new Color(0.6f, 0.6f, 0.65f, 0.4f), new Color(0.85f, 0.85f, 0.9f, 0.6f));
         _batch2d.BorderRectangle(0, 0, VirtualWidth, VirtualHeight, Color.White, 3f);
@@ -128,7 +126,7 @@ public class Game1 : Game
         _batch2d.DrawString($"(0,0)", new Vector2(12, 8), 3f, Palette.Emerald);
         _batch2d.FillCircle(new Vector2(VirtualWidth, VirtualHeight), 8f, Palette.Alizarin);
 
-        Vector2 mouseWorld = _adapter is not null ? _camera2d.ScreenToWorld(rawMouse) : _camera2d.ScreenToWorld(rawMouse);
+        Vector2 mouseWorld = _camera2d.ScreenToWorld(rawMouse);
         _batch2d.DrawLine(mouseWorld + new Vector2(-10, 0), mouseWorld + new Vector2(10, 0), 2f, Palette.PeterRiver);
         _batch2d.DrawLine(mouseWorld + new Vector2(0, -10), mouseWorld + new Vector2(0, 10), 2f, Palette.PeterRiver);
 
@@ -141,7 +139,8 @@ public class Game1 : Game
 
     private void Draw3DScene(Vector2 rawMouse)
     {
-        _adapter?.Apply();
+        // Begin(camera) applies the adapter internally (camera.ViewportAdapter?.Apply()) --
+        // no separate call needed here.
         _batch3d.Begin(_camera3d);
 
         _batch3d.DrawGridXZ(30, 20f);
