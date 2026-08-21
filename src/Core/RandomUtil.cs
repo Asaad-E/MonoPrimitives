@@ -32,6 +32,17 @@ namespace MonoPrimitives
         // average cost of NextGaussian instead of throwing it away.
         private float? _spareGaussian;
 
+        /// <summary>
+        /// The underlying seeded <see cref="Random"/> stream every method above advances — drop
+        /// down to it directly for anything not wrapped here (<see cref="Random.NextBytes(byte[])"/>,
+        /// <see cref="Random.NextInt64()"/>, <see cref="Random.NextDouble()"/>,
+        /// <see cref="Random.Shuffle{T}(T[])"/>, or any future addition to <see cref="Random"/>
+        /// itself), while staying on the exact same deterministic sequence as every
+        /// <see cref="RandomUtil"/> call around it. Constructing a separate <c>new Random(seed)</c>
+        /// yourself would desync into its own independent stream instead of sharing this one.
+        /// </summary>
+        public Random UnderlyingRandom => _rng;
+
         /// <summary>Creates a generator whose stream is fully determined by <paramref name="seed"/> — same seed always gives the same sequence of samples.</summary>
         public RandomUtil(int seed) => _rng = new Random(seed);
 
@@ -81,6 +92,9 @@ namespace MonoPrimitives
 
         /// <inheritdoc cref="SampleInsideUnitSphere(Random)"/>
         public Vector3 NextInsideUnitSphere() => SampleInsideUnitSphere(_rng);
+
+        /// <inheritdoc cref="SampleWeightedIndex(Random, ReadOnlySpan{float})"/>
+        public int NextWeightedIndex(ReadOnlySpan<float> weights) => SampleWeightedIndex(_rng, weights);
 
         // ------------------------------------------------------------------
         // Thread-safe static counterpart
@@ -145,6 +159,9 @@ namespace MonoPrimitives
 
             /// <inheritdoc cref="RandomUtil.NextInsideUnitSphere"/>
             public static Vector3 NextInsideUnitSphere() => SampleInsideUnitSphere(Random.Shared);
+
+            /// <inheritdoc cref="RandomUtil.NextWeightedIndex(ReadOnlySpan{float})"/>
+            public static int NextWeightedIndex(ReadOnlySpan<float> weights) => SampleWeightedIndex(Random.Shared, weights);
         }
 
         // ------------------------------------------------------------------
@@ -302,5 +319,37 @@ namespace MonoPrimitives
         /// cost stays a fixed handful of ops per sample instead of a ~52%-acceptance retry loop.
         /// </summary>
         private static Vector3 SampleInsideUnitSphere(Random rng) => SampleOnUnitSphere(rng) * MathF.Cbrt(rng.NextSingle());
+
+        /// <summary>
+        /// Picks a random index into <paramref name="weights"/>, with probability proportional to
+        /// each entry's own weight — a loot table, a weighted spawn/decision table. Weights must
+        /// all be non-negative with at least one positive, or this throws. A single linear scan,
+        /// O(n) per call with no state carried between calls — the right tool for a table that
+        /// changes between picks, not a large static one sampled every frame (build your own
+        /// cumulative-sum array once and binary-search it for that case instead).
+        /// </summary>
+        private static int SampleWeightedIndex(Random rng, ReadOnlySpan<float> weights)
+        {
+            if (weights.IsEmpty)
+                throw new ArgumentException("weights must not be empty.", nameof(weights));
+
+            float total = 0f;
+            foreach (float w in weights)
+            {
+                if (w < 0f) throw new ArgumentException("weights must not contain negative values.", nameof(weights));
+                total += w;
+            }
+            if (total <= 0f)
+                throw new ArgumentException("weights must contain at least one positive value.", nameof(weights));
+
+            float pick = rng.NextSingle() * total;
+            float cumulative = 0f;
+            for (int i = 0; i < weights.Length; i++)
+            {
+                cumulative += weights[i];
+                if (pick < cumulative) return i;
+            }
+            return weights.Length - 1; // float-rounding safety net -- pick can land exactly at total
+        }
     }
 }
