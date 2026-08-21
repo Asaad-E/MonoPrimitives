@@ -1865,6 +1865,126 @@ namespace MonoPrimitives.Primitives2D
             => FillRectangleChamferShadow(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), chamfer, color, spread, rotation, origin);
 
         /// <summary>
+        /// Triangle drop shadow: solid <paramref name="color"/> filling the exact shape
+        /// <see cref="FillTriangle(Vector2,Vector2,Vector2,Color,float,Vector2?)"/> would draw,
+        /// fading to fully transparent over <paramref name="spread"/> world units beyond its boundary.
+        /// </summary>
+        public void FillTriangleShadow(Vector2 v1, Vector2 v2, Vector2 v3, Color color, float spread = 20f, float rotation = 0f, Vector2? origin = null)
+        {
+            ThrowIfNotBegun();
+            RotateTriangle(ref v1, ref v2, ref v3, rotation, origin);
+            FillTriangle(v1, v2, v3, color);
+            if (spread <= 0f) return;
+
+            Span<Vector2> boundary = [v1, v2, v3];
+            Color transparent = new(color.R, color.G, color.B, (byte)0);
+            FillOutsetGradientRing(boundary, spread, color, transparent);
+        }
+
+        /// <summary>
+        /// Ellipse drop shadow: solid <paramref name="color"/> filling the exact shape
+        /// <see cref="FillEllipse(Vector2,float,float,Color,float)"/> would draw, fading to fully
+        /// transparent over <paramref name="spread"/> world units beyond its boundary.
+        /// </summary>
+        public void FillEllipseShadow(Vector2 center, float radiusH, float radiusV, Color color, float spread = 20f, float rotation = 0f)
+        {
+            ThrowIfNotBegun();
+            if (radiusH <= 0f || radiusV <= 0f) return;
+            FillEllipse(center, radiusH, radiusV, color, rotation);
+            if (spread <= 0f) return;
+
+            int segments = SegmentsForArc(MathF.Max(radiusH, radiusV), MathHelper.TwoPi);
+            Span<Vector2> boundary = segments <= MaxStackAllocElements ? stackalloc Vector2[segments] : new Vector2[segments];
+            float step = 1f / segments;
+            float cos = MathF.Cos(rotation), sin = MathF.Sin(rotation);
+            for (int i = 0; i < segments; i++)
+            {
+                Vector2 u = SampleUnitCircle(i * step);
+                float lx = u.X * radiusH, ly = u.Y * radiusV;
+                boundary[i] = new Vector2(center.X + lx * cos - ly * sin, center.Y + lx * sin + ly * cos);
+            }
+
+            Color transparent = new(color.R, color.G, color.B, (byte)0);
+            FillOutsetGradientRing(boundary, spread, color, transparent);
+        }
+
+        /// <summary>
+        /// Regular-polygon drop shadow: solid <paramref name="color"/> filling the exact shape
+        /// <see cref="FillPoly(Vector2,int,float,Color,float)"/> would draw, fading to fully
+        /// transparent over <paramref name="spread"/> world units beyond its boundary.
+        /// </summary>
+        public void FillPolyShadow(Vector2 center, int sides, float radius, Color color, float spread = 20f, float rotation = 0f)
+        {
+            ThrowIfNotBegun();
+            if (sides < 3 || radius <= 0f) return;
+            FillPoly(center, sides, radius, color, rotation);
+            if (spread <= 0f) return;
+
+            float rotationTurns = rotation / MathHelper.TwoPi;
+            float step = 1f / sides;
+            Span<Vector2> pts = sides <= MaxStackAllocElements ? stackalloc Vector2[sides] : new Vector2[sides];
+            for (int i = 0; i < sides; i++)
+                pts[i] = SampleUnitCircle(rotationTurns + i * step) * radius + center;
+
+            Color transparent = new(color.R, color.G, color.B, (byte)0);
+            FillOutsetGradientRing(pts, spread, color, transparent);
+        }
+
+        /// <summary>
+        /// Arbitrary-polygon drop shadow: solid <paramref name="color"/> filling the exact shape
+        /// <see cref="FillPolygon(ReadOnlySpan{Vector2},Color)"/> would draw, fading to fully
+        /// transparent over <paramref name="spread"/> world units beyond its boundary. Uses
+        /// <see cref="OutsetConvexPolygon"/> (via <see cref="FillOutsetGradientRing"/>) to build
+        /// the fading outer edge, which shares <see cref="InsetConvexPolygon"/>'s documented
+        /// reflex-vertex limitation (see ROADMAP.md's "Known bugs" section) — on a strongly
+        /// concave <paramref name="points"/>, the shadow's outer edge can distort at a reflex
+        /// vertex the same way a Miter-joined border can.
+        /// </summary>
+        public void FillPolygonShadow(ReadOnlySpan<Vector2> points, Color color, float spread = 20f)
+        {
+            ThrowIfNotBegun();
+            if (points.Length < 3) return;
+            FillPolygon(points, color);
+            if (spread <= 0f) return;
+
+            Color transparent = new(color.R, color.G, color.B, (byte)0);
+            FillOutsetGradientRing(points, spread, color, transparent);
+        }
+
+        /// <summary>
+        /// Capsule drop shadow: solid <paramref name="color"/> filling the exact shape
+        /// <see cref="FillCapsule(Vector2,Vector2,float,Color)"/> would draw, fading to fully
+        /// transparent over <paramref name="spread"/> world units beyond its boundary.
+        /// Degenerates to <see cref="FillCircleShadow"/> if <paramref name="start"/> equals
+        /// <paramref name="end"/>.
+        /// </summary>
+        public void FillCapsuleShadow(Vector2 start, Vector2 end, float radius, Color color, float spread = 20f)
+        {
+            ThrowIfNotBegun();
+            if (radius <= 0f) return;
+            Vector2 delta = end - start;
+            if (delta.LengthSquared() < 1e-12f) { FillCircleShadow(start, radius, color, spread); return; }
+
+            FillCapsule(start, end, radius, color);
+            if (spread <= 0f) return;
+
+            int capSegments = Math.Max(1, SegmentsForArc(radius, MathF.PI));
+            int n = 2 * (capSegments + 1);
+            Span<Vector2> boundary = n <= MaxStackAllocElements ? stackalloc Vector2[n] : new Vector2[n];
+            BuildCapsuleBoundary(start, end, radius, capSegments, boundary);
+
+            Color transparent = new(color.R, color.G, color.B, (byte)0);
+            FillOutsetGradientRing(boundary, spread, color, transparent);
+        }
+
+        /// <inheritdoc cref="FillCapsuleShadow(Vector2,Vector2,float,Color,float)"/>
+        public void FillCapsuleShadow(Vector2 center, float length, float radius, Color color, float spread = 20f, float rotation = 0f)
+        {
+            CapsuleEndpointsFromCenter(center, length, rotation, out Vector2 start, out Vector2 end);
+            FillCapsuleShadow(start, end, radius, color, spread);
+        }
+
+        /// <summary>
         /// Fills the ring between <paramref name="boundary"/> (a closed polygon, <paramref name="opaque"/>)
         /// and that same boundary offset outward by <paramref name="spread"/> (<paramref name="transparent"/>)
         /// via <see cref="OutsetConvexPolygon"/> — the shared "halo" geometry behind every
@@ -2158,6 +2278,48 @@ namespace MonoPrimitives.Primitives2D
         {
             float t = MathF.Max(0f, thickness);
             FillEllipseGradient(center, MathF.Max(0f, radiusH - t), MathF.Max(0f, radiusV - t), innerFill, outerFill, rotation, innerOffset, outerOffset);
+            if (thickness > 0f) BorderEllipse(center, radiusH, radiusV, borderColor, thickness, rotation);
+        }
+
+        /// <summary>
+        /// Draws an ellipse filled with a straight (non-radial) linear gradient from
+        /// <paramref name="from"/> to <paramref name="to"/> along an axis through the center, no
+        /// border — the ellipse counterpart to <see cref="FillCircleGradientLinear"/>. Unlike the
+        /// circle version, <paramref name="rotation"/> here does double duty: it both tilts the
+        /// ellipse's own H/V axes (same meaning as <see cref="FillEllipseGradient(Vector2,float,float,Color,Color,float,float,float)"/>'s)
+        /// AND is the axis the gradient reads along, so <paramref name="horizontal"/> always means
+        /// "along the ellipse's own (possibly tilted) H axis" rather than a separately-rotatable
+        /// screen-space direction — a circle has no shape orientation of its own to lock the
+        /// gradient to, but an ellipse does, so tying the two together is the more useful default.
+        /// </summary>
+        public void FillEllipseGradientLinear(Vector2 center, float radiusH, float radiusV, Color from, Color to, bool horizontal = true, float rotation = 0f, float innerOffset = 0f, float outerOffset = 0f)
+        {
+            ThrowIfNotBegun();
+            if (radiusH <= 0f || radiusV <= 0f) return;
+
+            int segments = SegmentsForArc(MathF.Max(radiusH, radiusV), MathHelper.TwoPi);
+            Span<Vector2> boundary = segments <= MaxStackAllocElements ? stackalloc Vector2[segments] : new Vector2[segments];
+            float step = 1f / segments;
+            float cos = MathF.Cos(rotation), sin = MathF.Sin(rotation);
+            for (int i = 0; i < segments; i++)
+            {
+                Vector2 u = SampleUnitCircle(i * step);
+                float lx = u.X * radiusH, ly = u.Y * radiusV;
+                boundary[i] = new Vector2(center.X + lx * cos - ly * sin, center.Y + lx * sin + ly * cos);
+            }
+
+            FillAxisGradientBoundary(boundary, center.X - radiusH, center.Y - radiusV, radiusH * 2f, radiusV * 2f, rotation, null, from, to, horizontal, innerOffset, outerOffset);
+        }
+
+        /// <summary>
+        /// Draws an ellipse with a straight linear gradient fill (see <see cref="FillEllipseGradientLinear"/>)
+        /// and a solid border. The gradient's own radii are <c>radiusH/V - thickness</c> — stop
+        /// exactly where the border begins, same rule as <see cref="DrawEllipseGradient(Vector2,float,float,Color,Color,Color,float,float,float,float)"/>.
+        /// </summary>
+        public void DrawEllipseGradientLinear(Vector2 center, float radiusH, float radiusV, Color from, Color to, Color borderColor, bool horizontal = true, float thickness = 1f, float rotation = 0f, float innerOffset = 0f, float outerOffset = 0f)
+        {
+            float t = MathF.Max(0f, thickness);
+            FillEllipseGradientLinear(center, MathF.Max(0f, radiusH - t), MathF.Max(0f, radiusV - t), from, to, horizontal, rotation, innerOffset, outerOffset);
             if (thickness > 0f) BorderEllipse(center, radiusH, radiusV, borderColor, thickness, rotation);
         }
 
@@ -2628,6 +2790,66 @@ namespace MonoPrimitives.Primitives2D
                 FillPolygon(boundary[..count], fillColor);
             }
             if (thickness > 0f) BorderPoly(center, sides, radius, borderColor, thickness, rotation, join, jointRadius);
+        }
+
+        /// <summary>
+        /// Draws a filled regular polygon with each corner rounded by <paramref name="cornerRadius"/>
+        /// world units, no border pass at all — the standalone counterpart to calling
+        /// <see cref="DrawPoly(Vector2,int,float,Color,Color,float,float,LineJoin,float?)"/> with
+        /// a matching fill/border color just to get a rounded fill (which already works today via
+        /// <c>join: LineJoin.Round, jointRadius: cornerRadius</c>, but forces a border pass to
+        /// exist just to reach it). Mirrors <see cref="FillTriangleRounded"/>/<see cref="FillPolygonRounded"/>'s
+        /// naming and clamp behavior (each corner independently clamped so it can't reach past
+        /// the midpoint of either adjacent edge).
+        /// </summary>
+        public void FillPolyRounded(Vector2 center, int sides, float radius, float cornerRadius, Color color, float rotation = 0f)
+        {
+            if (cornerRadius <= 0.01f) { FillPoly(center, sides, radius, color, rotation); return; }
+            ThrowIfNotBegun();
+            if (sides < 3) return;
+
+            float rotationTurns = rotation / MathHelper.TwoPi;
+            float step = 1f / sides;
+            Span<Vector2> pts = sides <= MaxStackAllocElements ? stackalloc Vector2[sides] : new Vector2[sides];
+            for (int i = 0; i < sides; i++)
+                pts[i] = SampleUnitCircle(rotationTurns + i * step) * radius + center;
+
+            float safeRadius = ClampCornerRadiusToFit(pts, cornerRadius);
+            Span<Vector2> boundary = sides <= MaxStackAllocElements / (MaxCircleSegments + 1)
+                ? stackalloc Vector2[sides * (MaxCircleSegments + 1)]
+                : new Vector2[sides * (MaxCircleSegments + 1)];
+            int count = BuildRoundedCornerBoundary(pts, safeRadius, LineJoin.Round, NoBorderClampBudget, boundary);
+            FillPolygon(boundary[..count], color);
+        }
+
+        /// <summary>Equivalent to <see cref="BorderPoly"/> with <c>join: LineJoin.Round, jointRadius: cornerRadius</c> (pre-clamped so neighboring corners can't overlap) — named to match <see cref="FillPolyRounded"/> for discoverability.</summary>
+        public void BorderPolyRounded(Vector2 center, int sides, float radius, float cornerRadius, Color color, float thickness = 1f, float rotation = 0f)
+        {
+            if (sides < 3) { BorderPoly(center, sides, radius, color, thickness, rotation); return; }
+            float rotationTurns = rotation / MathHelper.TwoPi;
+            float step = 1f / sides;
+            Span<Vector2> pts = sides <= MaxStackAllocElements ? stackalloc Vector2[sides] : new Vector2[sides];
+            for (int i = 0; i < sides; i++)
+                pts[i] = SampleUnitCircle(rotationTurns + i * step) * radius + center;
+            float safeRadius = ClampCornerRadiusToFit(pts, cornerRadius);
+            BorderPoly(center, sides, radius, color, thickness, rotation, LineJoin.Round, safeRadius);
+        }
+
+        /// <summary>Draws a rounded-corner regular polygon with both fill and border (same color), border growing inward.</summary>
+        public void DrawPolyRounded(Vector2 center, int sides, float radius, float cornerRadius, Color color, float thickness = 1f, float rotation = 0f)
+            => DrawPolyRounded(center, sides, radius, cornerRadius, color, color, thickness, rotation);
+
+        /// <summary>Draws a rounded-corner regular polygon with an independently colored fill and border, border growing inward. Radius pre-clamped so neighboring corners can't overlap.</summary>
+        public void DrawPolyRounded(Vector2 center, int sides, float radius, float cornerRadius, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f)
+        {
+            if (sides < 3) { DrawPoly(center, sides, radius, fillColor, borderColor, thickness, rotation); return; }
+            float rotationTurns = rotation / MathHelper.TwoPi;
+            float step = 1f / sides;
+            Span<Vector2> pts = sides <= MaxStackAllocElements ? stackalloc Vector2[sides] : new Vector2[sides];
+            for (int i = 0; i < sides; i++)
+                pts[i] = SampleUnitCircle(rotationTurns + i * step) * radius + center;
+            float safeRadius = ClampCornerRadiusToFit(pts, cornerRadius);
+            DrawPoly(center, sides, radius, fillColor, borderColor, thickness, rotation, LineJoin.Round, safeRadius);
         }
 
         /// <summary>
@@ -3144,6 +3366,13 @@ namespace MonoPrimitives.Primitives2D
             {
                 FillPolygonGradient(points, from, to);
             }
+        }
+
+        /// <summary>Equivalent to <see cref="DrawPolygonGradient"/> with <c>join: LineJoin.Round, jointRadius: cornerRadius</c> (pre-clamped so neighboring corners can't overlap) — named to match <see cref="FillPolygonGradientRounded"/> for discoverability.</summary>
+        public void DrawPolygonGradientRounded(ReadOnlySpan<Vector2> points, float cornerRadius, Color from, Color to, Color borderColor, float thickness = 1f)
+        {
+            float safeRadius = ClampCornerRadiusToFit(points, cornerRadius);
+            DrawPolygonGradient(points, from, to, borderColor, thickness, LineJoin.Round, safeRadius);
         }
 
         /// <summary>
