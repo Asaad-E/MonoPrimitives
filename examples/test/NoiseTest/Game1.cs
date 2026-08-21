@@ -13,8 +13,9 @@ namespace NoiseTest;
 
 /// <summary>
 /// Visual test for <see cref="Noise"/>'s 1D/2D/3D samples at a resolution fine enough to see the
-/// noise clearly. Keys 1-3 switch scene: a 1D Fbm curve as a simple terrain silhouette, a 2D Fbm
-/// heightmap terrain in 3D, and a live-animated 2D grid sampling 3D noise with Z as time.
+/// noise clearly. Keys 1-4 switch scene: a 1D Fbm curve as a simple terrain silhouette, a 2D Fbm
+/// heightmap terrain in 3D, a live-animated 2D grid sampling 3D noise with Z as time, and a
+/// side-by-side RidgeNoise2D vs Turbulence2D comparison.
 /// </summary>
 public class Game1 : Game
 {
@@ -26,12 +27,13 @@ public class Game1 : Game
     private Primitive3DBatch _batch3d = null!;
     private PrimitiveInput _input = null!;
 
-    private enum Scene { Curve1D, Terrain2D, AnimatedField3D }
+    private enum Scene { Curve1D, Terrain2D, AnimatedField3D, RidgeVsTurbulence }
     private Scene _scene = Scene.Curve1D;
 
-    private readonly Noise _noise1d = new(unchecked((int)0x4E314400)); // "N1D"
-    private readonly Noise _noise2d = new(unchecked((int)0x4E324400)); // "N2D"
+    private readonly Noise _noise1d = new(unchecked((int)0x4E314400)); // "N1D" -- default 4 octaves
+    private readonly Noise _noise2d = new(unchecked((int)0x4E324400), octaves: 5); // "N2D"
     private readonly Noise _noise3d = new(unchecked((int)0x4E334400)); // "N3D"
+    private readonly Noise _noise4d = new(unchecked((int)0x4E344400), octaves: 5); // "N4D" -- Ridge/Turbulence
 
     private Camera3D _camera3d = new(new Vector3(0, 150, 230), Vector3.Zero, Vector3.Up, 45f) { Mode = CameraMode.Orbital, OrbitalSpeed = 0.25f };
 
@@ -68,7 +70,7 @@ public class Game1 : Game
         {
             for (int x = 0; x < TerrainGridSize; x++)
             {
-                float h = _noise2d.Fbm2D(x * frequency, z * frequency, octaves: 5) * amplitude;
+                float h = _noise2d.Fbm2D(x * frequency, z * frequency) * amplitude;
                 _terrainHeights[x, z] = h;
                 float t = Math.Clamp((h / amplitude + 1f) * 0.5f, 0f, 1f);
                 _terrainColors[x, z] = ColorUtil.Lerp(Palette.Emerald, Palette.Clouds, t);
@@ -84,6 +86,7 @@ public class Game1 : Game
         if (_input.IsKeyPressed(Keys.D1)) _scene = Scene.Curve1D;
         if (_input.IsKeyPressed(Keys.D2)) _scene = Scene.Terrain2D;
         if (_input.IsKeyPressed(Keys.D3)) _scene = Scene.AnimatedField3D;
+        if (_input.IsKeyPressed(Keys.D4)) _scene = Scene.RidgeVsTurbulence;
 
         if (_scene == Scene.Terrain2D)
             _camera3d.UpdateWithInput(_input, deltaTime); // orbital auto-rotation only; no WASD/mouse needed
@@ -105,6 +108,7 @@ public class Game1 : Game
             case Scene.Curve1D: DrawCurve1D(); break;
             case Scene.Terrain2D: DrawTerrain2D(); break;
             case Scene.AnimatedField3D: DrawAnimatedField3D(); break;
+            case Scene.RidgeVsTurbulence: DrawRidgeVsTurbulence(); break;
         }
 
         DrawHud();
@@ -126,7 +130,7 @@ public class Game1 : Game
         for (int i = 0; i < sampleCount; i++)
         {
             float x = i * sampleStep;
-            float y = baseline - _noise1d.Fbm1D(x * frequency, octaves: 4) * amplitude;
+            float y = baseline - _noise1d.Fbm1D(x * frequency) * amplitude;
             ridge[i] = new Vector2(x, y);
         }
 
@@ -181,11 +185,41 @@ public class Game1 : Game
         _batch2d.End();
     }
 
+    // ------------------------------------------------------------------
+    // Scene 4: RidgeNoise2D (left) vs Turbulence2D (right), same coordinates -- Ridge should
+    // read as sharp, thin ridgelines; Turbulence as a softer, billowy, creased look.
+    // ------------------------------------------------------------------
+    private void DrawRidgeVsTurbulence()
+    {
+        const float frequency = 0.04f;
+        int cols = WindowWidth / 2 / FieldCellPixels;
+        int rows = WindowHeight / FieldCellPixels;
+
+        _batch2d.Begin();
+        for (int y = 0; y < rows; y++)
+        {
+            for (int x = 0; x < cols; x++)
+            {
+                float ridge = _noise4d.RidgeNoise2D(x * frequency, y * frequency);
+                float turbulence = _noise4d.Turbulence2D(x * frequency, y * frequency);
+                Color ridgeColor = ColorUtil.Lerp(Palette.MidnightBlue, Palette.Sunflower, Math.Clamp(ridge, 0f, 1f));
+                Color turbColor = ColorUtil.Lerp(Palette.MidnightBlue, Palette.Sunflower, Math.Clamp(turbulence, 0f, 1f));
+                _batch2d.FillRectangle(x * FieldCellPixels, y * FieldCellPixels, FieldCellPixels, FieldCellPixels, ridgeColor);
+                _batch2d.FillRectangle(WindowWidth / 2 + x * FieldCellPixels, y * FieldCellPixels, FieldCellPixels, FieldCellPixels, turbColor);
+            }
+        }
+        _batch2d.DrawLine(new Vector2(WindowWidth / 2f, 0), new Vector2(WindowWidth / 2f, WindowHeight), 2f, Color.White);
+        _batch2d.DrawString("RidgeNoise2D", new Vector2(16, WindowHeight - 34), 1.8f, Color.White);
+        _batch2d.DrawString("Turbulence2D", new Vector2(WindowWidth / 2f + 16, WindowHeight - 34), 1.8f, Color.White);
+        _batch2d.End();
+    }
+
     private static readonly (string Name, string Desc)[] SceneInfo =
     {
         ("1: 1D CURVE", "Fbm1D as a terrain silhouette"),
         ("2: 2D TERRAIN", "Fbm2D heightmap, orbiting camera"),
         ("3: 3D FIELD", "Sample3D, Z = time"),
+        ("4: RIDGE VS TURBULENCE", "RidgeNoise2D (left) vs Turbulence2D (right)"),
     };
 
     private void DrawHud()
