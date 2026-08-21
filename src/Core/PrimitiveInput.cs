@@ -240,14 +240,65 @@ namespace MonoPrimitives
         /// <summary><see cref="RightStick"/> with a circular deadzone applied, same as <see cref="LeftStickDeadzoned"/>.</summary>
         public Vector2 RightStickDeadzoned(int player = 0, float deadzone = 0.15f) => ApplyDeadzone(RightStick(player), deadzone);
 
+        /// <summary><see cref="LeftTrigger"/> with a deadzone applied — snaps to zero below <paramref name="deadzone"/> instead of reporting a controller's resting trigger noise as a pull.</summary>
+        public float LeftTriggerDeadzoned(int player = 0, float deadzone = 0.05f) => ApplyDeadzone(LeftTrigger(player), deadzone);
+
+        /// <summary><see cref="RightTrigger"/> with a deadzone applied, same as <see cref="LeftTriggerDeadzoned"/>.</summary>
+        public float RightTriggerDeadzoned(int player = 0, float deadzone = 0.05f) => ApplyDeadzone(RightTrigger(player), deadzone);
+
         private static Vector2 ApplyDeadzone(Vector2 v, float deadzone)
             => v.LengthSquared() < deadzone * deadzone ? Vector2.Zero : v;
+
+        private static float ApplyDeadzone(float value, float deadzone) => value < deadzone ? 0f : value;
+
+        /// <summary>
+        /// Sets <paramref name="player"/>'s gamepad rumble motor speeds, each [0,1] (0 stops, 1 is
+        /// maximum) — clamped internally by MonoGame, so an out-of-range value is safe, not an
+        /// error. Returns false if the slot has no connected gamepad or the platform/controller
+        /// doesn't support vibration; there's nothing further to do in that case; it's a
+        /// best-effort call, not a fire-once instruction. Call <c>SetVibration(0, 0, player)</c>
+        /// to stop — there's no separate <c>duration</c>/timer here, since managing when to stop
+        /// is a per-game decision (a fixed pulse, decaying with distance/trauma, etc.), not
+        /// something a raw building block should decide for you.
+        /// </summary>
+        public bool SetVibration(float leftMotor, float rightMotor, int player = 0)
+            => GamePad.SetVibration((PlayerIndex)player, leftMotor, rightMotor);
+
+        /// <summary>Same as <see cref="SetVibration(float,float,int)"/>, plus the two trigger-impulse motors some controllers (Xbox One/Series) have separately from the main motors.</summary>
+        public bool SetVibration(float leftMotor, float rightMotor, float leftTrigger, float rightTrigger, int player = 0)
+            => GamePad.SetVibration((PlayerIndex)player, leftMotor, rightMotor, leftTrigger, rightTrigger);
+
+        // Deliberately excludes the analog stick/trigger "as digital button" flags MonoGame also
+        // reports under Buttons (LeftThumbstickLeft, RightTrigger, etc.) -- those fire from idle
+        // drift or a light trigger rest, which would make IsAnyButtonPressed misfire during a
+        // "press any button to join" lobby screen instead of only on a deliberate press.
+        private static readonly Buttons[] DigitalButtons =
+        {
+            Buttons.A, Buttons.B, Buttons.X, Buttons.Y,
+            Buttons.Start, Buttons.Back, Buttons.BigButton,
+            Buttons.LeftShoulder, Buttons.RightShoulder,
+            Buttons.LeftStick, Buttons.RightStick,
+            Buttons.DPadUp, Buttons.DPadDown, Buttons.DPadLeft, Buttons.DPadRight,
+        };
+
+        /// <summary>
+        /// True on the frame any face/shoulder/stick-click/D-pad/Start/Back button on
+        /// <paramref name="player"/>'s gamepad went from up to down — for a "press any button to
+        /// join" lobby flow, one call instead of listing every button yourself. See
+        /// <see cref="DigitalButtons"/>'s comment for why stick/trigger movement doesn't count.
+        /// </summary>
+        public bool IsAnyButtonPressed(int player = 0)
+        {
+            foreach (Buttons button in DigitalButtons)
+                if (IsButtonPressed(button, player)) return true;
+            return false;
+        }
 
         // ---------------------------------------------------------------------
         // Composite helpers (Godot's Input.get_axis/get_vector shape)
         // ---------------------------------------------------------------------
 
-        /// <summary>-1/0/1 axis from two keys: -1 if only <paramref name="negative"/> is held, +1 if only <paramref name="positive"/> is held, 0 if neither or both are (positive wins a tie).</summary>
+        /// <summary>-1/0/1 axis from two keys: -1 if only <paramref name="negative"/> is held, +1 if only <paramref name="positive"/> is held, 0 if neither or both are held — matching Godot's own <c>Input.get_axis</c>, which cancels to 0 on a tie the same way (strength(positive) - strength(negative)), not a "positive wins" rule.</summary>
         public float GetAxis(Keys negative, Keys positive)
         {
             float v = 0f;
