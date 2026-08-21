@@ -177,5 +177,54 @@ namespace MonoPrimitives
             byte alpha = (byte)(a.A + (b.A - a.A) * t);
             return FromHSV(h, s, v, alpha);
         }
+
+        // ---------------------------------------------------------------------
+        // Blend modes
+        // ---------------------------------------------------------------------
+        // Pure Color x Color -> Color functions, computing a blended color VALUE to draw
+        // normally afterward -- not a GPU blend-state operation (PrimitiveBatch already uses one
+        // NonPremultiplied blend state throughout; these are for tinting/layering colors in code,
+        // procedural palette mixing, that kind of thing). Alpha is always taken from `a`
+        // unchanged -- these blend color, not transparency. Byte math throughout (not the
+        // float-based ToHSV/FromHSV round trip the adjustments above use), with a +127 rounding
+        // term on every /255 division rather than truncating, same rounding this library already
+        // does when going float->byte elsewhere (see Primitives2D.cs's BarycentricColor).
+
+        /// <summary>Multiply blend: darkens -- the result is never lighter than either input. Like stacking two semi-transparent color filters.</summary>
+        public static Color Multiply(Color a, Color b)
+            => new(
+                (byte)((a.R * b.R + 127) / 255),
+                (byte)((a.G * b.G + 127) / 255),
+                (byte)((a.B * b.B + 127) / 255),
+                a.A);
+
+        /// <summary>Screen blend: lightens -- the inverse of <see cref="Multiply"/>, the result is never darker than either input.</summary>
+        public static Color Screen(Color a, Color b)
+            => new(
+                (byte)(255 - ((255 - a.R) * (255 - b.R) + 127) / 255),
+                (byte)(255 - ((255 - a.G) * (255 - b.G) + 127) / 255),
+                (byte)(255 - ((255 - a.B) * (255 - b.B) + 127) / 255),
+                a.A);
+
+        /// <summary>
+        /// Overlay blend: <see cref="Multiply"/> where <paramref name="a"/> is dark, <see cref="Screen"/>
+        /// where it's light — boosts contrast instead of uniformly darkening or lightening.
+        /// <paramref name="a"/> is the base color; <paramref name="b"/> is the color overlaid on it
+        /// (the two aren't interchangeable, unlike <see cref="Multiply"/>/<see cref="Screen"/>).
+        /// </summary>
+        public static Color Overlay(Color a, Color b)
+            => new(OverlayChannel(a.R, b.R), OverlayChannel(a.G, b.G), OverlayChannel(a.B, b.B), a.A);
+
+        private static byte OverlayChannel(byte baseChannel, byte blendChannel)
+        {
+            int result = baseChannel < 128
+                ? (2 * baseChannel * blendChannel + 127) / 255
+                : 255 - (2 * (255 - baseChannel) * (255 - blendChannel) + 127) / 255;
+            return (byte)Math.Clamp(result, 0, 255);
+        }
+
+        /// <summary>Additive (linear dodge) blend: straight per-channel sum, clamped at 255 — brightens aggressively, the standard "glow"/particle-additive look.</summary>
+        public static Color Additive(Color a, Color b)
+            => new((byte)Math.Min(255, a.R + b.R), (byte)Math.Min(255, a.G + b.G), (byte)Math.Min(255, a.B + b.B), a.A);
     }
 }
