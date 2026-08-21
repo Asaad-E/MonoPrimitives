@@ -71,6 +71,119 @@ namespace MonoPrimitives.Tests
 
             results.Check("CheckCollisionRayRec: ray misses rectangle", () =>
                 !Collision2D.CheckCollisionRayRec(new Vector2(-20, 50), Vector2.UnitX, new Rectangle(0, 0, 10, 10), out _, out _) ? null : "expected false");
+
+            results.Check("CheckCollisionRecs / CheckCollisionPointRec / CheckCollisionPointCircle / GetCollisionRec", () =>
+            {
+                if (!Collision2D.CheckCollisionRecs(new Rectangle(0, 0, 10, 10), new Rectangle(5, 5, 10, 10))) return "CheckCollisionRecs: expected overlapping rects to collide";
+                if (Collision2D.CheckCollisionRecs(new Rectangle(0, 0, 10, 10), new Rectangle(100, 100, 10, 10))) return "CheckCollisionRecs: expected far-apart rects to not collide";
+                if (!Collision2D.CheckCollisionPointRec(new Vector2(5, 5), new Rectangle(0, 0, 10, 10))) return "CheckCollisionPointRec: expected point inside";
+                if (Collision2D.CheckCollisionPointRec(new Vector2(50, 50), new Rectangle(0, 0, 10, 10))) return "CheckCollisionPointRec: expected point outside";
+                if (!Collision2D.CheckCollisionPointCircle(new Vector2(1, 0), Vector2.Zero, 5f)) return "CheckCollisionPointCircle: expected point inside";
+                if (Collision2D.CheckCollisionPointCircle(new Vector2(50, 0), Vector2.Zero, 5f)) return "CheckCollisionPointCircle: expected point outside";
+                Rectangle overlap = Collision2D.GetCollisionRec(new Rectangle(0, 0, 10, 10), new Rectangle(5, 5, 10, 10));
+                if (overlap != new Rectangle(5, 5, 5, 5)) return $"GetCollisionRec: expected (5,5,5,5), got {overlap}";
+                return null;
+            });
+
+            results.Check("CheckCollisionCircleCapsule: near and far", () =>
+            {
+                if (!Collision2D.CheckCollisionCircleCapsule(new Vector2(5, 2), 1f, new Vector2(0, 0), new Vector2(10, 0), 1f)) return "expected a hit (circle near the capsule's axis)";
+                if (Collision2D.CheckCollisionCircleCapsule(new Vector2(5, 20), 1f, new Vector2(0, 0), new Vector2(10, 0), 1f)) return "expected no hit (circle far above)";
+                return null;
+            });
+
+            results.Check("CheckCollisionCapsuleCapsule: crossing, T-junction clamping, and far apart", () =>
+            {
+                // Two capsules crossing like a plus sign -- their axes intersect, so any positive radii overlap.
+                if (!Collision2D.CheckCollisionCapsuleCapsule(new Vector2(-5, 0), new Vector2(5, 0), 1f, new Vector2(0, -5), new Vector2(0, 5), 1f))
+                    return "expected crossing capsules to collide";
+                // T-junction: b's segment endpoint sits right next to a's segment, closest point must clamp correctly.
+                if (!Collision2D.CheckCollisionCapsuleCapsule(new Vector2(0, 0), new Vector2(10, 0), 1f, new Vector2(5, 1.5f), new Vector2(5, 10), 1f))
+                    return "expected a T-junction within combined radius to collide";
+                if (Collision2D.CheckCollisionCapsuleCapsule(new Vector2(0, 0), new Vector2(10, 0), 1f, new Vector2(5, 50), new Vector2(5, 60), 1f))
+                    return "expected far-apart capsules to not collide";
+                return null;
+            });
+
+            results.Check("CheckCollisionRayLine: ray hits a crossing segment, but not one behind the ray's origin", () =>
+            {
+                bool hit = Collision2D.CheckCollisionRayLine(Vector2.Zero, Vector2.UnitX, new Vector2(5, -5), new Vector2(5, 5), out Vector2 point, out float dist);
+                if (!hit) return "expected a hit";
+                if (Vector2.Distance(point, new Vector2(5, 0)) > 0.01f) return $"expected hit point near (5,0), got {point}";
+                if (MathF.Abs(dist - 5f) > 0.01f) return $"expected distance 5, got {dist}";
+                if (Collision2D.CheckCollisionRayLine(Vector2.Zero, Vector2.UnitX, new Vector2(-5, -5), new Vector2(-5, 5), out _, out _))
+                    return "expected no hit for a segment entirely behind the ray's origin";
+                return null;
+            });
+
+            results.Check("CheckCollisionPolyPoly / TriangleTriangle / RecPoly / RecTriangle (SAT, convex shapes)", () =>
+            {
+                Span<Vector2> squareA = stackalloc Vector2[] { new(0, 0), new(10, 0), new(10, 10), new(0, 10) };
+                Span<Vector2> squareB = stackalloc Vector2[] { new(5, 5), new(15, 5), new(15, 15), new(5, 15) };
+                Span<Vector2> squareFar = stackalloc Vector2[] { new(100, 100), new(110, 100), new(110, 110), new(100, 110) };
+                if (!Collision2D.CheckCollisionPolyPoly(squareA, squareB)) return "CheckCollisionPolyPoly: expected overlapping squares to collide";
+                if (Collision2D.CheckCollisionPolyPoly(squareA, squareFar)) return "CheckCollisionPolyPoly: expected far squares to not collide";
+
+                if (!Collision2D.CheckCollisionTriangleTriangle(new Vector2(0, 0), new Vector2(10, 0), new Vector2(0, 10), new Vector2(2, 2), new Vector2(12, 2), new Vector2(2, 12)))
+                    return "CheckCollisionTriangleTriangle: expected overlapping triangles to collide";
+                if (Collision2D.CheckCollisionTriangleTriangle(new Vector2(0, 0), new Vector2(10, 0), new Vector2(0, 10), new Vector2(100, 100), new Vector2(110, 100), new Vector2(100, 110)))
+                    return "CheckCollisionTriangleTriangle: expected far triangles to not collide";
+
+                if (!Collision2D.CheckCollisionRecPoly(new Rectangle(0, 0, 10, 10), squareB)) return "CheckCollisionRecPoly: expected overlap";
+                if (Collision2D.CheckCollisionRecPoly(new Rectangle(0, 0, 10, 10), squareFar)) return "CheckCollisionRecPoly: expected no overlap";
+
+                if (!Collision2D.CheckCollisionRecTriangle(new Rectangle(0, 0, 10, 10), new Vector2(5, 5), new Vector2(20, 5), new Vector2(5, 20))) return "CheckCollisionRecTriangle: expected overlap";
+                if (Collision2D.CheckCollisionRecTriangle(new Rectangle(0, 0, 10, 10), new Vector2(100, 100), new Vector2(120, 100), new Vector2(100, 120))) return "CheckCollisionRecTriangle: expected no overlap";
+                return null;
+            });
+
+            // L-shaped concave polygon: the union of [0,10]x[0,5] and [0,5]x[0,10] -- i.e. a 10x10
+            // square with its top-right [5,10]x[5,10] quadrant removed. (7,7) sits exactly in that
+            // removed notch: inside the shape's convex hull/bounding box, but outside the actual
+            // polygon. A SAT-based (convex-only) check would get this wrong; the non-SAT
+            // point/circle/capsule-vs-poly checks below must not.
+            Span<Vector2> LShape() => new Vector2[] { new(0, 0), new(10, 0), new(10, 5), new(5, 5), new(5, 10), new(0, 10) };
+
+            results.Check("CheckCollisionPointPoly is correct on a concave (L-shaped) polygon", () =>
+            {
+                if (Collision2D.CheckCollisionPointPoly(new Vector2(7, 7), LShape())) return "(7,7) is in the removed notch, expected outside";
+                if (!Collision2D.CheckCollisionPointPoly(new Vector2(2, 8), LShape())) return "(2,8) is in the left bar, expected inside";
+                if (!Collision2D.CheckCollisionPointPoly(new Vector2(8, 2), LShape())) return "(8,2) is in the bottom bar, expected inside";
+                return null;
+            });
+
+            results.Check("CheckCollisionCirclePoly is correct on a concave polygon (a circle sitting in the notch doesn't collide)", () =>
+            {
+                if (Collision2D.CheckCollisionCirclePoly(new Vector2(7, 7), 1f, LShape())) return "a small circle centered in the notch should not collide";
+                if (!Collision2D.CheckCollisionCirclePoly(new Vector2(2, 8), 1f, LShape())) return "a small circle centered inside the left bar should collide";
+                return null;
+            });
+
+            results.Check("CheckCollisionCapsulePoly/CapsuleRec/CapsuleTriangle -- concave-correct, and a capsule passing fully through solid material", () =>
+            {
+                // Entirely within the notch (empty space) -- must not collide even though both
+                // endpoints sit within the shape's overall bounding box.
+                if (Collision2D.CheckCollisionCapsulePoly(new Vector2(7, 7), new Vector2(9, 9), 0.5f, LShape()))
+                    return "a capsule entirely inside the concave notch should not collide";
+
+                // Passes through the solid left bar (x=3 is inside the L for the full y range 0-10),
+                // with both endpoints OUTSIDE the polygon (y=-5 and y=15) -- exercises the
+                // "neither endpoint inside, but crosses an edge" path specifically.
+                if (!Collision2D.CheckCollisionCapsulePoly(new Vector2(3, -5), new Vector2(3, 15), 0.5f, LShape()))
+                    return "a capsule passing through solid material (endpoints outside on both ends) should collide";
+
+                if (!Collision2D.CheckCollisionCapsuleRec(new Vector2(-5, 5), new Vector2(5, 5), 1f, new Rectangle(0, 0, 10, 10)))
+                    return "CheckCollisionCapsuleRec: expected a capsule entering a rectangle to collide";
+                if (Collision2D.CheckCollisionCapsuleRec(new Vector2(-50, 5), new Vector2(-40, 5), 1f, new Rectangle(0, 0, 10, 10)))
+                    return "CheckCollisionCapsuleRec: expected a far capsule to not collide";
+
+                if (!Collision2D.CheckCollisionCapsuleTriangle(new Vector2(-5, 2), new Vector2(5, 2), 1f, new Vector2(0, 0), new Vector2(10, 0), new Vector2(0, 10)))
+                    return "CheckCollisionCapsuleTriangle: expected a capsule entering a triangle to collide";
+                if (Collision2D.CheckCollisionCapsuleTriangle(new Vector2(-50, 2), new Vector2(-40, 2), 1f, new Vector2(0, 0), new Vector2(10, 0), new Vector2(0, 10)))
+                    return "CheckCollisionCapsuleTriangle: expected a far capsule to not collide";
+
+                return null;
+            });
         }
     }
 }
