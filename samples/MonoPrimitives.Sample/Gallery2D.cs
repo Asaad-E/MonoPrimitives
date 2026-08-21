@@ -50,6 +50,8 @@ internal static class Gallery2D
         DrawRow(batch, "ARBITRARY POLYGON", PolygonCells(), ref y, ref maxRight);
         DrawRow(batch, "LINES / POINTS", LineCells(), ref y, ref maxRight);
         DrawRow(batch, "SPLINES / ARROW / FAN / STRIP", SplineCells(), ref y, ref maxRight);
+        DrawRow(batch, "PALETTE.ALL - ROUNDED WHITE BORDER", PaletteAllCells(), ref y, ref maxRight);
+        DrawRow(batch, "PALETTE.GRADIENTPAIRS - LINEAR", GradientPairCells(), ref y, ref maxRight);
 
         return new Vector2(maxRight + 30f, y + 30f);
     }
@@ -383,4 +385,56 @@ internal static class Gallery2D
         ("bevel r=0", LineJoin.Bevel, 0f),
         ("bevel r=20", LineJoin.Bevel, 20f),
     };
+
+    // ==================================================================
+    // PALETTE.ALL — ROUNDED WHITE BORDER
+    // ==================================================================
+    // One portrait (taller-than-wide) rectangle per Palette.All color, minus Background (it's a
+    // backdrop color, not meant as a foreground fill — see Palette.All's own doc comment) — a
+    // 20px rounded white border on every one, purely to eyeball the whole curated palette at a
+    // glance against a consistent border/shape.
+
+    private static readonly (string Name, Color Color)[] PaletteColors =
+    {
+        ("Turquoise", Palette.Turquoise), ("GreenSea", Palette.GreenSea), ("Emerald", Palette.Emerald),
+        ("Nephritis", Palette.Nephritis), ("PeterRiver", Palette.PeterRiver), ("BelizeHole", Palette.BelizeHole),
+        ("Amethyst", Palette.Amethyst), ("Wisteria", Palette.Wisteria), ("WetAsphalt", Palette.WetAsphalt),
+        ("MidnightBlue", Palette.MidnightBlue), ("Sunflower", Palette.Sunflower), ("Orange", Palette.Orange),
+        ("Carrot", Palette.Carrot), ("Pumpkin", Palette.Pumpkin), ("Alizarin", Palette.Alizarin),
+        ("Pomegranate", Palette.Pomegranate), ("Clouds", Palette.Clouds), ("Silver", Palette.Silver),
+        ("Concrete", Palette.Concrete), ("Asbestos", Palette.Asbestos),
+    };
+
+    private static List<Cell> PaletteAllCells()
+    {
+        var cells = new List<Cell>();
+        static Vector2 TopLeft(Vector2 c) => c - new Vector2(45, 75);
+        Vector2 size = new(90, 150);
+
+        foreach (var (name, color) in PaletteColors)
+            cells.Add(new Cell(name, (b, p) => b.DrawRectangleRounded(TopLeft(p), size, 20f, color, Color.White, 20f)));
+
+        return cells;
+    }
+
+    // ==================================================================
+    // PALETTE.GRADIENTPAIRS — LINEAR (LEFT TO RIGHT)
+    // ==================================================================
+
+    private static readonly string[] GradientPairNames = { "Cherry", "Grape", "Dekopon", "Plum", "Pineapple", "Watermelon" };
+
+    private static List<Cell> GradientPairCells()
+    {
+        var cells = new List<Cell>();
+        var pairs = Palette.GradientPairs;
+
+        for (int i = 0; i < pairs.Length; i++)
+        {
+            (Color Inner, Color Outer) pair = pairs[i];
+            string name = i < GradientPairNames.Length ? GradientPairNames[i] : $"Pair {i + 1}";
+            cells.Add(new Cell(name, (b, p) => b.FillCircleGradientLinear(p, 60f, pair.Inner, pair.Outer, horizontal: true)));
+        }
+
+        return cells;
+    }
 }
