@@ -514,7 +514,11 @@ namespace MonoPrimitives.Primitives3D
         // The two-endpoint overloads are already fully orientable via their
         // start/end points; only the "standing on position, extends +Y" simple
         // overloads get a rotation parameter, since those otherwise have no way
-        // to tilt.
+        // to tilt. The parameter names deliberately differ between the two
+        // shapes too, not just the points: radiusTop/radiusBottom + slices for
+        // "standing upright" (top/bottom is a real, meaningful direction there),
+        // startRadius/endRadius + sides for "between two arbitrary points"
+        // (top/bottom would be misleading once the cylinder can point anywhere).
 
         /// <summary>Draws a filled cylinder or cone standing on <paramref name="position"/>, extending along +Y unless <paramref name="rotation"/> tilts it.</summary>
         public void FillCylinder(Vector3 position, float radiusTop, float radiusBottom, float height, int slices, Color color, Quaternion rotation = default)
