@@ -28,8 +28,8 @@ internal static class Gallery2D
     private static readonly Color FillColor = Palette.PeterRiver;
     private static readonly Color BorderColor = Palette.Clouds;
     private static readonly Color AltFillColor = Palette.Alizarin;
-    private static readonly Color GradientFrom = Palette.Turquoise;
-    private static readonly Color GradientTo = Palette.Wisteria;
+    private static readonly Color GradientFrom = Palette.PeterRiver;
+    private static readonly Color GradientTo = Palette.Alizarin;
     private static readonly Color GradientFrom2 = Palette.Sunflower;
     private static readonly Color GradientTo2 = Palette.Pomegranate;
 
@@ -249,11 +249,12 @@ internal static class Gallery2D
         var cells = new List<Cell>
         {
             new("Fill", (b, p) => b.FillCapsule(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, FillColor)),
+            new("Fill rotated (center+length overload)", (b, p) => b.FillCapsule(p, 80f, 30f, FillColor, rotation: MathHelper.ToRadians(30f))),
             new("Border", (b, p) => b.BorderCapsule(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, BorderColor, 4f)),
             new("Draw", (b, p) => b.DrawCapsule(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, FillColor, BorderColor, 4f)),
             new("Gradient", (b, p) => b.FillCapsuleGradient(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, GradientFrom, GradientTo)),
             new("Draw gradient", (b, p) => b.DrawCapsuleGradient(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, GradientFrom, GradientTo, BorderColor, 4f)),
-            new("Vertical (no rotation param)", (b, p) => b.DrawCapsule(p + new Vector2(0, -35), p + new Vector2(0, 35), 25f, FillColor, BorderColor, 4f)),
+            new("Vertical (endpoint-pair overload)", (b, p) => b.DrawCapsule(p + new Vector2(0, -35), p + new Vector2(0, 35), 25f, FillColor, BorderColor, 4f)),
         };
         return cells;
     }
