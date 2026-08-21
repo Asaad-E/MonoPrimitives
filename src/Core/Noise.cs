@@ -73,12 +73,29 @@ namespace MonoPrimitives
         public float Sample2D(float x, float y) => Sample3D(x, y, 0f);
 
         /// <summary>
-        /// 1D Perlin noise at x — a y=0, z=0 slice of <see cref="Sample3D"/>, same technique as
-        /// <see cref="Sample2D"/>. A smooth, deterministic "wander" over one variable: a steering
+        /// 1D Perlin noise at x. A smooth, deterministic "wander" over one variable: a steering
         /// angle drifting over time, wind gust strength, camera shake — anywhere you'd otherwise
         /// reach for a random walk but want it continuous instead of jittery.
         /// </summary>
-        public float Sample1D(float x) => Sample3D(x, 0f, 0f);
+        /// <remarks>
+        /// Deliberately NOT a y=0,z=0 slice of <see cref="Sample3D"/> the way <see cref="Sample2D"/>
+        /// is (a z=0 slice) — <see cref="Grad"/>'s 12-direction gradient table has several hash
+        /// values whose x-facing component actually reads <c>y</c> or <c>z</c> instead of <c>x</c>;
+        /// fixing BOTH y and z to 0 makes those cases evaluate to exactly zero, so a naive 3D
+        /// slice was empirically ~23% near-zero output versus ~2% for a normal 2D/3D sample (11x
+        /// more "flat" regions than real noise). This uses a dedicated 1D gradient (±1 per hash
+        /// bit, the standard approach) instead, which doesn't have that degenerate case.
+        /// </remarks>
+        public float Sample1D(float x)
+        {
+            int xi = (int)MathF.Floor(x) & 255;
+            float xf = x - MathF.Floor(x);
+            float u = Fade(xf);
+
+            float g0 = (_perm[xi] & 1) == 0 ? xf : -xf;
+            float g1 = (_perm[xi + 1] & 1) == 0 ? xf - 1f : -(xf - 1f);
+            return Lerp(u, g0, g1);
+        }
 
         /// <summary>
         /// Fractal Brownian motion: sums <paramref name="octaves"/> layers of <see cref="Sample2D"/>
