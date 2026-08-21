@@ -43,6 +43,7 @@ namespace MonoPrimitives.Tests
             using var batch = new Primitive3DBatch(GraphicsDevice);
             var camera = new Camera3D(position: new Vector3(6, 6, 6), target: Vector3.Zero, up: Vector3.Up, fovy: 50f);
             ShapeTests3D.Run(batch, camera, GraphicsDevice, results);
+            DebugFont3DTests.Run(batch, camera, GraphicsDevice, results);
 
             bool allPassed = results.PrintSummary();
             Environment.ExitCode = allPassed ? 0 : 1;
