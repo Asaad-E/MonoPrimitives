@@ -10,11 +10,11 @@ Shared foundation used by both 2D and 3D — nothing here is 2D- or 3D-specific.
 
 | File | Purpose |
 |---|---|
-| `Easing.cs` | 0→1 tween curves (Quad/Cubic/Quart/Expo/Sine/Back/Bounce/Elastic). |
-| `Palette.cs` | 21 curated colors + `Background`, `All`/`Primary` arrays, `Cycle(index)`. |
+| `Easing.cs` | 0→1 tween curves — every family (Quad/Cubic/Quart/Expo/Sine/Back/Bounce/Elastic) has In/Out/InOut. |
+| `Palette.cs` | 21 curated flat colors + `Background`, `All`/`Primary` arrays, `Cycle(index)`. Plus `GradientPairs`: inner/outer color pairs for a glossy radial-gradient "juicy ball" look via `FillCircleGradient` — a different flavor from the flat colors, not exhaustive, add more pairs as needed. |
 | `ColorUtil.cs` | Hex ↔ `Color`, HSV ↔ `Color`, `Lighten`/`Darken`/`Saturate`/`Desaturate`/`Complementary`, `Lerp`, `LerpHSV` (hue-wheel-aware). Hue is a turn in [0,1), not degrees. |
-| `Noise.cs` | Seedable Perlin noise: `Sample1D`/`2D`/`3D` (1D/2D are slices of the 3D implementation) + `Fbm1D`/`2D`/`3D`. |
-| `PrimitiveInput.cs` | Keyboard/mouse/gamepad polling, `GetAxis`/`GetVector2`, mouse drag/double-click/hit-test. `Update(GameTime)` once per frame. |
+| `Noise.cs` | Seedable Perlin noise: `Sample1D`/`2D`/`3D` + `Fbm1D`/`2D`/`3D`. `Sample2D`/`3D` share one implementation (2D is a z=0 slice); `Sample1D` has its own dedicated gradient (a naive y=0,z=0 slice would degenerate — see DECISIONS.md). |
+| `PrimitiveInput.cs` | Keyboard/mouse/gamepad polling, `GetAxis`/`GetVector2`, mouse drag/double-click/hit-test. `Update(GameTime)` once per frame. `DragDelta`/`IsDragging` still read correctly on the exact frame a drag ends (not reset to zero); `IsMouseButtonDoubleClicked` checks both `DoubleClickTime` and `DoubleClickDistance`. |
 | `FontGlyphs5x7.cs` | Raw 5×7 glyph bitmap data + layout math for the debug font. No rendering (2D and 3D each draw it differently). |
 
 ## `src/2D/` — namespace `MonoPrimitives.Primitives2D`
@@ -26,7 +26,8 @@ Shared foundation used by both 2D and 3D — nothing here is 2D- or 3D-specific.
 | `ViewportAdapter2D.cs` (+ `Boxing`/`Scaling`/`Default`/`Window` variants) | MonoGame.Extended-parity viewport adapter family: `BoxingViewportAdapter2D` (letterbox/pillarbox, uniform scale), `ScalingViewportAdapter2D` (stretch to fill, non-uniform scale), `DefaultViewportAdapter2D` (1:1, tracks device viewport), `WindowViewportAdapter2D` (1:1, tracks `GameWindow.ClientBounds`). All expose the same `GetScaleMatrix()`/`PointToVirtual`/`VirtualToPoint` surface — compose with `Camera2D` the same way regardless of which one's in use. Also usable by 3D via `Primitive3DBatch.Begin(camera, viewportAdapter)`. See `Design/2D/ViewportAdapter_Guide.md`. |
 | `Collision2D.cs` | Overlap tests + 3 raycasts. Detection only. |
 | `DebugFont5x7.cs` | `DrawString`/`MeasureText` on `PrimitiveBatch`, via `FillRectangle`. |
-| `Trail2D.cs` | Fixed-capacity fading position history. |
+| `Trail2D.cs` | Fixed-capacity fading position history. `fadeToAlpha` is clamped to [0,1]. |
+| `UnitCircleLut.cs` | Public precomputed unit-circle table — the 2D counterpart to the 3D library's `TrigLut`, for your own curved geometry. `PrimitiveBatch` uses it internally instead of keeping a private duplicate. |
 
 ## `src/3D/` — namespace `MonoPrimitives.Primitives3D`
 
@@ -36,8 +37,8 @@ Shared foundation used by both 2D and 3D — nothing here is 2D- or 3D-specific.
 | `Primitive3DBatchShapes.cs` | Cube/Sphere/Cylinder/Capsule/Torus/Heightmap/Plane/Grid/`DrawAxis`/splines/`DrawArrow`. Every shape is `Fill`/`Border`/`Draw` overloads of one name (no `Ex`/`V`-suffixed siblings — a two-endpoint cylinder, a vector-size cube, etc. are just another overload). `DrawGridXY/XZ/YZ` draw the grid only (`showMajorLines: bool = true` toggles the every-5th-line emphasis); `DrawAxis` is separate. Large; grep, don't read linearly. |
 | `Camera3D.cs` | View/projection, multiple modes, bounds/padding/follow/zoom, `ReadDefaultInput`/`Update` (both have `GameTime` overloads) (uses `PrimitiveInput`). Camera + controller merged into one class. Movement/rotation/sensitivity speeds are editable properties (`MoveSpeed`, `RotationSpeed`, etc.), not constants. Optionally takes a `ViewportAdapter2D` at construction, same as `Camera2D` — `GetWorldToScreen`/`GetScreenToWorld`/`GetScreenToWorldRay` then resolve it automatically instead of requiring an explicit `Viewport` argument. `Reset()` restores the construction-time pose (Position/Target/Up/Fovy/Projection/near/far) and clears zoom/follow/head-bob smoothing state; bound to `R` by default in `ReadDefaultInput`. |
 | `Collision3D.cs` | Wraps `BoundingSphere`/`BoundingBox`/`Ray`, plus capsule support and plane raycasts. |
-| `TrigLut.cs` | Precomputed sin/cos table for per-vertex trig. |
-| `Trail3D.cs` | 3D counterpart to `Trail2D`. |
+| `TrigLut.cs` | Precomputed sin/cos table for per-vertex trig — public, the 3D counterpart to 2D's `UnitCircleLut`. |
+| `Trail3D.cs` | 3D counterpart to `Trail2D`. `width` defaults to `Primitive3DBatch.DefaultLineWidth` (sentinel ≤0), `fadeToAlpha` is clamped to [0,1]. |
 | `DebugFont5x7.cs` | `DrawString3D`/`MeasureText3D`/`GetBillboardAxes` — billboarded text (cylindrical facing) by default; an overload taking an explicit `right`/`up` basis opts out of billboarding for text that should hold a fixed orientation. Never lit. |
 
 ## `samples/MonoPrimitives.Sample/`
@@ -50,4 +51,4 @@ Minimal runnable MonoGame game referencing `MonoPrimitives`, plus `MonoGame.Exte
 - `FillPolygonGradientByNearestVertex` (2D) — colors a rounded boundary's many points by nearest original vertex (a rounded corner's arc has no 1:1 vertex mapping).
 - Blend state is `NonPremultiplied` in both batches — see DECISIONS.md.
 - `PushQuadLit`/`PushTriangleLit` (3D) — face normal comes from vertex winding order; get it backwards and lighting/culling breaks silently. See DECISIONS.md.
-- `SampleUnitCircle` (2D) / `TrigLut` (3D) — precomputed trig tables. Use these for new curved geometry, not raw `MathF.Sin`/`Cos`.
+- `UnitCircleLut` (2D) / `TrigLut` (3D) — precomputed trig tables, both public. Use these for new curved geometry, not raw `MathF.Sin`/`Cos`.
