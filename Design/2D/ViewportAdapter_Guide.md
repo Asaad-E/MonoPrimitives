@@ -27,8 +27,8 @@ next to actual draw calls.
 ## Using it with 2D content
 
 Pass the adapter to `Camera2D`'s constructor (MonoGame.Extended's own `OrthographicCamera(ViewportAdapter)`
-shape) rather than threading it through every call — once stored, `ScreenToWorld`/`WorldToScreen`/
-`GetVisibleWorldBounds`/the mouse-drag part of `ReadDefaultInput` all use it automatically:
+shape) rather than threading it through every call — once stored, `GetTransformMatrix`/`ScreenToWorld`/
+`WorldToScreen`/`GetVisibleWorldBounds`/the mouse-drag part of `UpdateWithInput` all use it automatically:
 
 ```csharp
 var adapter = new BoxingViewportAdapter2D(GraphicsDevice, virtualWidth: 480, virtualHeight: 270);
@@ -36,9 +36,10 @@ var camera2d = new Camera2D(adapter, target: Vector2.Zero, zoom: 1f);
 // camera2d.Offset now defaults to the adapter's virtual center (240, 135) — override it if you
 // want a different anchor (e.g. Vector2.Zero so Target is the point drawn at the top-left corner).
 
-// once per frame, before drawing:
-adapter.Apply(); // narrows Device.Viewport to the boxed rect; clears/draws stop at its edge
-primitiveBatch.Begin(camera2d.GetTransformMatrix() * adapter.GetScaleMatrix());
+// once per frame, before drawing — do NOT call adapter.Apply() here: GetTransformMatrix() already
+// folds in adapter.GetScaleMatrix() (scale + offset), so narrowing the device viewport too would
+// double-apply the offset (see DECISIONS.md).
+primitiveBatch.Begin(camera2d.GetTransformMatrix());
 // ... draw in virtual (480x270) coordinates ...
 primitiveBatch.End();
 
@@ -70,6 +71,9 @@ only to override it for one call. See DECISIONS.md.
 
 ## Coexisting 2D + 3D in one window
 
-Draw order matters when both use the same adapter: call `adapter.Apply()` (directly, or via
-the `Primitive3DBatch.Begin(camera, adapter)` overload) before *each* layer's draw calls —
-it's idempotent and cheap, so there's no reason to try to call it only once per frame.
+`Apply()` and 2D's `GetScaleMatrix()` are two different ways of applying the same adapter —
+use one or the other, never both (see DECISIONS.md). 3D's path (`Primitive3DBatch.Begin(camera)`)
+calls `Apply()` internally; 2D's path folds `GetScaleMatrix()` into the draw transform instead
+and must *not* call `Apply()` first. If a frame draws both layers, call `adapter.Reset()` before
+each layer that needs the full window (2D's draw, and the HUD) and let 3D's `Begin(camera)` apply
+the boxed viewport itself right before its own draw calls — see `ViewportTest`'s `Draw()`.

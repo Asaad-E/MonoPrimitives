@@ -250,8 +250,7 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Palette.MidnightBlue);
 
-        Matrix transform = _camera2d.GetTransformMatrix() * _adapter.GetScaleMatrix();
-        _batch2d.Begin(transform);
+        _batch2d.Begin(_camera2d.GetTransformMatrix());
 
         foreach (Rectangle plat in _platforms)
             _batch2d.FillRectangleRounded(new Vector2(plat.X, plat.Y), new Vector2(plat.Width, plat.Height), 3f, Palette.Nephritis);

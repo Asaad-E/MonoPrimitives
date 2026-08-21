@@ -262,8 +262,7 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Palette.Background);
 
-        Matrix transform = _camera2d.GetTransformMatrix() * _adapter.GetScaleMatrix();
-        _batch2d.Begin(transform);
+        _batch2d.Begin(_camera2d.GetTransformMatrix());
 
         _batch2d.BorderRectangle(0, 0, VirtualWidth, VirtualHeight, Palette.WetAsphalt, 2f);
 

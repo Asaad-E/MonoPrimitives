@@ -3744,7 +3744,8 @@ namespace MonoPrimitives.Primitives2D
         /// uniformly with <paramref name="lineColor"/> — <paramref name="majorLineColor"/> is
         /// ignored.
         /// </param>
-        public void DrawGrid(int slices, float spacing, Vector2 origin, Color lineColor, Color majorLineColor, bool showMajorLines = true)
+        /// <param name="lineThickness">Minor line thickness; major lines are always 1 thicker.</param>
+        public void DrawGrid(int slices, float spacing, Vector2 origin, Color lineColor, Color majorLineColor, bool showMajorLines = true, float lineThickness = 1f)
         {
             ThrowIfNotBegun();
             int halfSlices = slices / 2;
@@ -3754,7 +3755,7 @@ namespace MonoPrimitives.Primitives2D
             {
                 bool major = showMajorLines && i % MajorGridLineInterval == 0;
                 float offset = i * spacing;
-                float thickness = major ? 2f : 1f;
+                float thickness = major ? lineThickness + 1f : lineThickness;
                 Color color = major ? majorLineColor : lineColor;
 
                 DrawLine(origin + new Vector2(offset, -extent), origin + new Vector2(offset, extent), thickness, color);
@@ -3769,11 +3770,11 @@ namespace MonoPrimitives.Primitives2D
         public void DrawAxis(float size, Color color) => DrawAxis(Vector2.Zero, size, color);
 
         /// <summary>Draws an X/Y axis cross of length <paramref name="size"/> (in each direction) through <paramref name="origin"/>.</summary>
-        public void DrawAxis(Vector2 origin, float size, Color color)
+        public void DrawAxis(Vector2 origin, float size, Color color, float thickness = 1f)
         {
             ThrowIfNotBegun();
-            DrawLine(origin - Vector2.UnitX * size, origin + Vector2.UnitX * size, color);
-            DrawLine(origin - Vector2.UnitY * size, origin + Vector2.UnitY * size, color);
+            DrawLine(origin - Vector2.UnitX * size, origin + Vector2.UnitX * size, thickness, color);
+            DrawLine(origin - Vector2.UnitY * size, origin + Vector2.UnitY * size, thickness, color);
         }
 
         // ------------------------------------------------------------------
