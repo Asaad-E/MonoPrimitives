@@ -18,6 +18,12 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Number of samples covering a full turn.</summary>
         public const int Resolution = 512;
 
+        /// <summary>1 / (2*PI) — multiply a radian angle by this to get turns, instead of dividing by 2*PI on every call.</summary>
+        public const float TurnsPerRadian = 1f / (MathF.PI * 2f);
+
+        /// <summary>1 / 360 — multiply a degree angle by this to get turns, instead of dividing by 360 on every call.</summary>
+        public const float TurnsPerDegree = 1f / 360f;
+
         private static readonly Vector2[] Table = Build();
 
         private static Vector2[] Build()
@@ -54,5 +60,19 @@ namespace MonoPrimitives.Primitives2D
             return new Vector2(a.X + (b.X - a.X) * frac,
                                a.Y + (b.Y - a.Y) * frac);
         }
+
+        /// <summary>
+        /// <see cref="Sample"/>, taking the angle in radians instead of turns — a multiply by
+        /// <see cref="TurnsPerRadian"/> (not a divide by <c>2*PI</c>) before the lookup.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector2 SampleRadians(float radians) => Sample(radians * TurnsPerRadian);
+
+        /// <summary>
+        /// <see cref="Sample"/>, taking the angle in degrees instead of turns — a multiply by
+        /// <see cref="TurnsPerDegree"/> (not a divide by 360) before the lookup.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector2 SampleDegrees(float degrees) => Sample(degrees * TurnsPerDegree);
     }
 }
