@@ -40,22 +40,6 @@ namespace MonoPrimitives.Primitives3D
     }
 
     /// <summary>
-    /// Per-frame movement/rotation request. Filling this yourself keeps the camera
-    /// logic input-agnostic, which matters for replays, network play and tests.
-    /// </summary>
-    public struct CameraInput
-    {
-        /// <summary>Movement request: X = right, Y = up, Z = forward. Already scaled by speed and delta time.</summary>
-        public Vector3 Movement;
-
-        /// <summary>Rotation request in radians: X = yaw, Y = pitch, Z = roll.</summary>
-        public Vector3 Rotation;
-
-        /// <summary>Zoom / target distance delta (mouse wheel).</summary>
-        public float Zoom;
-    }
-
-    /// <summary>
     /// A 3D camera with its own update/input logic folded into one class — a single object
     /// that owns both its state and its behaviour. Reference type (not a struct) so it can
     /// hold its own smoothing state (follow velocity, zoom velocity, mouse tracking) without
@@ -150,9 +134,9 @@ namespace MonoPrimitives.Primitives3D
         /// <see cref="Projection"/>/<see cref="NearPlane"/>/<see cref="FarPlane"/> to the values
         /// passed at construction, and clears smooth-zoom/smooth-follow/head-bobbing state so
         /// there's no lingering velocity to swoop through afterward. Bound to <c>R</c> by default
-        /// via <see cref="ReadDefaultInput(float)"/>; call directly if you're not using that.
-        /// Deliberately leaves <see cref="Mode"/> alone — that's a control-scheme choice, not part
-        /// of the camera's pose.
+        /// in <see cref="UpdateWithInput(PrimitiveInput, float)"/>; call directly if you're not
+        /// using that. Deliberately leaves <see cref="Mode"/> alone — that's a control-scheme
+        /// choice, not part of the camera's pose.
         /// </summary>
         public void Reset()
         {
@@ -168,7 +152,6 @@ namespace MonoPrimitives.Primitives3D
             _zoomVelocity = 0f;
             ResetFollowVelocity();
             ResetHeadBobbing();
-            _input.ResetMouseDelta();
         }
 
         // ---------------------------------------------------------------------
@@ -435,7 +418,6 @@ namespace MonoPrimitives.Primitives3D
         private const float FirstPersonStepTrigonometricDivider = 5f;
 
         private float _stepPhase;
-        private readonly PrimitiveInput _input = new();
 
         /// <summary>Current behaviour mode.</summary>
         public CameraMode Mode { get; set; } = CameraMode.Free;
@@ -446,16 +428,16 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>Mouse look sensitivity multiplier.</summary>
         public float LookSensitivity { get; set; } = 1f;
 
-        /// <summary>Base keyboard movement speed in world units per second, used by <see cref="ReadDefaultInput(float)"/> (further scaled by <see cref="MoveSpeedScale"/>). Editable; defaults to <see cref="DefaultMoveSpeed"/>.</summary>
+        /// <summary>Base keyboard movement speed in world units per second, used by <see cref="UpdateWithInput(PrimitiveInput, float)"/> (further scaled by <see cref="MoveSpeedScale"/>). Editable; defaults to <see cref="DefaultMoveSpeed"/>.</summary>
         public float MoveSpeed { get; set; } = DefaultMoveSpeed;
 
-        /// <summary>Keyboard-driven rotation speed in radians/frame, used by <see cref="ReadDefaultInput(float)"/> (Q/E roll, arrow-key look). Editable; defaults to <see cref="DefaultRotationSpeed"/>.</summary>
+        /// <summary>Keyboard-driven rotation speed in radians/frame, used by <see cref="UpdateWithInput(PrimitiveInput, float)"/> (Q/E yaw, Z/X roll, arrow-key look). Editable; defaults to <see cref="DefaultRotationSpeed"/>.</summary>
         public float RotationSpeed { get; set; } = DefaultRotationSpeed;
 
-        /// <summary>Raw mouse-delta-to-radians scale, used by <see cref="ReadDefaultInput(float)"/> (further scaled by <see cref="LookSensitivity"/>). Editable; defaults to <see cref="DefaultMouseMoveSensitivity"/>.</summary>
+        /// <summary>Raw mouse-delta-to-radians scale, used by <see cref="UpdateWithInput(PrimitiveInput, float)"/> (further scaled by <see cref="LookSensitivity"/>). Editable; defaults to <see cref="DefaultMouseMoveSensitivity"/>.</summary>
         public float MouseMoveSensitivity { get; set; } = DefaultMouseMoveSensitivity;
 
-        /// <summary>Mouse-wheel-to-zoom scale, used by <see cref="ReadDefaultInput(float)"/>. Editable; defaults to <see cref="DefaultMouseWheelZoomSensitivity"/>.</summary>
+        /// <summary>Mouse-wheel-to-zoom scale, used by <see cref="UpdateWithInput(PrimitiveInput, float)"/>. Editable; defaults to <see cref="DefaultMouseWheelZoomSensitivity"/>.</summary>
         public float MouseWheelZoomSensitivity { get; set; } = DefaultMouseWheelZoomSensitivity;
 
         /// <summary>Angular speed (radians/second) of the automatic orbit in <see cref="CameraMode.Orbital"/>. Editable; defaults to <see cref="DefaultOrbitalSpeed"/>.</summary>
@@ -472,33 +454,80 @@ namespace MonoPrimitives.Primitives3D
         /// and any in-flight <see cref="SmoothZoom"/> easing — with no movement and no input
         /// reading. Call this every frame when you're driving <see cref="Position"/>/<see cref="Target"/>
         /// yourself (a fixed prototype camera, a cutscene) and just want shake/easing to keep
-        /// working. For built-in WASD/mouse-look, use <see cref="UpdateWithInput(float)"/>
-        /// instead; to apply your own captured/replayed/networked input, use
-        /// <see cref="Update(in CameraInput, float)"/>.
+        /// working. For a built-in WASD/mouse-look controller driven by your own
+        /// <see cref="PrimitiveInput"/>, use <see cref="UpdateWithInput(PrimitiveInput, float)"/>
+        /// instead.
         /// </summary>
         public void Update(float deltaSeconds) => UpdateShake(deltaSeconds);
 
         /// <inheritdoc cref="Update(float)"/>
         public void Update(GameTime gameTime) => Update((float)gameTime.ElapsedGameTime.TotalSeconds);
 
-        /// <summary>Advances the camera one frame using <see cref="ReadDefaultInput(float)"/>'s built-in WASD/mouse-look controller — the simplest way to get a working camera with no input code of your own. This is a prototyping convenience, not something every game wants baked into its camera; use the plain <see cref="Update(float)"/>/<see cref="Update(in CameraInput, float)"/> overloads instead if you're driving the camera yourself or from your own input mapping.</summary>
-        public void UpdateWithInput(float deltaSeconds) => Update(ReadDefaultInput(deltaSeconds), deltaSeconds);
-
-        /// <inheritdoc cref="UpdateWithInput(float)"/>
-        public void UpdateWithInput(GameTime gameTime) => UpdateWithInput((float)gameTime.ElapsedGameTime.TotalSeconds);
-
-        /// <summary>Updates the camera from an explicit input request, taking the frame delta straight from a MonoGame <see cref="GameTime"/> instead of a raw float.</summary>
-        public void Update(GameTime gameTime, in CameraInput input) => Update(input, (float)gameTime.ElapsedGameTime.TotalSeconds);
-
-        /// <summary>Updates the camera from an explicit input request, allowing custom bindings, gamepads or recorded input. Doesn't read any input itself — <paramref name="input"/> can come from anywhere, not just <see cref="ReadDefaultInput(float)"/>.</summary>
-        public void Update(in CameraInput input, float deltaSeconds)
+        /// <summary>
+        /// Advances the camera one frame using W/A/S/D + Space/Ctrl movement, Q/E yaw, Z/X roll,
+        /// right-mouse-drag look and wheel zoom read from <paramref name="input"/> — the simplest
+        /// way to get a working camera with no input code of your own. This is a prototyping
+        /// convenience, not something every game wants baked into its camera; use the plain
+        /// <see cref="Update(float)"/> if you're driving the camera from your own logic, or query
+        /// <paramref name="input"/> yourself and call <see cref="Yaw"/>/<see cref="Pitch"/>/
+        /// <see cref="MoveForward"/>/etc. directly for custom bindings. Doesn't call
+        /// <see cref="PrimitiveInput.Update"/> itself — <paramref name="input"/> is expected to
+        /// already be current for this frame (the caller's own <c>Update</c> updates it once,
+        /// then hands the same instance to everything that reads it, this camera included).
+        /// <c>R</c> calls <see cref="Reset"/> directly and skips movement for that frame, so a
+        /// same-frame WASD/mouse delta doesn't immediately fight the reset.
+        /// </summary>
+        public void UpdateWithInput(PrimitiveInput input, float deltaSeconds)
         {
             UpdateShake(deltaSeconds); // before the Mode switch below, since Custom/Orbital return early
+
+            if (input.IsKeyPressed(Keys.R))
+            {
+                Reset();
+                return;
+            }
 
             bool moveInWorldPlane = Mode == CameraMode.FirstPerson || Mode == CameraMode.ThirdPerson;
             bool rotateAroundTarget = Mode == CameraMode.ThirdPerson || Mode == CameraMode.Orbital;
             bool lockView = Mode != CameraMode.Free;
             bool rotateUp = false;
+
+            float speed = MoveSpeed * MoveSpeedScale * deltaSeconds;
+            float sensitivity = MouseMoveSensitivity * LookSensitivity;
+
+            // normalize: false to keep each axis independently adding speed — a diagonal like
+            // W+D moves at sqrt(2)*speed rather than being capped to 1x.
+            Vector2 moveXZ = input.GetVector2(Keys.A, Keys.D, Keys.S, Keys.W, normalize: false) * speed;
+            float moveX = moveXZ.X, moveZ = moveXZ.Y, moveY = 0f;
+            if (input.IsKeyDown(Keys.Space)) moveY += speed;
+            if (input.IsKeyDown(Keys.LeftControl)) moveY -= speed;
+
+            float yaw = 0f, pitch = 0f, roll = 0f;
+
+            // Q/E turn the camera's body left/right (yaw) — the old roll binding moved to Z/X.
+            if (input.IsKeyDown(Keys.Q)) yaw -= RotationSpeed;
+            if (input.IsKeyDown(Keys.E)) yaw += RotationSpeed;
+            if (input.IsKeyDown(Keys.Z)) roll -= RotationSpeed;
+            if (input.IsKeyDown(Keys.X)) roll += RotationSpeed;
+
+            // Mouse look only while the right button is held, so the mouse can still drive
+            // UI/other systems the rest of the time. Subtracted (not added): a "grab and drag"
+            // feel — dragging right brings what was on the right into view, the same convention
+            // Camera2D's own left-drag pan already uses — rather than an FPS-style "steer the
+            // direction you push the mouse" feel.
+            if (input.IsMouseButtonDown(MouseButton.Right))
+            {
+                Vector2 mouseDelta = input.MouseDelta;
+                yaw -= mouseDelta.X * sensitivity;
+                pitch -= mouseDelta.Y * sensitivity;
+            }
+
+            if (input.IsKeyDown(Keys.Up)) pitch += RotationSpeed;
+            if (input.IsKeyDown(Keys.Down)) pitch -= RotationSpeed;
+            if (input.IsKeyDown(Keys.Right)) yaw += RotationSpeed;
+            if (input.IsKeyDown(Keys.Left)) yaw -= RotationSpeed;
+
+            float zoom = -input.MouseScrollDelta * (MouseWheelZoomSensitivity / 120f);
 
             switch (Mode)
             {
@@ -510,7 +539,7 @@ namespace MonoPrimitives.Primitives3D
                         Matrix rotation = Matrix.CreateFromAxisAngle(UpNormalized, OrbitalSpeed * deltaSeconds);
                         Vector3 view = Position - Target;
                         Position = Target + Vector3.Transform(view, rotation);
-                        SmoothZoom(input.Zoom, deltaSeconds);
+                        SmoothZoom(zoom, deltaSeconds);
                         ClampToBounds();
                         return;
                     }
@@ -520,19 +549,19 @@ namespace MonoPrimitives.Primitives3D
                     break;
             }
 
-            if (input.Rotation.X != 0f) Yaw(-input.Rotation.X, rotateAroundTarget);
-            if (input.Rotation.Y != 0f) Pitch(-input.Rotation.Y, lockView, rotateAroundTarget, rotateUp);
-            if (input.Rotation.Z != 0f && Mode == CameraMode.Free) Roll(input.Rotation.Z);
+            if (yaw != 0f) Yaw(-yaw, rotateAroundTarget);
+            if (pitch != 0f) Pitch(-pitch, lockView, rotateAroundTarget, rotateUp);
+            if (roll != 0f && Mode == CameraMode.Free) Roll(roll);
 
-            if (input.Movement.Z != 0f) MoveForward(input.Movement.Z, moveInWorldPlane);
-            if (input.Movement.X != 0f) MoveRight(input.Movement.X, moveInWorldPlane);
-            if (input.Movement.Y != 0f) MoveUp(input.Movement.Y);
+            if (moveZ != 0f) MoveForward(moveZ, moveInWorldPlane);
+            if (moveX != 0f) MoveRight(moveX, moveInWorldPlane);
+            if (moveY != 0f) MoveUp(moveY);
 
             if (Mode == CameraMode.FirstPerson)
             {
                 if (HeadBobbing)
                 {
-                    float horizontalMovement = MathF.Abs(input.Movement.X) + MathF.Abs(input.Movement.Z);
+                    float horizontalMovement = MathF.Abs(moveX) + MathF.Abs(moveZ);
                     if (horizontalMovement > 0f)
                     {
                         _stepPhase += horizontalMovement * FirstPersonStepTrigonometricDivider;
@@ -544,71 +573,14 @@ namespace MonoPrimitives.Primitives3D
             }
             else if (Mode is CameraMode.ThirdPerson or CameraMode.Free)
             {
-                SmoothZoom(input.Zoom, deltaSeconds);
+                SmoothZoom(zoom, deltaSeconds);
             }
 
             ClampToBounds();
         }
 
-        /// <summary>Builds a <see cref="CameraInput"/> from the current keyboard and mouse state, taking the frame delta straight from a MonoGame <see cref="GameTime"/> instead of a raw float.</summary>
-        public CameraInput ReadDefaultInput(GameTime gameTime) => ReadDefaultInput((float)gameTime.ElapsedGameTime.TotalSeconds);
-
-        /// <summary>
-        /// Builds a <see cref="CameraInput"/> from the current keyboard and mouse state (W/A/S/D,
-        /// Q/E roll, right-mouse-drag look, wheel zoom) via the shared <see cref="PrimitiveInput"/>.
-        /// <c>R</c> calls <see cref="Reset"/> directly (a discrete "snap to initial pose" action
-        /// doesn't fit the incremental movement/rotation/zoom shape <see cref="CameraInput"/>
-        /// represents) and returns a zeroed input for that frame, so a same-frame WASD/mouse
-        /// delta doesn't immediately fight the reset.
-        /// </summary>
-        public CameraInput ReadDefaultInput(float deltaSeconds)
-        {
-            _input.Update(deltaSeconds);
-
-            if (_input.IsKeyPressed(Keys.R))
-            {
-                Reset();
-                return default;
-            }
-
-            float speed = MoveSpeed * MoveSpeedScale * deltaSeconds;
-            float sensitivity = MouseMoveSensitivity * LookSensitivity;
-
-            CameraInput input = default;
-
-            // normalize: false to keep this byte-for-byte the same speed as the four separate
-            // IsKeyDown checks it replaces (each axis independently adds speed — a diagonal like
-            // W+D moves at sqrt(2)*speed, same as before; GetVector2's own default normalization
-            // is deliberately opted out of here, not forgotten).
-            Vector2 moveXZ = _input.GetVector2(Keys.A, Keys.D, Keys.S, Keys.W, normalize: false) * speed;
-            input.Movement.X = moveXZ.X;
-            input.Movement.Z = moveXZ.Y;
-            if (_input.IsKeyDown(Keys.Space)) input.Movement.Y += speed;
-            if (_input.IsKeyDown(Keys.LeftControl)) input.Movement.Y -= speed;
-
-            if (_input.IsKeyDown(Keys.Q)) input.Rotation.Z -= RotationSpeed;
-            if (_input.IsKeyDown(Keys.E)) input.Rotation.Z += RotationSpeed;
-
-            // Mouse look only while the right button is held, so the mouse can still
-            // drive UI/other systems the rest of the time.
-            if (_input.IsMouseButtonDown(MouseButton.Right))
-            {
-                Vector2 mouseDelta = _input.MouseDelta;
-                input.Rotation.X += mouseDelta.X * sensitivity;
-                input.Rotation.Y += mouseDelta.Y * sensitivity;
-            }
-
-            if (_input.IsKeyDown(Keys.Up)) input.Rotation.Y += RotationSpeed;
-            if (_input.IsKeyDown(Keys.Down)) input.Rotation.Y -= RotationSpeed;
-            if (_input.IsKeyDown(Keys.Right)) input.Rotation.X += RotationSpeed;
-            if (_input.IsKeyDown(Keys.Left)) input.Rotation.X -= RotationSpeed;
-
-            input.Zoom = -_input.MouseScrollDelta * (MouseWheelZoomSensitivity / 120f);
-            return input;
-        }
-
-        /// <summary>Resets mouse-delta tracking. Call after teleporting the cursor or regaining window focus to avoid a one-frame snap.</summary>
-        public void ResetMouseTracking() => _input.ResetMouseDelta();
+        /// <inheritdoc cref="UpdateWithInput(PrimitiveInput, float)"/>
+        public void UpdateWithInput(PrimitiveInput input, GameTime gameTime) => UpdateWithInput(input, (float)gameTime.ElapsedGameTime.TotalSeconds);
 
         /// <summary>Resets the head-bobbing phase, useful when respawning the player.</summary>
         public void ResetHeadBobbing() => _stepPhase = 0f;
@@ -679,7 +651,7 @@ namespace MonoPrimitives.Primitives3D
 
         /// <summary>
         /// Optional world-space bounds the camera <see cref="Position"/> is kept
-        /// inside (checked after every <see cref="Update(float)"/>/<see cref="Update(in CameraInput,float)"/>
+        /// inside (checked after every <see cref="Update(float)"/>/<see cref="UpdateWithInput(PrimitiveInput,float)"/>
         /// call, and after <see cref="FollowTarget"/>). <c>null</c> (default) disables clamping.
         /// </summary>
         public BoundingBox? PositionBounds { get; set; }
@@ -690,7 +662,7 @@ namespace MonoPrimitives.Primitives3D
         /// </summary>
         public float BoundsPadding { get; set; } = 0f;
 
-        /// <summary>Minimum allowed <see cref="TargetDistance"/> for <see cref="SmoothZoom"/> and the Orbital/ThirdPerson/Free auto-zoom in <see cref="Update(in CameraInput,float)"/>.</summary>
+        /// <summary>Minimum allowed <see cref="TargetDistance"/> for <see cref="SmoothZoom"/> and the Orbital/ThirdPerson/Free auto-zoom in <see cref="UpdateWithInput(PrimitiveInput,float)"/>.</summary>
         public float MinDistance { get; set; } = 0.5f;
 
         /// <summary>Maximum allowed <see cref="TargetDistance"/> for <see cref="SmoothZoom"/>.</summary>

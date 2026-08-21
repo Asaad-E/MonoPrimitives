@@ -37,7 +37,7 @@ public class Game1 : Game
     private bool _tabWasDown;
 
     private ViewportAdapter2D? _adapter;
-    private Camera2D _camera2d = new();
+    private Camera2D _camera2d = Camera2D.CreateDefault();
     private Camera3D _camera3d = new(new Vector3(300, 260, 300), Vector3.Zero, Vector3.Up, 55f);
 
     public Game1()

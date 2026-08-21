@@ -32,6 +32,7 @@ public class Game1 : Game
     // conversions and mouse-drag panning stay correct if the window is resized/letterboxed.
     private ViewportAdapter2D _viewportAdapter2d;
     private Camera2D _camera2d;
+    private readonly PrimitiveInput _input = new();
     private bool _show2DGallery = true;
     private Vector2 _gallery2DSize;
     private bool _tabWasDown;
@@ -107,6 +108,7 @@ public class Game1 : Game
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             _camera.Zoom += 0.1f;
         float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        _input.Update(deltaTime);
 
         bool tabDown = Keyboard.GetState().IsKeyDown(Keys.Tab);
         if (tabDown && !_tabWasDown) _show2DGallery = !_show2DGallery;
@@ -115,7 +117,7 @@ public class Game1 : Game
         if (_show2DGallery)
             UpdateGallery2DCamera(deltaTime);
         else
-            _camera3d.UpdateWithInput(deltaTime);
+            _camera3d.UpdateWithInput(_input, deltaTime);
 
         base.Update(gameTime);
     }
@@ -127,7 +129,7 @@ public class Game1 : Game
     private void UpdateGallery2DCamera(float deltaTime)
     {
         _camera2d.TargetBounds = new Rectangle(0, 0, (int)MathF.Max(_gallery2DSize.X, 1f), (int)MathF.Max(_gallery2DSize.Y, 1f));
-        _camera2d.UpdateWithInput(deltaTime);
+        _camera2d.UpdateWithInput(_input, deltaTime);
     }
 
     protected override void Draw(GameTime gameTime)

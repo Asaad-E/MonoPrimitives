@@ -52,7 +52,7 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>Draws a line as a raw GPU line-list segment (cheaper than <see cref="DrawLine3D"/>, always 1px, no camera facing).</summary>
         public void DrawLine3DFast(Vector3 startPos, Vector3 endPos, Color color)
         {
-            EnsureSpaceLine(2);
+            ReserveLine(2);
             PushLine(startPos, endPos, color);
         }
 
@@ -291,7 +291,7 @@ namespace MonoPrimitives.Primitives3D
             GetCubeCorners(position, size, rotation, out Vector3 p000, out Vector3 p100, out Vector3 p110, out Vector3 p010,
                            out Vector3 p001, out Vector3 p101, out Vector3 p111, out Vector3 p011);
 
-            EnsureSpace(36);
+            Reserve(36);
             PushQuadLit(p001, p101, p111, p011, color); // +Z front
             PushQuadLit(p100, p000, p010, p110, color); // -Z back
             PushQuadLit(p011, p111, p110, p010, color); // +Y top
@@ -550,7 +550,7 @@ namespace MonoPrimitives.Primitives3D
                 Vector3 bottom1 = startPos + dir1 * startRadius;
                 Vector3 top1 = endPos + dir1 * endRadius;
 
-                EnsureSpace(12);
+                Reserve(12);
                 PushQuadLit(bottom0, bottom1, top1, top0, color); // side (degenerates to a triangle when a radius is zero)
                 if (startRadius > 0f) PushTriangleLit(startPos, bottom1, bottom0, color);
                 if (endRadius > 0f) PushTriangleLit(endPos, top0, top1, color);

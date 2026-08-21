@@ -392,13 +392,13 @@ namespace MonoPrimitives.Primitives3D
         /// Ensures room for <paramref name="requiredVertices"/> and flushes if needed.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void EnsureSpace(int requiredVertices)
+        private void Reserve(int requiredVertices)
         {
             if (_vertexCount + requiredVertices > _maxVertices)
                 Flush();
         }
 
-        private void EnsureSpaceLine(int requiredVertices)
+        private void ReserveLine(int requiredVertices)
         {
             if (_vertexCountLine + requiredVertices > _maxVertices)
                 FlushLine();
@@ -419,7 +419,7 @@ namespace MonoPrimitives.Primitives3D
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void PushTriangle(in Vector3 a, in Vector3 b, in Vector3 c, in Color color)
         {
-            EnsureSpace(3);
+            Reserve(3);
             PushTriangleUnchecked(a, b, c, color);
         }
 
@@ -427,7 +427,7 @@ namespace MonoPrimitives.Primitives3D
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void PushQuad(in Vector3 a, in Vector3 b, in Vector3 c, in Vector3 d, in Color color)
         {
-            EnsureSpace(6);
+            Reserve(6);
             PushTriangleUnchecked(a, b, c, color);
             PushTriangleUnchecked(a, c, d, color);
         }

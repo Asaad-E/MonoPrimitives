@@ -223,7 +223,7 @@ namespace MonoPrimitives.Primitives2D
         // Begin/End state
         // ------------------------------------------------------------------
 
-        private bool _isStarted;
+        private bool _began;
 
         // Saved device state, restored on End(). Null until the first Begin() call.
         private BlendState? _savedBlend;
@@ -315,7 +315,7 @@ namespace MonoPrimitives.Primitives2D
             RasterizerState? rasterizerState = null,
             Effect? effect = null)
         {
-            if (_isStarted)
+            if (_began)
                 throw new InvalidOperationException("Begin cannot be called again until End has been called.");
 
             // Save everything we are about to touch.
@@ -342,7 +342,7 @@ namespace MonoPrimitives.Primitives2D
             _vertexCount = 0;
             _indexCount = 0;
             _vertexCountPoint = 0;
-            _isStarted = true;
+            _began = true;
         }
 
         /// <summary>
@@ -350,7 +350,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void End()
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             Flush();
             FlushPoint();
 
@@ -359,7 +359,7 @@ namespace MonoPrimitives.Primitives2D
             _device.RasterizerState = _savedRasterizer;
             _device.SamplerStates[0] = _savedSampler;
 
-            _isStarted = false;
+            _began = false;
         }
 
         /// <summary>
@@ -419,9 +419,9 @@ namespace MonoPrimitives.Primitives2D
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void EnsureStarted()
+        private void ThrowIfNotBegun()
         {
-            if (!_isStarted)
+            if (!_began)
                 throw new InvalidOperationException("Begin must be called before drawing.");
         }
 
@@ -537,7 +537,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void DrawPixelFast(Vector2 position, Color color)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             PushVertexPoint(position, color);
         }
 
@@ -576,7 +576,7 @@ namespace MonoPrimitives.Primitives2D
         /// </param>
         public void DrawLine(Vector2 start, Vector2 end, float thickness, Color color, LineCap cap)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
 
             float dx = end.X - start.X;
             float dy = end.Y - start.Y;
@@ -631,7 +631,7 @@ namespace MonoPrimitives.Primitives2D
         public void DrawLineStrip(ReadOnlySpan<Vector2> points, float thickness, Color color,
             LineJoin join = LineJoin.Miter, LineCap cap = LineCap.Butt, float? jointRadius = null)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (points.Length < 2) return;
             BuildOutlineGeometry(points, thickness, color, closed: false, join, cap, jointRadius);
         }
@@ -673,7 +673,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void DrawArrow(Vector2 start, Vector2 end, float thickness, Color color, float? headLength, float? headWidth)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             Vector2 delta = end - start;
             float len = delta.Length();
             if (len < 1e-6f)
@@ -726,7 +726,7 @@ namespace MonoPrimitives.Primitives2D
         public void FillTriangle(Vector2 v1, Vector2 v2, Vector2 v3, Color color, float rotation = 0f, Vector2? origin = null)
         {
             RotateTriangle(ref v1, ref v2, ref v3, rotation, origin);
-            EnsureStarted();
+            ThrowIfNotBegun();
             int b = Reserve(3, 3);
             PushVertex(v1, color);
             PushVertex(v2, color);
@@ -738,7 +738,7 @@ namespace MonoPrimitives.Primitives2D
         public void FillTriangle(Vector2 v1, Color c1, Vector2 v2, Color c2, Vector2 v3, Color c3, float rotation = 0f, Vector2? origin = null)
         {
             RotateTriangle(ref v1, ref v2, ref v3, rotation, origin);
-            EnsureStarted();
+            ThrowIfNotBegun();
             int b = Reserve(3, 3);
             PushVertex(v1, c1);
             PushVertex(v2, c2);
@@ -760,7 +760,7 @@ namespace MonoPrimitives.Primitives2D
         {
             if (thickness <= 0f) return;
             RotateTriangle(ref v1, ref v2, ref v3, rotation, origin);
-            EnsureStarted();
+            ThrowIfNotBegun();
             Span<Vector2> pts = [v1, v2, v3];
 
             if (join == LineJoin.Miter)
@@ -796,7 +796,7 @@ namespace MonoPrimitives.Primitives2D
             }
             else
             {
-                EnsureStarted();
+                ThrowIfNotBegun();
                 Span<Vector2> pts = [v1, v2, v3];
                 Span<Vector2> boundary = stackalloc Vector2[3 * (MaxCircleSegments + 1)];
                 int count = BuildRoundedCornerBoundary(pts, jointRadius.Value, join, thickness, boundary);
@@ -820,7 +820,7 @@ namespace MonoPrimitives.Primitives2D
         {
             if (cornerRadius <= 0.01f) { FillTriangle(v1, v2, v3, color, rotation, origin); return; }
             RotateTriangle(ref v1, ref v2, ref v3, rotation, origin);
-            EnsureStarted();
+            ThrowIfNotBegun();
             Span<Vector2> pts = [v1, v2, v3];
             float safeRadius = ClampCornerRadiusToFit(pts, cornerRadius);
             Span<Vector2> boundary = stackalloc Vector2[3 * (MaxCircleSegments + 1)];
@@ -871,7 +871,7 @@ namespace MonoPrimitives.Primitives2D
         {
             if (cornerRadius <= 0.01f) { FillTriangleGradient(v1, v2, v3, from, to, rotation, origin); return; }
             RotateTriangle(ref v1, ref v2, ref v3, rotation, origin);
-            EnsureStarted();
+            ThrowIfNotBegun();
             Span<Vector2> pts = [v1, v2, v3];
             float safeRadius = ClampCornerRadiusToFit(pts, cornerRadius);
             Span<Vector2> boundary = stackalloc Vector2[3 * (MaxCircleSegments + 1)];
@@ -943,7 +943,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         private void FillPolygonGradientByNearestVertex(ReadOnlySpan<Vector2> boundary, ReadOnlySpan<Vector2> originalVertices, ReadOnlySpan<Color> vertexColors)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             int n = boundary.Length;
             if (n < 3) return;
 
@@ -1004,7 +1004,7 @@ namespace MonoPrimitives.Primitives2D
         public void DrawTriangleGradient(Vector2 v1, Vector2 v2, Vector2 v3, Color from, Color to, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
             RotateTriangle(ref v1, ref v2, ref v3, rotation, origin);
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (thickness > 0f)
             {
                 Span<Vector2> pts = [v1, v2, v3];
@@ -1043,7 +1043,7 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Draws a triangle fan. The first point is the shared center vertex.</summary>
         public void DrawTriangleFan(ReadOnlySpan<Vector2> points, Color color)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (points.Length < 3) return;
 
             int b = Reserve(points.Length, (points.Length - 2) * 3);
@@ -1057,7 +1057,7 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Draws a triangle strip.</summary>
         public void DrawTriangleStrip(ReadOnlySpan<Vector2> points, Color color)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (points.Length < 3) return;
 
             int b = Reserve(points.Length, (points.Length - 2) * 3);
@@ -1079,7 +1079,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void FillRectangle(float x, float y, float width, float height, Color color, float rotation = 0f, Vector2? origin = null)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
 
             if (rotation == 0f)
             {
@@ -1123,7 +1123,7 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Draws a filled rectangle with four independently colored corners (no rotation).</summary>
         public void FillRectangle(Rectangle rect, Color topLeft, Color topRight, Color bottomRight, Color bottomLeft)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             int b = Reserve(4, 6);
             PushVertex(rect.X, rect.Y, topLeft);
             PushVertex(rect.X + rect.Width, rect.Y, topRight);
@@ -1159,7 +1159,7 @@ namespace MonoPrimitives.Primitives2D
                 return;
             }
 
-            EnsureStarted();
+            ThrowIfNotBegun();
             Vector2 pivot = origin ?? new Vector2(width * 0.5f, height * 0.5f);
             Span<Vector2> pts = stackalloc Vector2[4];
             if (rotation == 0f)
@@ -1229,7 +1229,7 @@ namespace MonoPrimitives.Primitives2D
             }
             else
             {
-                EnsureStarted();
+                ThrowIfNotBegun();
                 Vector2 pivot = origin ?? new Vector2(width * 0.5f, height * 0.5f);
                 Span<Vector2> pts = stackalloc Vector2[4];
                 if (rotation == 0f)
@@ -1281,7 +1281,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void FillRectangleGradient(float x, float y, float width, float height, Color from, Color to, bool horizontal, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (width <= 0f || height <= 0f) return;
 
             float axisLength = horizontal ? width : height;
@@ -1508,7 +1508,7 @@ namespace MonoPrimitives.Primitives2D
         /// <param name="rotation">Rotation in radians, about the rect's own center unless <paramref name="origin"/> is given.</param>
         public void FillRectangleRounded(Rectangle rect, RectCorners radius, Color color, float rotation = 0f, Vector2? origin = null)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             Span<Vector2> buffer = stackalloc Vector2[4 * (MaxCircleSegments + 1)];
             int count = GenerateRoundedRectBoundary(rect, radius, rotation, origin, buffer);
             FillPolygon(buffer[..count], color);
@@ -1531,7 +1531,7 @@ namespace MonoPrimitives.Primitives2D
         public void BorderRectangleRounded(Rectangle rect, RectCorners radius, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
         {
             if (thickness <= 0f) return;
-            EnsureStarted();
+            ThrowIfNotBegun();
             Span<Vector2> buffer = stackalloc Vector2[4 * (MaxCircleSegments + 1)];
             int count = GenerateRoundedRectBoundary(rect, radius, rotation, origin, buffer);
             ReadOnlySpan<Vector2> boundary = buffer[..count];
@@ -1574,7 +1574,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void FillRectangleRoundedGradient(Rectangle rect, RectCorners radius, Color from, Color to, bool horizontal, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             Span<Vector2> buffer = stackalloc Vector2[4 * (MaxCircleSegments + 1)];
             int count = GenerateRoundedRectBoundary(rect, radius, rotation, origin, buffer);
             FillAxisGradientBoundary(buffer[..count], rect.X, rect.Y, rect.Width, rect.Height, rotation, origin, from, to, horizontal, innerOffset, outerOffset);
@@ -1594,7 +1594,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void DrawRectangleRoundedGradient(Rectangle rect, RectCorners radius, Color from, Color to, bool horizontal, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             Span<Vector2> buffer = stackalloc Vector2[4 * (MaxCircleSegments + 1)];
             int count = GenerateRoundedRectBoundary(rect, radius, rotation, origin, buffer);
             ReadOnlySpan<Vector2> boundary = buffer[..count];
@@ -1677,7 +1677,7 @@ namespace MonoPrimitives.Primitives2D
         /// <param name="rotation">Rotation in radians, about the rect's own center unless <paramref name="origin"/> is given.</param>
         public void FillRectangleChamfer(Rectangle rect, RectCorners chamfer, Color color, float rotation = 0f, Vector2? origin = null)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             Span<Vector2> buffer = stackalloc Vector2[8];
             int count = GenerateChamferRectBoundary(rect, chamfer, rotation, origin, buffer);
             FillPolygon(buffer[..count], color);
@@ -1699,7 +1699,7 @@ namespace MonoPrimitives.Primitives2D
         public void BorderRectangleChamfer(Rectangle rect, RectCorners chamfer, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
         {
             if (thickness <= 0f) return;
-            EnsureStarted();
+            ThrowIfNotBegun();
             Span<Vector2> buffer = stackalloc Vector2[8];
             int count = GenerateChamferRectBoundary(rect, chamfer, rotation, origin, buffer);
             ReadOnlySpan<Vector2> boundary = buffer[..count];
@@ -1742,7 +1742,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void FillRectangleChamferGradient(Rectangle rect, RectCorners chamfer, Color from, Color to, bool horizontal, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             Span<Vector2> buffer = stackalloc Vector2[8];
             int count = GenerateChamferRectBoundary(rect, chamfer, rotation, origin, buffer);
             FillAxisGradientBoundary(buffer[..count], rect.X, rect.Y, rect.Width, rect.Height, rotation, origin, from, to, horizontal, innerOffset, outerOffset);
@@ -1761,7 +1761,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void DrawRectangleChamferGradient(Rectangle rect, RectCorners chamfer, Color from, Color to, bool horizontal, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             Span<Vector2> buffer = stackalloc Vector2[8];
             int count = GenerateChamferRectBoundary(rect, chamfer, rotation, origin, buffer);
             ReadOnlySpan<Vector2> boundary = buffer[..count];
@@ -1818,7 +1818,7 @@ namespace MonoPrimitives.Primitives2D
         /// <param name="spread">How far the fade extends beyond the rectangle's own edge.</param>
         public void FillRectangleShadow(Rectangle rect, RectCorners radius, Color color, float spread = 20f, float rotation = 0f, Vector2? origin = null)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             FillRectangleRounded(rect, radius, color, rotation, origin);
             if (spread <= 0f) return;
 
@@ -1841,7 +1841,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void FillRectangleChamferShadow(Rectangle rect, RectCorners chamfer, Color color, float spread = 20f, float rotation = 0f, Vector2? origin = null)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             FillRectangleChamfer(rect, chamfer, color, rotation, origin);
             if (spread <= 0f) return;
 
@@ -1940,7 +1940,7 @@ namespace MonoPrimitives.Primitives2D
         /// <param name="outer">Color at the rim.</param>
         public void FillEllipse(Vector2 center, float radiusH, float radiusV, int segments, Color inner, Color outer, float rotation = 0f)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (segments < 3 || radiusH <= 0f || radiusV <= 0f) return;
 
             int b = Reserve(segments + 2, segments * 3);
@@ -1967,7 +1967,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void BorderEllipse(Vector2 center, float radiusH, float radiusV, Color color, float thickness = 1f, float rotation = 0f)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (thickness <= 0f || radiusH <= 0f || radiusV <= 0f) return;
 
             int segments = SegmentsForArc(Math.Max(radiusH, radiusV), MathHelper.TwoPi);
@@ -2022,7 +2022,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void FillEllipseGradient(Vector2 center, float radiusH, float radiusV, Color inner, Color outer, float rotation = 0f, float innerOffset = 0f, float outerOffset = 0f)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (radiusH <= 0f || radiusV <= 0f) return;
 
             innerOffset = MathF.Max(0f, innerOffset);
@@ -2121,7 +2121,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void FillCircleGradientLinear(Vector2 center, float radius, Color from, Color to, bool horizontal = true, float rotation = 0f, float innerOffset = 0f, float outerOffset = 0f)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (radius <= 0f) return;
 
             int segments = SegmentsForArc(radius, MathHelper.TwoPi);
@@ -2169,7 +2169,7 @@ namespace MonoPrimitives.Primitives2D
         /// <inheritdoc cref="DrawCircleSector(Vector2,float,float,float,Color)"/>
         public void DrawCircleSector(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color color)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (segments < 1 || radius <= 0f) return;
 
             int b = Reserve(segments + 2, segments * 3);
@@ -2211,7 +2211,7 @@ namespace MonoPrimitives.Primitives2D
         public void DrawRing(Vector2 center, float innerRadius, float outerRadius,
                      float startAngle, float endAngle, int segments, Color color)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (segments < 1 || outerRadius <= 0f) return;
             if (innerRadius < 0f) innerRadius = 0f;
 
@@ -2255,7 +2255,7 @@ namespace MonoPrimitives.Primitives2D
         /// <param name="thickness">Line thickness; defaults to 1px.</param>
         public void BorderRing(Vector2 center, float innerRadius, float outerRadius, float startAngle, float endAngle, int segments, Color color, float thickness = 1f)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (segments < 1 || outerRadius <= 0f) return;
             if (innerRadius <= 0f) { DrawCircleSectorLines(center, outerRadius, startAngle, endAngle, thickness, color); return; }
 
@@ -2319,7 +2319,7 @@ namespace MonoPrimitives.Primitives2D
         /// <param name="rotation">Rotation in radians.</param>
         public void FillPoly(Vector2 center, int sides, float radius, Color color, float rotation = 0f)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (sides < 3) return;
 
             int b = Reserve(sides + 2, sides * 3);
@@ -2351,7 +2351,7 @@ namespace MonoPrimitives.Primitives2D
         public void BorderPoly(Vector2 center, int sides, float radius, Color color, float thickness = 1f, float rotation = 0f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
             if (thickness <= 0f || sides < 3) return;
-            EnsureStarted();
+            ThrowIfNotBegun();
 
             float rotationTurns = rotation / MathHelper.TwoPi;
             float step = 1f / sides;
@@ -2389,7 +2389,7 @@ namespace MonoPrimitives.Primitives2D
             }
             else
             {
-                EnsureStarted();
+                ThrowIfNotBegun();
                 float rotationTurns = rotation / MathHelper.TwoPi;
                 float step = 1f / sides;
                 Span<Vector2> pts = sides <= MaxStackAllocElements ? stackalloc Vector2[sides] : new Vector2[sides];
@@ -2415,7 +2415,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void FillPolyGradient(Vector2 center, int sides, float radius, Color inner, Color outer, float rotation = 0f, float innerOffset = 0f, float outerOffset = 0f)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (sides < 3 || radius <= 0f) return;
 
             innerOffset = MathF.Max(0f, innerOffset);
@@ -2498,7 +2498,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void FillPolygon(ReadOnlySpan<Vector2> points, Color color)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             int n = points.Length;
             if (n < 3) return;
 
@@ -2668,7 +2668,7 @@ namespace MonoPrimitives.Primitives2D
         public void BorderPolygon(ReadOnlySpan<Vector2> points, Color color, float thickness = 1f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
             if (thickness <= 0f || points.Length < 2) return;
-            EnsureStarted();
+            ThrowIfNotBegun();
 
             if (join == LineJoin.Miter)
             {
@@ -2700,7 +2700,7 @@ namespace MonoPrimitives.Primitives2D
             }
             else
             {
-                EnsureStarted();
+                ThrowIfNotBegun();
                 Span<Vector2> boundary = points.Length <= MaxStackAllocElements / (MaxCircleSegments + 1)
                     ? stackalloc Vector2[points.Length * (MaxCircleSegments + 1)]
                     : new Vector2[points.Length * (MaxCircleSegments + 1)];
@@ -2722,7 +2722,7 @@ namespace MonoPrimitives.Primitives2D
         public void FillPolygonRounded(ReadOnlySpan<Vector2> points, float cornerRadius, Color color)
         {
             if (cornerRadius <= 0.01f) { FillPolygon(points, color); return; }
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (points.Length < 3) return;
             float safeRadius = ClampCornerRadiusToFit(points, cornerRadius);
             int maxOut = points.Length * (MaxCircleSegments + 1);
@@ -2753,7 +2753,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void FillPolygonGradient(ReadOnlySpan<Vector2> points, Color from, Color to)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             int n = points.Length;
             if (n < 3) return;
 
@@ -2829,7 +2829,7 @@ namespace MonoPrimitives.Primitives2D
         public void FillPolygonGradientRounded(ReadOnlySpan<Vector2> points, float cornerRadius, Color from, Color to)
         {
             if (cornerRadius <= 0.01f) { FillPolygonGradient(points, from, to); return; }
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (points.Length < 3) return;
 
             float safeRadius = ClampCornerRadiusToFit(points, cornerRadius);
@@ -2852,7 +2852,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void FillPolygonGradientTopBottom(ReadOnlySpan<Vector2> bottomPoints, ReadOnlySpan<Vector2> topPoints, Color bottomColor, Color topColor)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             int n = Math.Min(bottomPoints.Length, topPoints.Length);
             if (n < 2) return;
 
@@ -2878,7 +2878,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void DrawPolygonGradient(ReadOnlySpan<Vector2> points, Color from, Color to, Color borderColor, float thickness = 1f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (thickness > 0f)
             {
                 if (join == LineJoin.Miter || !jointRadius.HasValue || jointRadius.Value <= 0f)
@@ -3616,7 +3616,7 @@ namespace MonoPrimitives.Primitives2D
         public void DrawSplineLinear(ReadOnlySpan<Vector2> points, float thickness, Color color,
             LineJoin join, LineCap cap = LineCap.Butt, float? jointRadius = null)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (points.Length < 2) return;
             BuildOutlineGeometry(points, thickness, color, closed: false, join, cap, jointRadius);
         }
@@ -3648,7 +3648,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void DrawSplineCatmullRom(ReadOnlySpan<Vector2> points, float thickness, Color color, int segmentsPerPiece = 16)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (points.Length < 4 || segmentsPerPiece < 1) return;
 
             int pieceCount = points.Length - 3;
@@ -3679,7 +3679,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         public void DrawSplineBezierCubic(ReadOnlySpan<Vector2> points, float thickness, Color color, int segmentsPerPiece = 16)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             if (points.Length < 4 || (points.Length - 1) % 3 != 0 || segmentsPerPiece < 1) return;
 
             int segmentCount = (points.Length - 1) / 3;
@@ -3738,7 +3738,7 @@ namespace MonoPrimitives.Primitives2D
         /// </param>
         public void DrawGrid(int slices, float spacing, Vector2 origin, Color lineColor, Color majorLineColor, bool showMajorLines = true)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             int halfSlices = slices / 2;
             float extent = halfSlices * spacing;
 
@@ -3763,7 +3763,7 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Draws an X/Y axis cross of length <paramref name="size"/> (in each direction) through <paramref name="origin"/>.</summary>
         public void DrawAxis(Vector2 origin, float size, Color color)
         {
-            EnsureStarted();
+            ThrowIfNotBegun();
             DrawLine(origin - Vector2.UnitX * size, origin + Vector2.UnitX * size, color);
             DrawLine(origin - Vector2.UnitY * size, origin + Vector2.UnitY * size, color);
         }
