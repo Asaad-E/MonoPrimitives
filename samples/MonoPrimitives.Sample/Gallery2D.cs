@@ -28,10 +28,23 @@ internal static class Gallery2D
     private static readonly Color FillColor = Palette.PeterRiver;
     private static readonly Color BorderColor = Palette.Clouds;
     private static readonly Color AltFillColor = Palette.Alizarin;
-    private static readonly Color GradientFrom = Palette.PeterRiver;
-    private static readonly Color GradientTo = Palette.Alizarin;
-    private static readonly Color GradientFrom2 = Palette.Sunflower;
-    private static readonly Color GradientTo2 = Palette.Pomegranate;
+
+    /// <summary>
+    /// Picks a curated, already-coherent Inner/Outer color pair from <see cref="Palette.GradientPairs"/>
+    /// by index (wrapping around), instead of every gradient cell in the gallery sharing one fixed
+    /// pair — each shape row calls this with its own base index (and again offset by half the
+    /// array's length for a second, visibly different pair within the same row), so the gallery
+    /// shows a variety of good-looking gradients rather than the same two colors repeated
+    /// everywhere. <c>Palette.GradientPairs</c> is deliberately used here instead of hand-picked
+    /// flat colors: every pair is already a light/dark version of one hue, which reads as a clean
+    /// gradient — two unrelated flat colors (e.g. blue-to-red) can look muddy/arbitrary together.
+    /// </summary>
+    private static (Color From, Color To) GradientPair(int index)
+    {
+        var pairs = Palette.GradientPairs;
+        int i = ((index % pairs.Length) + pairs.Length) % pairs.Length;
+        return (pairs[i].Inner, pairs[i].Outer);
+    }
 
     private readonly record struct Cell(string Label, Action<PrimitiveBatch, Vector2> Draw);
 
@@ -86,6 +99,8 @@ internal static class Gallery2D
 
     private static List<Cell> TriangleCells()
     {
+        var (GradientFrom, GradientTo) = GradientPair(0);
+        var (GradientFrom2, GradientTo2) = GradientPair(3);
         var cells = new List<Cell>();
         static (Vector2 v1, Vector2 v2, Vector2 v3) Tri(Vector2 c) => (c + new Vector2(-55, 50), c + new Vector2(55, 50), c + new Vector2(0, -55));
 
@@ -117,6 +132,8 @@ internal static class Gallery2D
 
     private static List<Cell> RectangleCells()
     {
+        var (GradientFrom, GradientTo) = GradientPair(1);
+        var (GradientFrom2, GradientTo2) = GradientPair(4);
         var cells = new List<Cell>();
         static Vector2 TopLeft(Vector2 c) => c - new Vector2(65, 45);
         Vector2 size = new(130, 90);
@@ -157,6 +174,8 @@ internal static class Gallery2D
 
     private static List<Cell> CircleCells()
     {
+        var (GradientFrom, GradientTo) = GradientPair(2);
+        var (GradientFrom2, GradientTo2) = GradientPair(5);
         var cells = new List<Cell>
         {
             new("Fill", (b, p) => b.FillCircle(p, 60f, FillColor)),
@@ -243,6 +262,21 @@ internal static class Gallery2D
                 b.FillCapsuleShadow(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, AltFillColor, spread: 22f);
                 b.FillCapsule(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, FillColor);
             }),
+            new("Circle sector", (b, p) =>
+            {
+                b.DrawCircleSectorShadow(p, 55f, 0f, 0.75f, AltFillColor, spread: 22f);
+                b.DrawCircleSector(p, 55f, 0f, 0.75f, FillColor);
+            }),
+            new("Ring", (b, p) =>
+            {
+                b.DrawRingShadow(p, 25f, 55f, 0f, 1f, AltFillColor, spread: 22f);
+                b.DrawRing(p, 25f, 55f, FillColor);
+            }),
+            new("Ring partial", (b, p) =>
+            {
+                b.DrawRingShadow(p, 25f, 55f, 0f, 0.6f, AltFillColor, spread: 22f);
+                b.DrawRing(p, 25f, 55f, 0f, 0.6f, 32, FillColor);
+            }),
         };
         return cells;
     }
@@ -253,6 +287,8 @@ internal static class Gallery2D
 
     private static List<Cell> EllipseCells()
     {
+        var (GradientFrom, GradientTo) = GradientPair(3);
+        var (GradientFrom2, GradientTo2) = GradientPair(0);
         var cells = new List<Cell>
         {
             new("Fill", (b, p) => b.FillEllipse(p, 70f, 45f, FillColor)),
@@ -276,6 +312,8 @@ internal static class Gallery2D
 
     private static List<Cell> CapsuleCells()
     {
+        var (GradientFrom, GradientTo) = GradientPair(4);
+        var (GradientFrom2, GradientTo2) = GradientPair(1);
         var cells = new List<Cell>
         {
             new("Fill", (b, p) => b.FillCapsule(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, FillColor)),
@@ -283,7 +321,7 @@ internal static class Gallery2D
             new("Border", (b, p) => b.BorderCapsule(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, BorderColor, 4f)),
             new("Draw", (b, p) => b.DrawCapsule(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, FillColor, BorderColor, 4f)),
             new("Gradient", (b, p) => b.FillCapsuleGradient(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, GradientFrom, GradientTo)),
-            new("Draw gradient", (b, p) => b.DrawCapsuleGradient(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, GradientFrom, GradientTo, BorderColor, 4f)),
+            new("Draw gradient", (b, p) => b.DrawCapsuleGradient(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, GradientFrom2, GradientTo2, BorderColor, 4f)),
             new("Vertical (endpoint-pair overload)", (b, p) => b.DrawCapsule(p + new Vector2(0, -35), p + new Vector2(0, 35), 25f, FillColor, BorderColor, 4f)),
         };
         return cells;
@@ -295,6 +333,8 @@ internal static class Gallery2D
 
     private static List<Cell> SectorRingCells()
     {
+        var (GradientFrom, GradientTo) = GradientPair(5);
+        var (GradientFrom2, GradientTo2) = GradientPair(2);
         var cells = new List<Cell>
         {
             new("Sector 1/4", (b, p) => b.DrawCircleSector(p, 60f, 0f, 0.25f, FillColor)),
@@ -318,6 +358,8 @@ internal static class Gallery2D
 
     private static List<Cell> PolyCells()
     {
+        var (GradientFrom, GradientTo) = GradientPair(0);
+        var (GradientFrom2, GradientTo2) = GradientPair(3);
         var cells = new List<Cell>
         {
             new("Fill sides=3", (b, p) => b.FillPoly(p, 3, 60f, FillColor)),
@@ -335,6 +377,7 @@ internal static class Gallery2D
         cells.Add(new Cell("Draw rounded r=20", (b, p) => b.DrawPolyRounded(p, 6, 60f, 20f, FillColor, BorderColor, 4f)));
         cells.Add(new Cell("Gradient", (b, p) => b.FillPolyGradient(p, 6, 60f, GradientFrom, GradientTo)));
         cells.Add(new Cell("Gradient offset", (b, p) => b.FillPolyGradient(p, 6, 60f, GradientFrom2, GradientTo2, innerOffset: 0.2f, outerOffset: 0.2f)));
+        cells.Add(new Cell("Gradient rounded r=20", (b, p) => b.FillPolyGradientRounded(p, 6, 60f, 20f, GradientFrom2, GradientTo2)));
         cells.Add(new Cell("Draw gradient", (b, p) => b.DrawPolyGradient(p, 6, 60f, GradientFrom, GradientTo, BorderColor, 4f)));
 
         return cells;
@@ -359,6 +402,8 @@ internal static class Gallery2D
 
     private static List<Cell> PolygonCells()
     {
+        var (GradientFrom, GradientTo) = GradientPair(1);
+        var (GradientFrom2, GradientTo2) = GradientPair(4);
         var cells = new List<Cell>
         {
             new("Fill", (b, p) => b.FillPolygon(LShape(p), FillColor)),
