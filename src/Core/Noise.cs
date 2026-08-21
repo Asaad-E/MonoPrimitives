@@ -14,9 +14,32 @@ namespace MonoPrimitives
     {
         private readonly int[] _perm = new int[512];
 
-        /// <summary>Creates a noise generator whose permutation table is shuffled from <paramref name="seed"/> — same seed always gives the same sequence of samples.</summary>
-        public Noise(int seed = 0)
+        /// <summary>Octave count for <see cref="Fbm1D"/>/<see cref="Fbm2D"/>/<see cref="Fbm3D"/> and the Ridge/Turbulence variants. Editable; defaults to the value passed at construction.</summary>
+        public int Octaves { get; set; }
+
+        /// <summary>Frequency multiplier applied each octave (how much finer detail each layer adds). Editable; defaults to the value passed at construction.</summary>
+        public float Lacunarity { get; set; }
+
+        /// <summary>Amplitude multiplier applied each octave (how much each finer layer contributes). Editable; defaults to the value passed at construction.</summary>
+        public float Gain { get; set; }
+
+        /// <summary>
+        /// Creates a noise generator whose permutation table is shuffled from <paramref name="seed"/>
+        /// — same seed always gives the same sequence of samples. <paramref name="octaves"/>/
+        /// <paramref name="lacunarity"/>/<paramref name="gain"/> set the initial
+        /// <see cref="Octaves"/>/<see cref="Lacunarity"/>/<see cref="Gain"/> (editable afterward) —
+        /// one consistent fBm configuration per generator, the same shape <see cref="Primitives2D.Camera2D"/>'s
+        /// <c>MoveSpeed</c> or <see cref="PrimitiveInput"/>'s <c>DoubleClickTime</c> use, rather than
+        /// repeating the same three values at every <see cref="Fbm2D"/> call site. Construct a second
+        /// <see cref="Noise"/> with the same seed (cheap — just a permutation shuffle) if you
+        /// genuinely need two different fBm configurations sampling the same underlying gradient field.
+        /// </summary>
+        public Noise(int seed = 0, int octaves = 4, float lacunarity = 2f, float gain = 0.5f)
         {
+            Octaves = octaves;
+            Lacunarity = lacunarity;
+            Gain = gain;
+
             var p = new int[256];
             for (int i = 0; i < 256; i++) p[i] = i;
 
@@ -99,49 +122,119 @@ namespace MonoPrimitives
         }
 
         /// <summary>
-        /// Fractal Brownian motion: sums <paramref name="octaves"/> layers of <see cref="Sample2D"/>
-        /// at increasing frequency (<paramref name="lacunarity"/> per octave) and decreasing
-        /// amplitude (<paramref name="gain"/> per octave) — rougher, more natural-looking terrain
-        /// than a single noise octave. Result is normalized back to roughly the same [-1,1] range
-        /// as a single sample regardless of octave count.
+        /// Fractal Brownian motion: sums <see cref="Octaves"/> layers of <see cref="Sample2D"/> at
+        /// increasing frequency (<see cref="Lacunarity"/> per octave) and decreasing amplitude
+        /// (<see cref="Gain"/> per octave) — rougher, more natural-looking terrain than a single
+        /// noise octave. Result is normalized back to roughly the same [-1,1] range as a single
+        /// sample regardless of octave count.
         /// </summary>
-        public float Fbm2D(float x, float y, int octaves = 4, float lacunarity = 2f, float gain = 0.5f)
+        public float Fbm2D(float x, float y)
         {
             float sum = 0f, amplitude = 1f, frequency = 1f, maxAmplitude = 0f;
-            for (int i = 0; i < octaves; i++)
+            for (int i = 0; i < Octaves; i++)
             {
                 sum += Sample2D(x * frequency, y * frequency) * amplitude;
                 maxAmplitude += amplitude;
-                amplitude *= gain;
-                frequency *= lacunarity;
+                amplitude *= Gain;
+                frequency *= Lacunarity;
             }
             return maxAmplitude > 1e-6f ? sum / maxAmplitude : 0f;
         }
 
         /// <summary>1D counterpart to <see cref="Fbm2D"/>.</summary>
-        public float Fbm1D(float x, int octaves = 4, float lacunarity = 2f, float gain = 0.5f)
+        public float Fbm1D(float x)
         {
             float sum = 0f, amplitude = 1f, frequency = 1f, maxAmplitude = 0f;
-            for (int i = 0; i < octaves; i++)
+            for (int i = 0; i < Octaves; i++)
             {
                 sum += Sample1D(x * frequency) * amplitude;
                 maxAmplitude += amplitude;
-                amplitude *= gain;
-                frequency *= lacunarity;
+                amplitude *= Gain;
+                frequency *= Lacunarity;
             }
             return maxAmplitude > 1e-6f ? sum / maxAmplitude : 0f;
         }
 
         /// <summary>3D counterpart to <see cref="Fbm2D"/>.</summary>
-        public float Fbm3D(float x, float y, float z, int octaves = 4, float lacunarity = 2f, float gain = 0.5f)
+        public float Fbm3D(float x, float y, float z)
         {
             float sum = 0f, amplitude = 1f, frequency = 1f, maxAmplitude = 0f;
-            for (int i = 0; i < octaves; i++)
+            for (int i = 0; i < Octaves; i++)
             {
                 sum += Sample3D(x * frequency, y * frequency, z * frequency) * amplitude;
                 maxAmplitude += amplitude;
-                amplitude *= gain;
-                frequency *= lacunarity;
+                amplitude *= Gain;
+                frequency *= Lacunarity;
+            }
+            return maxAmplitude > 1e-6f ? sum / maxAmplitude : 0f;
+        }
+
+        /// <summary>
+        /// Ridged multifractal noise: each octave folds <see cref="Sample2D"/> through
+        /// <c>(1 - |sample|)²</c> before summing, so values near a lattice's zero-crossings (where
+        /// <c>|sample|</c> is smallest) become sharp ridges instead of smooth rolling hills — the
+        /// standard look for mountain-ridge terrain. Unlike <see cref="Fbm2D"/>, the result is
+        /// naturally in roughly <c>[0,1]</c>, not <c>[-1,1]</c> (squaring a folded, already-positive
+        /// value can never go negative). Uses <see cref="Octaves"/>/<see cref="Lacunarity"/>/<see cref="Gain"/>, same as <see cref="Fbm2D"/>.
+        /// </summary>
+        public float RidgeNoise2D(float x, float y)
+        {
+            float sum = 0f, amplitude = 1f, frequency = 1f, maxAmplitude = 0f;
+            for (int i = 0; i < Octaves; i++)
+            {
+                float n = 1f - MathF.Abs(Sample2D(x * frequency, y * frequency));
+                sum += n * n * amplitude;
+                maxAmplitude += amplitude;
+                amplitude *= Gain;
+                frequency *= Lacunarity;
+            }
+            return maxAmplitude > 1e-6f ? sum / maxAmplitude : 0f;
+        }
+
+        /// <summary>3D counterpart to <see cref="RidgeNoise2D"/>.</summary>
+        public float RidgeNoise3D(float x, float y, float z)
+        {
+            float sum = 0f, amplitude = 1f, frequency = 1f, maxAmplitude = 0f;
+            for (int i = 0; i < Octaves; i++)
+            {
+                float n = 1f - MathF.Abs(Sample3D(x * frequency, y * frequency, z * frequency));
+                sum += n * n * amplitude;
+                maxAmplitude += amplitude;
+                amplitude *= Gain;
+                frequency *= Lacunarity;
+            }
+            return maxAmplitude > 1e-6f ? sum / maxAmplitude : 0f;
+        }
+
+        /// <summary>
+        /// Turbulence: sums <c>|<see cref="Sample2D"/>|</c> per octave instead of the signed value
+        /// — a rougher, "billowy" look (creases at every zero-crossing instead of smooth troughs).
+        /// Naturally in roughly <c>[0,1]</c>, like <see cref="RidgeNoise2D"/>, not <c>[-1,1]</c> like
+        /// <see cref="Fbm2D"/>. Uses <see cref="Octaves"/>/<see cref="Lacunarity"/>/<see cref="Gain"/>.
+        /// </summary>
+        public float Turbulence2D(float x, float y)
+        {
+            float sum = 0f, amplitude = 1f, frequency = 1f, maxAmplitude = 0f;
+            for (int i = 0; i < Octaves; i++)
+            {
+                sum += MathF.Abs(Sample2D(x * frequency, y * frequency)) * amplitude;
+                maxAmplitude += amplitude;
+                amplitude *= Gain;
+                frequency *= Lacunarity;
+            }
+            return maxAmplitude > 1e-6f ? sum / maxAmplitude : 0f;
+        }
+
+        /// <summary>3D counterpart to <see cref="Turbulence2D"/>.</summary>
+        public float Turbulence3D(float x, float y, float z)
+        {
+            float sum = 0f, amplitude = 1f, frequency = 1f, maxAmplitude = 0f;
+            for (int i = 0; i < Octaves; i++)
+            {
+                sum += MathF.Abs(Sample3D(x * frequency, y * frequency, z * frequency)) * amplitude;
+                maxAmplitude += amplitude;
+                amplitude *= Gain;
+                frequency *= Lacunarity;
             }
             return maxAmplitude > 1e-6f ? sum / maxAmplitude : 0f;
         }
