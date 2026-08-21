@@ -313,4 +313,4 @@ Circles/arcs/ellipses pick their own triangle-fan segment count automatically fr
 - [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the condensed rationale behind non-obvious choices (the bugs caught while building `DrawPolyGradientRounded` and `DrawRingShadow`, the Rectangle/spline naming renames, why Capsule got a second overload family, etc.).
 - [`Design/ROADMAP.md`](../Design/ROADMAP.md) — known gaps, including the reflex-vertex offsetting limitation above.
 - [`Collision2D`](../src/2D/Collision2D.cs) — a separate static class in the same namespace with `CheckCollision*` methods (Rec/Circle/Triangle/Poly/Capsule, including mixed-shape pairs) for hit-testing the shapes this guide draws. Not part of `PrimitiveBatch` itself.
-- [`ViewportAdapter_Guide.md`](../Design/2D/ViewportAdapter_Guide.md) — letterbox/scaling adapters for keeping a `PrimitiveBatch` scene correctly projected across resolutions.
+- [`Camera2D_Guide.md`](Camera2D_Guide.md) — `Camera2D` and the letterbox/scaling `ViewportAdapter2D` family for keeping a `PrimitiveBatch` scene correctly projected across resolutions.
