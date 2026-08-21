@@ -36,6 +36,7 @@ namespace MonoPrimitives.Tests
             EasingTests.Run(results);
             UnitCircleLutTests.Run(results);
             FontGlyphs5x7Tests.Run(results);
+            RandomUtilTests.Run(results);
 
             using var batch = new Primitive3DBatch(GraphicsDevice);
             var camera = new Camera3D(position: new Vector3(6, 6, 6), target: Vector3.Zero, up: Vector3.Up, fovy: 50f);
