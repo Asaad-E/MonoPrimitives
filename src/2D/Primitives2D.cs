@@ -1882,6 +1882,33 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>
+        /// Rounded-corner triangle drop shadow: solid <paramref name="color"/> filling the exact
+        /// shape <see cref="FillTriangleRounded"/> would draw, fading to fully transparent over
+        /// <paramref name="spread"/> world units beyond its rounded boundary.
+        /// </summary>
+        public void FillTriangleShadowRounded(Vector2 v1, Vector2 v2, Vector2 v3, float cornerRadius, Color color, float spread = 20f, float rotation = 0f, Vector2? origin = null)
+        {
+            ThrowIfNotBegun();
+            FillTriangleRounded(v1, v2, v3, cornerRadius, color, rotation, origin);
+            if (spread <= 0f) return;
+
+            RotateTriangle(ref v1, ref v2, ref v3, rotation, origin);
+            Color transparent = new(color.R, color.G, color.B, (byte)0);
+            if (cornerRadius <= 0.01f)
+            {
+                Span<Vector2> sharp = [v1, v2, v3];
+                FillOutsetGradientRing(sharp, spread, color, transparent);
+                return;
+            }
+
+            Span<Vector2> pts = [v1, v2, v3];
+            float safeRadius = ClampCornerRadiusToFit(pts, cornerRadius);
+            Span<Vector2> boundary = stackalloc Vector2[3 * (MaxCircleSegments + 1)];
+            int count = BuildRoundedCornerBoundary(pts, safeRadius, LineJoin.Round, NoBorderClampBudget, boundary);
+            FillOutsetGradientRing(boundary[..count], spread, color, transparent);
+        }
+
+        /// <summary>
         /// Ellipse drop shadow: solid <paramref name="color"/> filling the exact shape
         /// <see cref="FillEllipse(Vector2,float,float,Color,float)"/> would draw, fading to fully
         /// transparent over <paramref name="spread"/> world units beyond its boundary.
@@ -1931,6 +1958,35 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>
+        /// Rounded-corner regular-polygon drop shadow: solid <paramref name="color"/> filling the
+        /// exact shape <see cref="FillPolyRounded"/> would draw, fading to fully transparent over
+        /// <paramref name="spread"/> world units beyond its rounded boundary.
+        /// </summary>
+        public void FillPolyShadowRounded(Vector2 center, int sides, float radius, float cornerRadius, Color color, float spread = 20f, float rotation = 0f)
+        {
+            ThrowIfNotBegun();
+            if (sides < 3 || radius <= 0f) return;
+            FillPolyRounded(center, sides, radius, cornerRadius, color, rotation);
+            if (spread <= 0f) return;
+
+            float rotationTurns = rotation / MathHelper.TwoPi;
+            float step = 1f / sides;
+            Span<Vector2> pts = sides <= MaxStackAllocElements ? stackalloc Vector2[sides] : new Vector2[sides];
+            for (int i = 0; i < sides; i++)
+                pts[i] = SampleUnitCircle(rotationTurns + i * step) * radius + center;
+
+            Color transparent = new(color.R, color.G, color.B, (byte)0);
+            if (cornerRadius <= 0.01f) { FillOutsetGradientRing(pts, spread, color, transparent); return; }
+
+            float safeRadius = ClampCornerRadiusToFit(pts, cornerRadius);
+            Span<Vector2> boundary = sides <= MaxStackAllocElements / (MaxCircleSegments + 1)
+                ? stackalloc Vector2[sides * (MaxCircleSegments + 1)]
+                : new Vector2[sides * (MaxCircleSegments + 1)];
+            int count = BuildRoundedCornerBoundary(pts, safeRadius, LineJoin.Round, NoBorderClampBudget, boundary);
+            FillOutsetGradientRing(boundary[..count], spread, color, transparent);
+        }
+
+        /// <summary>
         /// Arbitrary-polygon drop shadow: solid <paramref name="color"/> filling the exact shape
         /// <see cref="FillPolygon(ReadOnlySpan{Vector2},Color)"/> would draw, fading to fully
         /// transparent over <paramref name="spread"/> world units beyond its boundary. Uses
@@ -1949,6 +2005,31 @@ namespace MonoPrimitives.Primitives2D
 
             Color transparent = new(color.R, color.G, color.B, (byte)0);
             FillOutsetGradientRing(points, spread, color, transparent);
+        }
+
+        /// <summary>
+        /// Rounded-corner arbitrary-polygon drop shadow: solid <paramref name="color"/> filling
+        /// the exact shape <see cref="FillPolygonRounded"/> would draw, fading to fully
+        /// transparent over <paramref name="spread"/> world units beyond its rounded boundary.
+        /// Shares <see cref="FillPolygonShadow"/>'s reflex-vertex caveat on a concave
+        /// <paramref name="points"/> — rounding a reflex corner leaves it concave, just an arc
+        /// instead of a sharp point.
+        /// </summary>
+        public void FillPolygonShadowRounded(ReadOnlySpan<Vector2> points, float cornerRadius, Color color, float spread = 20f)
+        {
+            ThrowIfNotBegun();
+            if (points.Length < 3) return;
+            FillPolygonRounded(points, cornerRadius, color);
+            if (spread <= 0f) return;
+
+            Color transparent = new(color.R, color.G, color.B, (byte)0);
+            if (cornerRadius <= 0.01f) { FillOutsetGradientRing(points, spread, color, transparent); return; }
+
+            float safeRadius = ClampCornerRadiusToFit(points, cornerRadius);
+            int maxOut = points.Length * (MaxCircleSegments + 1);
+            Span<Vector2> boundary = maxOut <= MaxStackAllocElements ? stackalloc Vector2[maxOut] : new Vector2[maxOut];
+            int count = BuildRoundedCornerBoundary(points, safeRadius, LineJoin.Round, NoBorderClampBudget, boundary);
+            FillOutsetGradientRing(boundary[..count], spread, color, transparent);
         }
 
         /// <summary>
@@ -2029,8 +2110,24 @@ namespace MonoPrimitives.Primitives2D
         /// fully transparent over <paramref name="spread"/> world units beyond its OUTER edge —
         /// a full ring's inner hole does not get its own separate inward-glowing edge, same
         /// "just the outer silhouette" convention <see cref="FillCircleShadow"/> uses. A partial
-        /// ring's shadow does trace its full wedge outline, including the two straight radial cut
-        /// edges (same inner-arc-then-reversed-outer-arc loop <see cref="BorderRing"/> builds).
+        /// ring's shadow traces its full wedge outline, including the two straight radial cut
+        /// edges, computed directly in closed form (grow the outer radius, shrink the inner
+        /// radius, same angle range) rather than through the shared
+        /// <see cref="OutsetConvexPolygon"/>-based halo helper every other <c>Fill*Shadow</c>
+        /// uses: a wedge's inner-arc corners are genuinely concave (reflex) from the
+        /// outward-growth perspective, which is exactly the case that helper's centroid-heuristic
+        /// offsetter gets wrong (same root cause as <see cref="InsetConvexPolygon"/>'s documented
+        /// reflex-vertex limitation — see ROADMAP.md). An earlier version of this also widened
+        /// the angle range slightly at each tip (to flare the two straight edges outward) — that
+        /// made the true and fade loops sweep different total angles across the same segment
+        /// count, so their per-index correspondence drifted across the sweep, producing a subtly
+        /// sheared/spiky strip; keeping both loops at the exact same angles (only radius differs)
+        /// removes that shear at the cost of the two tip corners not getting their own rounded
+        /// glow (the shadow there just stops at the wedge's own angular edge, rather than bleeding
+        /// a little further sideways) — a deliberately simpler, artifact-free trade. Confirmed by
+        /// rendering both: the original (before either fix) produced a lopsided, blobby halo from
+        /// routing through the shared convex-only helper; the angle-widened version fixed that but
+        /// introduced its own spike at the tips; this version has neither.
         /// </summary>
         public void DrawRingShadow(Vector2 center, float innerRadius, float outerRadius, float startAngle, float endAngle, Color color, float spread = 20f)
         {
@@ -2055,23 +2152,43 @@ namespace MonoPrimitives.Primitives2D
                 return;
             }
 
+            float expandedOuterRadius = outerRadius + spread;
+            float expandedInnerRadius = MathF.Max(0f, innerRadius - spread);
+
             int pointCount = segments + 1;
-            Span<Vector2> innerPts = pointCount <= MaxStackAllocElements ? stackalloc Vector2[pointCount] : new Vector2[pointCount];
-            Span<Vector2> outerPts2 = pointCount <= MaxStackAllocElements ? stackalloc Vector2[pointCount] : new Vector2[pointCount];
+            Span<Vector2> trueInner = pointCount <= MaxStackAllocElements ? stackalloc Vector2[pointCount] : new Vector2[pointCount];
+            Span<Vector2> trueOuter = pointCount <= MaxStackAllocElements ? stackalloc Vector2[pointCount] : new Vector2[pointCount];
+            Span<Vector2> fadeInner = pointCount <= MaxStackAllocElements ? stackalloc Vector2[pointCount] : new Vector2[pointCount];
+            Span<Vector2> fadeOuter = pointCount <= MaxStackAllocElements ? stackalloc Vector2[pointCount] : new Vector2[pointCount];
+
             float step = (endAngle - startAngle) / segments;
             for (int i = 0; i <= segments; i++)
             {
                 Vector2 u = SampleUnitCircle(startAngle + i * step);
-                innerPts[i] = center + u * innerRadius;
-                outerPts2[i] = center + u * outerRadius;
+                trueInner[i] = center + u * innerRadius;
+                trueOuter[i] = center + u * outerRadius;
+                fadeInner[i] = center + u * expandedInnerRadius;
+                fadeOuter[i] = center + u * expandedOuterRadius;
             }
 
             int loopCount = pointCount * 2;
-            Span<Vector2> loop = loopCount <= MaxStackAllocElements ? stackalloc Vector2[loopCount] : new Vector2[loopCount];
-            for (int i = 0; i < pointCount; i++) loop[i] = innerPts[i];
-            for (int i = 0; i < pointCount; i++) loop[pointCount + i] = outerPts2[pointCount - 1 - i];
+            Span<Vector2> trueLoop = loopCount <= MaxStackAllocElements ? stackalloc Vector2[loopCount] : new Vector2[loopCount];
+            Span<Vector2> fadeLoop = loopCount <= MaxStackAllocElements ? stackalloc Vector2[loopCount] : new Vector2[loopCount];
+            for (int i = 0; i < pointCount; i++) { trueLoop[i] = trueInner[i]; fadeLoop[i] = fadeInner[i]; }
+            for (int i = 0; i < pointCount; i++) { trueLoop[pointCount + i] = trueOuter[pointCount - 1 - i]; fadeLoop[pointCount + i] = fadeOuter[pointCount - 1 - i]; }
 
-            FillOutsetGradientRing(loop, spread, color, transparent);
+            int b = Reserve(loopCount * 2, loopCount * 2 * 3);
+            for (int i = 0; i < loopCount; i++)
+            {
+                PushVertex(trueLoop[i], color);
+                PushVertex(fadeLoop[i], transparent);
+            }
+            for (int i = 0; i < loopCount; i++)
+            {
+                int i0 = b + i * 2, i1 = b + ((i + 1) % loopCount) * 2;
+                PushTriangleIndices(i0, i0 + 1, i1 + 1);
+                PushTriangleIndices(i0, i1 + 1, i1);
+            }
         }
 
         /// <summary>
