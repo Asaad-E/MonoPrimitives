@@ -44,6 +44,7 @@ internal static class Gallery2D
         DrawRow(batch, "TRIANGLE", TriangleCells(), ref y, ref maxRight);
         DrawRow(batch, "RECTANGLE", RectangleCells(), ref y, ref maxRight);
         DrawRow(batch, "CIRCLE", CircleCells(), ref y, ref maxRight);
+        DrawRow(batch, "DROP SHADOW", ShadowCells(), ref y, ref maxRight);
         DrawRow(batch, "ELLIPSE", EllipseCells(), ref y, ref maxRight);
         DrawRow(batch, "CIRCLE SECTOR / RING", SectorRingCells(), ref y, ref maxRight);
         DrawRow(batch, "REGULAR POLYGON (POLY)", PolyCells(), ref y, ref maxRight);
@@ -168,6 +169,53 @@ internal static class Gallery2D
             new("Gradient linear V", (b, p) => b.FillCircleGradientLinear(p, 60f, GradientFrom2, GradientTo2, horizontal: false)),
             new("Draw gradient", (b, p) => b.DrawCircleGradient(p, 60f, GradientFrom, GradientTo, BorderColor, 4f)),
             new("Draw gradient linear", (b, p) => b.DrawCircleGradientLinear(p, 60f, GradientFrom2, GradientTo2, BorderColor, horizontal: true, thickness: 4f)),
+        };
+        return cells;
+    }
+
+    // ==================================================================
+    // DROP SHADOW
+    // ==================================================================
+    // The gallery's own backdrop (Palette.Background) is already near-black, so a literal
+    // black shadow wouldn't read here — using the shape's own fill color as a glow instead
+    // demonstrates the same primitive (it's just a colored halo, not inherently "dark").
+
+    private static List<Cell> ShadowCells()
+    {
+        var cells = new List<Cell>
+        {
+            new("Circle", (b, p) =>
+            {
+                b.FillCircleShadow(p, 55f, AltFillColor, spread: 25f);
+                b.FillCircle(p, 55f, FillColor);
+            }),
+            new("Rect r=20", (b, p) =>
+            {
+                Vector2 tl = p - new Vector2(55, 55);
+                b.FillRectangleShadow(tl, new Vector2(110, 110), 20f, AltFillColor, spread: 22f);
+                b.FillRectangleRounded(tl, new Vector2(110, 110), 20f, FillColor);
+            }),
+            new("Rect per-corner", (b, p) =>
+            {
+                Vector2 tl = p - new Vector2(55, 55);
+                RectCorners corners = new(0f, 12f, 30f, 45f);
+                b.FillRectangleShadow(tl, new Vector2(110, 110), corners, AltFillColor, spread: 22f);
+                b.FillRectangleRounded(tl, new Vector2(110, 110), corners, FillColor);
+            }),
+            new("Rect chamfer", (b, p) =>
+            {
+                Vector2 tl = p - new Vector2(55, 55);
+                b.FillRectangleChamferShadow(tl, new Vector2(110, 110), 25f, AltFillColor, spread: 22f);
+                b.FillRectangleChamfer(tl, new Vector2(110, 110), 25f, FillColor);
+            }),
+            new("Rect rotated", (b, p) =>
+            {
+                float rot = MathHelper.ToRadians(20f);
+                Vector2 size = new(120, 80);
+                Vector2 tl = p - size * 0.5f;
+                b.FillRectangleShadow(tl, size, 18f, AltFillColor, spread: 22f, rotation: rot);
+                b.FillRectangleRounded(tl, size, 18f, FillColor, rotation: rot);
+            }),
         };
         return cells;
     }
