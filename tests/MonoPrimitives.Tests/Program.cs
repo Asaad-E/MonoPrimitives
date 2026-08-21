@@ -34,6 +34,7 @@ namespace MonoPrimitives.Tests
             NoiseTests.Run(results);
             ColorUtilTests.Run(results);
             EasingTests.Run(results);
+            UnitCircleLutTests.Run(results);
 
             using var batch = new Primitive3DBatch(GraphicsDevice);
             var camera = new Camera3D(position: new Vector3(6, 6, 6), target: Vector3.Zero, up: Vector3.Up, fovy: 50f);
