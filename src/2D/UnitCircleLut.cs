@@ -1,0 +1,52 @@
+#nullable enable
+
+using System.Runtime.CompilerServices;
+using Microsoft.Xna.Framework;
+
+namespace MonoPrimitives.Primitives2D
+{
+    /// <summary>
+    /// Precomputed unit-circle lookup table — the 2D counterpart to the 3D library's own
+    /// <c>TrigLut</c>, exposed publicly for the same reason: fast, allocation-free sin/cos for
+    /// your own curved geometry (a custom particle ring, a procedural shape) without redoing
+    /// this table yourself. <see cref="PrimitiveBatch"/> uses <see cref="Sample"/> internally
+    /// for every curved shape it draws.
+    /// </summary>
+    public static class UnitCircleLut
+    {
+        /// <summary>Number of samples covering a full turn.</summary>
+        public const int Resolution = 512;
+
+        private static readonly Vector2[] Table = Build();
+
+        private static Vector2[] Build()
+        {
+            var table = new Vector2[Resolution];
+            const double step = System.Math.PI * 2.0 / Resolution;
+            for (int i = 0; i < Resolution; i++)
+                table[i] = new Vector2((float)System.Math.Cos(i * step), (float)System.Math.Sin(i * step));
+            return table;
+        }
+
+        /// <summary>
+        /// Samples the unit circle at a normalized angle <paramref name="t01"/> in [0, 1)
+        /// (1 = a full turn) with linear interpolation between the two nearest table entries —
+        /// trig-free, accurate to well under a pixel at any sane radius.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector2 Sample(float t01)
+        {
+            float f = t01 * Resolution;
+            int i0 = (int)f;
+            float frac = f - i0;
+
+            i0 &= Resolution - 1; // Resolution is a power of two
+            int i1 = (i0 + 1) & (Resolution - 1);
+
+            Vector2 a = Table[i0];
+            Vector2 b = Table[i1];
+            return new Vector2(a.X + (b.X - a.X) * frac,
+                               a.Y + (b.Y - a.Y) * frac);
+        }
+    }
+}

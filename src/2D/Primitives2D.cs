@@ -76,9 +76,6 @@ namespace MonoPrimitives.Primitives2D
         // Tunables
         // ------------------------------------------------------------------
 
-        /// <summary>Resolution of the precomputed unit-circle table. Higher = smoother max quality.</summary>
-        private const int UnitCircleResolution = 512;
-
         /// <summary>Minimum segments used for any arc/circle, regardless of radius.</summary>
         private const int MinCircleSegments = 48;
 
@@ -169,44 +166,13 @@ namespace MonoPrimitives.Primitives2D
         private const int MaxStackAllocJoints = 512;
 
         // ------------------------------------------------------------------
-        // Precomputed unit circle (static: shared by every instance)
+        // Precomputed unit circle
         // ------------------------------------------------------------------
+        // Delegates to the public UnitCircleLut (the 2D counterpart to the 3D library's
+        // TrigLut) instead of keeping a private duplicate table — see UnitCircleLut.cs.
 
-        private static readonly Vector2[] UnitCircle = BuildUnitCircle();
-
-        private static Vector2[] BuildUnitCircle()
-        {
-            Debug.Assert((UnitCircleResolution & (UnitCircleResolution - 1)) == 0,
-                "UnitCircleResolution must be a power of two — SampleUnitCircle's bitwise-AND wrap depends on it.");
-
-            var table = new Vector2[UnitCircleResolution];
-            const double step = Math.PI * 2.0 / UnitCircleResolution;
-            for (int i = 0; i < UnitCircleResolution; i++)
-            {
-                table[i] = new Vector2((float)Math.Cos(i * step), (float)Math.Sin(i * step));
-            }
-            return table;
-        }
-
-        /// <summary>
-        /// Samples the unit circle table at a normalized angle [0..1) with linear
-        /// interpolation. Trig-free; accurate to well under a pixel at any sane radius.
-        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Vector2 SampleUnitCircle(float t01)
-        {
-            float f = t01 * UnitCircleResolution;
-            int i0 = (int)f;
-            float frac = f - i0;
-
-            i0 &= UnitCircleResolution - 1;               // resolution is a power of two
-            int i1 = (i0 + 1) & (UnitCircleResolution - 1);
-
-            Vector2 a = UnitCircle[i0];
-            Vector2 b = UnitCircle[i1];
-            return new Vector2(a.X + (b.X - a.X) * frac,
-                               a.Y + (b.Y - a.Y) * frac);
-        }
+        private static Vector2 SampleUnitCircle(float t01) => UnitCircleLut.Sample(t01);
 
         /// <summary>
         /// Chooses a segment count appropriate for the given radius and sweep.
