@@ -1985,6 +1985,96 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>
+        /// Circle sector (pie slice) drop shadow: solid <paramref name="color"/> filling the
+        /// exact shape <see cref="DrawCircleSector(Vector2,float,float,float,Color)"/> would
+        /// draw, fading to fully transparent over <paramref name="spread"/> world units beyond
+        /// its boundary — including the two straight radial edges, not just the arc. Degenerates
+        /// to a plain circle's silhouette (no center-point spike) when <paramref name="startAngle"/>/
+        /// <paramref name="endAngle"/> span a full turn.
+        /// </summary>
+        public void DrawCircleSectorShadow(Vector2 center, float radius, float startAngle, float endAngle, Color color, float spread = 20f)
+        {
+            ThrowIfNotBegun();
+            if (radius <= 0f) return;
+            DrawCircleSector(center, radius, startAngle, endAngle, color);
+            if (spread <= 0f) return;
+
+            Color transparent = new(color.R, color.G, color.B, (byte)0);
+            int segments = SegmentsForArc(radius, (endAngle - startAngle) * MathHelper.TwoPi);
+            bool isFullTurn = MathF.Abs(MathF.Abs(endAngle - startAngle) - 1f) < 1e-4f;
+
+            if (isFullTurn)
+            {
+                Span<Vector2> rim = segments <= MaxStackAllocElements ? stackalloc Vector2[segments] : new Vector2[segments];
+                float fullStep = 1f / segments;
+                for (int i = 0; i < segments; i++)
+                    rim[i] = center + SampleUnitCircle(startAngle + i * fullStep) * radius;
+                FillOutsetGradientRing(rim, spread, color, transparent);
+                return;
+            }
+
+            int n = segments + 2; // center + (segments+1) rim points
+            Span<Vector2> boundary = n <= MaxStackAllocElements ? stackalloc Vector2[n] : new Vector2[n];
+            boundary[0] = center;
+            float step = (endAngle - startAngle) / segments;
+            for (int i = 0; i <= segments; i++)
+                boundary[1 + i] = center + SampleUnitCircle(startAngle + i * step) * radius;
+
+            FillOutsetGradientRing(boundary, spread, color, transparent);
+        }
+
+        /// <summary>
+        /// Ring (or partial arc band) drop shadow: solid <paramref name="color"/> filling the
+        /// exact shape <see cref="DrawRing(Vector2,float,float,Color)"/> would draw, fading to
+        /// fully transparent over <paramref name="spread"/> world units beyond its OUTER edge —
+        /// a full ring's inner hole does not get its own separate inward-glowing edge, same
+        /// "just the outer silhouette" convention <see cref="FillCircleShadow"/> uses. A partial
+        /// ring's shadow does trace its full wedge outline, including the two straight radial cut
+        /// edges (same inner-arc-then-reversed-outer-arc loop <see cref="BorderRing"/> builds).
+        /// </summary>
+        public void DrawRingShadow(Vector2 center, float innerRadius, float outerRadius, float startAngle, float endAngle, Color color, float spread = 20f)
+        {
+            ThrowIfNotBegun();
+            if (outerRadius <= 0f) return;
+            if (innerRadius < 0f) innerRadius = 0f;
+
+            int segments = SegmentsForArc(outerRadius, (endAngle - startAngle) * MathHelper.TwoPi);
+            DrawRing(center, innerRadius, outerRadius, startAngle, endAngle, segments, color);
+            if (spread <= 0f) return;
+
+            Color transparent = new(color.R, color.G, color.B, (byte)0);
+            bool isFullTurn = MathF.Abs(MathF.Abs(endAngle - startAngle) - 1f) < 1e-4f;
+
+            if (isFullTurn)
+            {
+                Span<Vector2> outerPts = segments <= MaxStackAllocElements ? stackalloc Vector2[segments] : new Vector2[segments];
+                float fullStep = 1f / segments;
+                for (int i = 0; i < segments; i++)
+                    outerPts[i] = center + SampleUnitCircle(startAngle + i * fullStep) * outerRadius;
+                FillOutsetGradientRing(outerPts, spread, color, transparent);
+                return;
+            }
+
+            int pointCount = segments + 1;
+            Span<Vector2> innerPts = pointCount <= MaxStackAllocElements ? stackalloc Vector2[pointCount] : new Vector2[pointCount];
+            Span<Vector2> outerPts2 = pointCount <= MaxStackAllocElements ? stackalloc Vector2[pointCount] : new Vector2[pointCount];
+            float step = (endAngle - startAngle) / segments;
+            for (int i = 0; i <= segments; i++)
+            {
+                Vector2 u = SampleUnitCircle(startAngle + i * step);
+                innerPts[i] = center + u * innerRadius;
+                outerPts2[i] = center + u * outerRadius;
+            }
+
+            int loopCount = pointCount * 2;
+            Span<Vector2> loop = loopCount <= MaxStackAllocElements ? stackalloc Vector2[loopCount] : new Vector2[loopCount];
+            for (int i = 0; i < pointCount; i++) loop[i] = innerPts[i];
+            for (int i = 0; i < pointCount; i++) loop[pointCount + i] = outerPts2[pointCount - 1 - i];
+
+            FillOutsetGradientRing(loop, spread, color, transparent);
+        }
+
+        /// <summary>
         /// Fills the ring between <paramref name="boundary"/> (a closed polygon, <paramref name="opaque"/>)
         /// and that same boundary offset outward by <paramref name="spread"/> (<paramref name="transparent"/>)
         /// via <see cref="OutsetConvexPolygon"/> — the shared "halo" geometry behind every
@@ -2984,6 +3074,40 @@ namespace MonoPrimitives.Primitives2D
                 }
                 prevBase = currBase;
             }
+        }
+
+        /// <summary>
+        /// Draws a filled regular polygon with each corner rounded by <paramref name="cornerRadius"/>,
+        /// with the same center-to-rim radial gradient <see cref="FillPolyGradient"/> draws — the
+        /// standalone rounded-corner counterpart, matching <see cref="FillTriangleGradientRounded"/>'s
+        /// naming and clamp behavior. Unlike <see cref="FillPolyGradient"/>, no <c>innerOffset</c>/
+        /// <c>outerOffset</c> bands — kept simple, matching <see cref="FillTriangleGradientRounded"/>'s
+        /// own rounded-corner variant, which drops them too.
+        /// </summary>
+        public void FillPolyGradientRounded(Vector2 center, int sides, float radius, float cornerRadius, Color inner, Color outer, float rotation = 0f)
+        {
+            if (cornerRadius <= 0.01f) { FillPolyGradient(center, sides, radius, inner, outer, rotation); return; }
+            ThrowIfNotBegun();
+            if (sides < 3) return;
+
+            float rotationTurns = rotation / MathHelper.TwoPi;
+            float step = 1f / sides;
+            Span<Vector2> pts = sides <= MaxStackAllocElements ? stackalloc Vector2[sides] : new Vector2[sides];
+            for (int i = 0; i < sides; i++)
+                pts[i] = SampleUnitCircle(rotationTurns + i * step) * radius + center;
+
+            float safeRadius = ClampCornerRadiusToFit(pts, cornerRadius);
+            Span<Vector2> boundary = sides <= MaxStackAllocElements / (MaxCircleSegments + 1)
+                ? stackalloc Vector2[sides * (MaxCircleSegments + 1)]
+                : new Vector2[sides * (MaxCircleSegments + 1)];
+            int count = BuildRoundedCornerBoundary(pts, safeRadius, LineJoin.Round, NoBorderClampBudget, boundary);
+
+            int b = Reserve(count + 1, count * 3);
+            PushVertex(center, inner);
+            for (int i = 0; i < count; i++)
+                PushVertex(boundary[i], outer);
+            for (int i = 0; i < count; i++)
+                PushTriangleIndices(b, b + 1 + i, b + 1 + (i + 1) % count);
         }
 
         /// <summary>
