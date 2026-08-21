@@ -91,17 +91,22 @@ namespace MonoPrimitives.Primitives2D
 
         /// <summary>
         /// Builds the matrix to pass into <c>PrimitiveBatch.Begin</c>'s <c>transformMatrix</c>:
-        /// translate by <c>-Target</c>, rotate, scale by <see cref="Zoom"/>, then translate to
-        /// <see cref="Offset"/> — the standard 2D camera composition. Does NOT include
-        /// <see cref="ViewportAdapter"/>'s own scale/offset — compose with
-        /// <c>ViewportAdapter.GetScaleMatrix()</c> yourself (per <c>Design/2D/ViewportAdapter_Guide.md</c>)
-        /// the same way you would with any other <see cref="ViewportAdapter2D"/> user.
+        /// translate by <c>-Target</c>, rotate (<see cref="Rotation"/> plus any screen-shake
+        /// rotation — see <see cref="AddTrauma"/>), scale by <see cref="Zoom"/>, then translate
+        /// to <see cref="Offset"/> plus any screen-shake offset — the standard 2D camera
+        /// composition. Does NOT include <see cref="ViewportAdapter"/>'s own scale/offset —
+        /// compose with <c>ViewportAdapter.GetScaleMatrix()</c> yourself (per
+        /// <c>Design/2D/ViewportAdapter_Guide.md</c>) the same way you would with any other
+        /// <see cref="ViewportAdapter2D"/> user.
         /// </summary>
         public Matrix GetTransformMatrix()
-            => Matrix.CreateTranslation(-Target.X, -Target.Y, 0f)
-             * Matrix.CreateRotationZ(Rotation)
-             * Matrix.CreateScale(Zoom, Zoom, 1f)
-             * Matrix.CreateTranslation(Offset.X, Offset.Y, 0f);
+        {
+            (Vector2 shakeOffset, float shakeRotation) = GetShakeOffset();
+            return Matrix.CreateTranslation(-Target.X, -Target.Y, 0f)
+                 * Matrix.CreateRotationZ(Rotation + shakeRotation)
+                 * Matrix.CreateScale(Zoom, Zoom, 1f)
+                 * Matrix.CreateTranslation(Offset.X + shakeOffset.X, Offset.Y + shakeOffset.Y, 0f);
+        }
 
         /// <summary>
         /// Converts a screen-space position (e.g. mouse coordinates) to world space. When
@@ -289,8 +294,16 @@ namespace MonoPrimitives.Primitives2D
 
         private readonly PrimitiveInput _input = new();
 
-        /// <summary>Advances the camera one frame using <see cref="ReadDefaultInput(float)"/> — the simplest way to get a working pan/zoom camera with no input code of your own.</summary>
-        public void Update(float deltaSeconds) => Update(ReadDefaultInput(deltaSeconds), deltaSeconds);
+        /// <summary>
+        /// Advances internal state only — screen-shake trauma decay (see <see cref="AddTrauma"/>)
+        /// and any in-flight <see cref="SmoothZoom"/> easing — with no movement and no input
+        /// reading. Call this every frame when you're driving <see cref="Target"/>/<see cref="Zoom"/>/
+        /// <see cref="Rotation"/> yourself (a fixed prototype camera, a cutscene) and just want
+        /// shake/easing to keep working. For built-in WASD-pan/wheel-zoom, use
+        /// <see cref="UpdateWithInput(float)"/> instead; to apply your own captured/replayed/
+        /// networked input, use <see cref="Update(in CameraInput2D, float)"/>.
+        /// </summary>
+        public void Update(float deltaSeconds) => UpdateShake(deltaSeconds);
 
         /// <inheritdoc cref="Update(float)"/>
         public void Update(GameTime gameTime) => Update((float)gameTime.ElapsedGameTime.TotalSeconds);
@@ -298,7 +311,7 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Advances the camera one frame using an explicit <see cref="CameraInput2D"/>, taking the frame delta from a MonoGame <see cref="GameTime"/> instead of a raw float.</summary>
         public void Update(GameTime gameTime, in CameraInput2D input) => Update(input, (float)gameTime.ElapsedGameTime.TotalSeconds);
 
-        /// <summary>Applies <paramref name="input"/>'s pan to <see cref="Target"/> and zoom to <see cref="SmoothZoom"/>, then re-clamps to <see cref="TargetBounds"/> if set.</summary>
+        /// <summary>Applies <paramref name="input"/>'s pan to <see cref="Target"/> and zoom to <see cref="SmoothZoom"/>, decays shake trauma, then re-clamps to <see cref="TargetBounds"/> if set. Doesn't read any input itself — <paramref name="input"/> can come from anywhere (a replay file, the network, a test script), not just <see cref="ReadDefaultInput(float)"/>.</summary>
         public void Update(in CameraInput2D input, float deltaSeconds)
         {
             Target += input.Pan;
@@ -307,8 +320,15 @@ namespace MonoPrimitives.Primitives2D
             // toward that tick's target has to keep advancing on every frame after it too — a
             // guard here would let it take one small step and then freeze.
             SmoothZoom(input.Zoom, deltaSeconds);
+            UpdateShake(deltaSeconds);
             ClampToBounds();
         }
+
+        /// <summary>Advances the camera one frame using <see cref="ReadDefaultInput(float)"/>'s built-in WASD-pan/left-drag-pan/wheel-zoom controller — the simplest way to get a working camera with no input code of your own. This is a prototyping convenience, not something every game wants baked into its camera; use the plain <see cref="Update(float)"/>/<see cref="Update(in CameraInput2D, float)"/> overloads instead if you're driving the camera yourself or from your own input mapping.</summary>
+        public void UpdateWithInput(float deltaSeconds) => Update(ReadDefaultInput(deltaSeconds), deltaSeconds);
+
+        /// <inheritdoc cref="UpdateWithInput(float)"/>
+        public void UpdateWithInput(GameTime gameTime) => UpdateWithInput((float)gameTime.ElapsedGameTime.TotalSeconds);
 
         /// <summary>Builds a <see cref="CameraInput2D"/> from the current keyboard and mouse state, taking the frame delta straight from a MonoGame <see cref="GameTime"/> instead of a raw float.</summary>
         public CameraInput2D ReadDefaultInput(GameTime gameTime) => ReadDefaultInput((float)gameTime.ElapsedGameTime.TotalSeconds);
@@ -351,6 +371,68 @@ namespace MonoPrimitives.Primitives2D
 
         /// <summary>Resets <see cref="ReadDefaultInput(float)"/>'s internal mouse-delta tracking — call after teleporting the camera or repositioning the mouse to avoid a one-frame pan jump.</summary>
         public void ResetMouseTracking() => _input.ResetMouseDelta();
+
+        // ---------------------------------------------------------------------
+        // Screen shake (trauma-based)
+        // ---------------------------------------------------------------------
+        // The technique most engines converged on (popularized by Squirrel Eiserloh's GDC talk
+        // "Math for Game Programmers: Juicing Your Cameras With Math", used by Celeste and
+        // plenty else): a "trauma" value in [0,1] that jumps up on impact and decays back to 0
+        // over time, with shake magnitude scaled by trauma^2 (small bumps barely shake, big
+        // hits shake hard, and the falloff itself feels natural rather than linear). The offset
+        // is sampled from Perlin noise (this library's own Noise, one channel per axis plus one
+        // for rotation) rather than raw random — smooth frame-to-frame motion instead of jitter,
+        // for the same reason a hand-held camera looks like a hand-held camera and not static.
+        // Purely a rendering effect: baked into GetTransformMatrix(), never touches Target/
+        // Rotation/Zoom themselves, so nothing that reads camera state sees the shake.
+
+        private readonly Noise _shakeNoiseX = new(unchecked((int)0x53484B58)); // "SHKX"
+        private readonly Noise _shakeNoiseY = new(unchecked((int)0x53484B59)); // "SHKY"
+        private readonly Noise _shakeNoiseRot = new(unchecked((int)0x53484B52)); // "SHKR"
+        // Starts away from 0 on purpose: Perlin noise is exactly 0 at every integer lattice
+        // point by construction, and 0 itself is one — starting there would make the very
+        // first shake read (AddTrauma then GetShakeOffset/GetTransformMatrix before any Update
+        // tick has advanced this) silently zero.
+        private float _shakeTime = 0.5f;
+
+        /// <summary>Current shake intensity, [0,1] — 0 is calm. Decays toward 0 at <see cref="TraumaDecayPerSecond"/> every time any <c>Update</c> overload runs. Set directly, or use <see cref="AddTrauma"/> to bump it without risking pushing it out of range.</summary>
+        public float Trauma { get; set; }
+
+        /// <summary>How fast <see cref="Trauma"/> decays back to 0, in units of trauma per second.</summary>
+        public float TraumaDecayPerSecond { get; set; } = 1.5f;
+
+        /// <summary>Shake displacement (world units) at maximum trauma (1.0) — actual displacement scales with trauma².</summary>
+        public float MaxShakeOffset { get; set; } = 30f;
+
+        /// <summary>Shake rotation (radians) at maximum trauma (1.0) — actual rotation scales with trauma².</summary>
+        public float MaxShakeRotation { get; set; } = 0.12f;
+
+        /// <summary>How fast the underlying Perlin noise is sampled while shaking is active — higher reads as a faster, more frantic shake; lower as a slower sway.</summary>
+        public float ShakeNoiseSpeed { get; set; } = 20f;
+
+        /// <summary>Bumps <see cref="Trauma"/> up by <paramref name="amount"/>, clamped to [0,1] — call this on a hit/impact/explosion instead of setting <see cref="Trauma"/> directly, so stacking several hits in one frame can't overshoot.</summary>
+        public void AddTrauma(float amount) => Trauma = Math.Clamp(Trauma + MathF.Max(0f, amount), 0f, 1f);
+
+        /// <summary>Stops any shake immediately.</summary>
+        public void ResetTrauma() => Trauma = 0f;
+
+        private void UpdateShake(float deltaSeconds)
+        {
+            if (Trauma <= 0f) return;
+            Trauma = MathF.Max(0f, Trauma - TraumaDecayPerSecond * deltaSeconds);
+            _shakeTime += deltaSeconds * ShakeNoiseSpeed;
+        }
+
+        /// <summary>The current frame's shake offset/rotation — already folded into <see cref="GetTransformMatrix"/>; exposed separately in case you want to apply it to something else (e.g. a UI element that should shake in sync).</summary>
+        public (Vector2 Offset, float Rotation) GetShakeOffset()
+        {
+            if (Trauma <= 0f) return (Vector2.Zero, 0f);
+            float shake = Trauma * Trauma;
+            float ox = _shakeNoiseX.Sample1D(_shakeTime) * shake * MaxShakeOffset;
+            float oy = _shakeNoiseY.Sample1D(_shakeTime) * shake * MaxShakeOffset;
+            float rot = _shakeNoiseRot.Sample1D(_shakeTime) * shake * MaxShakeRotation;
+            return (new Vector2(ox, oy), rot);
+        }
 
         // ---------------------------------------------------------------------
         // Easing
