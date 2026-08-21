@@ -189,6 +189,12 @@ namespace MonoPrimitives
         /// <summary>True on the frame <paramref name="key"/> went from down to up.</summary>
         public bool IsKeyReleased(Keys key) => _keyboard.IsKeyUp(key) && _prevKeyboard.IsKeyDown(key);
 
+        /// <summary>Whether Caps Lock is currently toggled on — the lock state itself, not whether the key is physically held. Useful for a custom on-screen keyboard, or warning next to a password field.</summary>
+        public bool CapsLock => _keyboard.CapsLock;
+
+        /// <summary>Whether Num Lock is currently toggled on, same idea as <see cref="CapsLock"/>.</summary>
+        public bool NumLock => _keyboard.NumLock;
+
         private static readonly Keys[] AllKeys = (Keys[])Enum.GetValues(typeof(Keys));
 
         /// <summary>True on the frame any key went from up to down — for a "press any key to continue" prompt, one call instead of listing every key yourself.</summary>
@@ -273,6 +279,16 @@ namespace MonoPrimitives
         /// the jump) since the cursor didn't actually travel there by user motion.
         /// </summary>
         public void SetMousePosition(int x, int y) => Mouse.SetPosition(x, y);
+
+        /// <summary>
+        /// Sets the OS cursor's shape — one of <see cref="MouseCursor"/>'s built-in system shapes
+        /// (<c>Arrow</c>, <c>IBeam</c>, <c>Hand</c>, <c>Crosshair</c>, the resize arrows, etc.) or a
+        /// fully custom one via <see cref="MouseCursor.FromTexture2D(Texture2D,int,int)"/>. A thin
+        /// passthrough to <see cref="Mouse.SetCursor(MouseCursor)"/> — kept here so mouse commands
+        /// live alongside the mouse queries above instead of requiring a separate
+        /// <c>using Microsoft.Xna.Framework.Input;</c> just for this one call.
+        /// </summary>
+        public void SetCursor(MouseCursor cursor) => Mouse.SetCursor(cursor);
 
         private static ButtonState GetMouseButtonState(in MouseState state, MouseButton button) => button switch
         {
