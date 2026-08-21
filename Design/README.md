@@ -14,6 +14,7 @@ These five are kept short on purpose — current state only, no narrative. Deepe
   - **[RandomUtil_Guide.md](../Guide/RandomUtil_Guide.md)** — `RandomUtil`: every method, what it computes and when to reach for it, the algorithms behind Gaussian/Poisson/Binomial sampling, and single-threaded vs. multi-threaded usage.
   - **[PrimitiveBatch_Guide.md](../Guide/PrimitiveBatch_Guide.md)** — `PrimitiveBatch`: every 2D shape method grouped by family, the Fill/Border/Draw/Gradient/Shadow conventions, and how shadows/gradients/segment counts actually work.
   - **[Camera2D_Guide.md](../Guide/Camera2D_Guide.md)** — `Camera2D` (pan/rotate/zoom, bounds, follow, shake, input controller) and the 4 `ViewportAdapter2D` types, when to use each, and how 2D/3D scenes share one for letterbox-aware projection.
+  - **[Trail2D_Guide.md](../Guide/Trail2D_Guide.md)** — `Trail2D`: the ring-buffer API and its per-segment fade cost/tradeoff.
 - **[2D/Primitives2D_Audit_Report.md](2D/Primitives2D_Audit_Report.md)**, **[2D/Overnight_Changes_2026-08-19.md](2D/Overnight_Changes_2026-08-19.md)**, **[3D/Primitive3D_Changes.md](3D/Primitive3D_Changes.md)** — historical session logs. Archaeology only ("why does this bug fix exist") — the five docs above already capture current state. Long; don't load by default.
 
 ## Repo layout
