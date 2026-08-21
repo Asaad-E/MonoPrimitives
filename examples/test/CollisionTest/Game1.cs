@@ -11,7 +11,10 @@ using MonoPrimitives.Primitives2D;
 namespace CollisionTest;
 
 /// <summary>
-/// Visual test for every <see cref="Collision2D"/> overlap/ray check: two controllable points, A
+/// Visual test for every <see cref="Collision2D"/> overlap/ray check, including the polygon and
+/// mixed-shape ones (PolyPoly/RecPoly/RecTriangle/TriangleTriangle via SAT, CirclePoly/CircleTriangle
+/// via the non-SAT closest-point approach — the star-shaped polygon in mode 9 is deliberately
+/// concave, to show that one still works where SAT wouldn't): two controllable points, A
 /// and B, reinterpreted per mode as a circle/rectangle/line/triangle/polygon/ray-origin. One of
 /// the two always follows the mouse; the other is nudged with W/A/S/D. Space swaps which is
 /// which, so "the fixed one you move with the keyboard" and "the one the mouse moves" can be
@@ -26,7 +29,11 @@ public class Game1 : Game
     private PrimitiveBatch _batch2d = null!;
     private PrimitiveInput _input = null!;
 
-    private enum Mode { CircleCircle, CircleRectangle, CircleLine, PointTriangle, PointPolygon, RayCircle }
+    private enum Mode
+    {
+        CircleCircle, CircleRectangle, CircleLine, PointTriangle, PointPolygon, RayCircle,
+        PolygonPolygon, RectanglePolygon, CirclePolygon, TriangleTriangle, RectangleTriangle, CircleTriangle
+    }
     private Mode _mode = Mode.CircleCircle;
 
     private Vector2 _posA = new(400, 360);
@@ -59,6 +66,12 @@ public class Game1 : Game
         if (_input.IsKeyPressed(Keys.D4)) _mode = Mode.PointTriangle;
         if (_input.IsKeyPressed(Keys.D5)) _mode = Mode.PointPolygon;
         if (_input.IsKeyPressed(Keys.D6)) _mode = Mode.RayCircle;
+        if (_input.IsKeyPressed(Keys.D7)) _mode = Mode.PolygonPolygon;
+        if (_input.IsKeyPressed(Keys.D8)) _mode = Mode.RectanglePolygon;
+        if (_input.IsKeyPressed(Keys.D9)) _mode = Mode.CirclePolygon;
+        if (_input.IsKeyPressed(Keys.D0)) _mode = Mode.TriangleTriangle;
+        if (_input.IsKeyPressed(Keys.Q)) _mode = Mode.RectangleTriangle;
+        if (_input.IsKeyPressed(Keys.E)) _mode = Mode.CircleTriangle;
         if (_input.IsKeyPressed(Keys.Space)) _mouseControlsA = !_mouseControlsA;
 
         Vector2 keyboardMove = _input.GetVector2(Keys.A, Keys.D, Keys.W, Keys.S) * KeyboardMoveSpeed * dt;
@@ -89,6 +102,16 @@ public class Game1 : Game
             Mode.PointTriangle => Collision2D.CheckCollisionPointTriangle(_posA, _posB + new Vector2(0, -70), _posB + new Vector2(-70, 60), _posB + new Vector2(70, 60)),
             Mode.PointPolygon => Collision2D.CheckCollisionPointPoly(_posA, StarAround(_posB, 90f, 38f)),
             Mode.RayCircle => Collision2D.CheckCollisionRayCircle(_posA, Vector2.UnitX, _posB, 40f, out _, out _),
+            Mode.PolygonPolygon => Collision2D.CheckCollisionPolyPoly(QuadAround(_posA, 60f), PentagonAround(_posB, 70f)),
+            Mode.RectanglePolygon => Collision2D.CheckCollisionRecPoly(RectAround(_posA, 140f, 90f), PentagonAround(_posB, 70f)),
+            Mode.CirclePolygon => Collision2D.CheckCollisionCirclePoly(_posA, 40f, StarAround(_posB, 90f, 38f)),
+            Mode.TriangleTriangle => Collision2D.CheckCollisionTriangleTriangle(
+                _posA + new Vector2(0, -60), _posA + new Vector2(-51, 42), _posA + new Vector2(51, 42),
+                _posB + new Vector2(0, -60), _posB + new Vector2(-51, 42), _posB + new Vector2(51, 42)),
+            Mode.RectangleTriangle => Collision2D.CheckCollisionRecTriangle(RectAround(_posA, 140f, 90f),
+                _posB + new Vector2(0, -60), _posB + new Vector2(-51, 42), _posB + new Vector2(51, 42)),
+            Mode.CircleTriangle => Collision2D.CheckCollisionCircleTriangle(_posA, 40f,
+                _posB + new Vector2(0, -60), _posB + new Vector2(-51, 42), _posB + new Vector2(51, 42)),
             _ => false,
         };
 
@@ -150,7 +173,58 @@ public class Game1 : Game
                 _batch2d.DrawLine(_posA, _posA + Vector2.UnitX * WindowWidth, 2.5f, color);
                 _batch2d.FillCircle(_posA, 6f, color);
                 break;
+
+            case Mode.PolygonPolygon:
+                DrawPoly(QuadAround(_posA, 60f), color);
+                DrawPoly(PentagonAround(_posB, 70f), color);
+                break;
+
+            case Mode.RectanglePolygon:
+                Rectangle recPoly = RectAround(_posA, 140f, 90f);
+                _batch2d.FillRectangle(recPoly.X, recPoly.Y, recPoly.Width, recPoly.Height, ToAlpha(color, 0.5f));
+                _batch2d.BorderRectangle(recPoly.X, recPoly.Y, recPoly.Width, recPoly.Height, color, 2.5f);
+                DrawPoly(PentagonAround(_posB, 70f), color);
+                break;
+
+            case Mode.CirclePolygon:
+                _batch2d.FillCircle(_posA, 40f, ToAlpha(color, 0.5f));
+                _batch2d.BorderCircle(_posA, 40f, color, 2.5f);
+                DrawPoly(StarAround(_posB, 90f, 38f), color);
+                break;
+
+            case Mode.TriangleTriangle:
+                Vector2 tt1a = _posA + new Vector2(0, -60), tt2a = _posA + new Vector2(-51, 42), tt3a = _posA + new Vector2(51, 42);
+                Vector2 tt1b = _posB + new Vector2(0, -60), tt2b = _posB + new Vector2(-51, 42), tt3b = _posB + new Vector2(51, 42);
+                _batch2d.FillTriangle(tt1a, tt2a, tt3a, ToAlpha(color, 0.5f));
+                _batch2d.BorderTriangle(tt1a, tt2a, tt3a, color, 2.5f);
+                _batch2d.FillTriangle(tt1b, tt2b, tt3b, ToAlpha(color, 0.5f));
+                _batch2d.BorderTriangle(tt1b, tt2b, tt3b, color, 2.5f);
+                break;
+
+            case Mode.RectangleTriangle:
+                Rectangle recTri = RectAround(_posA, 140f, 90f);
+                _batch2d.FillRectangle(recTri.X, recTri.Y, recTri.Width, recTri.Height, ToAlpha(color, 0.5f));
+                _batch2d.BorderRectangle(recTri.X, recTri.Y, recTri.Width, recTri.Height, color, 2.5f);
+                Vector2 rt1 = _posB + new Vector2(0, -60), rt2 = _posB + new Vector2(-51, 42), rt3 = _posB + new Vector2(51, 42);
+                _batch2d.FillTriangle(rt1, rt2, rt3, ToAlpha(color, 0.5f));
+                _batch2d.BorderTriangle(rt1, rt2, rt3, color, 2.5f);
+                break;
+
+            case Mode.CircleTriangle:
+                _batch2d.FillCircle(_posA, 40f, ToAlpha(color, 0.5f));
+                _batch2d.BorderCircle(_posA, 40f, color, 2.5f);
+                Vector2 ct1 = _posB + new Vector2(0, -60), ct2 = _posB + new Vector2(-51, 42), ct3 = _posB + new Vector2(51, 42);
+                _batch2d.FillTriangle(ct1, ct2, ct3, ToAlpha(color, 0.5f));
+                _batch2d.BorderTriangle(ct1, ct2, ct3, color, 2.5f);
+                break;
         }
+    }
+
+    private void DrawPoly(ReadOnlySpan<Vector2> points, Color color)
+    {
+        _batch2d.FillPolygon(points, ToAlpha(color, 0.5f));
+        for (int i = 0; i < points.Length; i++)
+            _batch2d.DrawLine(points[i], points[(i + 1) % points.Length], 2.5f, color);
     }
 
     private void DrawMarkers()
@@ -163,9 +237,13 @@ public class Game1 : Game
 
     private void DrawHud(bool colliding)
     {
-        string[] modeNames = { "1: CIRCLE vs CIRCLE", "2: CIRCLE vs RECTANGLE", "3: CIRCLE vs LINE", "4: POINT vs TRIANGLE", "5: POINT vs POLYGON", "6: RAY vs CIRCLE" };
+        string[] modeNames =
+        {
+            "1: CIRCLE vs CIRCLE", "2: CIRCLE vs RECTANGLE", "3: CIRCLE vs LINE", "4: POINT vs TRIANGLE", "5: POINT vs POLYGON", "6: RAY vs CIRCLE",
+            "7: POLYGON vs POLYGON", "8: RECTANGLE vs POLYGON", "9: CIRCLE vs POLYGON", "0: TRIANGLE vs TRIANGLE", "Q: RECTANGLE vs TRIANGLE", "E: CIRCLE vs TRIANGLE"
+        };
         _batch2d.DrawString(modeNames[(int)_mode], new Vector2(16, 16), 2f, Color.White);
-        _batch2d.DrawString("1-6: switch check   Space: swap mouse/keyboard control   WASD: move the keyboard shape", new Vector2(16, 44), 1.5f, Palette.Silver);
+        _batch2d.DrawString("1-9,0,Q,E: switch check   Space: swap mouse/keyboard control   WASD: move the keyboard shape", new Vector2(16, 44), 1.5f, Palette.Silver);
         _batch2d.DrawString($"blue ring = mouse-controlled   yellow ring = keyboard-controlled", new Vector2(16, 66), 1.5f, Palette.Silver);
         _batch2d.DrawString(colliding ? "COLLIDING" : "not colliding", new Vector2(16, 96), 2.5f, colliding ? Palette.Alizarin : Palette.Nephritis);
     }
@@ -187,4 +265,18 @@ public class Game1 : Game
     }
 
     private static Color ToAlpha(Color color, float alphaFraction) => new(color.R, color.G, color.B, (byte)(color.A * alphaFraction));
+
+    private static Vector2[] PentagonAround(Vector2 center, float radius) => RegularPolygonAround(center, radius, 5);
+    private static Vector2[] QuadAround(Vector2 center, float radius) => RegularPolygonAround(center, radius, 4);
+
+    private static Vector2[] RegularPolygonAround(Vector2 center, float radius, int sides)
+    {
+        var result = new Vector2[sides];
+        for (int i = 0; i < sides; i++)
+        {
+            float angle = -MathHelper.PiOver2 + i * MathHelper.TwoPi / sides;
+            result[i] = center + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * radius;
+        }
+        return result;
+    }
 }

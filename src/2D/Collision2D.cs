@@ -122,6 +122,96 @@ namespace MonoPrimitives.Primitives2D
         public static Rectangle GetCollisionRec(Rectangle rec1, Rectangle rec2) => Rectangle.Intersect(rec1, rec2);
 
         // =====================================================================
+        // POLYGON / MIXED-SHAPE OVERLAPS
+        //
+        // CheckCollisionPolyPoly/RecPoly/RecTriangle/TriangleTriangle all go through the same
+        // Separating Axis Theorem (SAT) core, which REQUIRES both shapes to be convex to give a
+        // correct answer (a rectangle and a triangle always are; an arbitrary "poly" span here is
+        // NOT checked for convexity — pass a convex one). CheckCollisionCirclePoly/CircleTriangle
+        // do NOT go through SAT (a circle has no straight edges for it to use) and work correctly
+        // for ANY simple polygon, convex or not — same generality as CheckCollisionPointPoly above.
+        // =====================================================================
+
+        /// <summary>
+        /// Convex polygon vs convex polygon overlap, via the Separating Axis Theorem: tries each
+        /// polygon's own edge normals in turn as a candidate separating axis, projecting both
+        /// polygons onto it and looking for a gap. No separating axis on either polygon's edges
+        /// means the polygons overlap. Requires both polygons to be convex.
+        /// </summary>
+        public static bool CheckCollisionPolyPoly(ReadOnlySpan<Vector2> poly1, ReadOnlySpan<Vector2> poly2)
+        {
+            if (poly1.Length < 3 || poly2.Length < 3) return false;
+            return !HasSeparatingAxis(poly1, poly2) && !HasSeparatingAxis(poly2, poly1);
+        }
+
+        /// <summary>Triangle vs triangle overlap (every triangle is convex, so this is exactly <see cref="CheckCollisionPolyPoly"/> on two 3-point spans).</summary>
+        public static bool CheckCollisionTriangleTriangle(Vector2 a1, Vector2 a2, Vector2 a3, Vector2 b1, Vector2 b2, Vector2 b3)
+            => CheckCollisionPolyPoly([a1, a2, a3], [b1, b2, b3]);
+
+        /// <summary>Rectangle vs convex polygon overlap (SAT — see <see cref="CheckCollisionPolyPoly"/>).</summary>
+        public static bool CheckCollisionRecPoly(Rectangle rec, ReadOnlySpan<Vector2> points)
+        {
+            Span<Vector2> rectPts = stackalloc Vector2[4] { new(rec.Left, rec.Top), new(rec.Right, rec.Top), new(rec.Right, rec.Bottom), new(rec.Left, rec.Bottom) };
+            return CheckCollisionPolyPoly(rectPts, points);
+        }
+
+        /// <summary>Rectangle vs triangle overlap (SAT — see <see cref="CheckCollisionPolyPoly"/>).</summary>
+        public static bool CheckCollisionRecTriangle(Rectangle rec, Vector2 p1, Vector2 p2, Vector2 p3)
+        {
+            Span<Vector2> rectPts = stackalloc Vector2[4] { new(rec.Left, rec.Top), new(rec.Right, rec.Top), new(rec.Right, rec.Bottom), new(rec.Left, rec.Bottom) };
+            return CheckCollisionPolyPoly(rectPts, [p1, p2, p3]);
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        private static bool HasSeparatingAxis(ReadOnlySpan<Vector2> a, ReadOnlySpan<Vector2> b)
+        {
+            int n = a.Length;
+            for (int i = 0; i < n; i++)
+            {
+                Vector2 edge = a[(i + 1) % n] - a[i];
+                Vector2 axis = new(-edge.Y, edge.X); // perpendicular; doesn't need normalizing to compare projections
+
+                ProjectPolygon(a, axis, out float minA, out float maxA);
+                ProjectPolygon(b, axis, out float minB, out float maxB);
+                if (maxA < minB || maxB < minA) return true; // a gap on this axis is enough to prove no overlap
+            }
+            return false;
+        }
+
+        private static void ProjectPolygon(ReadOnlySpan<Vector2> poly, Vector2 axis, out float min, out float max)
+        {
+            min = max = Vector2.Dot(poly[0], axis);
+            for (int i = 1; i < poly.Length; i++)
+            {
+                float p = Vector2.Dot(poly[i], axis);
+                if (p < min) min = p;
+                if (p > max) max = p;
+            }
+        }
+
+        /// <summary>
+        /// Circle vs arbitrary (possibly non-convex) polygon overlap — correct for any simple
+        /// polygon, unlike the SAT-based checks above. True if the circle's center is inside the
+        /// polygon (reusing <see cref="CheckCollisionPointPoly"/>) or within <paramref name="radius"/>
+        /// of any edge (reusing the same closest-point-on-segment distance as <see cref="CheckCollisionPointLine"/>).
+        /// </summary>
+        public static bool CheckCollisionCirclePoly(Vector2 center, float radius, ReadOnlySpan<Vector2> points)
+        {
+            if (points.Length < 2) return false;
+            if (CheckCollisionPointPoly(center, points)) return true;
+
+            int n = points.Length;
+            for (int i = 0, j = n - 1; i < n; j = i++)
+                if (CheckCollisionPointLine(center, points[j], points[i], radius))
+                    return true;
+            return false;
+        }
+
+        /// <summary>Circle vs triangle overlap (see <see cref="CheckCollisionCirclePoly"/>).</summary>
+        public static bool CheckCollisionCircleTriangle(Vector2 center, float radius, Vector2 p1, Vector2 p2, Vector2 p3)
+            => CheckCollisionCirclePoly(center, radius, [p1, p2, p3]);
+
+        // =====================================================================
         // RAYCASTS — the 2D counterpart to Camera3D's GetScreenToWorldRay and
         // MonoGame's own 3D Ray.Intersects: mouse-picking, line-of-sight,
         // projectile/sensor checks. origin+direction, not a segment — direction
