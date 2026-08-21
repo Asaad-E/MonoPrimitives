@@ -17,6 +17,12 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>Bit mask used for fast wrap-around indexing.</summary>
         public const int Mask = Resolution - 1;
 
+        /// <summary>1 / (2*PI) — multiply a radian angle by this to get turns, instead of dividing by 2*PI on every call.</summary>
+        public const float TurnsPerRadian = 1f / (MathF.PI * 2f);
+
+        /// <summary>1 / 360 — multiply a degree angle by this to get turns, instead of dividing by 360 on every call.</summary>
+        public const float TurnsPerDegree = 1f / 360f;
+
         private static readonly float[] SinTable = new float[Resolution + 1];
         private static readonly float[] CosTable = new float[Resolution + 1];
 
@@ -56,10 +62,42 @@ namespace MonoPrimitives.Primitives3D
                 return;
             }
 
-            // Generic path: linear interpolation on the LUT keeps this cheap and
-            // avoids Math.Sin/Cos calls while staying visually indistinguishable.
-            float t = step * (float)Resolution / steps;
-            int i0 = (int)t;
+            SampleInterpolated(step * (float)Resolution / steps, out sin, out cos);
+        }
+
+        /// <summary>
+        /// Sine/cosine at a normalized angle <paramref name="t01"/> in [0, 1) (1 = a full turn),
+        /// via linear interpolation between the two nearest table entries — the continuous
+        /// counterpart to <see cref="SinCosStep"/> for an angle that isn't naturally a division
+        /// of a circle (e.g. an animated phase held as its own float), and the 3D equivalent of
+        /// <c>UnitCircleLut.Sample(t01)</c> on the 2D side.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Sample(float t01, out float sin, out float cos) => SampleInterpolated(t01 * Resolution, out sin, out cos);
+
+        /// <summary>
+        /// <see cref="Sample"/>, taking the angle in radians instead of turns — a multiply by
+        /// <see cref="TurnsPerRadian"/> (not a divide by <c>2*PI</c>) before the lookup.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void SampleRadians(float radians, out float sin, out float cos) => Sample(radians * TurnsPerRadian, out sin, out cos);
+
+        /// <summary>
+        /// <see cref="Sample"/>, taking the angle in degrees instead of turns — a multiply by
+        /// <see cref="TurnsPerDegree"/> (not a divide by 360) before the lookup.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void SampleDegrees(float degrees, out float sin, out float cos) => Sample(degrees * TurnsPerDegree, out sin, out cos);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void SampleInterpolated(float t, out float sin, out float cos)
+        {
+            // Floor (not a raw truncating (int) cast) before splitting into index+fraction --
+            // truncation rounds toward zero, so for negative t it picks the wrong pair of
+            // adjacent table entries to interpolate between (same class of bug UnitCircleLut.Sample
+            // had for negative input; confirmed numerically this is a real, if small, curvature
+            // error at the wrap boundary, not just a theoretical one).
+            int i0 = (int)MathF.Floor(t);
             float frac = t - i0;
             int a = i0 & Mask;
             int b = (i0 + 1) & Mask;
