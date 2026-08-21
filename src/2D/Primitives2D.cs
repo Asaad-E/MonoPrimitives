@@ -2197,6 +2197,19 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>
+        /// Turns a center/length/rotation description into the two endpoints every capsule method
+        /// is actually built on — shared by every <c>center, length, radius, ..., rotation</c>
+        /// overload below, so each just forwards to its own endpoint-pair sibling.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void CapsuleEndpointsFromCenter(Vector2 center, float length, float rotation, out Vector2 start, out Vector2 end)
+        {
+            Vector2 half = new Vector2(MathF.Cos(rotation), MathF.Sin(rotation)) * (length * 0.5f);
+            start = center - half;
+            end = center + half;
+        }
+
+        /// <summary>
         /// Draws a filled capsule (a thick line with round caps), no border. Degenerates to
         /// <see cref="FillCircle"/> if <paramref name="start"/> equals <paramref name="end"/>.
         /// </summary>
@@ -2211,6 +2224,21 @@ namespace MonoPrimitives.Primitives2D
             Vector2 dir = SafeNormalize(delta);
             EmitRoundCap(start, -dir, radius, color);
             EmitRoundCap(end, dir, radius, color);
+        }
+
+        /// <summary>
+        /// Draws a filled capsule of the given <paramref name="length"/> and <paramref name="radius"/>,
+        /// centered at <paramref name="center"/> and rotated <paramref name="rotation"/> radians
+        /// from horizontal — the same "center + size + rotation" shape every other filled shape
+        /// here uses (<see cref="FillEllipse(Vector2,float,float,Color,float)"/>,
+        /// <see cref="FillRectangle(float,float,float,float,Color,float,Vector2?)"/>), unlike the
+        /// endpoint-pair overload above — which stays, since it's still the more convenient shape
+        /// for chain links/ropes/limbs where the two actual endpoints are already what you have.
+        /// </summary>
+        public void FillCapsule(Vector2 center, float length, float radius, Color color, float rotation = 0f)
+        {
+            CapsuleEndpointsFromCenter(center, length, rotation, out Vector2 start, out Vector2 end);
+            FillCapsule(start, end, radius, color);
         }
 
         /// <summary>
@@ -2250,6 +2278,13 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
+        /// <inheritdoc cref="FillCapsule(Vector2,float,float,Color,float)"/>
+        public void BorderCapsule(Vector2 center, float length, float radius, Color color, float thickness = 1f, float rotation = 0f)
+        {
+            CapsuleEndpointsFromCenter(center, length, rotation, out Vector2 start, out Vector2 end);
+            BorderCapsule(start, end, radius, color, thickness);
+        }
+
         /// <summary>Draws a capsule with both fill and border (same color), border growing inward.</summary>
         public void DrawCapsule(Vector2 start, Vector2 end, float radius, Color color, float thickness = 1f)
             => DrawCapsule(start, end, radius, color, color, thickness);
@@ -2259,6 +2294,17 @@ namespace MonoPrimitives.Primitives2D
         {
             FillCapsule(start, end, radius, fillColor);
             if (thickness > 0f) BorderCapsule(start, end, radius, borderColor, thickness);
+        }
+
+        /// <inheritdoc cref="FillCapsule(Vector2,float,float,Color,float)"/>
+        public void DrawCapsule(Vector2 center, float length, float radius, Color color, float thickness = 1f, float rotation = 0f)
+            => DrawCapsule(center, length, radius, color, color, thickness, rotation);
+
+        /// <inheritdoc cref="FillCapsule(Vector2,float,float,Color,float)"/>
+        public void DrawCapsule(Vector2 center, float length, float radius, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f)
+        {
+            CapsuleEndpointsFromCenter(center, length, rotation, out Vector2 start, out Vector2 end);
+            DrawCapsule(start, end, radius, fillColor, borderColor, thickness);
         }
 
         /// <summary>
@@ -2304,6 +2350,13 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
+        /// <inheritdoc cref="FillCapsule(Vector2,float,float,Color,float)"/>
+        public void FillCapsuleGradient(Vector2 center, float length, float radius, Color inner, Color outer, float rotation = 0f)
+        {
+            CapsuleEndpointsFromCenter(center, length, rotation, out Vector2 start, out Vector2 end);
+            FillCapsuleGradient(start, end, radius, inner, outer);
+        }
+
         /// <summary>
         /// Draws a capsule filled with an axis-to-boundary gradient (see <see cref="FillCapsuleGradient"/>)
         /// and a solid border. The gradient's own radius is <c>radius - thickness</c> — stops
@@ -2314,6 +2367,13 @@ namespace MonoPrimitives.Primitives2D
             float t = MathF.Max(0f, thickness);
             FillCapsuleGradient(start, end, MathF.Max(0f, radius - t), innerFill, outerFill);
             if (thickness > 0f) BorderCapsule(start, end, radius, borderColor, thickness);
+        }
+
+        /// <inheritdoc cref="FillCapsule(Vector2,float,float,Color,float)"/>
+        public void DrawCapsuleGradient(Vector2 center, float length, float radius, Color innerFill, Color outerFill, Color borderColor, float thickness = 1f, float rotation = 0f)
+        {
+            CapsuleEndpointsFromCenter(center, length, rotation, out Vector2 start, out Vector2 end);
+            DrawCapsuleGradient(start, end, radius, innerFill, outerFill, borderColor, thickness);
         }
 
         // ==================================================================
