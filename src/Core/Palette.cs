@@ -105,7 +105,7 @@ namespace MonoPrimitives
         // ---------------------------------------------------------------------
         // Gradient pairs — a different flavor from the flat colors above: an inner
         // (highlight) / outer (edge) pair per entry, for the glossy, saturated,
-        // "juicy" toy-ball look (bubble-shooter/merge-game pieces) rather than flat UI.
+        // "juicy" toy-ball look.
         // Feed a pair straight into FillCircleGradient/FillCircleGradientLinear.
         // A curated subset, not exhaustive — add more pairs here as needed rather than
         // building a separate one-off array elsewhere.
