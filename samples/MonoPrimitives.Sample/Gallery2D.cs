@@ -391,7 +391,9 @@ internal static class Gallery2D
         {
             new("Spline linear", (b, p) => b.DrawSplineLinear(ZigZag(p), 5f, FillColor)),
             new("Spline Catmull-Rom", (b, p) => b.DrawSplineCatmullRom(ZigZag(p), 5f, FillColor)),
+            new("Spline Basis (B-spline)", (b, p) => b.DrawSplineBasis(ZigZag(p), 5f, FillColor)),
             new("Spline Bezier cubic", (b, p) => b.DrawSplineBezierCubic(FourPointBezier(p), 5f, FillColor)),
+            new("Spline Bezier quadratic", (b, p) => b.DrawSplineBezierQuadratic(ThreePointBezierQuad(p), 5f, FillColor)),
             new("Arrow default", (b, p) => b.DrawArrow(p + new Vector2(-60, 0), p + new Vector2(60, 0), FillColor)),
             new("Arrow thick head", (b, p) => b.DrawArrow(p + new Vector2(-60, 0), p + new Vector2(60, 0), FillColor, 6f, headLength: 40f, headWidth: 40f)),
             new("Triangle fan", (b, p) => b.DrawTriangleFan(Fan(p), FillColor)),
@@ -403,6 +405,11 @@ internal static class Gallery2D
     private static Vector2[] FourPointBezier(Vector2 c) => new[]
     {
         c + new Vector2(-65, 40), c + new Vector2(-25, -60), c + new Vector2(25, 60), c + new Vector2(65, -40)
+    };
+
+    private static Vector2[] ThreePointBezierQuad(Vector2 c) => new[]
+    {
+        c + new Vector2(-65, 40), c + new Vector2(0, -70), c + new Vector2(65, 40)
     };
 
     private static Vector2[] Fan(Vector2 c)
