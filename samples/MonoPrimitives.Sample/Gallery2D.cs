@@ -46,6 +46,7 @@ internal static class Gallery2D
         DrawRow(batch, "CIRCLE", CircleCells(), ref y, ref maxRight);
         DrawRow(batch, "DROP SHADOW", ShadowCells(), ref y, ref maxRight);
         DrawRow(batch, "ELLIPSE", EllipseCells(), ref y, ref maxRight);
+        DrawRow(batch, "CAPSULE", CapsuleCells(), ref y, ref maxRight);
         DrawRow(batch, "CIRCLE SECTOR / RING", SectorRingCells(), ref y, ref maxRight);
         DrawRow(batch, "REGULAR POLYGON (POLY)", PolyCells(), ref y, ref maxRight);
         DrawRow(batch, "ARBITRARY POLYGON", PolygonCells(), ref y, ref maxRight);
@@ -235,6 +236,24 @@ internal static class Gallery2D
             new("Gradient", (b, p) => b.FillEllipseGradient(p, 70f, 45f, GradientFrom, GradientTo)),
             new("Gradient offset", (b, p) => b.FillEllipseGradient(p, 70f, 45f, GradientFrom2, GradientTo2, innerOffset: 0.2f, outerOffset: 0.2f)),
             new("Draw gradient", (b, p) => b.DrawEllipseGradient(p, 70f, 45f, GradientFrom, GradientTo, BorderColor, 4f)),
+        };
+        return cells;
+    }
+
+    // ==================================================================
+    // CAPSULE
+    // ==================================================================
+
+    private static List<Cell> CapsuleCells()
+    {
+        var cells = new List<Cell>
+        {
+            new("Fill", (b, p) => b.FillCapsule(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, FillColor)),
+            new("Border", (b, p) => b.BorderCapsule(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, BorderColor, 4f)),
+            new("Draw", (b, p) => b.DrawCapsule(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, FillColor, BorderColor, 4f)),
+            new("Gradient", (b, p) => b.FillCapsuleGradient(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, GradientFrom, GradientTo)),
+            new("Draw gradient", (b, p) => b.DrawCapsuleGradient(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, GradientFrom, GradientTo, BorderColor, 4f)),
+            new("Vertical (no rotation param)", (b, p) => b.DrawCapsule(p + new Vector2(0, -35), p + new Vector2(0, 35), 25f, FillColor, BorderColor, 4f)),
         };
         return cells;
     }

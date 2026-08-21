@@ -2162,6 +2162,161 @@ namespace MonoPrimitives.Primitives2D
         }
 
         // ==================================================================
+        // CAPSULE
+        // ==================================================================
+        // A capsule (a.k.a. stadium shape): a thick line segment with two round end caps --
+        // geometrically identical to what DrawLine(..., LineCap.Round) already draws as one
+        // solid stroke, so FillCapsule reuses that exact geometry (EmitLineSegment +
+        // EmitRoundCap) instead of duplicating it. Border/Draw/Gradient need the shape's own
+        // boundary loop though (Border traces an inward ring, Gradient fans from the axis
+        // outward) -- BuildCapsuleBoundary below provides that: a semicircle around each end,
+        // the two straight sides implicit in just connecting consecutive boundary points, the
+        // same trick BuildRoundedCornerBoundary already uses for a rounded rectangle's corners.
+        // No rotation parameter anywhere here -- unlike an ellipse's H/V radii, a capsule's
+        // orientation is already fully expressed by start/end, same as DrawLine.
+
+        /// <summary>
+        /// Fills <paramref name="boundary"/> (exactly <c>2*(capSegments+1)</c> points) with the
+        /// capsule's true outline, in order: a semicircle around <paramref name="start"/>
+        /// bulging away from <paramref name="end"/>, then a straight side, a semicircle around
+        /// <paramref name="end"/> bulging away from <paramref name="start"/>, and the other
+        /// straight side. Caller guarantees <paramref name="start"/> != <paramref name="end"/>
+        /// (degenerate callers fall back to the circle equivalents instead of reaching this).
+        /// </summary>
+        private static void BuildCapsuleBoundary(Vector2 start, Vector2 end, float radius, int capSegments, Span<Vector2> boundary)
+        {
+            Vector2 dir = SafeNormalize(end - start);
+            float dirAngle = MathF.Atan2(dir.Y, dir.X);
+
+            int n = capSegments + 1;
+            float step = MathF.PI / capSegments;
+            for (int i = 0; i < n; i++)
+                boundary[i] = start + SampleUnitCircle((dirAngle + MathHelper.PiOver2 + step * i) / MathHelper.TwoPi) * radius;
+            for (int i = 0; i < n; i++)
+                boundary[n + i] = end + SampleUnitCircle((dirAngle - MathHelper.PiOver2 + step * i) / MathHelper.TwoPi) * radius;
+        }
+
+        /// <summary>
+        /// Draws a filled capsule (a thick line with round caps), no border. Degenerates to
+        /// <see cref="FillCircle"/> if <paramref name="start"/> equals <paramref name="end"/>.
+        /// </summary>
+        public void FillCapsule(Vector2 start, Vector2 end, float radius, Color color)
+        {
+            ThrowIfNotBegun();
+            if (radius <= 0f) return;
+            Vector2 delta = end - start;
+            if (delta.LengthSquared() < 1e-12f) { FillCircle(start, radius, color); return; }
+
+            EmitLineSegment(start, end, radius, color);
+            Vector2 dir = SafeNormalize(delta);
+            EmitRoundCap(start, -dir, radius, color);
+            EmitRoundCap(end, dir, radius, color);
+        }
+
+        /// <summary>
+        /// Draws a capsule's border only, growing inward from <paramref name="radius"/> — the
+        /// border never extends past it. Clamped so a thick border on a thin capsule degenerates
+        /// gracefully to a full fill, same precedent as <see cref="BorderEllipse"/>. Degenerates
+        /// to <see cref="BorderCircle"/> if <paramref name="start"/> equals <paramref name="end"/>.
+        /// </summary>
+        public void BorderCapsule(Vector2 start, Vector2 end, float radius, Color color, float thickness = 1f)
+        {
+            ThrowIfNotBegun();
+            if (thickness <= 0f || radius <= 0f) return;
+            Vector2 delta = end - start;
+            if (delta.LengthSquared() < 1e-12f) { BorderCircle(start, radius, color, thickness); return; }
+
+            float t = Math.Min(thickness, radius);
+            int capSegments = Math.Max(1, SegmentsForArc(radius, MathF.PI));
+            int n = 2 * (capSegments + 1);
+
+            Span<Vector2> outer = n <= MaxStackAllocElements ? stackalloc Vector2[n] : new Vector2[n];
+            Span<Vector2> inner = n <= MaxStackAllocElements ? stackalloc Vector2[n] : new Vector2[n];
+            BuildCapsuleBoundary(start, end, radius, capSegments, outer);
+            BuildCapsuleBoundary(start, end, radius - t, capSegments, inner);
+
+            int b = Reserve(n * 2, n * 2 * 3);
+            for (int i = 0; i < n; i++)
+            {
+                PushVertex(outer[i], color);
+                PushVertex(inner[i], color);
+            }
+            for (int i = 0; i < n; i++)
+            {
+                int i0 = b + i * 2;
+                int i1 = b + ((i + 1) % n) * 2;
+                PushTriangleIndices(i0, i0 + 1, i1 + 1);
+                PushTriangleIndices(i0, i1 + 1, i1);
+            }
+        }
+
+        /// <summary>Draws a capsule with both fill and border (same color), border growing inward.</summary>
+        public void DrawCapsule(Vector2 start, Vector2 end, float radius, Color color, float thickness = 1f)
+            => DrawCapsule(start, end, radius, color, color, thickness);
+
+        /// <summary>Draws a capsule with an independently colored fill and border, border growing inward.</summary>
+        public void DrawCapsule(Vector2 start, Vector2 end, float radius, Color fillColor, Color borderColor, float thickness = 1f)
+        {
+            FillCapsule(start, end, radius, fillColor);
+            if (thickness > 0f) BorderCapsule(start, end, radius, borderColor, thickness);
+        }
+
+        /// <summary>
+        /// Draws a filled capsule with a gradient from <paramref name="inner"/> on the central
+        /// axis (the segment from <paramref name="start"/> to <paramref name="end"/>) to
+        /// <paramref name="outer"/> at the boundary, no border — the capsule's counterpart to
+        /// <see cref="FillEllipseGradient"/>'s radial gradient, except "distance from center"
+        /// means distance from the axis SEGMENT rather than a single point. Built as a ring
+        /// between the true outer boundary and the axis collapsed onto it (each outer boundary
+        /// point pairs with whichever pole — <paramref name="start"/> or <paramref name="end"/> —
+        /// its own cap arc surrounds); GPU interpolation across the straight-side quads then
+        /// linearly blends the paired axis point from <paramref name="start"/> to <paramref name="end"/>,
+        /// which is exactly the true closest-point-on-segment there, not just an approximation.
+        /// Degenerates to <see cref="FillCircleGradient"/> if <paramref name="start"/> equals <paramref name="end"/>.
+        /// </summary>
+        public void FillCapsuleGradient(Vector2 start, Vector2 end, float radius, Color inner, Color outer)
+        {
+            ThrowIfNotBegun();
+            if (radius <= 0f) return;
+            Vector2 delta = end - start;
+            if (delta.LengthSquared() < 1e-12f) { FillCircleGradient(start, radius, inner, outer); return; }
+
+            int capSegments = Math.Max(1, SegmentsForArc(radius, MathF.PI));
+            int n = 2 * (capSegments + 1);
+
+            Span<Vector2> boundary = n <= MaxStackAllocElements ? stackalloc Vector2[n] : new Vector2[n];
+            BuildCapsuleBoundary(start, end, radius, capSegments, boundary);
+
+            int b = Reserve(n * 2, n * 2 * 3);
+            int half = capSegments + 1;
+            for (int i = 0; i < n; i++)
+            {
+                Vector2 axisPoint = i < half ? start : end;
+                PushVertex(boundary[i], outer);
+                PushVertex(axisPoint, inner);
+            }
+            for (int i = 0; i < n; i++)
+            {
+                int i0 = b + i * 2;
+                int i1 = b + ((i + 1) % n) * 2;
+                PushTriangleIndices(i0, i0 + 1, i1 + 1);
+                PushTriangleIndices(i0, i1 + 1, i1);
+            }
+        }
+
+        /// <summary>
+        /// Draws a capsule filled with an axis-to-boundary gradient (see <see cref="FillCapsuleGradient"/>)
+        /// and a solid border. The gradient's own radius is <c>radius - thickness</c> — stops
+        /// exactly where the border begins, same rule as <see cref="DrawCircleGradient"/>/<see cref="DrawEllipseGradient"/>.
+        /// </summary>
+        public void DrawCapsuleGradient(Vector2 start, Vector2 end, float radius, Color innerFill, Color outerFill, Color borderColor, float thickness = 1f)
+        {
+            float t = MathF.Max(0f, thickness);
+            FillCapsuleGradient(start, end, MathF.Max(0f, radius - t), innerFill, outerFill);
+            if (thickness > 0f) BorderCapsule(start, end, radius, borderColor, thickness);
+        }
+
+        // ==================================================================
         // SECTORS & RINGS
         // ==================================================================
 
