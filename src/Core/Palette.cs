@@ -34,7 +34,14 @@ namespace MonoPrimitives
         /// <summary>Near-black charcoal-navy — a whole-screen backdrop for a dark dashboard/HUD, not a content color. <see cref="MidnightBlue"/>/<see cref="WetAsphalt"/> work well as panels on top of it.</summary>
         public static readonly Color Background = new(20, 22, 31);
 
-        /// <summary>All 21 colors above — for picking one at random (e.g. a color per boid/cell/agent).</summary>
+        /// <summary>
+        /// All 21 colors above, <see cref="Background"/> included — for code that genuinely
+        /// wants every curated color (a palette swatch viewer, a "cycle through all of them"
+        /// debug tool). For picking a random FOREGROUND color (a boid/cell/agent), use
+        /// <see cref="Primary"/> or <see cref="Cycle"/> instead: <see cref="Background"/> is a
+        /// near-black backdrop color, and a random pick from this array can silently return it,
+        /// rendering as invisible/near-invisible against the very background it's meant for.
+        /// </summary>
         public static readonly Color[] All =
         {
             Turquoise, GreenSea, Emerald, Nephritis, PeterRiver, BelizeHole, Amethyst, Wisteria,
@@ -42,7 +49,7 @@ namespace MonoPrimitives
             Clouds, Silver, Concrete, Asbestos, Background
         };
 
-        /// <summary>The 10 brighter/primary hues only (skipping each one's darker pair) — visually distinct even in a short sequence.</summary>
+        /// <summary>The 10 primary hues only (skipping each one's darker pair, and never <see cref="Background"/>) — visually distinct even in a short sequence, and always safe to use as a foreground color.</summary>
         public static readonly Color[] Primary =
         {
             Turquoise, Emerald, PeterRiver, Amethyst, WetAsphalt, Sunflower, Carrot, Alizarin, Clouds, Concrete
@@ -55,5 +62,25 @@ namespace MonoPrimitives
             if (i < 0) i += Primary.Length;
             return Primary[i];
         }
+
+        // ---------------------------------------------------------------------
+        // Gradient pairs — a different flavor from the flat colors above: an inner
+        // (highlight) / outer (edge) pair per entry, for the glossy, saturated,
+        // "juicy" toy-ball look (bubble-shooter/merge-game pieces) rather than flat UI.
+        // Feed a pair straight into FillCircleGradient/FillCircleGradientLinear.
+        // A curated subset, not exhaustive — add more pairs here as needed rather than
+        // building a separate one-off array elsewhere.
+        // ---------------------------------------------------------------------
+
+        /// <summary>Paired inner (highlight)/outer (edge) colors for a glossy radial-gradient ball — e.g. <c>batch.FillCircleGradient(center, radius, GradientPairs[i].Inner, GradientPairs[i].Outer)</c>.</summary>
+        public static readonly (Color Inner, Color Outer)[] GradientPairs =
+        {
+            (new Color(255, 120, 140), new Color(215, 20, 45)),   // Cherry — red
+            (new Color(130, 180, 255), new Color(30, 90, 220)),   // Grape — blue
+            (new Color(255, 210, 100), new Color(245, 130, 15)),  // Dekopon — orange
+            (new Color(230, 100, 210), new Color(160, 30, 130)),  // Plum — magenta
+            (new Color(255, 240, 130), new Color(245, 175, 15)),  // Pineapple — yellow
+            (new Color(90, 230, 90), new Color(10, 120, 40)),     // Watermelon — green
+        };
     }
 }
