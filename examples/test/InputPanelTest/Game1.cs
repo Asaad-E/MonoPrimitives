@@ -12,8 +12,10 @@ namespace InputPanelTest;
 
 /// <summary>
 /// Visual test for <see cref="PrimitiveInput"/>: a keyboard layout that lights each key up while
-/// held (and flashes on the exact press/release frame), plus a mouse panel showing position,
-/// buttons, scroll and drag, and a small gamepad panel for whatever's connected.
+/// held (and flashes on the exact press/release frame), a mouse panel showing position, buttons,
+/// scroll and drag, a gamepad panel (sticks/triggers, rumble on A, any-button flash) for whatever's
+/// connected, "any key"/"any mouse" indicators, and a live text box exercising
+/// <see cref="PrimitiveInput.GetCharPressed"/> (try typing Spanish accents).
 /// </summary>
 public class Game1 : Game
 {
@@ -28,6 +30,12 @@ public class Game1 : Game
     // passthrough by design (see its doc comment), so "how long" is always the caller's call.
     private float _vibrationTimeRemaining;
     private float _anyButtonFlashTimeRemaining;
+    private float _anyKeyFlashTimeRemaining;
+    private float _anyMouseFlashTimeRemaining;
+
+    // GetCharPressed demo: Backspace/Enter are editing controls, not typed "content" -- polled
+    // separately via the regular Keys API, same split a real text box would make.
+    private string _typedText = "";
 
     private readonly record struct KeySpec(Keys Key, string Label, float Width);
     private static readonly KeySpec[][] KeyboardRows =
@@ -53,7 +61,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         _batch2d = new PrimitiveBatch(GraphicsDevice);
-        _input = new PrimitiveInput();
+        _input = new PrimitiveInput(Window); // Window ctor -- enables GetCharPressed
         base.Initialize();
     }
 
@@ -77,6 +85,24 @@ public class Game1 : Game
         if (_anyButtonFlashTimeRemaining > 0f)
             _anyButtonFlashTimeRemaining -= dt;
 
+        if (_input.IsAnyKeyPressed())
+            _anyKeyFlashTimeRemaining = 0.3f;
+        if (_anyKeyFlashTimeRemaining > 0f)
+            _anyKeyFlashTimeRemaining -= dt;
+
+        if (_input.IsAnyMouseButtonPressed())
+            _anyMouseFlashTimeRemaining = 0.3f;
+        if (_anyMouseFlashTimeRemaining > 0f)
+            _anyMouseFlashTimeRemaining -= dt;
+
+        char c;
+        while ((c = _input.GetCharPressed()) != '\0')
+            _typedText += c;
+        if (_input.IsKeyPressed(Keys.Back) && _typedText.Length > 0)
+            _typedText = _typedText[..^1];
+        if (_input.IsKeyPressed(Keys.Enter))
+            _typedText = "";
+
         base.Update(gameTime);
     }
 
@@ -86,11 +112,16 @@ public class Game1 : Game
         _batch2d.Begin();
 
         _batch2d.DrawString("INPUT PANEL -- keyboard, mouse, gamepad state, live", new Vector2(16, 12), 2f, Color.White);
+        _batch2d.DrawString("any key:", new Vector2(700, 14), 1.3f, Palette.Silver);
+        _batch2d.FillCircle(new Vector2(760, 20), 7f, _anyKeyFlashTimeRemaining > 0f ? Palette.Sunflower : Palette.WetAsphalt);
+        _batch2d.DrawString("any mouse:", new Vector2(790, 14), 1.3f, Palette.Silver);
+        _batch2d.FillCircle(new Vector2(870, 20), 7f, _anyMouseFlashTimeRemaining > 0f ? Palette.Sunflower : Palette.WetAsphalt);
 
         DrawKeyboard(new Vector2(16, 50));
         DrawArrowCluster(new Vector2(830, 210));
         DrawMousePanel(new Vector2(940, 50));
         DrawGamepadPanel(new Vector2(940, 320));
+        DrawTypedTextPanel(new Vector2(16, 270));
 
         _batch2d.End();
         base.Draw(gameTime);
@@ -145,6 +176,20 @@ public class Game1 : Game
         Vector2 textSize = DebugFont5x7TextSize(label, 1.5f);
         Vector2 textPos = position + (size - textSize) * 0.5f;
         _batch2d.DrawString(label, textPos, 1.5f, down ? Color.White : Palette.Silver);
+    }
+
+    // ------------------------------------------------------------------
+    // Typed text (GetCharPressed)
+    // ------------------------------------------------------------------
+    private void DrawTypedTextPanel(Vector2 origin)
+    {
+        _batch2d.DrawString("TYPE HERE (GetCharPressed -- try accents: áéíóúñ)  Backspace/Enter clear", origin, 1.5f, Color.White);
+
+        Vector2 boxPos = origin + new Vector2(0, 22);
+        Vector2 boxSize = new(900, 34);
+        _batch2d.FillRectangleRounded(boxPos, boxSize, 4f, Palette.WetAsphalt);
+        _batch2d.BorderRectangleRounded(boxPos, boxSize, 4f, Palette.Concrete, 1.5f);
+        _batch2d.DrawString(_typedText, boxPos + new Vector2(8, 10), 1.6f, Color.White);
     }
 
     private static Vector2 DebugFont5x7TextSize(string text, float pixelSize) => new(text.Length * 6f * pixelSize, 7f * pixelSize);
