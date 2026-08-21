@@ -159,11 +159,11 @@ internal static class Gallery2D
         cells.Add(new Cell("Gradient horizontal", (b, p) => b.FillRectangleGradient(TopLeft(p), size, GradientFrom, GradientTo, horizontal: true)));
         cells.Add(new Cell("Gradient vertical", (b, p) => b.FillRectangleGradient(TopLeft(p), size, GradientFrom, GradientTo, horizontal: false)));
         cells.Add(new Cell("Gradient offset", (b, p) => b.FillRectangleGradient(TopLeft(p), size, GradientFrom, GradientTo, horizontal: true, rotation: 0f, origin: null, innerOffset: 0.2f, outerOffset: 0.2f)));
-        cells.Add(new Cell("Gradient rounded", (b, p) => b.FillRectangleRoundedGradient(TopLeft(p), size, 20f, GradientFrom2, GradientTo2, horizontal: true)));
-        cells.Add(new Cell("Gradient chamfer", (b, p) => b.FillRectangleChamferGradient(TopLeft(p), size, 20f, GradientFrom2, GradientTo2, horizontal: false)));
+        cells.Add(new Cell("Gradient rounded", (b, p) => b.FillRectangleGradientRounded(TopLeft(p), size, 20f, GradientFrom2, GradientTo2, horizontal: true)));
+        cells.Add(new Cell("Gradient chamfer", (b, p) => b.FillRectangleGradientChamfer(TopLeft(p), size, 20f, GradientFrom2, GradientTo2, horizontal: false)));
         cells.Add(new Cell("Draw gradient", (b, p) => b.DrawRectangleGradient(TopLeft(p), size, GradientFrom, GradientTo, horizontal: true, BorderColor, 4f)));
-        cells.Add(new Cell("Draw gradient rounded", (b, p) => b.DrawRectangleRoundedGradient(TopLeft(p), size, 20f, GradientFrom2, GradientTo2, horizontal: true, BorderColor, 4f)));
-        cells.Add(new Cell("Draw gradient chamfer", (b, p) => b.DrawRectangleChamferGradient(TopLeft(p), size, 20f, GradientFrom2, GradientTo2, horizontal: false, BorderColor, 4f)));
+        cells.Add(new Cell("Draw gradient rounded", (b, p) => b.DrawRectangleGradientRounded(TopLeft(p), size, 20f, GradientFrom2, GradientTo2, horizontal: true, BorderColor, 4f)));
+        cells.Add(new Cell("Draw gradient chamfer", (b, p) => b.DrawRectangleGradientChamfer(TopLeft(p), size, 20f, GradientFrom2, GradientTo2, horizontal: false, BorderColor, 4f)));
 
         return cells;
     }
