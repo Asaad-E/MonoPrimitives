@@ -18,6 +18,7 @@ These five are kept short on purpose — current state only, no narrative. Deepe
   - **[PrimitiveInput_Guide.md](../Guide/PrimitiveInput_Guide.md)** — `PrimitiveInput`: keyboard/mouse/gamepad polling, vibration, `GetCharPressed`'s `GameWindow` requirement, and what it deliberately can't/won't do.
   - **[Color_Guide.md](../Guide/Color_Guide.md)** — `Palette` (curated colors, `Cycle`, `GradientPairs`) and `ColorUtil` (hex/HSV conversions, adjustments, blend modes) together, plus what's deliberately not there.
   - **[Noise_Guide.md](../Guide/Noise_Guide.md)** — `Noise`: `Sample1D`/`2D`/`3D`, the `Fbm`/`RidgeNoise`/`Turbulence` families and their shared `Octaves`/`Lacunarity`/`Gain` properties, why `Sample1D` is special, and what's deliberately not there.
+  - **[Easing_Guide.md](../Guide/Easing_Guide.md)** — `Easing`: all 11 families (including `Quint`/`Circ`), which curve to reach for, and the two universal properties (`InOut`'s midpoint, `Out = 1 - In(1-t)`) every function satisfies.
 - **[2D/Primitives2D_Audit_Report.md](2D/Primitives2D_Audit_Report.md)**, **[2D/Overnight_Changes_2026-08-19.md](2D/Overnight_Changes_2026-08-19.md)**, **[3D/Primitive3D_Changes.md](3D/Primitive3D_Changes.md)** — historical session logs. Archaeology only ("why does this bug fix exist") — the five docs above already capture current state. Long; don't load by default.
 
 ## Repo layout
