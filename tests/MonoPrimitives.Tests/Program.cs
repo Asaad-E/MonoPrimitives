@@ -10,7 +10,7 @@ game.Run();
 namespace MonoPrimitives.Tests
 {
     /// <summary>
-    /// Headless test runner: pure-math checks (Collision2D/3D, Noise, ColorUtil) need nothing
+    /// Headless test runner: pure-math checks (Collision2D/3D, Noise, ColorUtil, Easing) need nothing
     /// but this exe, but the shape-generation and lighting-regression checks need a real
     /// GraphicsDevice (BasicEffect, DrawUserPrimitives), which MonoGame only creates inside a
     /// running Game -- so everything runs once in Draw(), then the process exits with 0 (all
@@ -33,6 +33,7 @@ namespace MonoPrimitives.Tests
             Collision3DTests.Run(results);
             NoiseTests.Run(results);
             ColorUtilTests.Run(results);
+            EasingTests.Run(results);
 
             using var batch = new Primitive3DBatch(GraphicsDevice);
             var camera = new Camera3D(position: new Vector3(6, 6, 6), target: Vector3.Zero, up: Vector3.Up, fovy: 50f);
