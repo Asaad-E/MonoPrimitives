@@ -27,6 +27,8 @@ protected override void Update(GameTime gameTime)
 
 Construct one instance, keep it, and call its `Next*` methods every frame — the same lifecycle as [`Noise`](../src/Core/Noise.cs). Use `new RandomUtil(seed)` for a reproducible sequence (debugging, sharing a specific run, deterministic tests), or the parameterless `new RandomUtil()` for a different sequence every run.
 
+Need something this class doesn't wrap (`NextBytes`, `NextDouble`, `NextInt64`, or .NET 8's `Random.Shuffle`)? Drop down to `rng.UnderlyingRandom` — the exact same seeded stream every `Next*` call above advances, not a second, independent one. Constructing your own separate `new Random(seed)` instead would desync from `RandomUtil`'s own sequence the moment either one is called.
+
 ## Method reference
 
 | Method | Returns | What it samples | Typical simulation use |
@@ -43,6 +45,7 @@ Construct one instance, keep it, and call its `Next*` methods every frame — th
 | `NextInsideUnitCircle()` | `Vector2` | Uniform point inside the unit disc, by area (not just by angle) | Scattering spawn positions naturally around a point instead of a hard ring or a center-heavy clump |
 | `NextOnUnitSphere()` | `Vector3` | Uniform point on the unit sphere's surface (length exactly 1) | Random initial 3D direction/orientation |
 | `NextInsideUnitSphere()` | `Vector3` | Uniform point inside the unit ball, by volume | 3D volumetric jitter or scatter (particle puffs, spawn clouds) |
+| `NextWeightedIndex(weights)` | `int` | An index into `weights`, with probability proportional to each entry's own weight. Throws if `weights` is empty, contains a negative value, or sums to `0` | A loot table, a weighted spawn/decision table — `rng.NextWeightedIndex([0.1f, 0.3f, 0.6f])` picks index 2 60% of the time |
 
 **Choosing between `NextUniform`, `NextGaussian`, and `NextExponential`/`NextPoisson`/`NextBinomial` for "randomness in a simulation":** ask what shape the real-world quantity has. No natural center (any value equally likely) → `NextUniform`. A typical value with symmetric variation around it → `NextGaussian`. A count of discrete events at a known rate → `NextPoisson`. A count of successes out of a known number of independent attempts → `NextBinomial`. A waiting time between independent events → `NextExponential`.
 
@@ -58,7 +61,7 @@ The rejection loop accepts roughly 78.5% of the time (the unit disc's area relat
 
 Simulated directly, both Poisson and Binomial cost work proportional to their parameter (`lambda`, or `trials`) — fine for small values, but unbounded for large ones. A pandemic model asking `NextBinomial(2_000_000, 0.00003f)` every tick would be simulating two million individual coin flips per call if done naively.
 
-`RandomUtil` instead switches to a Gaussian approximation once the distribution's variance is large enough for that approximation to hold (the standard textbook threshold), and — for the specific case of a huge trial count paired with a tiny probability, i.e. a rare event repeated across a huge population — falls back to a Poisson approximation instead, since that is the correct classical approximation for exactly that regime. The practical effect: cost stays a small, fixed number of operations no matter how large `lambda` or `trials` gets, and every regime was verified (200,000-sample runs) to match its theoretical mean and variance before being trusted.
+`RandomUtil` instead switches to a Gaussian approximation once the distribution's variance is large enough for that approximation to hold (the standard textbook threshold), and — for the specific case of a huge trial count paired with a tiny probability, i.e. a rare event repeated across a huge population — falls back to a Poisson approximation instead, since that is the correct classical approximation for exactly that regime. The practical effect: cost stays a small, fixed number of operations no matter how large `lambda` or `trials` gets, and every regime is checked against its theoretical mean and variance by a permanent test (200,000-sample runs), not just a one-time check — see "Testing" below.
 
 You never need to know which internal path a given call took — the three regimes exist purely to keep worst-case cost bounded, not to change what you write at the call site.
 
@@ -116,7 +119,7 @@ Parallel.For(0, agentCount, i =>
 
 `RandomUtil.Shared` mirrors every instance method as a static equivalent, built on .NET's own `Random.Shared` (thread-safe internally — each thread gets its own stream automatically) instead of a seeded per-instance stream. There is no seed constructor for `Shared`: once more than one thread can touch it, there is no single reproducible sequence to seed in the first place, so that guarantee was never on the table for this path regardless of how it's implemented.
 
-`Shared.NextGaussian`'s internal spare-value cache (see the Marsaglia polar explanation above) uses a `[ThreadStatic]` field rather than a lock, so each thread keeps its own cache slot with no contention — the same strategy .NET's own `Random.Shared` uses internally. This was verified directly with a 16-thread stress test hammering every method concurrently: zero exceptions, and each thread's own running statistics matched the expected theoretical mean/variance.
+`Shared.NextGaussian`'s internal spare-value cache (see the Marsaglia polar explanation above) uses a `[ThreadStatic]` field rather than a lock, so each thread keeps its own cache slot with no contention — the same strategy .NET's own `Random.Shared` uses internally. A permanent test hammers `Shared` from 16 threads concurrently and confirms zero exceptions — see "Testing" below.
 
 ### Which one to use
 
@@ -127,7 +130,15 @@ Parallel.For(0, agentCount, i =>
 | Setup needed for parallel use | One instance per thread (`ThreadLocal<RandomUtil>`) | None — call directly |
 | Best for | A simulation you want to reproduce, debug, or replay | Fire-and-forget randomness in parallel code where the exact sequence doesn't matter |
 
+## Testing
+
+[`tests/MonoPrimitives.Tests/RandomUtilTests.cs`](../tests/MonoPrimitives.Tests/RandomUtilTests.cs) checks determinism (same seed → same sequence), every distribution's sample mean/variance against its theoretical value over large sample counts (including all three `Poisson`/`Binomial` regimes separately), the circle/sphere sampling's area/volume-uniformity specifically (`E[r²] ≈ 0.5` for the disc, `E[z²] ≈ 1/3` and `E[r³] ≈ 0.5` for the sphere — chosen because a regression back to a naive uniform-radius or uniform-latitude approach would visibly miss these exact numbers), `NextWeightedIndex`'s proportions and error handling, that `UnderlyingRandom` shares `RandomUtil`'s own stream rather than a separate one, and a 16-thread concurrent stress test of `Shared`. Run with:
+
+```bash
+dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
+```
+
 ## See also
 
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the condensed rationale behind these specific algorithm and threshold choices.
+- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the condensed rationale behind these specific algorithm and threshold choices, plus `NextWeightedIndex`/`UnderlyingRandom`'s addition.
 - [`Noise`](../src/Core/Noise.cs) — the other seedable source of randomness in this library, for smooth/coherent (not independent-sample) variation like terrain or organic motion.
