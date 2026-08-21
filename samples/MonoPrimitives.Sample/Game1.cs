@@ -20,9 +20,7 @@ public class Game1 : Game
     private Camera3D _camera3d;
 
 
-    private ViewportAdapter _viweport;
-
-    private RenderTarget2D _target;
+    private ViewportAdapter _viewport;
 
     private OrthographicCamera _camera;
 
@@ -78,8 +76,8 @@ public class Game1 : Game
         _primitive3DBatch.LightDirection = new Vector3(0, -1, 0);
 
 
-        _viweport = new BoxingViewportAdapter(Window, GraphicsDevice, 800, 720);
-        _camera = new OrthographicCamera(_viweport);
+        _viewport = new BoxingViewportAdapter(Window, GraphicsDevice, 800, 720);
+        _camera = new OrthographicCamera(_viewport);
 
         // Shared between both cameras below: same window, same boxed rect either way, so there's
         // no reason for the 2D and 3D galleries to each carry their own adapter instance.
