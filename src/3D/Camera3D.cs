@@ -450,7 +450,16 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>Enables head bobbing in <see cref="CameraMode.FirstPerson"/>.</summary>
         public bool HeadBobbing { get; set; } = true;
 
-        /// <summary>Eye height applied in first person mode, measured from the camera target's Y coordinate.</summary>
+        /// <summary>
+        /// Suggested eye height for <see cref="CameraMode.FirstPerson"/>, in world units above
+        /// ground level — a reference default, not applied automatically. Only the game knows
+        /// ground/terrain height, so <see cref="UpdateWithInput(PrimitiveInput,float)"/>'s
+        /// head-bob only ever nudges the existing <c>Position.Y</c>/<c>Target.Y</c> by a small
+        /// delta; it's on the caller to set <c>Position.Y</c> (and <c>Target.Y</c>) to
+        /// <c>groundY + EyeHeight</c> themselves each frame the way a platformer already tracks
+        /// its own ground contact — an auto-applying version would need to track ground height
+        /// itself, which would make this a physics/collision system rather than a camera.
+        /// </summary>
         public float EyeHeight { get; set; } = FirstPersonEyeHeight;
 
         /// <summary>
