@@ -58,6 +58,29 @@ namespace MonoPrimitives.Tests
                 }
                 return maxDiff < 1e-4f ? null : $"max diff between Sample(t) and Sample(wrap(t)) = {maxDiff:F6}, expected ~0";
             });
+
+            results.Check("SampleRadians/SampleDegrees agree with Sample(t01) and with real trig, including negative angles", () =>
+            {
+                var rand = new Random(2);
+                float maxErrVsTurns = 0f, maxErrVsMath = 0f;
+                for (int i = 0; i < 2000; i++)
+                {
+                    float radians = (float)(rand.NextDouble() * 40.0 - 20.0); // includes negative and >2*PI
+                    float degrees = radians * (180f / MathF.PI);
+
+                    Vector2 viaTurns = UnitCircleLut.Sample(radians / (MathF.PI * 2f));
+                    Vector2 viaRadians = UnitCircleLut.SampleRadians(radians);
+                    Vector2 viaDegrees = UnitCircleLut.SampleDegrees(degrees);
+                    maxErrVsTurns = MathF.Max(maxErrVsTurns, Vector2.Distance(viaTurns, viaRadians));
+                    maxErrVsTurns = MathF.Max(maxErrVsTurns, Vector2.Distance(viaTurns, viaDegrees));
+
+                    double trueCos = Math.Cos(radians), trueSin = Math.Sin(radians);
+                    maxErrVsMath = MathF.Max(maxErrVsMath, (float)Math.Max(Math.Abs(viaRadians.X - trueCos), Math.Abs(viaRadians.Y - trueSin)));
+                }
+                if (maxErrVsTurns > 1e-5f) return $"SampleRadians/SampleDegrees disagree with equivalent Sample(t01) by {maxErrVsTurns:F7}";
+                // Same lattice-spacing error bound as the plain Sample table check above (~1/Resolution^2 scale).
+                return maxErrVsMath < 1e-4f ? null : $"SampleRadians max abs error vs Math.Sin/Cos = {maxErrVsMath:F6}, expected < 1e-4";
+            });
         }
     }
 }
