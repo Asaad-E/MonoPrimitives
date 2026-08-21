@@ -39,3 +39,4 @@ dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 
 - [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the negative-input imprecision found and fixed, including why it wasn't the index bug it first looked like.
 - [`Guide/PrimitiveBatch_Guide.md`](PrimitiveBatch_Guide.md) — everything this table is built to serve.
+- [`Guide/TrigLut_Guide.md`](TrigLut_Guide.md) — the 3D counterpart, `out float` sin/cos pairs instead of `Vector2`.
