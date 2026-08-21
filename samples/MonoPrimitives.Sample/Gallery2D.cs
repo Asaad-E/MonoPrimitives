@@ -217,6 +217,32 @@ internal static class Gallery2D
                 b.FillRectangleShadow(tl, size, 18f, AltFillColor, spread: 22f, rotation: rot);
                 b.FillRectangleRounded(tl, size, 18f, FillColor, rotation: rot);
             }),
+            new("Triangle", (b, p) =>
+            {
+                Vector2 v1 = p + new Vector2(-55, 50), v2 = p + new Vector2(55, 50), v3 = p + new Vector2(0, -55);
+                b.FillTriangleShadow(v1, v2, v3, AltFillColor, spread: 22f);
+                b.FillTriangle(v1, v2, v3, FillColor);
+            }),
+            new("Ellipse", (b, p) =>
+            {
+                b.FillEllipseShadow(p, 70f, 45f, AltFillColor, spread: 22f);
+                b.FillEllipse(p, 70f, 45f, FillColor);
+            }),
+            new("Poly (hexagon)", (b, p) =>
+            {
+                b.FillPolyShadow(p, 6, 55f, AltFillColor, spread: 22f);
+                b.FillPoly(p, 6, 55f, FillColor);
+            }),
+            new("Polygon (L-shape)", (b, p) =>
+            {
+                b.FillPolygonShadow(LShape(p), AltFillColor, spread: 22f);
+                b.FillPolygon(LShape(p), FillColor);
+            }),
+            new("Capsule", (b, p) =>
+            {
+                b.FillCapsuleShadow(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, AltFillColor, spread: 22f);
+                b.FillCapsule(p + new Vector2(-40, 0), p + new Vector2(40, 0), 30f, FillColor);
+            }),
         };
         return cells;
     }
@@ -236,6 +262,10 @@ internal static class Gallery2D
             new("Gradient", (b, p) => b.FillEllipseGradient(p, 70f, 45f, GradientFrom, GradientTo)),
             new("Gradient offset", (b, p) => b.FillEllipseGradient(p, 70f, 45f, GradientFrom2, GradientTo2, innerOffset: 0.2f, outerOffset: 0.2f)),
             new("Draw gradient", (b, p) => b.DrawEllipseGradient(p, 70f, 45f, GradientFrom, GradientTo, BorderColor, 4f)),
+            new("Gradient linear H", (b, p) => b.FillEllipseGradientLinear(p, 70f, 45f, GradientFrom2, GradientTo2, horizontal: true)),
+            new("Gradient linear V", (b, p) => b.FillEllipseGradientLinear(p, 70f, 45f, GradientFrom2, GradientTo2, horizontal: false)),
+            new("Gradient linear rotated", (b, p) => b.FillEllipseGradientLinear(p, 70f, 45f, GradientFrom2, GradientTo2, horizontal: true, rotation: MathHelper.ToRadians(30f))),
+            new("Draw gradient linear", (b, p) => b.DrawEllipseGradientLinear(p, 70f, 45f, GradientFrom2, GradientTo2, BorderColor, horizontal: true, thickness: 4f)),
         };
         return cells;
     }
@@ -295,7 +325,11 @@ internal static class Gallery2D
         foreach (var (suffix, join, radius) in JoinAxis())
             cells.Add(new Cell($"Border {suffix}", (b, p) => b.BorderPoly(p, 6, 60f, BorderColor, 4f, 0f, join, radius)));
 
+        cells.Add(new Cell("Fill rounded r=0", (b, p) => b.FillPolyRounded(p, 6, 60f, 0f, FillColor)));
+        cells.Add(new Cell("Fill rounded r=20", (b, p) => b.FillPolyRounded(p, 6, 60f, 20f, FillColor)));
+        cells.Add(new Cell("Border rounded r=20", (b, p) => b.BorderPolyRounded(p, 6, 60f, 20f, BorderColor, 4f)));
         cells.Add(new Cell("Draw", (b, p) => b.DrawPoly(p, 6, 60f, FillColor, BorderColor, 4f)));
+        cells.Add(new Cell("Draw rounded r=20", (b, p) => b.DrawPolyRounded(p, 6, 60f, 20f, FillColor, BorderColor, 4f)));
         cells.Add(new Cell("Gradient", (b, p) => b.FillPolyGradient(p, 6, 60f, GradientFrom, GradientTo)));
         cells.Add(new Cell("Gradient offset", (b, p) => b.FillPolyGradient(p, 6, 60f, GradientFrom2, GradientTo2, innerOffset: 0.2f, outerOffset: 0.2f)));
         cells.Add(new Cell("Draw gradient", (b, p) => b.DrawPolyGradient(p, 6, 60f, GradientFrom, GradientTo, BorderColor, 4f)));
@@ -347,6 +381,7 @@ internal static class Gallery2D
             b.FillPolygonGradientTopBottom(bottom, top, GradientFrom, GradientTo);
         }));
         cells.Add(new Cell("Draw gradient", (b, p) => b.DrawPolygonGradient(LShape(p), GradientFrom, GradientTo, BorderColor, 4f)));
+        cells.Add(new Cell("Draw gradient rounded r=6", (b, p) => b.DrawPolygonGradientRounded(LShape(p), 6f, GradientFrom2, GradientTo2, BorderColor, 4f)));
 
         // A 5-point star: alternating outer/inner vertices, so no single points[0] choice makes
         // the naive fan-from-points[0] correct (see FillPolygon's ear-clipping fallback in
