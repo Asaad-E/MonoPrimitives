@@ -35,11 +35,16 @@ namespace MonoPrimitives
 
         // Per-button drag/double-click tracking (indexed by MouseButton, 5 values).
         private readonly Vector2?[] _dragStart = new Vector2?[5];
+        private readonly Vector2[] _dragEnd = new Vector2[5]; // valid only once _dragStart[i] is set and the button is currently up
+        private readonly Vector2[] _lastClickPosition = new Vector2[5];
         private readonly float[] _timeSinceLastClick = { float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue };
         private readonly bool[] _doubleClickedThisFrame = new bool[5];
 
         /// <summary>Max seconds between two presses of the same button for <see cref="IsMouseButtonDoubleClicked"/> to report one.</summary>
         public float DoubleClickTime { get; set; } = 0.35f;
+
+        /// <summary>Max pixels between two presses of the same button for <see cref="IsMouseButtonDoubleClicked"/> to report one — without this, two clicks in unrelated corners of the screen within <see cref="DoubleClickTime"/> would still count as a double-click.</summary>
+        public float DoubleClickDistance { get; set; } = 6f;
 
         /// <summary>Refreshes keyboard/mouse/gamepad state for this frame — the usual call from inside your own <c>Game.Update(GameTime gameTime)</c>, so <see cref="IsMouseButtonDoubleClicked"/>'s timing window uses the real elapsed time automatically.</summary>
         public void Update(GameTime gameTime) => Update((float)gameTime.ElapsedGameTime.TotalSeconds);
@@ -74,13 +79,21 @@ namespace MonoPrimitives
 
                 if (down && !wasDown)
                 {
-                    _dragStart[i] = MousePosition;
-                    doubleClicked = _timeSinceLastClick[i] <= DoubleClickTime;
+                    Vector2 pos = MousePosition;
+                    doubleClicked = _timeSinceLastClick[i] <= DoubleClickTime
+                        && Vector2.DistanceSquared(pos, _lastClickPosition[i]) <= DoubleClickDistance * DoubleClickDistance;
                     _timeSinceLastClick[i] = 0f;
+                    _lastClickPosition[i] = pos;
+                    _dragStart[i] = pos; // overwrites whatever the previous drag cycle left behind
                 }
                 else
                 {
-                    if (!down) _dragStart[i] = null;
+                    // Deliberately NOT nulling _dragStart[i] here on release: DragDelta/IsDragging
+                    // need to still report the completed drag's distance on the exact frame
+                    // IsMouseButtonReleased fires (the natural "did I just swipe far enough" check),
+                    // not read as zero because the reset already happened this same frame. It only
+                    // gets overwritten by the next press, above.
+                    if (!down && wasDown) _dragEnd[i] = MousePosition; // capture once, right at release
                     if (_timeSinceLastClick[i] < float.MaxValue) _timeSinceLastClick[i] += deltaSeconds;
                 }
 
@@ -137,22 +150,29 @@ namespace MonoPrimitives
         public bool IsMouseButtonReleased(MouseButton button)
             => GetMouseButtonState(_mouse, button) == ButtonState.Released && GetMouseButtonState(_prevMouse, button) == ButtonState.Pressed;
 
-        /// <summary>True on the frame <paramref name="button"/> is pressed again within <see cref="DoubleClickTime"/> seconds of its previous press.</summary>
+        /// <summary>True on the frame <paramref name="button"/> is pressed again within <see cref="DoubleClickTime"/> seconds AND <see cref="DoubleClickDistance"/> pixels of its previous press.</summary>
         public bool IsMouseButtonDoubleClicked(MouseButton button) => _doubleClickedThisFrame[(int)button];
 
         /// <summary>
-        /// Total movement since <paramref name="button"/> was last pressed, or <see cref="Vector2.Zero"/>
-        /// if it isn't currently held — a drag-to-pan camera or a box-select's live size both just
-        /// need this each frame, no manual "remember where the button went down" bookkeeping.
+        /// Total movement since <paramref name="button"/> was last pressed — live-tracking
+        /// <see cref="MousePosition"/> while still held, or the drag's final distance for the
+        /// rest of the frame it's released on (and after, until the next press starts a new
+        /// drag) — so checking this from inside an <c>if (IsMouseButtonReleased(button))</c>
+        /// block (a swipe/flick gesture, "did I drag far enough to count") sees the real
+        /// distance instead of a stale zero. <see cref="Vector2.Zero"/> if never pressed.
         /// </summary>
         public Vector2 DragDelta(MouseButton button)
         {
-            Vector2? start = _dragStart[(int)button];
-            return start.HasValue ? MousePosition - start.Value : Vector2.Zero;
+            int i = (int)button;
+            Vector2? start = _dragStart[i];
+            if (!start.HasValue) return Vector2.Zero;
+            Vector2 end = IsMouseButtonDown(button) ? MousePosition : _dragEnd[i];
+            return end - start.Value;
         }
 
-        /// <summary>True while <paramref name="button"/> is held AND has moved more than <paramref name="threshold"/> pixels from where it was pressed — lets a click handler and a drag handler share the same button without the click firing on every tiny press-time jitter.</summary>
-        public bool IsDragging(MouseButton button, float threshold = 4f) => DragDelta(button).LengthSquared() > threshold * threshold;
+        /// <summary>True while <paramref name="button"/> is currently held AND has moved more than <paramref name="threshold"/> pixels from where it was pressed — lets a click handler and a drag handler share the same button without the click firing on every tiny press-time jitter. Unlike <see cref="DragDelta"/>, always false once the button is released.</summary>
+        public bool IsDragging(MouseButton button, float threshold = 4f)
+            => IsMouseButtonDown(button) && DragDelta(button).LengthSquared() > threshold * threshold;
 
         /// <summary>Point-in-rectangle test against <see cref="MousePosition"/> — hit-testing a UI panel or button without pulling in a separate UI library.</summary>
         public bool IsMouseOver(Rectangle screenRect) => screenRect.Contains(new Point(_mouse.X, _mouse.Y));
