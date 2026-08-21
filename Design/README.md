@@ -21,6 +21,7 @@ These five are kept short on purpose — current state only, no narrative. Deepe
   - **[Easing_Guide.md](../Guide/Easing_Guide.md)** — `Easing`: all 11 families (including `Quint`/`Circ`), which curve to reach for, and the two universal properties (`InOut`'s midpoint, `Out = 1 - In(1-t)`) every function satisfies.
   - **[UnitCircleLut_Guide.md](../Guide/UnitCircleLut_Guide.md)** — `UnitCircleLut`: the trig-free `Sample(t01)` table `PrimitiveBatch` itself is built on.
   - **[DebugFont5x7_Guide.md](../Guide/DebugFont5x7_Guide.md)** — `DebugFont5x7`/`FontGlyphs5x7`: `DrawString`/`MeasureText`, the row-span convention every glyph follows, and the two glyph bugs found and fixed this session.
+  - **[Collision2D_Guide.md](../Guide/Collision2D_Guide.md)** — `Collision2D`: every overlap/ray check by shape, and which ones need convex input (SAT) vs. work on any simple polygon.
 - **[2D/Primitives2D_Audit_Report.md](2D/Primitives2D_Audit_Report.md)**, **[2D/Overnight_Changes_2026-08-19.md](2D/Overnight_Changes_2026-08-19.md)**, **[3D/Primitive3D_Changes.md](3D/Primitive3D_Changes.md)** — historical session logs. Archaeology only ("why does this bug fix exist") — the five docs above already capture current state. Long; don't load by default.
 
 ## Repo layout
