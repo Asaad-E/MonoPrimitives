@@ -2882,7 +2882,9 @@ namespace MonoPrimitives.Primitives2D
         /// Draws an arbitrary closed polygon's border only, growing inward from its own
         /// edges via <see cref="InsetConvexPolygon"/> — correct for a convex input; a
         /// non-convex (reflex-vertex) input's inward direction isn't guaranteed to resolve
-        /// exactly right at every corner (same documented scope limitation as elsewhere).
+        /// exactly right at every corner. See ROADMAP.md's "Known bugs" section for the exact
+        /// failure mechanism (a centroid-distance tie at some reflex vertices) and what a real
+        /// fix needs to account for — not fixed here, left as a documented limitation.
         /// For <see cref="LineJoin.Round"/>/<see cref="LineJoin.Bevel"/>, strokes the true
         /// vertices directly with an inward-only stroke instead — see
         /// <see cref="BuildRoundedOutlineGeometry"/>'s <c>inwardOnly</c> doc for why
@@ -3098,17 +3100,29 @@ namespace MonoPrimitives.Primitives2D
         /// gradient fill (first point→from, rest→to) and a solid border. The gradient's own
         /// polygon is inset by <paramref name="thickness"/> via <see cref="InsetConvexPolygon"/> —
         /// stops exactly where the border begins, same rule as the other shapes' gradients.
+        /// Gradient colors are always computed from the ORIGINAL <paramref name="points"/>
+        /// (via <see cref="ComputeDistanceGradientColors"/>) and then mapped onto the inset
+        /// geometry by nearest original vertex (<see cref="FillPolygonGradientByNearestVertex"/>),
+        /// never recomputed from the inset points directly — keeps color consistent with the
+        /// un-bordered fill even when <see cref="InsetConvexPolygon"/> itself distorts a concave
+        /// polygon's shape at a reflex vertex (see ROADMAP.md's "Known bugs" section — that
+        /// distortion is a separate, NOT-yet-fixed geometry issue this color fix does not solve;
+        /// confirmed by rendering the L-shape gallery cell, where the fill's shape is still
+        /// visibly wrong at the reflex corner even with this correction in place).
         /// </summary>
         public void DrawPolygonGradient(ReadOnlySpan<Vector2> points, Color from, Color to, Color borderColor, float thickness = 1f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
             ThrowIfNotBegun();
             if (thickness > 0f)
             {
+                Span<Color> vertexColors = points.Length <= MaxStackAllocElements ? stackalloc Color[points.Length] : new Color[points.Length];
+                ComputeDistanceGradientColors(points, from, to, vertexColors);
+
                 if (join == LineJoin.Miter || !jointRadius.HasValue || jointRadius.Value <= 0f)
                 {
                     Span<Vector2> inset = points.Length <= MaxStackAllocElements ? stackalloc Vector2[points.Length] : new Vector2[points.Length];
                     InsetConvexPolygon(points, thickness, inset, closed: true);
-                    FillPolygonGradient(inset, from, to);
+                    FillPolygonGradientByNearestVertex(inset, points, vertexColors);
                 }
                 else
                 {
@@ -3122,7 +3136,7 @@ namespace MonoPrimitives.Primitives2D
                     int count = BuildRoundedCornerBoundary(points, jointRadius.Value, join, thickness, boundary);
                     Span<Vector2> inset = count <= MaxStackAllocElements ? stackalloc Vector2[count] : new Vector2[count];
                     InsetConvexPolygon(boundary[..count], MathF.Min(thickness, jointRadius.Value), inset, closed: true);
-                    FillPolygonGradient(inset, from, to);
+                    FillPolygonGradientByNearestVertex(inset, points, vertexColors);
                 }
                 BorderPolygon(points, borderColor, thickness, join, jointRadius);
             }
