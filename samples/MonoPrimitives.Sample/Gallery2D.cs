@@ -242,6 +242,12 @@ internal static class Gallery2D
                 b.FillTriangleShadow(v1, v2, v3, AltFillColor, spread: 22f);
                 b.FillTriangle(v1, v2, v3, FillColor);
             }),
+            new("Triangle rounded r=20", (b, p) =>
+            {
+                Vector2 v1 = p + new Vector2(-55, 50), v2 = p + new Vector2(55, 50), v3 = p + new Vector2(0, -55);
+                b.FillTriangleShadowRounded(v1, v2, v3, 20f, AltFillColor, spread: 22f);
+                b.FillTriangleRounded(v1, v2, v3, 20f, FillColor);
+            }),
             new("Ellipse", (b, p) =>
             {
                 b.FillEllipseShadow(p, 70f, 45f, AltFillColor, spread: 22f);
@@ -252,10 +258,20 @@ internal static class Gallery2D
                 b.FillPolyShadow(p, 6, 55f, AltFillColor, spread: 22f);
                 b.FillPoly(p, 6, 55f, FillColor);
             }),
+            new("Poly rounded r=20", (b, p) =>
+            {
+                b.FillPolyShadowRounded(p, 6, 55f, 20f, AltFillColor, spread: 22f);
+                b.FillPolyRounded(p, 6, 55f, 20f, FillColor);
+            }),
             new("Polygon (L-shape)", (b, p) =>
             {
                 b.FillPolygonShadow(LShape(p), AltFillColor, spread: 22f);
                 b.FillPolygon(LShape(p), FillColor);
+            }),
+            new("Polygon rounded r=6", (b, p) =>
+            {
+                b.FillPolygonShadowRounded(LShape(p), 6f, AltFillColor, spread: 22f);
+                b.FillPolygonRounded(LShape(p), 6f, FillColor);
             }),
             new("Capsule", (b, p) =>
             {
