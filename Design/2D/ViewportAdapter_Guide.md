@@ -33,8 +33,12 @@ shape) rather than threading it through every call — once stored, `GetTransfor
 ```csharp
 var adapter = new BoxingViewportAdapter2D(GraphicsDevice, virtualWidth: 480, virtualHeight: 270);
 var camera2d = new Camera2D(adapter, target: Vector2.Zero, zoom: 1f);
-// camera2d.Offset now defaults to the adapter's virtual center (240, 135) — override it if you
-// want a different anchor (e.g. Vector2.Zero so Target is the point drawn at the top-left corner).
+// camera2d.Offset now tracks the adapter's virtual center (240, 135) live — for Boxing/Scaling
+// adapters that's fixed forever since their virtual size never changes, but for Default/Window
+// adapters (whose virtual size follows the live window size) it keeps re-centering across a
+// resize. Assign camera2d.Offset directly if you want a different, fixed anchor instead (e.g.
+// Vector2.Zero so Target is the point drawn at the top-left corner) — doing so pins it from then
+// on; camera2d.Reset() un-pins it again.
 
 // once per frame, before drawing — do NOT call adapter.Apply() here: GetTransformMatrix() already
 // folds in adapter.GetScaleMatrix() (scale + offset), so narrowing the device viewport too would
