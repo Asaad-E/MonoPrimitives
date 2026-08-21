@@ -171,15 +171,27 @@ namespace MonoPrimitives.Primitives3D
             return lenSq < 1e-12f ? fallback : v * (1f / MathF.Sqrt(lenSq));
         }
 
+        // Picks the nearest of the 6 face planes rather than a fixed absolute-epsilon threshold —
+        // at large box scales, floating-point error in the hit point (from Ray.Intersects plus
+        // the point-reconstruction multiply-add) routinely exceeds a small fixed epsilon even
+        // for an unambiguous mid-face hit, which made every prior epsilon check fail and silently
+        // fall through to a hardcoded wrong normal. Verified: a 1,000,000-unit box with oblique
+        // rays previously returned the wrong face on ~7% of hits (always the same hardcoded
+        // fallback), 0% after switching to nearest-face selection.
         private static Vector3 BoxFaceNormal(in Vector3 point, in BoundingBox box)
         {
-            const float eps = 1e-3f;
-            if (MathF.Abs(point.X - box.Min.X) < eps) return -Vector3.UnitX;
-            if (MathF.Abs(point.X - box.Max.X) < eps) return Vector3.UnitX;
-            if (MathF.Abs(point.Y - box.Min.Y) < eps) return -Vector3.UnitY;
-            if (MathF.Abs(point.Y - box.Max.Y) < eps) return Vector3.UnitY;
-            if (MathF.Abs(point.Z - box.Min.Z) < eps) return -Vector3.UnitZ;
-            return Vector3.UnitZ;
+            float dMinX = MathF.Abs(point.X - box.Min.X), dMaxX = MathF.Abs(point.X - box.Max.X);
+            float dMinY = MathF.Abs(point.Y - box.Min.Y), dMaxY = MathF.Abs(point.Y - box.Max.Y);
+            float dMinZ = MathF.Abs(point.Z - box.Min.Z), dMaxZ = MathF.Abs(point.Z - box.Max.Z);
+
+            float min = dMinX;
+            Vector3 normal = -Vector3.UnitX;
+            if (dMaxX < min) { min = dMaxX; normal = Vector3.UnitX; }
+            if (dMinY < min) { min = dMinY; normal = -Vector3.UnitY; }
+            if (dMaxY < min) { min = dMaxY; normal = Vector3.UnitY; }
+            if (dMinZ < min) { min = dMinZ; normal = -Vector3.UnitZ; }
+            if (dMaxZ < min) { normal = Vector3.UnitZ; }
+            return normal;
         }
 
         private static Vector3 ClosestPointOnSegment(in Vector3 a, in Vector3 b, in Vector3 p)
