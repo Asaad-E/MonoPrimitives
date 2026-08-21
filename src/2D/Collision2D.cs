@@ -136,7 +136,8 @@ namespace MonoPrimitives.Primitives2D
         // Separating Axis Theorem (SAT) core, which REQUIRES both shapes to be convex to give a
         // correct answer (a rectangle and a triangle always are; an arbitrary "poly" span here is
         // NOT checked for convexity — pass a convex one). CheckCollisionCirclePoly/CircleTriangle
-        // do NOT go through SAT (a circle has no straight edges for it to use) and work correctly
+        // and CheckCollisionCapsulePoly/CapsuleRec/CapsuleTriangle do NOT go through SAT (neither a
+        // circle nor a capsule's rounded ends have straight edges for it to use) and work correctly
         // for ANY simple polygon, convex or not — same generality as CheckCollisionPointPoly above.
         // =====================================================================
 
@@ -218,6 +219,40 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Circle vs triangle overlap (see <see cref="CheckCollisionCirclePoly"/>).</summary>
         public static bool CheckCollisionCircleTriangle(Vector2 center, float radius, Vector2 p1, Vector2 p2, Vector2 p3)
             => CheckCollisionCirclePoly(center, radius, [p1, p2, p3]);
+
+        /// <summary>
+        /// Capsule vs arbitrary (possibly non-convex) polygon overlap — correct for any simple
+        /// polygon, same generality as <see cref="CheckCollisionCirclePoly"/> (not SAT-based, so
+        /// convexity isn't required). True if either capsule endpoint is inside the polygon
+        /// (reusing <see cref="CheckCollisionPointPoly"/>), or the capsule's own axis SEGMENT comes
+        /// within <paramref name="capsuleRadius"/> of any polygon edge (via the same
+        /// closest-point-between-segments distance <see cref="CheckCollisionCapsuleCapsule"/> uses)
+        /// — the second check alone also covers a capsule passing all the way through the polygon,
+        /// since entering a closed shape always crosses one of its edges.
+        /// </summary>
+        public static bool CheckCollisionCapsulePoly(Vector2 capsuleStart, Vector2 capsuleEnd, float capsuleRadius, ReadOnlySpan<Vector2> points)
+        {
+            if (points.Length < 2) return false;
+            if (CheckCollisionPointPoly(capsuleStart, points) || CheckCollisionPointPoly(capsuleEnd, points)) return true;
+
+            int n = points.Length;
+            float radiusSq = capsuleRadius * capsuleRadius;
+            for (int i = 0, j = n - 1; i < n; j = i++)
+                if (SegmentSegmentDistanceSquared(capsuleStart, capsuleEnd, points[j], points[i]) <= radiusSq)
+                    return true;
+            return false;
+        }
+
+        /// <summary>Capsule vs rectangle overlap (see <see cref="CheckCollisionCapsulePoly"/>).</summary>
+        public static bool CheckCollisionCapsuleRec(Vector2 capsuleStart, Vector2 capsuleEnd, float capsuleRadius, Rectangle rec)
+        {
+            Span<Vector2> rectPts = stackalloc Vector2[4] { new(rec.Left, rec.Top), new(rec.Right, rec.Top), new(rec.Right, rec.Bottom), new(rec.Left, rec.Bottom) };
+            return CheckCollisionCapsulePoly(capsuleStart, capsuleEnd, capsuleRadius, rectPts);
+        }
+
+        /// <summary>Capsule vs triangle overlap (see <see cref="CheckCollisionCapsulePoly"/>).</summary>
+        public static bool CheckCollisionCapsuleTriangle(Vector2 capsuleStart, Vector2 capsuleEnd, float capsuleRadius, Vector2 p1, Vector2 p2, Vector2 p3)
+            => CheckCollisionCapsulePoly(capsuleStart, capsuleEnd, capsuleRadius, [p1, p2, p3]);
 
         /// <summary>
         /// Capsule vs capsule overlap — the standard "cheap, robust hitbox" check both shapes
