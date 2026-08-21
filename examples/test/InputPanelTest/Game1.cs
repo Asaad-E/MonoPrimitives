@@ -24,6 +24,11 @@ public class Game1 : Game
     private PrimitiveBatch _batch2d = null!;
     private PrimitiveInput _input = null!;
 
+    // Demo-owned rumble/flash timers -- PrimitiveInput.SetVibration is a raw, stateless
+    // passthrough by design (see its doc comment), so "how long" is always the caller's call.
+    private float _vibrationTimeRemaining;
+    private float _anyButtonFlashTimeRemaining;
+
     private readonly record struct KeySpec(Keys Key, string Label, float Width);
     private static readonly KeySpec[][] KeyboardRows =
     {
@@ -55,6 +60,23 @@ public class Game1 : Game
     protected override void Update(GameTime gameTime)
     {
         _input.Update(gameTime);
+
+        float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+        if (_input.IsButtonPressed(Buttons.A))
+            _vibrationTimeRemaining = 0.25f;
+        if (_vibrationTimeRemaining > 0f)
+        {
+            _vibrationTimeRemaining -= dt;
+            _input.SetVibration(1f, 1f);
+            if (_vibrationTimeRemaining <= 0f) _input.SetVibration(0f, 0f);
+        }
+
+        if (_input.IsAnyButtonPressed())
+            _anyButtonFlashTimeRemaining = 0.3f;
+        if (_anyButtonFlashTimeRemaining > 0f)
+            _anyButtonFlashTimeRemaining -= dt;
+
         base.Update(gameTime);
     }
 
@@ -184,10 +206,15 @@ public class Game1 : Game
         Vector2 rightStick = _input.RightStickDeadzoned();
         _batch2d.DrawString($"Left stick: {leftStick.X:F2}, {leftStick.Y:F2}", origin + new Vector2(0, 50), 1.5f, Palette.Silver);
         _batch2d.DrawString($"Right stick: {rightStick.X:F2}, {rightStick.Y:F2}", origin + new Vector2(0, 70), 1.5f, Palette.Silver);
-        _batch2d.DrawString($"Triggers: L {_input.LeftTrigger():F2}  R {_input.RightTrigger():F2}", origin + new Vector2(0, 90), 1.5f, Palette.Silver);
+        _batch2d.DrawString($"Triggers: L {_input.LeftTriggerDeadzoned():F2}  R {_input.RightTriggerDeadzoned():F2}", origin + new Vector2(0, 90), 1.5f, Palette.Silver);
 
         bool aDown = _input.IsButtonDown(Buttons.A);
         _batch2d.FillCircle(origin + new Vector2(30, 130), 14f, aDown ? Palette.Emerald : Palette.WetAsphalt);
         _batch2d.DrawString("A", origin + new Vector2(24, 122), 1.5f, Color.White);
+        _batch2d.DrawString("(A: 0.25s rumble)", origin + new Vector2(56, 122), 1.2f, Palette.Silver);
+
+        bool anyFlash = _anyButtonFlashTimeRemaining > 0f;
+        _batch2d.DrawString("Any button pressed:", origin + new Vector2(0, 160), 1.5f, Palette.Silver);
+        _batch2d.FillCircle(origin + new Vector2(160, 166), 8f, anyFlash ? Palette.Sunflower : Palette.WetAsphalt);
     }
 }
