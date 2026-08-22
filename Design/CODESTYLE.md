@@ -23,7 +23,7 @@ Follow these rather than re-deriving a convention or introducing an inconsistent
 
 ## Comments and docs
 
-- Never name "raylib" or other design inspirations in doc comments or `Guide/*.md` files. Internal implementation comments may reference an algorithm's origin if useful. **Exception, by explicit request:** the root `README.md`'s "Inspiration" section names raylib/raylib-cs/MonoGame.Extended/Godot/Processing directly and explains what each influenced — that section is deliberate and should stay, don't scrub it to match this rule.
+- Never name "raylib" or other design inspirations in doc comments or `Guide/*.md` files. Internal implementation comments may reference an algorithm's origin if useful. **Exception, by explicit request:** the root `README.md`'s "Inspiration" section names Apos.Shapes/raylib/raylib-cs/MonoGame.Extended/Godot/Processing directly and explains what each influenced — that section is deliberate and should stay, don't scrub it to match this rule.
 - Be concise. Describe behavior, not lineage.
 - Comment the WHY (a non-obvious clamp, a hidden invariant, a workaround), not the WHAT.
 - Don't reference "the fix" or a specific past conversation in code comments — that belongs in a changelog, not in code that outlives the context that produced it.

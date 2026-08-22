@@ -52,7 +52,12 @@ private Camera3D _camera;
 protected override void LoadContent()
 {
     _batch = new Primitive3DBatch(GraphicsDevice);
-    _camera = new Camera3D(position: new Vector3(6, 6, 6), target: Vector3.Zero, up: Vector3.Up, fovy: 50f);
+    _camera = new Camera3D(
+        position: new Vector3(6, 6, 6),
+        target: Vector3.Zero,
+        up: Vector3.Up,
+        fovy: 50f
+        );
 }
 
 protected override void Draw(GameTime gameTime)
@@ -79,12 +84,12 @@ Each class has its own guide — start with whichever one covers what you're tou
 - [`Camera2D_Guide.md`](Guide/Camera2D_Guide.md) — pan/rotate/zoom, bounds, follow, shake, and the `ViewportAdapter2D` family (letterboxing/scaling for resolution independence).
 - [`Camera3D_Guide.md`](Guide/Camera3D_Guide.md) — the 3D counterpart: 5 behaviour modes, free-fly/orbit/first-/third-person controllers.
 
+**Input**
+- [`PrimitiveInput_Guide.md`](Guide/PrimitiveInput_Guide.md) — keyboard/mouse/gamepad polling, vibration, typed text.
+
 **Collision**
 - [`Collision2D_Guide.md`](Guide/Collision2D_Guide.md) — every 2D overlap/ray check by shape.
 - [`Collision3D_Guide.md`](Guide/Collision3D_Guide.md) — sphere/box/capsule/plane/triangle/quad overlap and raycasts.
-
-**Input**
-- [`PrimitiveInput_Guide.md`](Guide/PrimitiveInput_Guide.md) — keyboard/mouse/gamepad polling, vibration, typed text.
 
 **Math & utilities**
 - [`Easing_Guide.md`](Guide/Easing_Guide.md) — 31 tweening curves for one-shot animations with a known duration.
@@ -112,8 +117,8 @@ For the project's own internals (architecture map, conventions, the reasoning be
 
 This library borrows ideas from several places rather than inventing its own conventions from scratch:
 
-- **[raylib](https://www.raylib.com/)** — the biggest influence on the API's shape: `Fill`/`Border`/`Draw` per shape mirrors raylib's own function-per-shape simplicity, `Camera3D`'s movement/rotation math is a direct port of `rcamera.h`, and `Collision3D`'s `GetRayCollision*` naming and result struct follow raylib's own collision module.
-- **[raylib-cs](https://github.com/ChrisDill/Raylib-cs)** — a reference for translating raylib's C-shaped API (output parameters, `Ex`/`V`-suffixed overload families) into idiomatic C#: overloads instead of suffixes, MonoGame's own `Vector2`/`Vector3`/`Color` types instead of reinventing them.
+- **[Apos.Shapes](https://github.com/Apostolique/Apos.Shapes)** and **[raylib](https://www.raylib.com/)** — the two biggest influences, each drawn on more than the rest. `Fill`/`Border`/`Draw` per shape — the core naming convention the whole drawing API is built on — comes from Apos.Shapes, which uses that exact three-verb split (`FillCircle`/`BorderCircle`/`DrawCircle`, and so on for every shape it has). raylib's contribution is different: `Camera3D`'s movement/rotation math is a direct port of `rcamera.h`, and `Collision3D`'s `GetRayCollision*` naming and result struct follow raylib's own collision module.
+- **[raylib-cs](https://github.com/raylib-cs/raylib-cs)** — its C# bindings keep raylib's own function names as-is (`DrawCircleV`, `DrawRectangleV`) but swap raylib's custom math types for .NET's own `System.Numerics.Vector2`/`Vector3` — the same instinct behind this library using MonoGame's own `Vector2`/`Vector3`/`Color` rather than defining its own.
 - **[MonoGame.Extended](https://github.com/craftworkgames/MonoGame.Extended)** — `Camera2D`/`ViewportAdapter2D`'s design (letterbox/scaling viewport adapters composed with a camera) follows its `OrthographicCamera`/`ViewportAdapter` shape.
 - **[Godot](https://godotengine.org/)** — several individual methods are confirmed against Godot's own equivalents where raylib has no answer: `PrimitiveInput.GetAxis`'s tie-to-zero behavior matches `Input.get_axis`, `DebugFont5x7`'s cylindrical text billboarding matches `Label3D`'s default billboard mode, `RandomUtil.NextWeightedIndex` matches `RandomNumberGenerator.rand_weighted_pick`.
 - **[Processing](https://processing.org/) / [p5.js](https://p5js.org/)** — the underlying philosophy: draw a shape with one call, no setup ceremony, fast enough to iterate on an idea in a sketch rather than a project. `Noise`'s API shape (seedable, sample-anywhere) is the same idea as Processing's own `noise()`.
