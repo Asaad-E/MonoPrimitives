@@ -22,6 +22,8 @@ batch.End();
 | `MeasureText(text, pixelSize, glyphSpacing, lineSpacing)` | Total `(Width, Height)` the text would occupy — for centering/layout before drawing. |
 | `SpaceWidthScale` (static, default `0.3f`) | How wide a space character is, as a fraction of a normal glyph's width. Set once to change spacing globally — shared with the 3D renderer. |
 | `GlyphWidth` / `GlyphHeight` (constants, `5`/`7`) | The font's cell size in pixels, before `pixelSize` scaling. |
+| `FontGlyphs5x7.GetGlyph(char)` | The raw 7-row bitmap (`byte[]`) for a character, or a hollow-box fallback glyph if it has none — for building your own custom renderer on top of the same glyph data instead of `DrawString`. |
+| `FontGlyphs5x7.AdvanceFor(char, pixelSize, glyphSpacing)` | The horizontal advance (already scaled by `pixelSize`) one character takes up — what `DrawString`/`DrawString3D` use internally to move the cursor; useful for your own custom layout (e.g. computing where a specific character in a string will land). |
 
 A character with no assigned glyph draws as a hollow box instead of silently vanishing — you'll always notice a missing character rather than lose it in blank space.
 
@@ -53,16 +55,9 @@ A full spherical billboard (tilting with camera pitch, not just yaw) was deliber
 - **No true descenders.** `g`, `j`, `p`, `q`, `y` are compressed to fit the same 7-row cell as every other glyph, rather than hanging below the baseline the way real typography does.
 - **A strict x-height convention every non-ascender lowercase letter follows exactly**: rows 0-1 are always blank, the glyph body occupies rows 2-6 (5 rows). Ascenders (`b d f h k l t`) use the full 0-6 range instead. `i`/`j` are a dot at row 0, a blank row 1, then a rows-2-6 body — the same baseline as everything else, just with a floating dot on top. This convention is why every letter reads as sitting on the same baseline; a letter that quietly breaks it (one row too tall, or starting one row too high) reads as visually "off" even though nothing else about its shape is wrong — which is exactly what happened to `a`/`e`/`g`/`u` (see below).
 
-## Bugs found and fixed this session
-
-Both were found by rendering the alphabet at real reading size and looking closely, not by reading the bitmap literals — a 6-row-tall letter or a one-column notch doesn't jump out of a `0b01110` the way it does on screen.
-
-- **`a`/`e`/`g`/`u` (and accented `á`/`é`) were one row taller than every other x-height letter.** Each had a single literally-duplicated row in its own bitmap (e.g. `u` repeated its side-row four times instead of three) — almost certainly a copy-paste slip when those glyphs were first authored. Fixed by dropping the duplicate row, the same "compress by one row" technique already used correctly elsewhere in this font (the accented uppercase letters).
-- **Lowercase `h`'s crossbar stopped one column short of its right leg** (`0b11110` instead of `0b11111`), so the leg only touched the arch diagonally at a corner instead of sharing an edge — read as a floating, disconnected leg. Fixed by widening the crossbar to full width. `n` (and `ñ`, which reuses `n`'s body) has the same underlying pattern and was deliberately left as-is — not reported, and changing it wasn't confirmed.
-
 ## Testing
 
-[`tests/MonoPrimitives.Tests/FontGlyphs5x7Tests.cs`](../tests/MonoPrimitives.Tests/FontGlyphs5x7Tests.cs) locks in the row-span convention above as a permanent check per letter class (x-height, ascender, dotted, uppercase/digit), plus the `h` crossbar fix, the fallback hollow-box glyph, `AdvanceFor`'s scaling, and `MeasureText`'s multi-line behavior — this is exactly the check that would have caught the `a`/`e`/`g`/`u` bug immediately, instead of needing an actual rendered screenshot to notice. [`tests/MonoPrimitives.Tests/DebugFont3DTests.cs`](../tests/MonoPrimitives.Tests/DebugFont3DTests.cs) covers 3D's own surface: `GetBillboardAxes`'s orthonormality and exact match against the camera's rendered view-space X/Y axes from several camera positions, the straight-up/down pole fallback, `DrawString3D` emitting geometry only for non-space glyphs (and exactly double for a doubled glyph), `MeasureText3D` agreeing with `FontGlyphs5x7.MeasureText`, and the not-begun/null/empty/zero-size no-op paths. Run with:
+[`tests/MonoPrimitives.Tests/FontGlyphs5x7Tests.cs`](../tests/MonoPrimitives.Tests/FontGlyphs5x7Tests.cs) locks in the row-span convention above as a permanent check per letter class (x-height, ascender, dotted, uppercase/digit), plus the fallback hollow-box glyph, `AdvanceFor`'s scaling, and `MeasureText`'s multi-line behavior. [`tests/MonoPrimitives.Tests/DebugFont3DTests.cs`](../tests/MonoPrimitives.Tests/DebugFont3DTests.cs) covers 3D's own surface: `GetBillboardAxes`'s orthonormality and match against the camera's own view-space axes, the straight-up/down pole fallback, `DrawString3D` emitting geometry only for non-space glyphs, `MeasureText3D` agreeing with `FontGlyphs5x7.MeasureText`, and the not-begun/null/empty/zero-size no-op paths. Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj

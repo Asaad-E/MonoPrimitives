@@ -71,7 +71,7 @@ This is the one genuinely non-obvious behavior in the whole class. When a camera
 
 Assigning `Offset` directly — even to the value it already holds — **pins** it from that point on, exactly like a plain field: `camera.Offset = Vector2.Zero;` (so `Target` draws at the top-left corner instead of centered) stays exactly `(0,0)` forever after, through any number of resizes. `camera.Reset()` un-pins it again, restoring the construction-time behavior (which, for the adapter constructor, *was* live-tracking).
 
-This deliberately goes one step further than MonoGame.Extended's own `OrthographicCamera.Origin`, which is a plain construction-time snapshot for the camera's entire lifetime (confirmed directly against its source) — Extended's actual reactive mechanism (`GameWindow.ClientSizeChanged`) exists to keep `GraphicsDevice.Viewport` itself in sync instead, a different problem this library already solves differently (see the adapter section below). Making `Offset` live is simply the same "recompute live, no cache to invalidate" philosophy this library's adapters already use for `Scale`/`Offset`, applied consistently to the camera too.
+This goes one step further than MonoGame.Extended's own `OrthographicCamera.Origin`, which is a plain construction-time snapshot for the camera's entire lifetime — Extended's actual reactive mechanism (`GameWindow.ClientSizeChanged`) exists to keep `GraphicsDevice.Viewport` itself in sync instead, a different problem this library already solves differently (see the adapter section below). Making `Offset` live is simply the same "recompute live, no cache to invalidate" philosophy this library's adapters already use for `Scale`/`Offset`, applied consistently to the camera too.
 
 ## Bounds, padding, and clamping
 
@@ -93,6 +93,8 @@ camera.FollowTarget(player.Position, deltaSeconds);
 ```
 
 Eases `Target` toward `desiredTarget` via critically-damped spring smoothing (`SmoothDamp`, the same algorithm as Unity's `Mathf.SmoothDamp` — no overshoot across varying frame rates) instead of snapping. Within `FollowPadding` world units of the goal, the camera holds still — a deadzone, not constant low-amplitude jitter. `ResetFollowVelocity()` clears the internal smoothing velocity; call it after teleporting the camera or its subject to avoid a lingering swoop.
+
+`Camera2D.SmoothDamp(float current, float target, ref float velocity, float smoothTime, float deltaTime)` and its `Vector2` overload are public static methods — reach for them directly on any float/`Vector2` value you want to ease the same way (a health bar filling in, a UI panel sliding into place), not just for the camera's own `Target`/`Zoom`.
 
 ## Smooth zoom
 
@@ -227,4 +229,4 @@ protected override void Draw(GameTime gameTime)
 - [`Guide/PrimitiveInput_Guide.md`](PrimitiveInput_Guide.md) — the `PrimitiveInput` instance `UpdateWithInput` reads from.
 - [`Guide/Easing_Guide.md`](Easing_Guide.md) — fixed-duration tweens, for when `SmoothDamp`'s open-ended spring isn't the right shape.
 - [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the mouse-drag rotation fix, `Reset()` parity with `Camera3D`, the `Offset` live-tracking decision (including the direct comparison against MonoGame.Extended's actual `OrthographicCamera` source), and `BoundingRectangle`'s rounding fix.
-- `examples/test/ViewportTest` — every adapter mode, 2D and 3D, verified via round-trip `ScreenToWorld(WorldToScreen(x))` checks and a rendered-marker-position check; the best place to see all of the above running side by side.
+- `examples/test/ViewportTest` — every adapter mode, 2D and 3D, side by side.

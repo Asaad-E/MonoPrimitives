@@ -23,7 +23,7 @@ protected override void Update(GameTime gameTime)
 }
 ```
 
-Call `Update` exactly once per frame, before reading anything else — every `Is*Down`/`Is*Pressed`/`Is*Released` query compares this frame's polled state against the previous frame's, so `Update` is what actually advances "previous."
+Call `Update` exactly once per frame, before reading anything else — every `Is*Down`/`Is*Pressed`/`Is*Released` query compares this frame's polled state against the previous frame's, so `Update` is what actually advances "previous." `Update(float deltaSeconds = 0f)` is the same call taking raw seconds instead of a `GameTime` — `deltaSeconds` only matters for `IsMouseButtonDoubleClicked`'s timing window, so `0f` (the default) is fine if you don't use that.
 
 ## Keyboard
 
@@ -67,6 +67,13 @@ Call `Update` exactly once per frame, before reading anything else — every `Is
 
 **`SetVibration` is a raw, stateless passthrough — there's no `duration` parameter.** Call `SetVibration(0, 0, player)` to stop. Deciding *how long* to rumble (a fixed pulse, decaying with impact distance, etc.) is a per-game decision, the same reasoning that keeps every other "system" out of this library — see `examples/test/InputPanelTest`, which owns its own short rumble timer around the raw call.
 
+## Composite helpers
+
+| Method | What it does |
+|---|---|
+| `GetAxis(negative, positive)` | `-1`/`0`/`+1` from two keys — `-1` if only `negative` is held, `+1` if only `positive`, `0` if neither or both (a tie cancels to `0`, it doesn't pick a winner). The one-axis version of `GetVector2`, for something like a single-axis slider or a 1D character (a side-scroller's left/right). |
+| `GetVector2(negativeX, positiveX, negativeY, positiveY, normalize = true)` | A 2D movement vector from four keys (e.g. `A`/`D`/`W`/`S` or arrow keys) — each axis computed the same way as `GetAxis`. `normalize: true` (default) keeps diagonal movement the same speed as axis-aligned movement; `false` gives the raw, un-normalized per-axis `[-1,1]` pair instead. This is what `Camera2D`/`Camera3D`'s own `UpdateWithInput` use for WASD movement. |
+
 ## Typed text (`GetCharPressed`)
 
 Everything above is `Keys`/`Buttons` **polling** — and polling fundamentally cannot produce correct typed text. `Keys` is physical key identity, not the character a keyboard layout/shift/dead-key combination actually produces (`Keys.Q` is `'A'` on AZERTY; this library's own `DebugFont5x7` supports Spanish accents like `'á'`, which are typically composed from a dead-key sequence only the OS can resolve), and OS key-repeat timing can't be reconstructed by guessing at settings the OS already knows. Even raylib's own `GetCharPressed` — despite its "call it in a loop" polling *feel* — is backed by a real OS/GLFW character-composition event under the hood, not raw key-state polling.
@@ -93,7 +100,7 @@ if (_input.IsKeyPressed(Keys.Back) && typedText.Length > 0)
 
 Two things worth knowing before you go looking for them:
 
-- **A true "relative/captured" mouse mode** (like love2d's `setRelativeMode`, Godot's `MOUSE_MODE_CAPTURED`, Unity's `Cursor.lockState`) — MonoGame's own `Mouse` class doesn't expose this at all (checked: it only has `GetState`/`SetPosition`/`SetCursor`/`WindowHandle`). The manual re-center-every-frame trick `SetMousePosition`/`ResetMouseDelta` already support is the actual ceiling here, not a missing convenience wrapper — there's no lower-level toggle in MonoGame's public API to wrap.
+- **A true "relative/captured" mouse mode** (like love2d's `setRelativeMode`, Godot's `MOUSE_MODE_CAPTURED`, Unity's `Cursor.lockState`) — MonoGame's own `Mouse` class doesn't expose this at all (it only has `GetState`/`SetPosition`/`SetCursor`/`WindowHandle`). The manual re-center-every-frame trick `SetMousePosition`/`ResetMouseDelta` already support is the actual ceiling here, not a missing convenience wrapper — there's no lower-level toggle in MonoGame's public API to wrap.
 - **Correct typed text from key polling alone** — see `GetCharPressed` above; this needs the `GameWindow` constructor, there's no way around it.
 
 Deliberately **not** in scope, regardless of what other engines offer: an input *action*/binding-map system (Unity's Input System package, Godot's named actions). This library hands you the poll, not a rebindable-action layer on top of it — building that yourself with `GetAxis`/`GetVector2` as the last mile is the point of reaching for a toolkit instead of a framework.

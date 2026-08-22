@@ -1,6 +1,6 @@
 # Easing — Guide
 
-`Easing` (namespace `MonoPrimitives`, file [`src/Core/Easing.cs`](../src/Core/Easing.cs)) is a static class of classic 0→1 tweening curves for one-shot animations with a known duration — a menu sliding in, an object scaling up, a color fading out. Every formula is a direct match of the canonical easings.net/Penner reference set, verified term-by-term.
+`Easing` (namespace `MonoPrimitives`, file [`src/Core/Easing.cs`](../src/Core/Easing.cs)) is a static class of classic 0→1 tweening curves for one-shot animations with a known duration — a menu sliding in, an object scaling up, a color fading out. Every formula matches the canonical easings.net/Penner reference set.
 
 ## Quick start
 
@@ -47,7 +47,7 @@ Every function takes `t` in `[0,1]` and returns a (usually, see below) `[0,1]`-i
 
 ## Two properties worth knowing (both are permanent regression tests, not just claims)
 
-- **Every `InOut` variant passes through exactly `f(0.5) = 0.5`.** The `In` and `Out` halves are constructed to meet exactly at the midpoint — true even for `Back`/`Bounce`/`Elastic`'s `InOut` variants, verified algebraically before being trusted as a test.
+- **Every `InOut` variant passes through exactly `f(0.5) = 0.5`.** The `In` and `Out` halves are constructed to meet exactly at the midpoint — true even for `Back`/`Bounce`/`Elastic`'s `InOut` variants.
 - **Every family's `Out` is `1 - In(1 - t)`.** This is how an ease-out is always derived from its ease-in — reverse time, flip the result. True universally, even though only `BounceIn` is literally implemented that way in the source (`BounceIn(t) => 1 - BounceOut(1 - t)`); the rest just happen to satisfy the same identity by construction.
 
 ## Testing

@@ -61,7 +61,7 @@ The rejection loop accepts roughly 78.5% of the time (the unit disc's area relat
 
 Simulated directly, both Poisson and Binomial cost work proportional to their parameter (`lambda`, or `trials`) — fine for small values, but unbounded for large ones. A pandemic model asking `NextBinomial(2_000_000, 0.00003f)` every tick would be simulating two million individual coin flips per call if done naively.
 
-`RandomUtil` instead switches to a Gaussian approximation once the distribution's variance is large enough for that approximation to hold (the standard textbook threshold), and — for the specific case of a huge trial count paired with a tiny probability, i.e. a rare event repeated across a huge population — falls back to a Poisson approximation instead, since that is the correct classical approximation for exactly that regime. The practical effect: cost stays a small, fixed number of operations no matter how large `lambda` or `trials` gets, and every regime is checked against its theoretical mean and variance by a permanent test (200,000-sample runs), not just a one-time check — see "Testing" below.
+`RandomUtil` instead switches to a Gaussian approximation once the distribution's variance is large enough for that approximation to hold (the standard textbook threshold), and — for the specific case of a huge trial count paired with a tiny probability, i.e. a rare event repeated across a huge population — falls back to a Poisson approximation instead, since that is the correct classical approximation for exactly that regime. The practical effect: cost stays a small, fixed number of operations no matter how large `lambda` or `trials` gets.
 
 You never need to know which internal path a given call took — the three regimes exist purely to keep worst-case cost bounded, not to change what you write at the call site.
 
@@ -119,7 +119,7 @@ Parallel.For(0, agentCount, i =>
 
 `RandomUtil.Shared` mirrors every instance method as a static equivalent, built on .NET's own `Random.Shared` (thread-safe internally — each thread gets its own stream automatically) instead of a seeded per-instance stream. There is no seed constructor for `Shared`: once more than one thread can touch it, there is no single reproducible sequence to seed in the first place, so that guarantee was never on the table for this path regardless of how it's implemented.
 
-`Shared.NextGaussian`'s internal spare-value cache (see the Marsaglia polar explanation above) uses a `[ThreadStatic]` field rather than a lock, so each thread keeps its own cache slot with no contention — the same strategy .NET's own `Random.Shared` uses internally. A permanent test hammers `Shared` from 16 threads concurrently and confirms zero exceptions — see "Testing" below.
+`Shared.NextGaussian`'s internal spare-value cache (see the Marsaglia polar explanation above) uses a `[ThreadStatic]` field rather than a lock, so each thread keeps its own cache slot with no contention — the same strategy .NET's own `Random.Shared` uses internally.
 
 ### Which one to use
 

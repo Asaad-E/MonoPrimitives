@@ -23,7 +23,7 @@ if (hit.Hit)
 
 ## `RayCollision3D`
 
-Every raycast in this class returns this struct instead of MonoGame's own mix of `bool`/`float?` returns:
+Every raycast in this class returns this struct instead of MonoGame's own mix of `bool`/`float?` returns. You normally only ever receive one back from a raycast method — the public `RayCollision3D(bool hit, float distance, Vector3 point, Vector3 normal)` constructor exists mainly for building your own `default`-like "no hit" or synthetic result if you're writing code that mixes hits from several sources.
 
 | Field | What it holds |
 |---|---|

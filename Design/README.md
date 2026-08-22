@@ -16,7 +16,7 @@ These five are kept short on purpose — current state only, no narrative. Deepe
   - **[Primitive3DBatch_Guide.md](../Guide/Primitive3DBatch_Guide.md)** — `Primitive3DBatch`: every 3D shape grouped by family, opt-in flat-shading lighting, the now-complete spline family, and the confirmed raylib `rmodels.h` superset comparison.
   - **[Camera2D_Guide.md](../Guide/Camera2D_Guide.md)** — `Camera2D` (pan/rotate/zoom, bounds, follow, shake, input controller) and the 4 `ViewportAdapter2D` types, when to use each, and how 2D/3D scenes share one for letterbox-aware projection.
   - **[Camera3D_Guide.md](../Guide/Camera3D_Guide.md)** — `Camera3D`: `rcamera.h`-parity basis/movement/rotation, the 5 `CameraMode`s and `UpdateWithInput`'s bindings, and the bounds/follow/zoom/shake surface shared with `Camera2D`.
-  - **[Trail2D_Guide.md](../Guide/Trail2D_Guide.md)** — `Trail2D`: the ring-buffer API and its per-segment fade cost/tradeoff.
+  - **[Trail2D_Guide.md](../Guide/Trail2D_Guide.md)** — `Trail2D`/`Trail3D`: the ring-buffer API and its per-segment fade cost/tradeoff.
   - **[PrimitiveInput_Guide.md](../Guide/PrimitiveInput_Guide.md)** — `PrimitiveInput`: keyboard/mouse/gamepad polling, vibration, `GetCharPressed`'s `GameWindow` requirement, and what it deliberately can't/won't do.
   - **[Color_Guide.md](../Guide/Color_Guide.md)** — `Palette` (curated colors, `Cycle`, `GradientPairs`) and `ColorUtil` (hex/HSV conversions, adjustments, blend modes) together, plus what's deliberately not there.
   - **[Noise_Guide.md](../Guide/Noise_Guide.md)** — `Noise`: `Sample1D`/`2D`/`3D`, the `Fbm`/`RidgeNoise`/`Turbulence` families and their shared `Octaves`/`Lacunarity`/`Gain` properties, why `Sample1D` is special, and what's deliberately not there.

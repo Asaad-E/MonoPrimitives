@@ -32,11 +32,14 @@ Construct one `Primitive3DBatch` per `GraphicsDevice` and keep it — its intern
 
 | Method | What it does |
 |---|---|
+| `Primitive3DBatch(graphicsDevice, maxVertices = DefaultMaxVertices)` | Constructor. `maxVertices` is the vertex capacity before an automatic mid-batch flush — `DefaultMaxVertices` (`49152`) is generous for typical scenes; raise it if you're submitting many large meshes (heightmaps, many spheres) per frame and want fewer draw calls. |
 | `Begin(camera, blendState, depthStencilState, rasterizerState, transform)` | Starts a batch using a `Camera3D` — applies its `ViewportAdapter` automatically if it has one. |
 | `Begin(view, projection, ...)` | Starts a batch with explicit matrices, for interop with your own camera representation. |
 | `End()` | Submits any buffered geometry and restores device state. |
 | `Flush()` / `FlushLine()` | Submits buffered triangle/line geometry immediately without ending the batch. |
 | `Dispose()` | Releases the internal effect. |
+| `PendingVertices` / `Capacity` | Vertices currently buffered and not yet flushed / total vertex capacity before an automatic flush. |
+| `DrawCalls` / `TrianglesSubmitted` / `LinesSubmitted` | Reset on every `Begin` — running totals since then, for profiling how many draw calls or how much geometry a frame actually costs. |
 
 ## Core conventions
 
@@ -54,10 +57,10 @@ Construct one `Primitive3DBatch` per `GraphicsDevice` and keep it — its intern
 |---|---|
 | `DrawLine3D(start, end, color)` / `(start, end, thickness, color)` | A camera-facing quad, so it reads as a real 3D line with thickness from any angle. `thickness` is in pixels when `SmoothLines` (default `true`) is on, world units otherwise. |
 | `DrawLine3DFast(start, end, color)` | A raw GPU line-list segment — always 1px, no camera facing, the cheapest option for large numbers of lines. |
-| `DrawLineStrip3D(points, color)` | A connected polyline through any number of points. |
+| `DrawLineStrip3D(points, color)` | A connected polyline through any number of points. Each segment is its own independent camera-facing quad, so at non-trivial thickness a sharp bend can show a visible gap or overlap — fine for thin-to-moderate lines, not a shape to rely on for a thick, sharp-cornered ribbon (see [`Design/ROADMAP.md`](../Design/ROADMAP.md)). |
 | `DrawLine3DDashed(start, end, dashLength, gapLength, color)` / `(..., thickness, color)` | A dashed line. |
-| `DrawPoint3D(position, color)` / `(position, size, color)` | A point drawn as a short line along local X. |
-| `DrawPoint3DCross(position, color)` / `(position, size, color)` | A point drawn as a 3-axis cross — more readable when the camera angle is unknown. |
+| `DrawPoint3D(position, color)` / `(position, size, color)` | A point drawn as a short line along local X. `size` defaults to `DefaultPointSize`. |
+| `DrawPoint3DCross(position, color)` / `(position, size, color)` | A point drawn as a 3-axis cross — more readable when the camera angle is unknown. `size` defaults to `DefaultPointSize`. |
 | `DrawRay(ray, color)` / `DrawRay(ray, length, color)` | A ray drawn as a line; defaults to a length of 1000 units. |
 | `DrawArrow(start, end, color)` | Shaft + cone head, sized automatically from length and `DefaultLineThickness`. |
 | `DrawArrow(start, end, thickness, color, headLength?, headRadius?, sides = 12)` | Same, with full control over shaft thickness and head size. |
@@ -134,8 +137,8 @@ A donut shape, lying flat on XZ (hole facing `+Y`) unless `rotation` tilts it. `
 | `FillPlane(centerPos, size, color)` | A filled plane on the XZ axes. |
 | `FillPlane(centerPos, size, normal, color)` | Tilted so its face normal is `normal`; the in-plane twist is arbitrary. |
 | `FillPlane(centerPos, size, rotation, color)` | Fully explicit orientation (tilt and twist) via a `Quaternion`. |
-| `BorderPlane(...)` (all three forms, `+ thickness`) | The plane's 4 edges only. |
-| `DrawPlane(...)` (all three forms, `+ fillColor, borderColor, thickness`) | Fill + border. |
+| `BorderPlane(centerPos, size, color, thickness)` / `(centerPos, size, rotation, color, thickness)` | The plane's 4 edges only — the default-XZ and `Quaternion` forms (no separate `normal` overload). |
+| `DrawPlane(centerPos, size, fillColor, borderColor, thickness)` / `(centerPos, size, rotation, fillColor, borderColor, thickness)` | Fill + border, same two forms. |
 
 ## Lighting (flat shading, opt-in)
 
@@ -175,7 +178,7 @@ Same four spline types as 2D (see [`PrimitiveBatch_Guide.md`](PrimitiveBatch_Gui
 
 ## Segment counts: chosen for you, overridable
 
-Only `Sphere` has a no-tessellation-arguments overload; `Cylinder`/`Capsule`/`Torus` always take their segment counts explicitly. Pass `-1` for any of them to get automatic level-of-detail instead of hand-picking a number.
+Only `Sphere` has a no-tessellation-arguments overload; `Cylinder`/`Capsule`/`Torus` always take their segment counts explicitly. Pass `-1` for any of them to get automatic level-of-detail instead of hand-picking a number — `ResolveSegments(requested, radius, [center,] fallback)` is the public method behind that choice (distance-to-camera and radius in, a segment count out, clamped to `[AutoSegmentsMin, AutoSegmentsMax]` = `[8, 96]`), exposed in case you want the same auto-LOD sizing for your own curved geometry.
 
 ## Testing
 

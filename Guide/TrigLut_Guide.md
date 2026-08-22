@@ -26,6 +26,7 @@ for (int i = 1; i <= segments; i++)
 | Member | What it does |
 |---|---|
 | `Resolution` | `1024` — the number of samples covering a full turn. |
+| `Mask` | `Resolution - 1` — the bitmask `SinIndex`/`CosIndex` wrap indices with; exposed in case you're building your own wraparound indexing on top of the same table. |
 | `SinIndex(index)` / `CosIndex(index)` | Raw table lookup at a table index (`index * 2*PI/Resolution` radians) — exact, no interpolation. `index` wraps (including negative/out-of-range) via a bitmask, no modulo needed. |
 | `SinCosStep(step, steps, out sin, out cos)` | Sine/cosine for step `step` out of `steps` equal divisions of a full circle — the ring/slice-building entry point every curved 3D shape uses. Exact table hit when `steps` divides `Resolution` evenly; linearly interpolates between the two nearest entries otherwise. |
 | `Sample(t01, out sin, out cos)` | Sine/cosine at a normalized angle `t01` in turns (`0`=`(0,1)` sin/cos order, `0.25`=`(1,0)`, ...) — the continuous counterpart to `SinCosStep`, for an angle that isn't naturally a division of a circle (an animated phase held as its own float). The 3D equivalent of `UnitCircleLut.Sample(t01)`. |

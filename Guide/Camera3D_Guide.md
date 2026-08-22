@@ -32,6 +32,19 @@ protected override void Draw(GameTime gameTime)
 
 `Position`/`Target`/`Up` are plain public fields — set them directly for a hand-driven camera (a fixed cutscene angle, a custom rig); nothing stops you from ignoring `Mode`/`UpdateWithInput` entirely and only using `GetViewMatrix()`/`GetProjectionMatrix()`.
 
+## Constructing a camera
+
+```csharp
+var camera = new Camera3D(position, target, up, fovy: 45f, projection: CameraProjection.Perspective,
+                           nearPlane: Camera3D.DefaultNear, farPlane: Camera3D.DefaultFar);
+
+// With a ViewportAdapter2D, the same way Camera2D takes one -- WorldToScreen/ScreenToWorld/
+// GetScreenToWorldRay and Primitive3DBatch.Begin(camera) all resolve it automatically.
+var camera = new Camera3D(adapter, position, target, up, fovy: 45f);
+```
+
+`CameraProjection` is `Perspective` (the default — `fovy` is a vertical field of view in degrees) or `Orthographic` (`fovy` is instead the vertical world height). `DefaultNear`/`DefaultFar` name the near/far clip plane defaults. `Camera3D.CreateDefault()` gives a camera positioned at `(10,10,10)` looking at the origin — a placeholder to construct with before a real position/target is known.
+
 ## Basis vectors and matrices
 
 | Member | What it does |
@@ -75,14 +88,16 @@ camera.UpdateWithInput(primitiveInput, deltaSeconds);
 | Mouse wheel | `SmoothZoom`'d by `MouseWheelZoomSensitivity` (`Free`/`ThirdPerson`/`Orbital`). |
 | `R` | Calls `Reset()` and skips movement for that frame. |
 
-`Custom` mode does nothing (you drive the camera entirely yourself); `Orbital` auto-rotates around `Target` at `OrbitalSpeed` radians/second; `FirstPerson` adds head-bobbing (`HeadBobbing`, `EyeHeight` as a suggested reference height — only the game knows ground height, so bobbing only ever nudges the existing `Position.Y`/`Target.Y`, it never sets them); `ThirdPerson` orbits `Position` around `Target` on look input. `MoveSpeed`/`RotationSpeed`/`MouseMoveSensitivity`/`MouseWheelZoomSensitivity`/`OrbitalSpeed` are editable properties (`Default*` constants name their defaults).
+`Custom` mode does nothing (you drive the camera entirely yourself); `Orbital` auto-rotates around `Target` at `OrbitalSpeed` radians/second; `FirstPerson` adds head-bobbing (`HeadBobbing`, `EyeHeight` as a suggested reference height — only the game knows ground height, so bobbing only ever nudges the existing `Position.Y`/`Target.Y`, it never sets them; `ResetHeadBobbing()` resets its phase, useful when respawning the player); `ThirdPerson` orbits `Position` around `Target` on look input. `MoveSpeed`/`RotationSpeed`/`MouseMoveSensitivity`/`MouseWheelZoomSensitivity`/`OrbitalSpeed` are editable properties (`Default*` constants name their defaults).
 
 ## Bounds, smooth follow, smooth zoom, screen shake
 
 Identical shape and API to `Camera2D`'s (see its guide for the full rationale) — `PositionBounds`/`BoundsPadding`/`ClampToBounds()`, `FollowTarget(desiredPosition, deltaSeconds, desiredTarget?)`/`FollowSmoothTime`/`FollowPadding`, `SmoothZoom(delta, deltaSeconds)`/`MinDistance`/`MaxDistance`/`ZoomSmoothTime`, `AddTrauma`/`ResetTrauma`/`Trauma`/`GetShakeOffset()`. Two 3D-specific notes:
 
 - `SmoothZoom` moves `Position` along `Forward` to change `TargetDistance` (not a `Zoom` scalar like 2D, since 3D zoom is dolly-in/out distance) — call it once per discrete request (a wheel tick), not every frame with the same nonzero `delta`, or the target races ahead instead of easing.
-- Shake is applied along the camera's own `Right`/`UpNormalized` axes (not world axes) plus a roll around `Forward`, so it reads as camera shake regardless of which way the camera faces.
+- Shake is applied along the camera's own `Right`/`UpNormalized` axes (not world axes) plus a roll around `Forward` (`MaxShakeRoll`, radians at maximum trauma — alongside `MaxShakeOffset` for the positional part), so it reads as camera shake regardless of which way the camera faces. `ShakeNoiseSpeed` controls how fast the underlying noise is sampled — higher reads as a faster, more frantic shake.
+
+`Camera3D.SmoothDamp(float current, float target, ref float velocity, float smoothTime, float deltaTime)` and its `Vector3` overload are the public static critically-damped-spring functions `FollowTarget`/`SmoothZoom` are built on — reach for them directly to ease any other float/`Vector3` value the same way.
 
 ## Reset()
 

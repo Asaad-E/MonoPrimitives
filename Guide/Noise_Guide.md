@@ -52,7 +52,7 @@ These are set once (at construction or afterward) rather than passed to every `F
 
 ## Why `Sample1D` is special
 
-`Sample1D` is deliberately **not** a `y=0, z=0` slice of `Sample3D` the way `Sample2D` is a `z=0` slice. The internal 12-direction gradient table (`Grad`) has several hash cases whose x-facing component actually reads `y` or `z` instead of `x`; pinning *both* to zero makes those cases evaluate to exactly zero — empirically ~23% near-zero output versus ~2% for a normal 2D/3D sample (11x more "flat" dead regions than real noise). `Sample1D` uses its own dedicated 1D gradient (±1 per hash bit, the standard approach for 1D Perlin noise) instead, which has no such degenerate case.
+`Sample1D` is deliberately **not** a `y=0, z=0` slice of `Sample3D` the way `Sample2D` is a `z=0` slice. The internal 12-direction gradient table (`Grad`) has several hash cases whose x-facing component actually reads `y` or `z` instead of `x`; pinning *both* to zero would make those cases evaluate to exactly zero — around 23% near-zero output versus 2% for a normal 2D/3D sample, far more "flat" dead regions than real noise should have. `Sample1D` uses its own dedicated 1D gradient (±1 per hash bit, the standard approach for 1D Perlin noise) instead, which has no such degenerate case — reach for it rather than hand-rolling a `Sample3D(x, 0, 0)` call yourself.
 
 ## Testing
 
