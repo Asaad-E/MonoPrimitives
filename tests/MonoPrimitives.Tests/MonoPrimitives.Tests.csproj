@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Not a normal xunit/nunit project: PrimitiveBatch/Primitive3DBatch both need a real
+    Not a normal xunit/nunit project: Primitive2DBatch/Primitive3DBatch both need a real
     GraphicsDevice (BasicEffect, DrawUserPrimitives), and MonoGame only creates one inside
     a running Game. So this is a small headless Game that runs every shape-generation test
     once in Draw(), then exits with a process exit code (0 = all passed, 1 = a test failed)
