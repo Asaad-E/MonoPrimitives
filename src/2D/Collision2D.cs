@@ -7,7 +7,7 @@ namespace MonoPrimitives.Primitives2D
 {
     /// <summary>
     /// Pure geometry overlap/intersection tests (circle, rectangle, triangle, polygon,
-    /// line). Static utilities rather than <see cref="PrimitiveBatch"/> methods, since they
+    /// line). Static utilities rather than <see cref="Primitive2DBatch"/> methods, since they
     /// don't touch a <see cref="Microsoft.Xna.Framework.Graphics.GraphicsDevice"/> at all —
     /// plain math you can call any time, not just mid-draw. MonoGame's own
     /// <see cref="Rectangle"/> only covers rect-rect/point-in-rect; everything else here

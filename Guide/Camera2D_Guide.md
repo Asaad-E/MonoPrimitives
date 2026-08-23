@@ -1,18 +1,18 @@
 # Camera2D & ViewportAdapter2D — Guide
 
-`Camera2D` (namespace `MonoPrimitives.Primitives2D`, file [`src/2D/Camera2D.cs`](../src/2D/Camera2D.cs)) is a 2D camera — pan/rotate/zoom, bounds clamping, smooth-follow, smooth-zoom, trauma-based screen shake, and an optional WASD/mouse-drag/wheel controller — that hands `PrimitiveBatch.Begin` a single transform matrix. `ViewportAdapter2D` (and its four concrete adapters, same file's siblings) maps a fixed "virtual" resolution onto the actual window, so game logic and drawing work in one resolution regardless of what size the window actually is. The two are covered together here because a `Camera2D` is normally constructed *with* an adapter and leans on it for every screen↔world conversion.
+`Camera2D` (namespace `MonoPrimitives.Primitives2D`, file [`src/2D/Camera2D.cs`](../src/2D/Camera2D.cs)) is a 2D camera — pan/rotate/zoom, bounds clamping, smooth-follow, smooth-zoom, trauma-based screen shake, and an optional WASD/mouse-drag/wheel controller — that hands `Primitive2DBatch.Begin` a single transform matrix. `ViewportAdapter2D` (and its four concrete adapters, same file's siblings) maps a fixed "virtual" resolution onto the actual window, so game logic and drawing work in one resolution regardless of what size the window actually is. The two are covered together here because a `Camera2D` is normally constructed *with* an adapter and leans on it for every screen↔world conversion.
 
 ## Quick start
 
 ```csharp
 using MonoPrimitives.Primitives2D;
 
-private PrimitiveBatch _batch;
+private Primitive2DBatch _batch;
 private Camera2D _camera;
 
 protected override void LoadContent()
 {
-    _batch = new PrimitiveBatch(GraphicsDevice);
+    _batch = new Primitive2DBatch(GraphicsDevice);
     _camera = new Camera2D(target: Vector2.Zero, offset: new Vector2(400, 300)); // no adapter
 }
 
@@ -30,7 +30,7 @@ protected override void Draw(GameTime gameTime)
 }
 ```
 
-`Target` is the world point the camera looks at; `Offset` is the screen point `Target` is drawn at (typically the viewport center). `GetTransformMatrix()` is the one thing `PrimitiveBatch.Begin` needs — pass it as `transformMatrix` and every subsequent draw call in that batch is automatically panned/rotated/zoomed.
+`Target` is the world point the camera looks at; `Offset` is the screen point `Target` is drawn at (typically the viewport center). `GetTransformMatrix()` is the one thing `Primitive2DBatch.Begin` needs — pass it as `transformMatrix` and every subsequent draw call in that batch is automatically panned/rotated/zoomed.
 
 ## Core state
 
@@ -40,7 +40,7 @@ protected override void Draw(GameTime gameTime)
 | `Offset` (`Vector2`) | Screen-space point `Target` is drawn at. See "Offset and ViewportAdapter" below — behaves differently depending on whether this camera has an adapter. |
 | `Rotation` (`float`, radians) | Camera rotation. |
 | `Zoom` (`float`, default `1`) | Scale factor: `>1` zoomed in, `<1` zoomed out. |
-| `GetTransformMatrix()` | Builds the matrix for `PrimitiveBatch.Begin`: translate by `-Target`, rotate, scale by `Zoom`, translate to `Offset` (screen shake folded in — see below), then — if constructed with a `ViewportAdapter` — the adapter's own `GetScaleMatrix()` on top. Composition order matches MonoGame.Extended's `OrthographicCamera.GetViewMatrix()`; don't multiply by the adapter's matrix again yourself. |
+| `GetTransformMatrix()` | Builds the matrix for `Primitive2DBatch.Begin`: translate by `-Target`, rotate, scale by `Zoom`, translate to `Offset` (screen shake folded in — see below), then — if constructed with a `ViewportAdapter` — the adapter's own `GetScaleMatrix()` on top. Composition order matches MonoGame.Extended's `OrthographicCamera.GetViewMatrix()`; don't multiply by the adapter's matrix again yourself. |
 | `ScreenToWorld(Vector2)` / `WorldToScreen(Vector2)` | Convert between screen pixels and world space, inverse of each other. With an adapter, `screenPosition`/the result are real window pixels — the adapter's virtual↔window mapping is applied automatically. Without one, screen space is assumed to already share the same pixel space as `Offset` (raw device/mouse coordinates). |
 | `GetVisibleWorldBounds(GraphicsDevice? device = null)` | The world-space rectangle currently visible on screen, as `(Vector2 Min, Vector2 Max)` corners (axis-aligned even under rotation) — for culling before drawing many world objects. `device` is only a fallback when there's no adapter; omit it when one is set. |
 
@@ -225,7 +225,7 @@ protected override void Draw(GameTime gameTime)
 
 ## See also
 
-- [`Guide/PrimitiveBatch_Guide.md`](PrimitiveBatch_Guide.md) — everything `Camera2D.GetTransformMatrix()` feeds into.
+- [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) — everything `Camera2D.GetTransformMatrix()` feeds into.
 - [`Guide/PrimitiveInput_Guide.md`](PrimitiveInput_Guide.md) — the `PrimitiveInput` instance `UpdateWithInput` reads from.
 - [`Guide/Easing_Guide.md`](Easing_Guide.md) — fixed-duration tweens, for when `SmoothDamp`'s open-ended spring isn't the right shape.
 - [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the mouse-drag rotation fix, `Reset()` parity with `Camera3D`, the `Offset` live-tracking decision (including the direct comparison against MonoGame.Extended's actual `OrthographicCamera` source), and `BoundingRectangle`'s rounding fix.

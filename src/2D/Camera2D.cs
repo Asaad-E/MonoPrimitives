@@ -14,7 +14,7 @@ namespace MonoPrimitives.Primitives2D
     /// input-driven-update <c>Camera3D</c> has in the companion 3D library — a 2D prototype (a
     /// platformer, an asteroids clone, a pan-and-zoom plot) starts from a camera that already
     /// does the common things. Pass <see cref="GetTransformMatrix"/> into
-    /// <see cref="PrimitiveBatch.Begin(Matrix?,BlendState?,DepthStencilState?,RasterizerState?,Effect?)"/>'s
+    /// <see cref="Primitive2DBatch.Begin(Matrix?,BlendState?,DepthStencilState?,RasterizerState?,Effect?)"/>'s
     /// <c>transformMatrix</c> each frame.
     /// </summary>
     public sealed class Camera2D
@@ -143,7 +143,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>
-        /// Builds the matrix to pass into <c>PrimitiveBatch.Begin</c>'s <c>transformMatrix</c>:
+        /// Builds the matrix to pass into <c>Primitive2DBatch.Begin</c>'s <c>transformMatrix</c>:
         /// translate by <c>-Target</c>, rotate (<see cref="Rotation"/> plus any screen-shake
         /// rotation — see <see cref="AddTrauma"/>), scale by <see cref="Zoom"/>, then translate
         /// to <see cref="Offset"/> plus any screen-shake offset — the standard 2D camera

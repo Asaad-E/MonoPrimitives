@@ -30,7 +30,7 @@ public class Game1 : Game
 
     private GraphicsDeviceManager _graphics;
     private Primitive3DBatch _batch3d = null!;
-    private PrimitiveBatch _batch2d = null!;
+    private Primitive2DBatch _batch2d = null!;
     private PrimitiveInput _input = null!;
     private Camera3D _camera3d = null!;
 
@@ -83,7 +83,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         _batch3d = new Primitive3DBatch(GraphicsDevice) { LightingEnabled = true, AmbientLight = 0.55f, LightDirection = new Vector3(-0.3f, -1f, -0.5f) };
-        _batch2d = new PrimitiveBatch(GraphicsDevice);
+        _batch2d = new Primitive2DBatch(GraphicsDevice);
         _input = new PrimitiveInput();
         _camera3d = new Camera3D(new Vector3(0, 20, 60), Vector3.Zero, Vector3.Up, 55f) { Mode = CameraMode.Custom, FollowSmoothTime = 0.25f };
         ResetGame();

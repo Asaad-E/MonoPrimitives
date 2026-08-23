@@ -80,7 +80,7 @@ namespace MonoPrimitives.Primitives2D
     ///  - No trigonometry at draw time: a unit-circle lookup table is built once.
     ///  - Device state is fully saved on Begin and restored on End.
     /// </summary>
-    public sealed class PrimitiveBatch : IDisposable
+    public sealed class Primitive2DBatch : IDisposable
     {
         // ------------------------------------------------------------------
         // Tunables
@@ -260,7 +260,7 @@ namespace MonoPrimitives.Primitives2D
         /// needs more vertices/indices than this capacity will still fail. Raise this
         /// value if you draw very large single shapes (e.g. big polygons or splines).
         /// </param>
-        public PrimitiveBatch(GraphicsDevice device, int initialVertexCapacity = 32768)
+        public Primitive2DBatch(GraphicsDevice device, int initialVertexCapacity = 32768)
         {
             _device = device ?? throw new ArgumentNullException(nameof(device));
 

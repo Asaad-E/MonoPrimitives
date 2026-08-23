@@ -7,7 +7,7 @@ Covers full basic ASCII (32–126) plus Spanish characters (`ñ Ñ á é í ó �
 ## Quick start
 
 ```csharp
-using MonoPrimitives.Primitives2D; // DrawString/MeasureText are extension methods on PrimitiveBatch
+using MonoPrimitives.Primitives2D; // DrawString/MeasureText are extension methods on Primitive2DBatch
 
 batch.Begin();
 batch.DrawString("FPS: 60", new Vector2(10, 10), pixelSize: 4, Color.White);
@@ -18,7 +18,7 @@ batch.End();
 
 | Member | What it does |
 |---|---|
-| `DrawString(this PrimitiveBatch, text, position, pixelSize, color, glyphSpacing = 1f, lineSpacing = 2f)` | Draws text starting at `position` (top-left of the first character), one `FillRectangle` per "on" pixel. `'\n'` starts a new line. Named to match `SpriteBatch.DrawString`. |
+| `DrawString(this Primitive2DBatch, text, position, pixelSize, color, glyphSpacing = 1f, lineSpacing = 2f)` | Draws text starting at `position` (top-left of the first character), one `FillRectangle` per "on" pixel. `'\n'` starts a new line. Named to match `SpriteBatch.DrawString`. |
 | `MeasureText(text, pixelSize, glyphSpacing, lineSpacing)` | Total `(Width, Height)` the text would occupy — for centering/layout before drawing. |
 | `SpaceWidthScale` (static, default `0.3f`) | How wide a space character is, as a fraction of a normal glyph's width. Set once to change spacing globally — shared with the 3D renderer. |
 | `GlyphWidth` / `GlyphHeight` (constants, `5`/`7`) | The font's cell size in pixels, before `pixelSize` scaling. |

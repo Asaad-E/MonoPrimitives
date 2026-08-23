@@ -8,7 +8,7 @@ namespace MonoPrimitives.Primitives2D
 {
     /// <summary>
     /// Standalone 5x7 dot-matrix "pixel art" debug font, drawn entirely with
-    /// <see cref="PrimitiveBatch.FillRectangle(float,float,float,float,Color,float,Vector2?)"/> —
+    /// <see cref="Primitive2DBatch.FillRectangle(float,float,float,float,Color,float,Vector2?)"/> —
     /// no textures, no SpriteFont. Glyph data (<see cref="FontGlyphs5x7"/>) is shared with the 3D
     /// library's own billboard text renderer; only the actual drawing differs. Intended for
     /// test/debug text (HUD counters, labels), not production typography.
@@ -37,7 +37,7 @@ namespace MonoPrimitives.Primitives2D
         /// <c>7*pixelSize</c> tall). <c>'\n'</c> starts a new line. Characters with no glyph
         /// draw as a hollow box instead of silently vanishing.
         /// </summary>
-        public static void DrawString(this PrimitiveBatch batch, string text, Vector2 position, float pixelSize, Color color, float glyphSpacing = 1f, float lineSpacing = 2f)
+        public static void DrawString(this Primitive2DBatch batch, string text, Vector2 position, float pixelSize, Color color, float glyphSpacing = 1f, float lineSpacing = 2f)
         {
             if (string.IsNullOrEmpty(text) || pixelSize <= 0f) return;
 

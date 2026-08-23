@@ -62,7 +62,7 @@ namespace MonoPrimitives.Primitives2D
         /// <c>DrawLineStrip</c> can't fade along its own length) — keep <see cref="Capacity"/> no
         /// bigger than the trail actually needs to look right, especially with many trails on screen.
         /// </summary>
-        public void Draw(PrimitiveBatch batch, Color color, float thickness = 2f, float fadeToAlpha = 0f)
+        public void Draw(Primitive2DBatch batch, Color color, float thickness = 2f, float fadeToAlpha = 0f)
         {
             if (Count < 2) return;
             fadeToAlpha = Math.Clamp(fadeToAlpha, 0f, 1f);

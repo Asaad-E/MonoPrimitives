@@ -1,6 +1,6 @@
 # Primitive3DBatch — Guide
 
-`Primitive3DBatch` (namespace `MonoPrimitives.Primitives3D`, files [`src/3D/Primitive3DBatch.cs`](../src/3D/Primitive3DBatch.cs) + [`Primitive3DBatchShapes.cs`](../src/3D/Primitive3DBatchShapes.cs)) is the 3D counterpart to [`PrimitiveBatch`](PrimitiveBatch_Guide.md) — immediate-mode shape drawing for MonoGame, one call per shape, no retained scene graph or model loading.
+`Primitive3DBatch` (namespace `MonoPrimitives.Primitives3D`, files [`src/3D/Primitive3DBatch.cs`](../src/3D/Primitive3DBatch.cs) + [`Primitive3DBatchShapes.cs`](../src/3D/Primitive3DBatchShapes.cs)) is the 3D counterpart to [`Primitive2DBatch`](Primitive2DBatch_Guide.md) — immediate-mode shape drawing for MonoGame, one call per shape, no retained scene graph or model loading.
 
 This guide covers every public method, grouped by shape family. For per-parameter detail beyond what's here, the XML doc comments in `Primitive3DBatchShapes.cs` go deeper.
 
@@ -152,7 +152,7 @@ Each filled triangle/quad is shaded by its own face normal — a cheap, per-face
 
 ## Splines
 
-Same four spline types as 2D (see [`PrimitiveBatch_Guide.md`](PrimitiveBatch_Guide.md#splines) for the shape of each curve), each drawn as a loop of `DrawLine3D` calls rather than a single joined strip.
+Same four spline types as 2D (see [`Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md#splines) for the shape of each curve), each drawn as a loop of `DrawLine3D` calls rather than a single joined strip.
 
 | Method | What it does |
 |---|---|
@@ -190,7 +190,7 @@ dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 
 ## See also
 
-- [`Guide/PrimitiveBatch_Guide.md`](PrimitiveBatch_Guide.md) — the 2D sibling; most conventions here carry over directly.
+- [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) — the 2D sibling; most conventions here carry over directly.
 - [`Guide/Camera3D_Guide.md`](Camera3D_Guide.md) — the camera `Begin(camera)` takes.
 - [`Guide/TrigLut_Guide.md`](TrigLut_Guide.md) — the trig table every curved shape here samples from.
 - [`Guide/Collision3D_Guide.md`](Collision3D_Guide.md) — hit-testing the shapes this guide draws.

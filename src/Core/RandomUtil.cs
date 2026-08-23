@@ -217,7 +217,7 @@ namespace MonoPrimitives
         /// Threshold above which <see cref="SamplePoisson"/>/<see cref="SampleBinomial"/> switch
         /// to a Gaussian approximation instead of direct simulation — both are otherwise
         /// O(lambda) / O(trials) per sample, an unbounded cost this library avoids elsewhere too
-        /// (see <c>PrimitiveBatch.SegmentsForArc</c>'s capped segment count for the same
+        /// (see <c>Primitive2DBatch.SegmentsForArc</c>'s capped segment count for the same
         /// reasoning). 30 is the standard textbook rule of thumb for Poisson→Normal.
         /// </summary>
         private const float GaussianApproxThreshold = 30f;

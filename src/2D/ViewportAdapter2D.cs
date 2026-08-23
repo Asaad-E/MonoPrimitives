@@ -14,7 +14,7 @@ namespace MonoPrimitives.Primitives2D
     /// <see cref="VirtualWidth"/>×<see cref="VirtualHeight"/> coordinates regardless of the
     /// actual window size; <see cref="GetScaleMatrix"/> maps that virtual space onto the window.
     /// <see cref="Camera2D"/> folds this in automatically when constructed with an adapter —
-    /// <c>camera.GetTransformMatrix()</c> alone is enough to pass into <c>PrimitiveBatch.Begin</c>.
+    /// <c>camera.GetTransformMatrix()</c> alone is enough to pass into <c>Primitive2DBatch.Begin</c>.
     /// </summary>
     public abstract class ViewportAdapter2D
     {

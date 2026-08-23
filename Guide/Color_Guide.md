@@ -67,7 +67,7 @@ All of these preserve alpha and take an existing `Color` in, returning a new one
 
 ### Blend modes
 
-Pure `Color x Color -> Color` functions computing a blended color *value* to draw normally afterward — **not** a GPU blend-state operation (`PrimitiveBatch` already uses one `NonPremultiplied` state throughout these are for tinting/layering colors in code, procedural palette mixing). **Alpha always comes from `a` unchanged** in every mode — these blend color, not transparency.
+Pure `Color x Color -> Color` functions computing a blended color *value* to draw normally afterward — **not** a GPU blend-state operation (`Primitive2DBatch` already uses one `NonPremultiplied` state throughout these are for tinting/layering colors in code, procedural palette mixing). **Alpha always comes from `a` unchanged** in every mode — these blend color, not transparency.
 
 | Method | What it does |
 |---|---|
@@ -79,7 +79,7 @@ Pure `Color x Color -> Color` functions computing a blended color *value* to dra
 ## What's deliberately not here
 
 - **A "readable text color" / auto-contrast helper** (pick black or white text based on a background's luminance) — a genuinely common UI utility elsewhere, but not something raylib/love2d/Godot/Unity ship as a core color function either, so it wasn't added speculatively.
-- **Proper alpha-compositing** (raylib's `ColorAlphaBlend`, a Porter-Duff "over" operator accounting for both colors' own alpha) — lower value here specifically, since `PrimitiveBatch` already composites layered draws via its GPU blend state; a CPU-side compositor would mostly duplicate that.
+- **Proper alpha-compositing** (raylib's `ColorAlphaBlend`, a Porter-Duff "over" operator accounting for both colors' own alpha) — lower value here specifically, since `Primitive2DBatch` already composites layered draws via its GPU blend state; a CPU-side compositor would mostly duplicate that.
 - **Per-color alpha replacement, normalized/packed-int conversion** — already covered directly by MonoGame's own `Color` struct (`new Color(color, alpha)`, `.ToVector3()`/`.ToVector4()`, `.PackedValue`, `new Color(uint)`), so wrapping them here would be pure, redundant sugar.
 
 ## Testing
@@ -93,4 +93,4 @@ dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 ## See also
 
 - [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the audit that added `Invert`/`Contrast` and the missing test coverage, including exactly what was checked and ruled out against raylib/love2d/Godot/Unity.
-- [`Guide/PrimitiveBatch_Guide.md`](PrimitiveBatch_Guide.md) — where these colors actually get drawn.
+- [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) — where these colors actually get drawn.

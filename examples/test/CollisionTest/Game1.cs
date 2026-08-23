@@ -27,7 +27,7 @@ public class Game1 : Game
     private const int WindowHeight = 720;
 
     private GraphicsDeviceManager _graphics;
-    private PrimitiveBatch _batch2d = null!;
+    private Primitive2DBatch _batch2d = null!;
     private PrimitiveInput _input = null!;
 
     private enum Mode
@@ -52,7 +52,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        _batch2d = new PrimitiveBatch(GraphicsDevice);
+        _batch2d = new Primitive2DBatch(GraphicsDevice);
         _input = new PrimitiveInput();
         base.Initialize();
     }

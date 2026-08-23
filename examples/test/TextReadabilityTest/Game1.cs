@@ -20,7 +20,7 @@ public class Game1 : Game
     private const int WindowHeight = 720;
 
     private GraphicsDeviceManager _graphics;
-    private PrimitiveBatch _batch2d = null!;
+    private Primitive2DBatch _batch2d = null!;
     private PrimitiveInput _input = null!;
     private Camera2D _camera2d = null!;
 
@@ -42,7 +42,7 @@ _graphics = new GraphicsDeviceManager(this) {
 
     protected override void Initialize()
     {
-        _batch2d = new PrimitiveBatch(GraphicsDevice);
+        _batch2d = new Primitive2DBatch(GraphicsDevice);
         _input = new PrimitiveInput();
         _camera2d = new Camera2D(target: Vector2.Zero, offset: new Vector2(20f, 40f));
         base.Initialize();

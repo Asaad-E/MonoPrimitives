@@ -201,7 +201,7 @@ namespace MonoPrimitives
         // Blend modes
         // ---------------------------------------------------------------------
         // Pure Color x Color -> Color functions, computing a blended color VALUE to draw
-        // normally afterward -- not a GPU blend-state operation (PrimitiveBatch already uses one
+        // normally afterward -- not a GPU blend-state operation (Primitive2DBatch already uses one
         // NonPremultiplied blend state throughout; these are for tinting/layering colors in code,
         // procedural palette mixing, that kind of thing). Alpha is always taken from `a`
         // unchanged -- these blend color, not transparency. Byte math throughout (not the

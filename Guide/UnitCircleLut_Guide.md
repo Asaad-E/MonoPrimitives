@@ -1,6 +1,6 @@
 # UnitCircleLut — Guide
 
-`UnitCircleLut` (namespace `MonoPrimitives.Primitives2D`, file [`src/2D/UnitCircleLut.cs`](../src/2D/UnitCircleLut.cs)) is a precomputed unit-circle lookup table — fast, allocation-free sin/cos for your own curved geometry (a custom particle ring, a procedural shape) without redoing this table yourself. `PrimitiveBatch` uses it internally for every curved shape it draws; it's exposed publicly for the same reason 3D's `TrigLut` is.
+`UnitCircleLut` (namespace `MonoPrimitives.Primitives2D`, file [`src/2D/UnitCircleLut.cs`](../src/2D/UnitCircleLut.cs)) is a precomputed unit-circle lookup table — fast, allocation-free sin/cos for your own curved geometry (a custom particle ring, a procedural shape) without redoing this table yourself. `Primitive2DBatch` uses it internally for every curved shape it draws; it's exposed publicly for the same reason 3D's `TrigLut` is.
 
 ## Quick start
 
@@ -38,5 +38,5 @@ dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 ## See also
 
 - [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the negative-input imprecision found and fixed, including why it wasn't the index bug it first looked like.
-- [`Guide/PrimitiveBatch_Guide.md`](PrimitiveBatch_Guide.md) — everything this table is built to serve.
+- [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) — everything this table is built to serve.
 - [`Guide/TrigLut_Guide.md`](TrigLut_Guide.md) — the 3D counterpart, `out float` sin/cos pairs instead of `Vector2`.

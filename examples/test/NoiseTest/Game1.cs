@@ -23,7 +23,7 @@ public class Game1 : Game
     private const int WindowHeight = 720;
 
     private GraphicsDeviceManager _graphics;
-    private PrimitiveBatch _batch2d = null!;
+    private Primitive2DBatch _batch2d = null!;
     private Primitive3DBatch _batch3d = null!;
     private PrimitiveInput _input = null!;
 
@@ -53,7 +53,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        _batch2d = new PrimitiveBatch(GraphicsDevice);
+        _batch2d = new Primitive2DBatch(GraphicsDevice);
         _batch3d = new Primitive3DBatch(GraphicsDevice) { LightingEnabled = true, AmbientLight = 0.6f, LightDirection = new Vector3(-0.4f, -1f, -0.3f) };
         _input = new PrimitiveInput();
         BuildTerrain();

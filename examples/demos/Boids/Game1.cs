@@ -24,7 +24,7 @@ public class Game1 : Game
     private const int BoidCount = 120;
 
     private GraphicsDeviceManager _graphics;
-    private PrimitiveBatch _batch2d = null!;
+    private Primitive2DBatch _batch2d = null!;
     private PrimitiveInput _input = null!;
 
     private struct Boid
@@ -55,7 +55,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        _batch2d = new PrimitiveBatch(GraphicsDevice);
+        _batch2d = new Primitive2DBatch(GraphicsDevice);
         _input = new PrimitiveInput();
 
         var rng = new Random(7);

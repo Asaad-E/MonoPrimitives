@@ -1,6 +1,6 @@
-# PrimitiveBatch — Guide
+# Primitive2DBatch — Guide
 
-`PrimitiveBatch` (namespace `MonoPrimitives.Primitives2D`, file [`src/2D/Primitives2D.cs`](../src/2D/Primitives2D.cs)) is an immediate-mode 2D primitive renderer for MonoGame — every shape you'd otherwise hand-triangulate yourself (rectangles, circles, polygons, capsules, sectors/rings, splines) drawn with a `SpriteBatch`-like API, buffered into one shared vertex/index buffer and submitted in as few draw calls as possible.
+`Primitive2DBatch` (namespace `MonoPrimitives.Primitives2D`, file [`src/2D/Primitives2D.cs`](../src/2D/Primitives2D.cs)) is an immediate-mode 2D primitive renderer for MonoGame — every shape you'd otherwise hand-triangulate yourself (rectangles, circles, polygons, capsules, sectors/rings, splines) drawn with a `SpriteBatch`-like API, buffered into one shared vertex/index buffer and submitted in as few draw calls as possible.
 
 This guide covers every public method, grouped by shape family, plus the handful of conventions that apply across all of them and the non-obvious mechanics behind gradients, shadows, and segment counts. For per-parameter detail beyond what's here, the XML doc comments on each method in `Primitives2D.cs` go deeper.
 
@@ -9,11 +9,11 @@ This guide covers every public method, grouped by shape family, plus the handful
 ```csharp
 using MonoPrimitives.Primitives2D;
 
-private PrimitiveBatch _batch;
+private Primitive2DBatch _batch;
 
 protected override void LoadContent()
 {
-    _batch = new PrimitiveBatch(GraphicsDevice); // one instance, reused every frame
+    _batch = new Primitive2DBatch(GraphicsDevice); // one instance, reused every frame
 }
 
 protected override void Draw(GameTime gameTime)
@@ -26,7 +26,7 @@ protected override void Draw(GameTime gameTime)
 }
 ```
 
-Construct one `PrimitiveBatch` per `GraphicsDevice` and keep it — never allocate a new one per frame, since its internal buffers are allocated once in the constructor and reused. Wrap every frame's drawing in `Begin`/`End`.
+Construct one `Primitive2DBatch` per `GraphicsDevice` and keep it — never allocate a new one per frame, since its internal buffers are allocated once in the constructor and reused. Wrap every frame's drawing in `Begin`/`End`.
 
 | Method | What it does |
 |---|---|
@@ -276,14 +276,14 @@ Debug/reference overlays built entirely from `DrawLine` calls — not a separate
 A separate, standalone file (`DebugFont5x7.cs`) — a 5×7 dot-matrix pixel font drawn entirely with `FillRectangle` calls, no textures or `SpriteFont`. Covers full ASCII (32–126) plus Spanish characters (`ñ Ñ á é í ó ú Á É Í Ó Ú ü Ü ¿ ¡`). Intended for debug/test text (HUD counters, labels), not production typography — lowercase descenders are compressed to fit the same cell as everything else, and unknown characters draw as a hollow box instead of vanishing silently.
 
 ```csharp
-using MonoPrimitives.Primitives2D; // DrawString/MeasureText are extension methods on PrimitiveBatch
+using MonoPrimitives.Primitives2D; // DrawString/MeasureText are extension methods on Primitive2DBatch
 
 batch.DrawString("FPS: 60", new Vector2(10, 10), pixelSize: 4, Color.White);
 ```
 
 | Member | What it does |
 |---|---|
-| `DrawString(this PrimitiveBatch, text, position, pixelSize, color, glyphSpacing = 1f, lineSpacing = 2f)` | Draws text starting at `position` (top-left of the first character). `'\n'` starts a new line. Named to match `SpriteBatch.DrawString`. |
+| `DrawString(this Primitive2DBatch, text, position, pixelSize, color, glyphSpacing = 1f, lineSpacing = 2f)` | Draws text starting at `position` (top-left of the first character). `'\n'` starts a new line. Named to match `SpriteBatch.DrawString`. |
 | `MeasureText(text, pixelSize, glyphSpacing, lineSpacing)` | Total size in pixels the text would occupy — for centering/layout before drawing. |
 | `DebugFont5x7.SpaceWidthScale` (static field, default `0.3f`) | How wide a space character is, as a fraction of a normal glyph's width. Change it once globally for tighter/looser spacing. |
 | `DebugFont5x7.GlyphWidth` / `GlyphHeight` (constants, `5`/`7`) | The font's cell size in pixels, before `pixelSize` scaling. |
@@ -306,13 +306,13 @@ Circles/arcs/ellipses pick their own triangle-fan segment count automatically fr
 
 - The batch buffers vertices/indices internally and only submits a draw call when the buffer fills up or `End()`/`Flush()` is called — draw as much as you want per frame without worrying about draw-call count yourself.
 - `Border*`/`Draw*` with `LineJoin.Miter` (the default) is the cheapest join style. `Round`/`Bevel` cost more triangles per corner and are worth reaching for on large, soft-looking shapes, not small UI chrome.
-- Zero per-frame heap allocations — all buffers are allocated once in the `PrimitiveBatch` constructor, and geometry construction that needs scratch space uses `stackalloc`.
+- Zero per-frame heap allocations — all buffers are allocated once in the `Primitive2DBatch` constructor, and geometry construction that needs scratch space uses `stackalloc`.
 
 ## See also
 
 - [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the condensed rationale behind non-obvious choices (the bugs caught while building `DrawPolyGradientRounded` and `DrawRingShadow`, the Rectangle/spline naming renames, why Capsule got a second overload family, etc.).
 - [`Design/ROADMAP.md`](../Design/ROADMAP.md) — known gaps, including the reflex-vertex offsetting limitation above.
-- [`Guide/Collision2D_Guide.md`](Collision2D_Guide.md) — `CheckCollision*` methods (Rec/Circle/Triangle/Poly/Capsule, including mixed-shape pairs) for hit-testing the shapes this guide draws. A separate static class in the same namespace, not part of `PrimitiveBatch` itself.
-- [`Camera2D_Guide.md`](Camera2D_Guide.md) — `Camera2D` and the letterbox/scaling `ViewportAdapter2D` family for keeping a `PrimitiveBatch` scene correctly projected across resolutions.
+- [`Guide/Collision2D_Guide.md`](Collision2D_Guide.md) — `CheckCollision*` methods (Rec/Circle/Triangle/Poly/Capsule, including mixed-shape pairs) for hit-testing the shapes this guide draws. A separate static class in the same namespace, not part of `Primitive2DBatch` itself.
+- [`Camera2D_Guide.md`](Camera2D_Guide.md) — `Camera2D` and the letterbox/scaling `ViewportAdapter2D` family for keeping a `Primitive2DBatch` scene correctly projected across resolutions.
 - [`Color_Guide.md`](Color_Guide.md) — `Palette`/`ColorUtil`, the colors this guide's shapes are drawn with.
 - [`Trail2D_Guide.md`](Trail2D_Guide.md) — a fading position-history trail built on `DrawLine`.

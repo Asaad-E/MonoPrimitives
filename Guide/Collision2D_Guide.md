@@ -84,4 +84,4 @@ dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 ## See also
 
 - [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the audit that added the `Capsule*Poly` family and closed the test-coverage gap.
-- [`Guide/PrimitiveBatch_Guide.md`](PrimitiveBatch_Guide.md) — drawing the shapes this class tests.
+- [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) — drawing the shapes this class tests.

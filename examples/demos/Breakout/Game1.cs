@@ -26,7 +26,7 @@ public class Game1 : Game
     private const int WindowHeight = 960;
 
     private GraphicsDeviceManager _graphics;
-    private PrimitiveBatch _batch2d = null!;
+    private Primitive2DBatch _batch2d = null!;
     private PrimitiveInput _input = null!;
     private BoxingViewportAdapter2D _adapter = null!;
     private Camera2D _camera2d = null!;
@@ -63,7 +63,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        _batch2d = new PrimitiveBatch(GraphicsDevice);
+        _batch2d = new Primitive2DBatch(GraphicsDevice);
         _input = new PrimitiveInput();
         _adapter = new BoxingViewportAdapter2D(GraphicsDevice, VirtualWidth, VirtualHeight);
         _camera2d = new Camera2D(_adapter, target: new Vector2(VirtualWidth * 0.5f, VirtualHeight * 0.5f));

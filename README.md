@@ -18,7 +18,7 @@ One NuGet package, one assembly, one DLL — 2D and 3D both come with it, no sep
 | Namespace | Source folder | What's there |
 |---|---|---|
 | `MonoPrimitives` | `src/Core/` | Shared: `PrimitiveInput`, `Easing`, `Palette`/`ColorUtil`, `Noise`, `RandomUtil`, `FontGlyphs5x7` |
-| `MonoPrimitives.Primitives2D` | `src/2D/` | `PrimitiveBatch`, `Camera2D` + `ViewportAdapter2D`, `Collision2D`, `Trail2D`, `UnitCircleLut` |
+| `MonoPrimitives.Primitives2D` | `src/2D/` | `Primitive2DBatch`, `Camera2D` + `ViewportAdapter2D`, `Collision2D`, `Trail2D`, `UnitCircleLut` |
 | `MonoPrimitives.Primitives3D` | `src/3D/` | `Primitive3DBatch`, `Camera3D`, `Collision3D`, `Trail3D`, `TrigLut` |
 
 ## Quick start
@@ -26,11 +26,11 @@ One NuGet package, one assembly, one DLL — 2D and 3D both come with it, no sep
 ```csharp
 using MonoPrimitives.Primitives2D;
 
-private PrimitiveBatch _batch;
+private Primitive2DBatch _batch;
 
 protected override void LoadContent()
 {
-    _batch = new PrimitiveBatch(GraphicsDevice);
+    _batch = new Primitive2DBatch(GraphicsDevice);
 }
 
 protected override void Draw(GameTime gameTime)
@@ -76,7 +76,7 @@ Every shape follows the same `Fill<Shape>` (solid) / `Border<Shape>` (outline, g
 Each class has its own guide — start with whichever one covers what you're touching:
 
 **Drawing**
-- [`PrimitiveBatch_Guide.md`](Guide/PrimitiveBatch_Guide.md) — every 2D shape (rectangles, circles, ellipses, capsules, polygons, sectors/rings, splines), gradients, shadows, rounded/chamfered corners.
+- [`Primitive2DBatch_Guide.md`](Guide/Primitive2DBatch_Guide.md) — every 2D shape (rectangles, circles, ellipses, capsules, polygons, sectors/rings, splines), gradients, shadows, rounded/chamfered corners.
 - [`Primitive3DBatch_Guide.md`](Guide/Primitive3DBatch_Guide.md) — every 3D shape (cubes, spheres, cylinders, capsules, torus, planes, heightmaps), flat-shading lighting, splines.
 - [`DebugFont5x7_Guide.md`](Guide/DebugFont5x7_Guide.md) — a built-in bitmap debug font, 2D and 3D (billboarded).
 

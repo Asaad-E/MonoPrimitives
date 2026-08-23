@@ -77,5 +77,5 @@ protected override void Draw(GameTime gameTime)
 
 ## See also
 
-- [`Guide/PrimitiveBatch_Guide.md`](PrimitiveBatch_Guide.md) / [`Guide/Primitive3DBatch_Guide.md`](Primitive3DBatch_Guide.md) — `DrawLine`/`DrawLine3D`, which `Trail2D.Draw`/`Trail3D.Draw` are built on.
+- [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) / [`Guide/Primitive3DBatch_Guide.md`](Primitive3DBatch_Guide.md) — `DrawLine`/`DrawLine3D`, which `Trail2D.Draw`/`Trail3D.Draw` are built on.
 - `examples/test/ParticleTrailTest` — several `Trail2D`s with different capacity/thickness/fade styles, dragged behind particles that bounce off the window edges and each other.

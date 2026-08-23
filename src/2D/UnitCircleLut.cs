@@ -10,7 +10,7 @@ namespace MonoPrimitives.Primitives2D
     /// Precomputed unit-circle lookup table — the 2D counterpart to the 3D library's own
     /// <c>TrigLut</c>, exposed publicly for the same reason: fast, allocation-free sin/cos for
     /// your own curved geometry (a custom particle ring, a procedural shape) without redoing
-    /// this table yourself. <see cref="PrimitiveBatch"/> uses <see cref="Sample"/> internally
+    /// this table yourself. <see cref="Primitive2DBatch"/> uses <see cref="Sample"/> internally
     /// for every curved shape it draws.
     /// </summary>
     public static class UnitCircleLut

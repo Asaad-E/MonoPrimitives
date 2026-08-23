@@ -46,10 +46,10 @@ internal static class Gallery2D
         return (pairs[i].Inner, pairs[i].Outer);
     }
 
-    private readonly record struct Cell(string Label, Action<PrimitiveBatch, Vector2> Draw);
+    private readonly record struct Cell(string Label, Action<Primitive2DBatch, Vector2> Draw);
 
     /// <summary>Draws the whole gallery starting at the origin and returns its total content size (for camera bounds).</summary>
-    public static Vector2 Draw(PrimitiveBatch batch)
+    public static Vector2 Draw(Primitive2DBatch batch)
     {
         float y = 20f;
         float maxRight = 0f;
@@ -71,7 +71,7 @@ internal static class Gallery2D
         return new Vector2(maxRight + 30f, y + 30f);
     }
 
-    private static void DrawRow(PrimitiveBatch batch, string title, IReadOnlyList<Cell> cells, ref float y, ref float maxRight)
+    private static void DrawRow(Primitive2DBatch batch, string title, IReadOnlyList<Cell> cells, ref float y, ref float maxRight)
     {
         batch.DrawString(title, new Vector2(30f, y), LabelPixelSize, Palette.Clouds);
         y += RowHeaderHeight;

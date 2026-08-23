@@ -21,7 +21,7 @@ public class Game1 : Game
     private const int WindowHeight = 720;
 
     private GraphicsDeviceManager _graphics;
-    private PrimitiveBatch _batch2d = null!;
+    private Primitive2DBatch _batch2d = null!;
     private Particle[] _particles = null!;
 
     private sealed class Particle
@@ -37,11 +37,13 @@ public class Game1 : Game
 
     public Game1()
     {
-        _graphics = new GraphicsDeviceManager(this) { 
+        _graphics = new GraphicsDeviceManager(this)
+        {
             PreferredBackBufferWidth = WindowWidth,
             PreferredBackBufferHeight = WindowHeight,
             PreferMultiSampling = true,
-            GraphicsProfile= GraphicsProfile.HiDef };
+            GraphicsProfile = GraphicsProfile.HiDef
+        };
 
         _graphics.PreparingDeviceSettings += (sender, e) =>
         {
@@ -52,7 +54,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        _batch2d = new PrimitiveBatch(GraphicsDevice);
+        _batch2d = new Primitive2DBatch(GraphicsDevice);
         BuildParticles();
         base.Initialize();
     }
@@ -162,11 +164,31 @@ public class Game1 : Game
 
         foreach (Particle p in _particles)
         {
-            _batch2d.FillCircle(p.Position, p.Radius, p.Color);
-            _batch2d.BorderCircle(p.Position, p.Radius, Color.White, 1.5f);
+            float r = 0.2f;
+            float s = 1 - r + 0.1f;
+            float shadowOffsetDistance = 2.0f; 
+            _batch2d.FillCircleShadow(
+                p.Position + Vector2.One * shadowOffsetDistance,
+                p.Radius * r,
+                Color.White,
+                spread: p.Radius * s
+                );
+
+            _batch2d.DrawCircle(p.Position, p.Radius, p.Color, Color.White, 3f);
+            // _batch2d.BorderCircle(p.Position, p.Radius, Color.White, 1.5f);
         }
 
         _batch2d.DrawString("Particles bounce off walls and each other -- each drags a differently-styled Trail2D", new Vector2(16, 16), 2f, Color.White);
+
+        int Radius = 30;
+        _batch2d.FillCircleShadow(new Vector2(WindowWidth / 2, WindowHeight / 2) + Vector2.One * 1, Radius * 0.9f, Color.Black, spread: 5);
+        _batch2d.DrawCircle(new Vector2(WindowWidth / 2, WindowHeight / 2), Radius, Color.SkyBlue, Color.White, 20);
+
+
+        _batch2d.FillRectangleShadow(new Vector2(WindowWidth / 2, WindowHeight / 2) + Vector2.One*100, new Vector2(100, 50), new RectCorners(20f), Color.Black, 0);
+
+
+        // _batch2d.DrawGrid(60, 45);
 
         _batch2d.End();
         base.Draw(gameTime);

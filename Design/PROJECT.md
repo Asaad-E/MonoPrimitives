@@ -24,7 +24,7 @@ Per-namespace (not shared — genuinely different code):
 
 | | 2D (`MonoPrimitives.Primitives2D`) | 3D (`MonoPrimitives.Primitives3D`) |
 |---|---|---|
-| Shape drawing | `PrimitiveBatch` | `Primitive3DBatch` |
+| Shape drawing | `Primitive2DBatch` | `Primitive3DBatch` |
 | Camera | `Camera2D` | `Camera3D` |
 | Collision & raycasts | `Collision2D` | `Collision3D` |
 | Trail | `Trail2D` | `Trail3D` |

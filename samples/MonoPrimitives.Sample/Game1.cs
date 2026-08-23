@@ -15,7 +15,7 @@ public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
-    private PrimitiveBatch _primitiveBatch;
+    private Primitive2DBatch _primitiveBatch;
     private Primitive3DBatch _primitive3DBatch;
     private Camera3D _camera3d;
 
@@ -69,7 +69,7 @@ public class Game1 : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-        _primitiveBatch = new PrimitiveBatch(GraphicsDevice);
+        _primitiveBatch = new Primitive2DBatch(GraphicsDevice);
         _primitive3DBatch = new Primitive3DBatch(GraphicsDevice);
         _primitive3DBatch.LightingEnabled = true;
         _primitive3DBatch.AmbientLight = 0.5f;
