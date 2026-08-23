@@ -45,6 +45,10 @@ namespace MonoPrimitives.Tests
             ShapeTests3D.Run(batch, camera, GraphicsDevice, results);
             DebugFont3DTests.Run(batch, camera, GraphicsDevice, results);
 
+            Console.WriteLine();
+            Console.WriteLine("-- Benchmarks (not pass/fail, informational only) --");
+            TextureUpdateBenchmark.Run(GraphicsDevice, results);
+
             bool allPassed = results.PrintSummary();
             Environment.ExitCode = allPassed ? 0 : 1;
             Exit();
