@@ -223,6 +223,22 @@ protected override void Draw(GameTime gameTime)
 }
 ```
 
+### Giving the boxed area a different color than the bars
+
+`GraphicsDevice.Clear()` ignores a narrowed viewport — it always clears the *entire* render target. Clearing once for the bars, then narrowing via `Apply()` and calling `Clear()` again for a different "inside" color wipes the bars too. Draw a rectangle sized to the current viewport instead — an actual draw call *is* confined to `Viewport`, unlike `Clear()`:
+
+```csharp
+adapter.Apply(); // narrow the viewport once
+Viewport vp = GraphicsDevice.Viewport;
+batch2d.Begin(); // Begin() derives its own projection from the CURRENT (already-narrowed) viewport
+batch2d.FillRectangle(0, 0, vp.Width, vp.Height, insideColor); // background, drawn before the scene
+batch2d.End();
+
+batch3d.Begin(camera3d); // calls Apply() again internally -- same rect, harmless
+// ... draw the 3D scene on top ...
+batch3d.End();
+```
+
 ## See also
 
 - [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) — everything `Camera2D.GetTransformMatrix()` feeds into.

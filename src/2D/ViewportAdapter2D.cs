@@ -66,6 +66,13 @@ namespace MonoPrimitives.Primitives2D
         /// against the whole window, or call Apply() and drop Offset from the draw transform
         /// (<c>Matrix.CreateScale(Scale.X, Scale.Y, 1f)</c> only). <see cref="Primitive3DBatch"/>'s
         /// camera-driven 3D path uses Apply() this second way internally and is unaffected.
+        ///
+        /// <see cref="GraphicsDevice.Clear(Color)"/> ignores a narrowed viewport and always clears
+        /// the whole render target — calling it again after Apply() to give the boxed "inside" a
+        /// different color from the bars wipes the bars too, not just the inside. To fill just the
+        /// current viewport, draw a rectangle sized to it instead (its bounds are already respected
+        /// by an actual draw, unlike Clear) — e.g. after narrowing, a <c>Primitive2DBatch.Begin()</c>/
+        /// <c>FillRectangle(0, 0, Device.Viewport.Width, Device.Viewport.Height, color)</c>/<c>End()</c>.
         /// </summary>
         public virtual void Apply() => Device.Viewport = new Viewport(BoundingRectangle);
 
