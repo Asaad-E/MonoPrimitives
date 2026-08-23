@@ -42,16 +42,16 @@ Construct one `Primitive2DBatch` per `GraphicsDevice` and keep it — never allo
 - `Border<Shape>` — outline only, growing **inward** from the shape's own edge. A thick border on a small shape never pokes outside it — it clamps and degrades gracefully toward a full fill instead.
 - `Draw<Shape>` — both together. One overload takes a single `Color` (fill and border match); another takes `fillColor, borderColor` separately.
 
-Raw multi-point mesh primitives with no natural "inside" (`DrawTriangleFan`, `DrawTriangleStrip`) keep a single `Draw` name, since there's nothing to separately border. `DrawCircleSector`/`DrawRing` keep the same `Draw`-only naming quirk for a related but different reason: they're fill-only shapes that were named `Draw*` from the start rather than `Fill*` — outline is a separate `*Lines`/`Border` method instead (see Sectors and rings below).
+Raw multi-point mesh primitives with no natural "inside" (`DrawTriangleFan`, `DrawTriangleStrip`) keep a single `Draw` name, since there's nothing to separately border. Sectors and rings (`FillCircleSector`/`BorderCircleSector`/`DrawCircleSector`, `FillRing`/`BorderRing`/`DrawRing`) follow the same three-verb pattern too — see Sectors and rings below.
 
 **Rotation.** Shapes with a meaningful orientation (Triangle, Rectangle, Ellipse, regular Poly, Capsule) take an optional trailing `float rotation = 0f` in **radians**, pivoting on the shape's own center unless you pass an explicit `Vector2? origin` (an offset from the shape's own position, not an absolute world coordinate). Shapes that look identical at any rotation (a solid or radially-graded Circle) have no rotation parameter at all — it would be a no-op. Arbitrary `Polygon`s (your own point list) and the regular `Poly` family don't take a separate `origin` either — a regular polygon always pivots on its own center, and an arbitrary polygon is already fully described by its points.
 
-One different unit convention to know: `startAngle`/`endAngle` on `DrawCircleSector`/`DrawCircleSectorGradient`/`DrawCircleSectorLines`/`DrawCircleSectorShadow`/`DrawRing`/`DrawRingGradient`/`BorderRing`/`DrawRingShadow` are normalized **turns** in `[0, 1]` (`1` = a full circle), not radians and not degrees. This is unrelated to the `rotation` parameter's radians and is easy to trip over the first time — `endAngle: 0.25f` is a quarter turn, not 0.25 radians.
+One different unit convention to know: `startAngle`/`endAngle` on every Sector/Ring method (`FillCircleSector`/`FillCircleSectorGradient`/`BorderCircleSector`/`DrawCircleSector`/`FillCircleSectorShadow`/`FillRing`/`FillRingGradient`/`BorderRing`/`DrawRing`/`FillRingShadow`) are normalized **turns** in `[0, 1]` (`1` = a full circle), not radians and not degrees. This is unrelated to the `rotation` parameter's radians and is easy to trip over the first time — `endAngle: 0.25f` is a quarter turn, not 0.25 radians.
 
 **Thickness and joins.** `Border*`/`Draw*` methods that can have sharp corners take `LineJoin join = LineJoin.Miter` (sharp, cheapest) or `LineJoin.Round`/`LineJoin.Bevel` (with an optional `float? jointRadius` to control how rounded/beveled the join is). Miter is fast and exact for most UI-style shapes; Round costs more triangles but looks right on large, soft shapes. Lines have their own related but separate concept, `LineCap` (`Butt`/`Round`), for how an *open* stroke's free end is finished.
 
 **Gradients.** `Fill<Shape>Gradient` (fill only) and `Draw<Shape>Gradient` (fill + border) exist for every shape family. In `Draw*Gradient`, the gradient fill always stops exactly where the border begins — for a circle of `radius` with `thickness`, the fill runs from the center out to `radius - thickness`. Most gradient methods also take `innerOffset`/`outerOffset`: solid-color margins before/after the actual fade. If the two would overlap (their sum exceeds the available space), both are scaled down proportionally rather than producing an inverted or negative fade — consistent across every gradient method in the file. Two distinct gradient *shapes* exist, and the parameter names tell you which one a method uses:
-- **Radial** (center → rim): parameters are named `inner`/`outer` (or `innerFill`/`outerFill` alongside a separate `borderColor`). `FillCircleGradient`, `FillEllipseGradient`, `FillPolyGradient`, `FillCapsuleGradient`, `DrawRingGradient` (band-width fade, not center-based, but same naming since there's still an inner/outer edge).
+- **Radial** (center → rim): parameters are named `inner`/`outer` (or `innerFill`/`outerFill` alongside a separate `borderColor`). `FillCircleGradient`, `FillEllipseGradient`, `FillPolyGradient`, `FillCapsuleGradient`, `FillRingGradient` (band-width fade, not center-based, but same naming since there's still an inner/outer edge).
 - **Directional/linear** (a straight fade along one axis, or point-to-point): parameters are named `from`/`to`. `FillTriangleGradient`, `FillRectangleGradient`, `FillCircleGradientLinear`, `FillEllipseGradientLinear`, `FillPolygonGradient`.
 
 **Shadows.** `Fill<Shape>Shadow` draws the shape's own solid fill plus a soft halo glowing outward from its boundary by `spread` pixels, fading from `color` at the edge to transparent at the outer edge of the halo — see the dedicated Shadows section below for how these are built and their one documented limitation.
@@ -84,7 +84,7 @@ Stroke primitives — no Fill/Border split, since a line has no "inside." `thick
 | `DrawLine(x1, y1, x2, y2, color)` / `DrawLine(x1, y1, x2, y2, thickness, color)` | Same, from raw floats instead of `Vector2`s. |
 | `DrawLineStrip(points, color)` / `DrawLineStrip(points, thickness, color, join, cap, jointRadius)` | A connected polyline through any number of points, with proper mitered/rounded/beveled joints at each corner instead of independent overlapping segments. |
 | `DrawLineDashed(start, end, dashLength, gapLength, color)` / `(..., thickness, color)` | A dashed line. |
-| `DrawArrow(start, end, color, thickness = 2f, headLength?, headWidth?)` | A line with a triangular arrowhead at `end`. `headLength`/`headWidth` default to a size proportional to `thickness` if omitted. |
+| `DrawArrow(start, end, color, thickness = 2f, headLength?, headWidth?, cap = LineCap.Butt, headCornerRadius = 0f)` | A line with a triangular arrowhead at `end`. `headLength`/`headWidth` default to a size proportional to `thickness` if omitted. `cap` finishes the shaft's free end (only meaningful when the shaft is visibly shorter than `headLength`); `headCornerRadius` rounds the arrowhead's corners — keep it small relative to the head's own size, since a large radius blobs the triangle out into a rounded shape rather than reading as an arrowhead. |
 
 ## Triangles
 
@@ -229,18 +229,20 @@ Takes a `ReadOnlySpan<Vector2>` of points instead of center/sides/radius — dra
 
 ## Sectors and rings
 
-Special-purpose shapes that don't fit the Fill/Border/Draw mold cleanly, so they keep their own simpler names — all fill-only except the dedicated `*Lines`/`Border` outline methods. Remember: `startAngle`/`endAngle` here are normalized **turns** `[0, 1]`, not radians.
+Same Fill/Border/Draw pattern as every other shape. Remember: `startAngle`/`endAngle` here are normalized **turns** `[0, 1]`, not radians.
 
 | Method | What it does |
 |---|---|
-| `DrawCircleSector(center, radius, startAngle, endAngle, [segments,] color)` | A filled pie slice. |
-| `DrawCircleSectorGradient(center, radius, startAngle, endAngle, [segments,] inner, outer)` | Radial-gradient pie slice, center → rim. |
-| `DrawCircleSectorLines(center, radius, startAngle, endAngle, thickness, color)` | The pie slice's outline (arc + the two straight radii). |
-| `DrawCircleSectorShadow(center, radius, startAngle, endAngle, color, spread)` | Pie slice with a soft outward drop shadow. Special-cases a full-turn sweep (no center-point "spike," since a full circle has no radial cut edges to shadow). |
-| `DrawRing(center, innerRadius, outerRadius, [startAngle, endAngle, segments,] color)` | A filled annulus (donut), or a partial donut wedge if you pass an angle range. `innerRadius <= 0` degenerates to a sector. |
-| `DrawRingGradient(center, innerRadius, outerRadius, [startAngle, endAngle, segments,] innerColor, outerColor)` | Same, with a radial fade across the band's own width (inner edge → outer edge — a ring has no center point within its filled area to fade from). |
+| `FillCircleSector(center, radius, startAngle, endAngle, [segments,] color)` | A filled pie slice. |
+| `FillCircleSectorGradient(center, radius, startAngle, endAngle, [segments,] inner, outer)` | Radial-gradient pie slice, center → rim. |
+| `BorderCircleSector(center, radius, startAngle, endAngle, thickness, color)` | The pie slice's outline (arc + the two straight radii). |
+| `DrawCircleSector(center, radius, startAngle, endAngle, [segments,] fillColor, borderColor, thickness = 1f)` | Fill + border together. |
+| `FillCircleSectorShadow(center, radius, startAngle, endAngle, color, spread)` | Pie slice with a soft outward drop shadow. Special-cases a full-turn sweep (no center-point "spike," since a full circle has no radial cut edges to shadow). |
+| `FillRing(center, innerRadius, outerRadius, [startAngle, endAngle, segments,] color)` | A filled annulus (donut), or a partial donut wedge if you pass an angle range. `innerRadius <= 0` degenerates to a sector. |
+| `FillRingGradient(center, innerRadius, outerRadius, [startAngle, endAngle, segments,] innerColor, outerColor)` | Same, with a radial fade across the band's own width (inner edge → outer edge — a ring has no center point within its filled area to fade from). |
 | `BorderRing(center, innerRadius, outerRadius, [startAngle, endAngle, segments,] color, thickness)` | The ring's outline: outer + inner arcs, plus (for a partial ring) the two straight radial edges. |
-| `DrawRingShadow(center, innerRadius, outerRadius, startAngle, endAngle, color, spread)` | Ring (or partial wedge) with a soft outward drop shadow. A full ring's shadow only glows on its outer edge, matching `FillCircleShadow`'s own precedent (no inner-hole glow). A partial wedge computes its offset boundary in closed form (grow the outer radius, shrink the inner radius, same angle range) rather than through the shared halo helper every other `Fill*Shadow` uses — see "How shadows are built" below for why. |
+| `DrawRing(center, innerRadius, outerRadius, [startAngle, endAngle, segments,] fillColor, borderColor, thickness = 1f)` | Fill + border together. |
+| `FillRingShadow(center, innerRadius, outerRadius, startAngle, endAngle, color, spread)` | Ring (or partial wedge) with a soft outward drop shadow. A full ring's shadow only glows on its outer edge, matching `FillCircleShadow`'s own precedent (no inner-hole glow). |
 
 ## Splines
 
@@ -266,10 +268,8 @@ Debug/reference overlays built entirely from `DrawLine` calls — not a separate
 
 | Method | What it does |
 |---|---|
-| `DrawGrid(slices, spacing)` | A grid centered at the origin, using subtle default colors meant to sit quietly behind other content. |
-| `DrawGrid(slices, spacing, origin, lineColor, majorLineColor, showMajorLines = true, lineThickness = 1f)` | Same, fully customized. Every 5th line (`MajorGridLineInterval`) draws in `majorLineColor` at `lineThickness + 1` when `showMajorLines` is true; set it `false` to draw every line uniformly in `lineColor`. |
-| `DrawAxis(size)` / `DrawAxis(size, color)` | An X/Y axis cross through the world origin. |
-| `DrawAxis(origin, size, color, thickness = 1f)` | Same, at an explicit origin. |
+| `DrawGrid(slices, spacing, origin = null, lineColor = null, majorLineColor = null, showMajorLines = true, lineThickness = 1f)` | A grid, centered at the origin by default, using subtle default colors meant to sit quietly behind other content — omit anything past `spacing` to get that default look. Every 5th line (`MajorGridLineInterval`) draws in `majorLineColor` at `lineThickness + 1` when `showMajorLines` is true; set it `false` to draw every line uniformly in `lineColor`. |
+| `DrawAxis(size, origin = null, color = null, thickness = 1f)` | An X/Y axis cross, through the world origin by default — pass `origin` for an explicit one. |
 
 ## Text
 
@@ -288,11 +288,11 @@ batch.DrawString("FPS: 60", new Vector2(10, 10), pixelSize: 4, Color.White);
 | `DebugFont5x7.SpaceWidthScale` (static field, default `0.3f`) | How wide a space character is, as a fraction of a normal glyph's width. Change it once globally for tighter/looser spacing. |
 | `DebugFont5x7.GlyphWidth` / `GlyphHeight` (constants, `5`/`7`) | The font's cell size in pixels, before `pixelSize` scaling. |
 
-## How shadows are built
+## How shadows look
 
-Every `Fill*Shadow` method draws the shape's own solid fill (reusing the exact same `Fill*`/`Fill*Rounded`/`Fill*Chamfer` method, so there's never a seam) plus a halo tracing that shape's real boundary outward by `spread` pixels, opaque at the boundary and fading to alpha-0 at the outer edge. This is built from `OutsetConvexPolygon` (the mirror image of the fillet/rounding engine's `InsetConvexPolygon` — same miter-offset math, but picks the candidate point *farther* from the shape's centroid instead of closer) tracing the shape's own already-generated boundary outward, rather than 9-sliced or independently-scaled fixed pieces. Because it traces the real boundary, it automatically supports per-corner radius, rotation, and chamfer with zero extra bookkeeping — whatever a shape's `Fill*` can draw, its shadow matches exactly.
+Every `Fill*Shadow` draws the shape's own solid fill plus a soft halo tracing its real boundary outward by `spread` pixels — opaque at the edge, fading to fully transparent further out. Because it follows the shape's actual outline, rounded corners, chamfers, and rotation all shadow correctly with no extra setup — whatever a shape's plain `Fill*` can draw, its shadow matches exactly.
 
-**Known limitation, shared with `InsetConvexPolygon`:** both offsetters pick an offset direction per-vertex using a centroid-distance heuristic, which only works correctly for a **convex** vertex. On a genuinely concave (reflex) vertex — an arbitrary `Polygon` with a notch, or (historically) a ring wedge's inner-arc corners — this heuristic can pick the wrong direction, producing a small visible artifact right at that corner. `FillPolygonShadow`/`FillPolygonShadowRounded` inherit this on non-convex input; `DrawRingShadow`'s partial-wedge case sidesteps it entirely by computing its offset boundary in closed form instead of routing through this shared helper (see [`Design/DECISIONS.md`](../Design/DECISIONS.md) for the two buggy iterations that preceded that fix). A proper fix needs per-vertex convex/reflex detection via turn-direction, not centroid distance — tracked as deliberately deferred work in [`Design/ROADMAP.md`](../Design/ROADMAP.md).
+**Known limitation:** on a genuinely concave (reflex) corner — an arbitrary `Polygon` with a notch — the halo can show a small visible artifact right at that corner. `FillPolygonShadow`/`FillPolygonShadowRounded` inherit this on non-convex input; every other shape family (including `DrawRingShadow`'s own partial-wedge case) is unaffected. Tracked in [`Design/ROADMAP.md`](../Design/ROADMAP.md).
 
 ## A note on gradients in general
 

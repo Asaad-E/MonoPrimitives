@@ -45,9 +45,7 @@ Construct one `Primitive3DBatch` per `GraphicsDevice` and keep it — its intern
 
 **Fill / Border / Draw**, same as 2D: `Fill<Shape>` is solid color, `Border<Shape>` is outline only (defaults to `DefaultLineThickness` via a `thickness <= 0` sentinel), `Draw<Shape>` is both together as a `fillColor, borderColor` overload.
 
-**No `Ex`/`V`-suffixed variants** — a two-endpoint cylinder and a "standing upright" one are both just `FillCylinder`, picked by which arguments you pass, not a different method name. Same for `Cube` (width/height/length vs. a `Vector3 size`).
-
-**Segment/ring/slice counts are explicit parameters** on every curved shape except `Sphere` (see "Segment counts" below). Pass `-1` for automatic level-of-detail (picked from distance-to-camera and radius so each edge stays roughly constant-size on screen), or `0` to use the shape's own default.
+**Segment/ring/slice counts are explicit parameters** on every curved shape except `Sphere`/`Circle3D`, whose simple overloads pick automatically (see "Segment counts" below). Pass `-1` for automatic level-of-detail (picked from distance-to-camera and radius so each edge stays roughly constant-size on screen), or `0` to use the shape's own default.
 
 **Rotation** on the "standing upright"/centered shapes (`Cube`, `Cylinder`, `Torus`) is a `Quaternion`, not radians — the natural rotation type in 3D. `Circle3D` is the one exception: it takes `Vector3 rotationAxis, float rotationAngle` (angle in **degrees**), an axis-angle pair instead of a full quaternion. Shapes fully described by two endpoints (`Capsule`, the two-point `Cylinder` overload) take no separate rotation parameter — they're already oriented by their own points. `Sphere` takes no rotation at all — a solid-color sphere looks identical from any angle.
 
@@ -93,7 +91,7 @@ No `rotation` parameter anywhere — a solid-color sphere is rotationally symmet
 
 | Method | What it does |
 |---|---|
-| `FillSphere(center, radius, color)` | A filled sphere using default tessellation. |
+| `FillSphere(center, radius, color)` | A filled sphere, ring/slice count picked automatically (see "Segment counts" below). |
 | `FillSphere(center, radius, rings, slices, color)` | Same, with an explicit ring/slice count. |
 | `FillSphere(BoundingSphere, color)` | Same, from a `BoundingSphere` directly. |
 | `BorderSphere(center, radius, color, thickness)` / `(center, radius, rings, slices, color, thickness)` | Wireframe (latitude + longitude lines) only. |
@@ -178,7 +176,7 @@ Same four spline types as 2D (see [`Primitive2DBatch_Guide.md`](Primitive2DBatch
 
 ## Segment counts: chosen for you, overridable
 
-Only `Sphere` has a no-tessellation-arguments overload; `Cylinder`/`Capsule`/`Torus` always take their segment counts explicitly. Pass `-1` for any of them to get automatic level-of-detail instead of hand-picking a number — `ResolveSegments(requested, radius, [center,] fallback)` is the public method behind that choice (distance-to-camera and radius in, a segment count out, clamped to `[AutoSegmentsMin, AutoSegmentsMax]` = `[8, 96]`), exposed in case you want the same auto-LOD sizing for your own curved geometry.
+Only `Sphere` and `Circle3D` have a no-tessellation-arguments overload, and both pick automatic level-of-detail by default rather than a fixed segment count — `Cylinder`/`Capsule`/`Torus` always take their segment counts explicitly. Pass `-1` for any of them to get the same automatic level-of-detail instead of hand-picking a number — `ResolveSegments(requested, radius, [center,] fallback)` is the public method behind that choice (distance-to-camera and radius in, a segment count out, clamped to `[AutoSegmentsMin, AutoSegmentsMax]` = `[8, 96]`), exposed in case you want the same auto-LOD sizing for your own curved geometry.
 
 ## Testing
 
