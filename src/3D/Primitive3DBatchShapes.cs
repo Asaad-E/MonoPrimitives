@@ -1039,37 +1039,25 @@ namespace MonoPrimitives.Primitives3D
 
         private const int MajorGridLineInterval = 5;
 
-        /// <summary>Draws a grid on the XZ plane (the ground), centered at the origin.</summary>
-        public void DrawGrid(int slices, float spacing) => DrawGridXZ(slices, spacing);
-
-        /// <summary>Draws a grid on the XZ plane with an explicit origin and colors.</summary>
+        /// <summary>
+        /// Draws a grid on the XZ plane (the ground). Every parameter past <paramref name="spacing"/>
+        /// is optional — omit any of them for a grid centered at the origin with the default subtle colors.
+        /// </summary>
         /// <param name="lineThickness">Minor line thickness; &lt;= 0 (the default) draws minor lines via the cheap fixed-1px <see cref="DrawLine3DFast"/> path, as before. A positive value draws minor lines via <see cref="DrawLine3D(Vector3,Vector3,float,Color)"/> instead, so they can be scaled; major lines are always 1 thicker.</param>
-        public void DrawGrid(int slices, float spacing, Vector3 origin, Color lineColor, Color majorLineColor, bool showMajorLines = true, float lineThickness = 0f)
+        public void DrawGrid(int slices, float spacing, Vector3? origin = null, Color? lineColor = null, Color? majorLineColor = null, bool showMajorLines = true, float lineThickness = 0f)
             => DrawGridXZ(slices, spacing, origin, lineColor, majorLineColor, showMajorLines, lineThickness);
 
-        /// <summary>Draws a grid on the XZ plane (the ground), centered at the origin.</summary>
-        public void DrawGridXZ(int slices, float spacing)
-            => DrawGridXZ(slices, spacing, Vector3.Zero, DefaultGridLineColor, DefaultGridMajorLineColor);
+        /// <inheritdoc cref="DrawGrid(int,float,Vector3?,Color?,Color?,bool,float)"/>
+        public void DrawGridXZ(int slices, float spacing, Vector3? origin = null, Color? lineColor = null, Color? majorLineColor = null, bool showMajorLines = true, float lineThickness = 0f)
+            => DrawGridPlane(slices, spacing, origin ?? Vector3.Zero, Vector3.UnitX, Vector3.UnitZ, lineColor ?? DefaultGridLineColor, majorLineColor ?? DefaultGridMajorLineColor, showMajorLines, lineThickness);
 
-        /// <inheritdoc cref="DrawGrid(int,float,Vector3,Color,Color,bool,float)"/>
-        public void DrawGridXZ(int slices, float spacing, Vector3 origin, Color lineColor, Color majorLineColor, bool showMajorLines = true, float lineThickness = 0f)
-            => DrawGridPlane(slices, spacing, origin, Vector3.UnitX, Vector3.UnitZ, lineColor, majorLineColor, showMajorLines, lineThickness);
+        /// <summary>Draws a grid on the XY plane (a wall facing +Z/-Z). Every parameter past <paramref name="spacing"/> is optional, same as <see cref="DrawGridXZ(int,float,Vector3?,Color?,Color?,bool,float)"/>.</summary>
+        public void DrawGridXY(int slices, float spacing, Vector3? origin = null, Color? lineColor = null, Color? majorLineColor = null, bool showMajorLines = true, float lineThickness = 0f)
+            => DrawGridPlane(slices, spacing, origin ?? Vector3.Zero, Vector3.UnitX, Vector3.UnitY, lineColor ?? DefaultGridLineColor, majorLineColor ?? DefaultGridMajorLineColor, showMajorLines, lineThickness);
 
-        /// <summary>Draws a grid on the XY plane (a wall facing +Z/-Z), centered at the origin.</summary>
-        public void DrawGridXY(int slices, float spacing)
-            => DrawGridXY(slices, spacing, Vector3.Zero, DefaultGridLineColor, DefaultGridMajorLineColor);
-
-        /// <inheritdoc cref="DrawGrid(int,float,Vector3,Color,Color,bool,float)"/>
-        public void DrawGridXY(int slices, float spacing, Vector3 origin, Color lineColor, Color majorLineColor, bool showMajorLines = true, float lineThickness = 0f)
-            => DrawGridPlane(slices, spacing, origin, Vector3.UnitX, Vector3.UnitY, lineColor, majorLineColor, showMajorLines, lineThickness);
-
-        /// <summary>Draws a grid on the YZ plane (a wall facing +X/-X), centered at the origin.</summary>
-        public void DrawGridYZ(int slices, float spacing)
-            => DrawGridYZ(slices, spacing, Vector3.Zero, DefaultGridLineColor, DefaultGridMajorLineColor);
-
-        /// <inheritdoc cref="DrawGrid(int,float,Vector3,Color,Color,bool,float)"/>
-        public void DrawGridYZ(int slices, float spacing, Vector3 origin, Color lineColor, Color majorLineColor, bool showMajorLines = true, float lineThickness = 0f)
-            => DrawGridPlane(slices, spacing, origin, Vector3.UnitY, Vector3.UnitZ, lineColor, majorLineColor, showMajorLines, lineThickness);
+        /// <summary>Draws a grid on the YZ plane (a wall facing +X/-X). Every parameter past <paramref name="spacing"/> is optional, same as <see cref="DrawGridXZ(int,float,Vector3?,Color?,Color?,bool,float)"/>.</summary>
+        public void DrawGridYZ(int slices, float spacing, Vector3? origin = null, Color? lineColor = null, Color? majorLineColor = null, bool showMajorLines = true, float lineThickness = 0f)
+            => DrawGridPlane(slices, spacing, origin ?? Vector3.Zero, Vector3.UnitY, Vector3.UnitZ, lineColor ?? DefaultGridLineColor, majorLineColor ?? DefaultGridMajorLineColor, showMajorLines, lineThickness);
 
         // Low alpha by default so a reference grid reads as a subtle backdrop for a moving
         // camera/simulation rather than competing with whatever's being drawn on top of it.
@@ -1124,28 +1112,29 @@ namespace MonoPrimitives.Primitives3D
         // two read as one family when drawn together.
         private static readonly Color DefaultAxisColor = new(0.15f, 0.15f, 0.15f, 0.65f);
 
-        /// <summary>Draws an X/Y/Z axis triad of length <paramref name="size"/> (in each direction) through the origin, using a dark, grid-like default color.</summary>
-        public void DrawAxis(float size) => DrawAxis(Vector3.Zero, size, DefaultAxisColor);
-
-        /// <summary>Draws an X/Y/Z axis triad of length <paramref name="size"/> (in each direction) through the origin.</summary>
-        public void DrawAxis(float size, Color color) => DrawAxis(Vector3.Zero, size, color);
-
-        /// <summary>Draws an X/Y/Z axis triad of length <paramref name="size"/> (in each direction) through <paramref name="origin"/>, all one color — for the classic red/green/blue gizmo instead, use <see cref="DrawAxes"/>.</summary>
+        /// <summary>
+        /// Draws an X/Y/Z axis triad of length <paramref name="size"/> (in each direction), all one
+        /// color — for the classic red/green/blue gizmo instead, use <see cref="DrawAxes"/>. Every
+        /// parameter past <paramref name="size"/> is optional — omit any of them for a triad through
+        /// the origin, using a dark, grid-like default color.
+        /// </summary>
         /// <param name="thickness">&lt;= 0 (the default) draws via the cheap fixed-1px <see cref="DrawLine3DFast"/> path, as before. A positive value draws via <see cref="DrawLine3D(Vector3,Vector3,float,Color)"/> instead, so the triad can be made thicker.</param>
-        public void DrawAxis(Vector3 origin, float size, Color color, float thickness = 0f)
+        public void DrawAxis(float size, Vector3? origin = null, Color? color = null, float thickness = 0f)
         {
             ThrowIfNotBegun();
+            Vector3 o = origin ?? Vector3.Zero;
+            Color c = color ?? DefaultAxisColor;
             if (thickness > 0f)
             {
-                DrawLine3D(origin - Vector3.UnitX * size, origin + Vector3.UnitX * size, thickness, color);
-                DrawLine3D(origin - Vector3.UnitY * size, origin + Vector3.UnitY * size, thickness, color);
-                DrawLine3D(origin - Vector3.UnitZ * size, origin + Vector3.UnitZ * size, thickness, color);
+                DrawLine3D(o - Vector3.UnitX * size, o + Vector3.UnitX * size, thickness, c);
+                DrawLine3D(o - Vector3.UnitY * size, o + Vector3.UnitY * size, thickness, c);
+                DrawLine3D(o - Vector3.UnitZ * size, o + Vector3.UnitZ * size, thickness, c);
             }
             else
             {
-                DrawLine3DFast(origin - Vector3.UnitX * size, origin + Vector3.UnitX * size, color);
-                DrawLine3DFast(origin - Vector3.UnitY * size, origin + Vector3.UnitY * size, color);
-                DrawLine3DFast(origin - Vector3.UnitZ * size, origin + Vector3.UnitZ * size, color);
+                DrawLine3DFast(o - Vector3.UnitX * size, o + Vector3.UnitX * size, c);
+                DrawLine3DFast(o - Vector3.UnitY * size, o + Vector3.UnitY * size, c);
+                DrawLine3DFast(o - Vector3.UnitZ * size, o + Vector3.UnitZ * size, c);
             }
         }
 

@@ -1841,6 +1841,15 @@ namespace MonoPrimitives.Primitives2D
         public void FillRectangleShadow(Vector2 position, Vector2 size, RectCorners radius, Color color, float spread = 20f, float rotation = 0f, Vector2? origin = null)
             => FillRectangleShadow(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), radius, color, spread, rotation, origin);
 
+        /// <summary>Sharp-cornered rectangle drop shadow — same as the <see cref="RectCorners"/> overload with a radius of 0, for when you don't want rounding and don't want to think about corners at all.</summary>
+        public void FillRectangleShadow(Rectangle rect, Color color, float spread = 20f, float rotation = 0f, Vector2? origin = null)
+            => FillRectangleShadow(rect, default, color, spread, rotation, origin);
+
+        /// <inheritdoc cref="FillRectangleShadow(Rectangle,Color,float,float,Vector2?)"/>
+        /// <remarks><paramref name="position"/>/<paramref name="size"/> are truncated to <see cref="Rectangle"/>'s integer fields.</remarks>
+        public void FillRectangleShadow(Vector2 position, Vector2 size, Color color, float spread = 20f, float rotation = 0f, Vector2? origin = null)
+            => FillRectangleShadow(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), default, color, spread, rotation, origin);
+
         /// <summary>
         /// Chamfered-rectangle drop shadow — same idea as
         /// <see cref="FillRectangleShadow(Rectangle,RectCorners,Color,float,float,Vector2?)"/>
@@ -4668,12 +4677,9 @@ namespace MonoPrimitives.Primitives2D
         private static readonly Color DefaultGridMajorLineColor = new(0.9f, 0.9f, 0.95f, 0.55f);
         private static readonly Color DefaultAxisColor = new(0.15f, 0.15f, 0.15f, 0.65f);
 
-        /// <summary>Draws a grid centered at the origin, using the default subtle grid colors.</summary>
-        public void DrawGrid(int slices, float spacing)
-            => DrawGrid(slices, spacing, Vector2.Zero, DefaultGridLineColor, DefaultGridMajorLineColor);
-
         /// <summary>
-        /// Draws a grid with an explicit origin and colors.
+        /// Draws a grid. Every parameter past <paramref name="spacing"/> is optional — omit any of
+        /// them to get a grid centered at the origin, using the default subtle grid colors.
         /// </summary>
         /// <param name="showMajorLines">
         /// When true (default), every <see cref="MajorGridLineInterval"/>th division uses
@@ -4682,9 +4688,12 @@ namespace MonoPrimitives.Primitives2D
         /// ignored.
         /// </param>
         /// <param name="lineThickness">Minor line thickness; major lines are always 1 thicker.</param>
-        public void DrawGrid(int slices, float spacing, Vector2 origin, Color lineColor, Color majorLineColor, bool showMajorLines = true, float lineThickness = 1f)
+        public void DrawGrid(int slices, float spacing, Vector2? origin = null, Color? lineColor = null, Color? majorLineColor = null, bool showMajorLines = true, float lineThickness = 1f)
         {
             ThrowIfNotBegun();
+            Vector2 o = origin ?? Vector2.Zero;
+            Color line = lineColor ?? DefaultGridLineColor;
+            Color majorLine = majorLineColor ?? DefaultGridMajorLineColor;
             int halfSlices = slices / 2;
             float extent = halfSlices * spacing;
 
@@ -4693,25 +4702,25 @@ namespace MonoPrimitives.Primitives2D
                 bool major = showMajorLines && i % MajorGridLineInterval == 0;
                 float offset = i * spacing;
                 float thickness = major ? lineThickness + 1f : lineThickness;
-                Color color = major ? majorLineColor : lineColor;
+                Color color = major ? majorLine : line;
 
-                DrawLine(origin + new Vector2(offset, -extent), origin + new Vector2(offset, extent), thickness, color);
-                DrawLine(origin + new Vector2(-extent, offset), origin + new Vector2(extent, offset), thickness, color);
+                DrawLine(o + new Vector2(offset, -extent), o + new Vector2(offset, extent), thickness, color);
+                DrawLine(o + new Vector2(-extent, offset), o + new Vector2(extent, offset), thickness, color);
             }
         }
 
-        /// <summary>Draws an X/Y axis cross of length <paramref name="size"/> (in each direction) through the origin, using a dark, grid-like default color.</summary>
-        public void DrawAxis(float size) => DrawAxis(Vector2.Zero, size, DefaultAxisColor);
-
-        /// <summary>Draws an X/Y axis cross of length <paramref name="size"/> (in each direction) through the origin.</summary>
-        public void DrawAxis(float size, Color color) => DrawAxis(Vector2.Zero, size, color);
-
-        /// <summary>Draws an X/Y axis cross of length <paramref name="size"/> (in each direction) through <paramref name="origin"/>.</summary>
-        public void DrawAxis(Vector2 origin, float size, Color color, float thickness = 1f)
+        /// <summary>
+        /// Draws an X/Y axis cross of length <paramref name="size"/> (in each direction). Every
+        /// parameter past <paramref name="size"/> is optional — omit any of them for a cross
+        /// through the origin, using a dark, grid-like default color.
+        /// </summary>
+        public void DrawAxis(float size, Vector2? origin = null, Color? color = null, float thickness = 1f)
         {
             ThrowIfNotBegun();
-            DrawLine(origin - Vector2.UnitX * size, origin + Vector2.UnitX * size, thickness, color);
-            DrawLine(origin - Vector2.UnitY * size, origin + Vector2.UnitY * size, thickness, color);
+            Vector2 o = origin ?? Vector2.Zero;
+            Color c = color ?? DefaultAxisColor;
+            DrawLine(o - Vector2.UnitX * size, o + Vector2.UnitX * size, thickness, c);
+            DrawLine(o - Vector2.UnitY * size, o + Vector2.UnitY * size, thickness, c);
         }
 
         // ------------------------------------------------------------------
