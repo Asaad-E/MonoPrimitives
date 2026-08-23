@@ -161,9 +161,9 @@ namespace MonoPrimitives.Primitives3D
         // CIRCLES (flat disc in an arbitrary 3D plane)
         // =====================================================================
 
-        /// <summary>Draws a filled disc, oriented like <see cref="BorderCircle3D(Vector3,float,Vector3,float,Color,float)"/>.</summary>
+        /// <summary>Draws a filled disc, oriented like <see cref="BorderCircle3D(Vector3,float,Vector3,float,Color,float)"/>. Segment count picked automatically from distance and radius — see <see cref="Primitive3DBatch.ResolveSegments(int,float,in Vector3,int)"/>.</summary>
         public void FillCircle3D(Vector3 center, float radius, Vector3 rotationAxis, float rotationAngle, Color color)
-            => FillCircle3D(center, radius, rotationAxis, rotationAngle, DefaultCircleSegments, color);
+            => FillCircle3D(center, radius, rotationAxis, rotationAngle, -1, color);
 
         /// <summary>Draws a filled disc with an explicit segment count (-1 for automatic LOD).</summary>
         public void FillCircle3D(Vector3 center, float radius, Vector3 rotationAxis, float rotationAngle, int segments, Color color)
@@ -184,10 +184,10 @@ namespace MonoPrimitives.Primitives3D
             }
         }
 
-        /// <summary>Draws a wireframe circle, rotated by <paramref name="rotationAngle"/> (degrees) around <paramref name="rotationAxis"/>.</summary>
+        /// <summary>Draws a wireframe circle, rotated by <paramref name="rotationAngle"/> (degrees) around <paramref name="rotationAxis"/>. Segment count picked automatically from distance and radius.</summary>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderCircle3D(Vector3 center, float radius, Vector3 rotationAxis, float rotationAngle, Color color, float thickness = -1f)
-            => BorderCircle3D(center, radius, rotationAxis, rotationAngle, DefaultCircleSegments, color, thickness);
+            => BorderCircle3D(center, radius, rotationAxis, rotationAngle, -1, color, thickness);
 
         /// <summary>Draws a wireframe circle with an explicit segment count (-1 for automatic LOD).</summary>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
@@ -408,9 +408,9 @@ namespace MonoPrimitives.Primitives3D
         // symmetric, so rotating it has no visible effect — same reasoning the
         // 2D library documents for FillCircleGradient's own lack of rotation.
 
-        /// <summary>Draws a filled sphere using default tessellation.</summary>
+        /// <summary>Draws a filled sphere, ring/slice count picked automatically from distance and radius.</summary>
         public void FillSphere(Vector3 centerPos, float radius, Color color)
-            => FillSphere(centerPos, radius, DefaultSphereRings, DefaultSphereSlices, color);
+            => FillSphere(centerPos, radius, -1, -1, color);
 
         /// <summary>Draws a filled sphere with an explicit ring/slice count (-1 for automatic LOD).</summary>
         public void FillSphere(Vector3 centerPos, float radius, int rings, int slices, Color color)
@@ -463,10 +463,10 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>Draws a filled sphere from a <see cref="BoundingSphere"/>.</summary>
         public void FillSphere(BoundingSphere sphere, Color color) => FillSphere(sphere.Center, sphere.Radius, color);
 
-        /// <summary>Draws a sphere wireframe using default tessellation.</summary>
+        /// <summary>Draws a sphere wireframe, ring/slice count picked automatically from distance and radius.</summary>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderSphere(Vector3 centerPos, float radius, Color color, float thickness = -1f)
-            => BorderSphere(centerPos, radius, DefaultSphereRings, DefaultSphereSlices, color, thickness);
+            => BorderSphere(centerPos, radius, -1, -1, color, thickness);
 
         /// <summary>Draws a sphere wireframe (latitude and longitude lines) with an explicit ring/slice count.</summary>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
