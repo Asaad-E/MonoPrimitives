@@ -415,5 +415,37 @@ namespace MonoPrimitives
             if (normalize && v.LengthSquared() > 1f) v = Vector2.Normalize(v);
             return v;
         }
+
+        /// <summary>WASD movement direction — shorthand for <c>GetVector2(Keys.A, Keys.D, Keys.W, Keys.S, normalize)</c>. W/S map to -Y/+Y, the same screen-space convention every camera and demo in this library already reads keyboard movement with.</summary>
+        public Vector2 GetWASD(bool normalize = true) => GetVector2(Keys.A, Keys.D, Keys.W, Keys.S, normalize);
+
+        /// <summary>Arrow-key movement direction — same shape and Y convention as <see cref="GetWASD"/>.</summary>
+        public Vector2 GetArrowKeys(bool normalize = true) => GetVector2(Keys.Left, Keys.Right, Keys.Up, Keys.Down, normalize);
+
+        /// <summary>
+        /// Combined movement direction from every source at once — WASD, arrow keys, the left
+        /// thumbstick (deadzoned), and the D-pad — so a caller doesn't have to pick one input method
+        /// or merge them by hand. Every source shares this library's Y-down convention (up is
+        /// negative Y); the thumbstick's own raw Y (hardware convention: up is positive) is flipped
+        /// before summing to match. <paramref name="normalize"/> (default true) caps the combined
+        /// magnitude at 1 without flattening a slower analog-stick push into a full-speed digital
+        /// one — same behavior as <see cref="GetVector2"/>.
+        /// </summary>
+        public Vector2 GetInputDirection(int player = 0, bool normalize = true)
+        {
+            Vector2 v = GetVector2(Keys.A, Keys.D, Keys.W, Keys.S, normalize: false)
+                      + GetVector2(Keys.Left, Keys.Right, Keys.Up, Keys.Down, normalize: false);
+
+            Vector2 stick = LeftStickDeadzoned(player);
+            v += new Vector2(stick.X, -stick.Y);
+
+            if (IsButtonDown(Buttons.DPadLeft, player)) v.X -= 1f;
+            if (IsButtonDown(Buttons.DPadRight, player)) v.X += 1f;
+            if (IsButtonDown(Buttons.DPadUp, player)) v.Y -= 1f;
+            if (IsButtonDown(Buttons.DPadDown, player)) v.Y += 1f;
+
+            if (normalize && v.LengthSquared() > 1f) v = Vector2.Normalize(v);
+            return v;
+        }
     }
 }

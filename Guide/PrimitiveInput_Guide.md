@@ -73,6 +73,8 @@ Call `Update` exactly once per frame, before reading anything else — every `Is
 |---|---|
 | `GetAxis(negative, positive)` | `-1`/`0`/`+1` from two keys — `-1` if only `negative` is held, `+1` if only `positive`, `0` if neither or both (a tie cancels to `0`, it doesn't pick a winner). The one-axis version of `GetVector2`, for something like a single-axis slider or a 1D character (a side-scroller's left/right). |
 | `GetVector2(negativeX, positiveX, negativeY, positiveY, normalize = true)` | A 2D movement vector from four keys (e.g. `A`/`D`/`W`/`S` or arrow keys) — each axis computed the same way as `GetAxis`. `normalize: true` (default) keeps diagonal movement the same speed as axis-aligned movement; `false` gives the raw, un-normalized per-axis `[-1,1]` pair instead. This is what `Camera2D`/`Camera3D`'s own `UpdateWithInput` use for WASD movement. |
+| `GetWASD(normalize = true)` / `GetArrowKeys(normalize = true)` | `GetVector2` pre-filled with `A`/`D`/`W`/`S` or `Left`/`Right`/`Up`/`Down` — up is `-Y`, matching every camera/demo in this library. |
+| `GetInputDirection(player = 0, normalize = true)` | WASD + arrow keys + the deadzoned left stick + D-pad, all summed into one direction — every source normalized to the same `-Y`-is-up convention first, so pressing a key and pushing the stick the same way reinforce instead of cancelling. `normalize` behaves the same as on `GetVector2`. |
 
 ## Typed text (`GetCharPressed`)
 
