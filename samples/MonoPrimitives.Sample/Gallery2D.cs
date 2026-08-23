@@ -518,6 +518,7 @@ internal static class Gallery2D
             new("Spline Bezier quadratic", (b, p) => b.DrawSplineBezierQuadratic(ThreePointBezierQuad(p), 5f, FillColor)),
             new("Arrow default", (b, p) => b.DrawArrow(p + new Vector2(-60, 0), p + new Vector2(60, 0), FillColor)),
             new("Arrow thick head", (b, p) => b.DrawArrow(p + new Vector2(-60, 0), p + new Vector2(60, 0), FillColor, 6f, headLength: 40f, headWidth: 40f)),
+            new("Arrow round", (b, p) => b.DrawArrow(p + new Vector2(-60, 0), p + new Vector2(60, 0), FillColor, 6f, cap: LineCap.Round, headCornerRadius: 3f)),
             new("Triangle fan", (b, p) => b.DrawTriangleFan(Fan(p), FillColor)),
             new("Triangle strip", (b, p) => b.DrawTriangleStrip(Strip(p), FillColor)),
         };

@@ -679,7 +679,9 @@ namespace MonoPrimitives.Primitives2D
         /// capped so a short arrow doesn't grow a head bigger than the arrow itself; pass
         /// <paramref name="headLength"/>/<paramref name="headWidth"/> to size it exactly instead.
         /// </summary>
-        public void DrawArrow(Vector2 start, Vector2 end, Color color, float thickness = 2f, float? headLength = null, float? headWidth = null)
+        /// <param name="cap">Shaft end cap style — <see cref="LineCap.Round"/> for a softer tail end instead of the default flat cut.</param>
+        /// <param name="headCornerRadius">Rounds the head triangle's 3 corners by this amount (0, the default, keeps sharp points) — the head is just a triangle, so this is the same knob as <see cref="FillTriangleRounded(Vector2,Vector2,Vector2,float,Color,float,Vector2?)"/>.</param>
+        public void DrawArrow(Vector2 start, Vector2 end, Color color, float thickness = 2f, float? headLength = null, float? headWidth = null, LineCap cap = LineCap.Butt, float headCornerRadius = 0f)
         {
             ThrowIfNotBegun();
             Vector2 delta = end - start;
@@ -697,8 +699,14 @@ namespace MonoPrimitives.Primitives2D
 
             Vector2 headBase = end - dir * hl;
             if (hl < len)
-                DrawLine(start, headBase, thickness, color);
-            FillTriangle(end, headBase + normal * hw * 0.5f, headBase - normal * hw * 0.5f, color);
+                DrawLine(start, headBase, thickness, color, cap);
+
+            Vector2 baseLeft = headBase + normal * hw * 0.5f;
+            Vector2 baseRight = headBase - normal * hw * 0.5f;
+            if (headCornerRadius > 0f)
+                FillTriangleRounded(end, baseLeft, baseRight, headCornerRadius, color);
+            else
+                FillTriangle(end, baseLeft, baseRight, color);
         }
 
         // ==================================================================
