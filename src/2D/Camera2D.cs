@@ -330,7 +330,14 @@ namespace MonoPrimitives.Primitives2D
 
             Zoom = ZoomSmoothTime <= 0f ? target : SmoothDamp(Zoom, target, ref _zoomVelocity, ZoomSmoothTime, deltaSeconds);
 
-            if (MathF.Abs(Zoom - target) < 0.0005f)
+            // Relative to target, capped at the plain 0.0005f used for a normal (~0.1-10) zoom
+            // range -- a fixed absolute epsilon alone declares "settled" while still meaningfully
+            // (percentage-wise) short of target for a caller-chosen MinZoom/MaxZoom range much
+            // smaller than that, permanently stalling short of it (SmoothZoom no-ops once settled).
+            // Verified: a 0.001-0.01 zoom range settled 7% short of target after 1 frame with a
+            // fixed epsilon; this closes to within 0.01% over a normal ~20-30 frame ease instead.
+            float epsilon = MathF.Min(0.0005f, MathF.Abs(target) * 0.001f);
+            if (MathF.Abs(Zoom - target) < epsilon)
                 _pendingZoomTarget = float.NaN;
         }
 

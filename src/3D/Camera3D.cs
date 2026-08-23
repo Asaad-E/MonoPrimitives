@@ -715,7 +715,12 @@ namespace MonoPrimitives.Primitives3D
 
             Position = Target - Forward * MathF.Max(newDistance, 0.001f);
 
-            if (MathF.Abs(newDistance - target) < 0.0005f)
+            // Relative to target, capped at the plain 0.0005f used for a normal-scale distance --
+            // see Camera2D.SmoothZoom's identical fix for the measured failure mode (a small
+            // MinDistance/MaxDistance range stalling short of target once a fixed absolute epsilon
+            // declares "settled" too early).
+            float epsilon = MathF.Min(0.0005f, MathF.Abs(target) * 0.001f);
+            if (MathF.Abs(newDistance - target) < epsilon)
                 _pendingZoomTarget = float.NaN; // settled; let the next call start fresh
         }
 
