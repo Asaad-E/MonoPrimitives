@@ -5,7 +5,7 @@ Known gaps and queued ideas. Check before proposing something "obviously missing
 ## Deferred on purpose (don't build without asking)
 
 - **Named input-action mapping** (register `"Jump"` once, rebindable). `PrimitiveInput` deliberately stays low-level (`IsKeyDown`/`GetAxis`/`GetVector2` + raw device queries) — a full action-map layer is real infrastructure beyond what's been asked for.
-- **Shader-based screen-space antialiasing.** Built twice (search-based FXAA, then a simpler edge-aware blend), both verified rendering correctly, both shelved anyway — see DECISIONS.md. Don't rebuild this without a concrete reason MSAA isn't enough.
+- **Shader-based screen-space antialiasing.** Built twice (search-based FXAA, then a simpler edge-aware blend), both verified rendering correctly, both shelved anyway — see DECISIONS.md. Don't rebuild this without a concrete reason MSAA isn't enough. **Circle-specific edge feathering was evaluated separately (non-shader, a vertex-alpha gradient ring) and hits the same wall — see DECISIONS.md.**
 
 ## Known bugs, documented but not fixed
 
