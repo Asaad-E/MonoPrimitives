@@ -9,7 +9,7 @@ namespace MonoPrimitives
     /// lightening/darkening/saturating, and a hue-aware lerp for vivid color-wheel transitions
     /// (a straight RGB lerp between two saturated hues muddies through gray on the way).
     /// Hue is a normalized turn in [0,1) (0 = red, 1/3 = green, 2/3 = blue), matching this
-    /// project's own convention elsewhere for angle-like values (see <c>DrawCircleSector</c>),
+    /// project's own convention elsewhere for angle-like values (see <c>FillCircleSector</c>),
     /// not degrees or radians.
     /// </summary>
     public static class ColorUtil

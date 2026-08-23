@@ -280,18 +280,18 @@ internal static class Gallery2D
             }),
             new("Circle sector", (b, p) =>
             {
-                b.DrawCircleSectorShadow(p, 55f, 0f, 0.75f, AltFillColor, spread: 22f);
-                b.DrawCircleSector(p, 55f, 0f, 0.75f, FillColor);
+                b.FillCircleSectorShadow(p, 55f, 0f, 0.75f, AltFillColor, spread: 22f);
+                b.FillCircleSector(p, 55f, 0f, 0.75f, FillColor);
             }),
             new("Ring", (b, p) =>
             {
-                b.DrawRingShadow(p, 25f, 55f, 0f, 1f, AltFillColor, spread: 22f);
-                b.DrawRing(p, 25f, 55f, FillColor);
+                b.FillRingShadow(p, 25f, 55f, 0f, 1f, AltFillColor, spread: 22f);
+                b.FillRing(p, 25f, 55f, FillColor);
             }),
             new("Ring partial", (b, p) =>
             {
-                b.DrawRingShadow(p, 25f, 55f, 0f, 0.6f, AltFillColor, spread: 22f);
-                b.DrawRing(p, 25f, 55f, 0f, 0.6f, 32, FillColor);
+                b.FillRingShadow(p, 25f, 55f, 0f, 0.6f, AltFillColor, spread: 22f);
+                b.FillRing(p, 25f, 55f, 0f, 0.6f, 32, FillColor);
             }),
         };
         return cells;
@@ -353,17 +353,19 @@ internal static class Gallery2D
         var (GradientFrom2, GradientTo2) = GradientPair(2);
         var cells = new List<Cell>
         {
-            new("Sector 1/4", (b, p) => b.DrawCircleSector(p, 60f, 0f, 0.25f, FillColor)),
-            new("Sector 3/4", (b, p) => b.DrawCircleSector(p, 60f, 0f, 0.75f, FillColor)),
-            new("Sector lines", (b, p) => b.DrawCircleSectorLines(p, 60f, 0f, 0.6f, 4f, BorderColor)),
-            new("Sector gradient", (b, p) => b.DrawCircleSectorGradient(p, 60f, 0f, 0.75f, GradientFrom, GradientTo)),
-            new("Ring full", (b, p) => b.DrawRing(p, 30f, 60f, FillColor)),
-            new("Ring partial 1/2", (b, p) => b.DrawRing(p, 30f, 60f, 0f, 0.5f, 32, FillColor)),
-            new("Ring gradient", (b, p) => b.DrawRingGradient(p, 30f, 60f, GradientFrom, GradientTo)),
-            new("Ring gradient partial", (b, p) => b.DrawRingGradient(p, 30f, 60f, 0f, 0.5f, 32, GradientFrom2, GradientTo2)),
+            new("Sector 1/4", (b, p) => b.FillCircleSector(p, 60f, 0f, 0.25f, FillColor)),
+            new("Sector 3/4", (b, p) => b.FillCircleSector(p, 60f, 0f, 0.75f, FillColor)),
+            new("Sector lines", (b, p) => b.BorderCircleSector(p, 60f, 0f, 0.6f, 4f, BorderColor)),
+            new("Sector gradient", (b, p) => b.FillCircleSectorGradient(p, 60f, 0f, 0.75f, GradientFrom, GradientTo)),
+            new("Sector draw", (b, p) => b.DrawCircleSector(p, 60f, 0f, 0.75f, FillColor, BorderColor, 4f)),
+            new("Ring full", (b, p) => b.FillRing(p, 30f, 60f, FillColor)),
+            new("Ring partial 1/2", (b, p) => b.FillRing(p, 30f, 60f, 0f, 0.5f, 32, FillColor)),
+            new("Ring gradient", (b, p) => b.FillRingGradient(p, 30f, 60f, GradientFrom, GradientTo)),
+            new("Ring gradient partial", (b, p) => b.FillRingGradient(p, 30f, 60f, 0f, 0.5f, 32, GradientFrom2, GradientTo2)),
             new("Border ring thin", (b, p) => b.BorderRing(p, 30f, 60f, BorderColor, 1f)),
             new("Border ring thick", (b, p) => b.BorderRing(p, 30f, 60f, BorderColor, 6f)),
             new("Border ring partial", (b, p) => b.BorderRing(p, 30f, 60f, 0f, 0.5f, 32, BorderColor, 4f)),
+            new("Ring draw", (b, p) => b.DrawRing(p, 30f, 60f, FillColor, BorderColor, 4f)),
         };
         return cells;
     }

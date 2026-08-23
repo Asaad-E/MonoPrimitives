@@ -2067,17 +2067,17 @@ namespace MonoPrimitives.Primitives2D
 
         /// <summary>
         /// Circle sector (pie slice) drop shadow: solid <paramref name="color"/> filling the
-        /// exact shape <see cref="DrawCircleSector(Vector2,float,float,float,Color)"/> would
+        /// exact shape <see cref="FillCircleSector(Vector2,float,float,float,Color)"/> would
         /// draw, fading to fully transparent over <paramref name="spread"/> world units beyond
         /// its boundary — including the two straight radial edges, not just the arc. Degenerates
         /// to a plain circle's silhouette (no center-point spike) when <paramref name="startAngle"/>/
         /// <paramref name="endAngle"/> span a full turn.
         /// </summary>
-        public void DrawCircleSectorShadow(Vector2 center, float radius, float startAngle, float endAngle, Color color, float spread = 20f)
+        public void FillCircleSectorShadow(Vector2 center, float radius, float startAngle, float endAngle, Color color, float spread = 20f)
         {
             ThrowIfNotBegun();
             if (radius <= 0f) return;
-            DrawCircleSector(center, radius, startAngle, endAngle, color);
+            FillCircleSector(center, radius, startAngle, endAngle, color);
             if (spread <= 0f) return;
 
             Color transparent = new(color.R, color.G, color.B, (byte)0);
@@ -2106,7 +2106,7 @@ namespace MonoPrimitives.Primitives2D
 
         /// <summary>
         /// Ring (or partial arc band) drop shadow: solid <paramref name="color"/> filling the
-        /// exact shape <see cref="DrawRing(Vector2,float,float,Color)"/> would draw, fading to
+        /// exact shape <see cref="FillRing(Vector2,float,float,Color)"/> would draw, fading to
         /// fully transparent over <paramref name="spread"/> world units beyond its OUTER edge —
         /// a full ring's inner hole does not get its own separate inward-glowing edge, same
         /// "just the outer silhouette" convention <see cref="FillCircleShadow"/> uses. A partial
@@ -2129,14 +2129,14 @@ namespace MonoPrimitives.Primitives2D
         /// routing through the shared convex-only helper; the angle-widened version fixed that but
         /// introduced its own spike at the tips; this version has neither.
         /// </summary>
-        public void DrawRingShadow(Vector2 center, float innerRadius, float outerRadius, float startAngle, float endAngle, Color color, float spread = 20f)
+        public void FillRingShadow(Vector2 center, float innerRadius, float outerRadius, float startAngle, float endAngle, Color color, float spread = 20f)
         {
             ThrowIfNotBegun();
             if (outerRadius <= 0f) return;
             if (innerRadius < 0f) innerRadius = 0f;
 
             int segments = SegmentsForArc(outerRadius, (endAngle - startAngle) * MathHelper.TwoPi);
-            DrawRing(center, innerRadius, outerRadius, startAngle, endAngle, segments, color);
+            FillRing(center, innerRadius, outerRadius, startAngle, endAngle, segments, color);
             if (spread <= 0f) return;
 
             Color transparent = new(color.R, color.G, color.B, (byte)0);
@@ -2245,7 +2245,7 @@ namespace MonoPrimitives.Primitives2D
         {
             if (thickness <= 0f || radius <= 0f) return;
             float t = Math.Min(thickness, radius);
-            DrawRing(center, radius - t, radius, 0f, 1f, SegmentsForArc(radius, MathHelper.TwoPi), color);
+            FillRing(center, radius - t, radius, 0f, 1f, SegmentsForArc(radius, MathHelper.TwoPi), color);
         }
 
         /// <summary>Draws a circle with both fill and border (same color), border growing inward.</summary>
@@ -2754,12 +2754,12 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         /// <param name="startAngle">Start of the sweep, normalized to [0..1] where 1 is a full turn.</param>
         /// <param name="endAngle">End of the sweep, same units.</param>
-        public void DrawCircleSector(Vector2 center, float radius, float startAngle, float endAngle, Color color)
-            => DrawCircleSector(center, radius, startAngle, endAngle,
+        public void FillCircleSector(Vector2 center, float radius, float startAngle, float endAngle, Color color)
+            => FillCircleSector(center, radius, startAngle, endAngle,
                    SegmentsForArc(radius, (endAngle - startAngle) * MathHelper.TwoPi), color);
 
-        /// <inheritdoc cref="DrawCircleSector(Vector2,float,float,float,Color)"/>
-        public void DrawCircleSector(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color color)
+        /// <inheritdoc cref="FillCircleSector(Vector2,float,float,float,Color)"/>
+        public void FillCircleSector(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color color)
         {
             ThrowIfNotBegun();
             if (segments < 1 || radius <= 0f) return;
@@ -2784,12 +2784,12 @@ namespace MonoPrimitives.Primitives2D
         /// <paramref name="inner"/> (center) to <paramref name="outer"/> (rim) — the sector
         /// counterpart to <see cref="FillCircleGradient"/>.
         /// </summary>
-        public void DrawCircleSectorGradient(Vector2 center, float radius, float startAngle, float endAngle, Color inner, Color outer)
-            => DrawCircleSectorGradient(center, radius, startAngle, endAngle,
+        public void FillCircleSectorGradient(Vector2 center, float radius, float startAngle, float endAngle, Color inner, Color outer)
+            => FillCircleSectorGradient(center, radius, startAngle, endAngle,
                    SegmentsForArc(radius, (endAngle - startAngle) * MathHelper.TwoPi), inner, outer);
 
-        /// <inheritdoc cref="DrawCircleSectorGradient(Vector2,float,float,float,Color,Color)"/>
-        public void DrawCircleSectorGradient(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color inner, Color outer)
+        /// <inheritdoc cref="FillCircleSectorGradient(Vector2,float,float,float,Color,Color)"/>
+        public void FillCircleSectorGradient(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color inner, Color outer)
         {
             ThrowIfNotBegun();
             if (segments < 1 || radius <= 0f) return;
@@ -2809,10 +2809,10 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Draws the outline of a circle sector, including the two radii.</summary>
-        public void DrawCircleSectorLines(Vector2 center, float radius, float startAngle, float endAngle, float thickness, Color color)
+        public void BorderCircleSector(Vector2 center, float radius, float startAngle, float endAngle, float thickness, Color color)
         {
             int segments = SegmentsForArc(radius, (endAngle - startAngle) * MathHelper.TwoPi);
-            DrawRing(center, radius - thickness, radius, startAngle, endAngle, segments, color);
+            FillRing(center, radius - thickness, radius, startAngle, endAngle, segments, color);
 
             Vector2 a = SampleUnitCircle(startAngle) * radius + center;
             Vector2 c = SampleUnitCircle(endAngle) * radius + center;
@@ -2823,13 +2823,27 @@ namespace MonoPrimitives.Primitives2D
             DrawLineStrip([a, center, c], thickness, color, LineJoin.Round);
         }
 
+        /// <summary>Draws a circle sector (pie slice) with independently colored fill and border.</summary>
+        public void DrawCircleSector(Vector2 center, float radius, float startAngle, float endAngle, Color fillColor, Color borderColor, float thickness = 1f)
+        {
+            FillCircleSector(center, radius, startAngle, endAngle, fillColor);
+            BorderCircleSector(center, radius, startAngle, endAngle, thickness, borderColor);
+        }
+
+        /// <inheritdoc cref="DrawCircleSector(Vector2,float,float,float,Color,Color,float)"/>
+        public void DrawCircleSector(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color fillColor, Color borderColor, float thickness = 1f)
+        {
+            FillCircleSector(center, radius, startAngle, endAngle, segments, fillColor);
+            BorderCircleSector(center, radius, startAngle, endAngle, thickness, borderColor);
+        }
+
         /// <summary>
         /// Draws a filled ring (annulus) or a partial arc band.
         /// </summary>
         /// <param name="innerRadius">Inner edge radius. Values <= 0 produce a sector.</param>
         /// <param name="startAngle">Normalized start angle, 1 = full turn.</param>
         /// <param name="endAngle">Normalized end angle.</param>
-        public void DrawRing(Vector2 center, float innerRadius, float outerRadius,
+        public void FillRing(Vector2 center, float innerRadius, float outerRadius,
                      float startAngle, float endAngle, int segments, Color color)
         {
             ThrowIfNotBegun();
@@ -2856,9 +2870,9 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
-        /// <inheritdoc cref="DrawRing(Vector2,float,float,float,float,int,Color)"/>
-        public void DrawRing(Vector2 center, float innerRadius, float outerRadius, Color color)
-            => DrawRing(center, innerRadius, outerRadius, 0f, 1f,
+        /// <inheritdoc cref="FillRing(Vector2,float,float,float,float,int,Color)"/>
+        public void FillRing(Vector2 center, float innerRadius, float outerRadius, Color color)
+            => FillRing(center, innerRadius, outerRadius, 0f, 1f,
                         SegmentsForArc(outerRadius, MathHelper.TwoPi), color);
 
         /// <summary>
@@ -2868,7 +2882,7 @@ namespace MonoPrimitives.Primitives2D
         /// except the fade runs across the band's own width rather than from a center point (a
         /// ring has no center within its own filled area).
         /// </summary>
-        public void DrawRingGradient(Vector2 center, float innerRadius, float outerRadius,
+        public void FillRingGradient(Vector2 center, float innerRadius, float outerRadius,
             float startAngle, float endAngle, int segments, Color innerColor, Color outerColor)
         {
             ThrowIfNotBegun();
@@ -2893,9 +2907,9 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
-        /// <inheritdoc cref="DrawRingGradient(Vector2,float,float,float,float,int,Color,Color)"/>
-        public void DrawRingGradient(Vector2 center, float innerRadius, float outerRadius, Color innerColor, Color outerColor)
-            => DrawRingGradient(center, innerRadius, outerRadius, 0f, 1f,
+        /// <inheritdoc cref="FillRingGradient(Vector2,float,float,float,float,int,Color,Color)"/>
+        public void FillRingGradient(Vector2 center, float innerRadius, float outerRadius, Color innerColor, Color outerColor)
+            => FillRingGradient(center, innerRadius, outerRadius, 0f, 1f,
                                  SegmentsForArc(outerRadius, MathHelper.TwoPi), innerColor, outerColor);
 
         /// <summary>
@@ -2905,7 +2919,7 @@ namespace MonoPrimitives.Primitives2D
         /// ring's own "inward" direction is ambiguous (its inner edge could grow toward the
         /// hole or the filled band), so <paramref name="thickness"/> is applied uniformly —
         /// centered on each arc/edge line — rather than growing inward. Degenerates to a
-        /// pie-slice outline (<see cref="DrawCircleSectorLines"/>) when
+        /// pie-slice outline (<see cref="BorderCircleSector"/>) when
         /// <paramref name="innerRadius"/> &lt;= 0.
         /// </summary>
         /// <param name="startAngle">Normalized start angle, 1 = full turn.</param>
@@ -2915,7 +2929,7 @@ namespace MonoPrimitives.Primitives2D
         {
             ThrowIfNotBegun();
             if (segments < 1 || outerRadius <= 0f) return;
-            if (innerRadius <= 0f) { DrawCircleSectorLines(center, outerRadius, startAngle, endAngle, thickness, color); return; }
+            if (innerRadius <= 0f) { BorderCircleSector(center, outerRadius, startAngle, endAngle, thickness, color); return; }
 
             // Each arc is drawn as ONE joined strip (LineJoin.Round), not one DrawLine per
             // segment: independent segments each get their own flat, perpendicular end caps,
@@ -2968,6 +2982,20 @@ namespace MonoPrimitives.Primitives2D
         public void BorderRing(Vector2 center, float innerRadius, float outerRadius, Color color, float thickness = 1f)
             => BorderRing(center, innerRadius, outerRadius, 0f, 1f,
                           SegmentsForArc(outerRadius, MathHelper.TwoPi), color, thickness);
+
+        /// <summary>Draws a ring (or partial arc band) with independently colored fill and border.</summary>
+        public void DrawRing(Vector2 center, float innerRadius, float outerRadius, float startAngle, float endAngle, int segments, Color fillColor, Color borderColor, float thickness = 1f)
+        {
+            FillRing(center, innerRadius, outerRadius, startAngle, endAngle, segments, fillColor);
+            BorderRing(center, innerRadius, outerRadius, startAngle, endAngle, segments, borderColor, thickness);
+        }
+
+        /// <inheritdoc cref="DrawRing(Vector2,float,float,float,float,int,Color,Color,float)"/>
+        public void DrawRing(Vector2 center, float innerRadius, float outerRadius, Color fillColor, Color borderColor, float thickness = 1f)
+        {
+            FillRing(center, innerRadius, outerRadius, fillColor);
+            BorderRing(center, innerRadius, outerRadius, borderColor, thickness);
+        }
 
         // ==================================================================
         // POLYGONS
