@@ -58,7 +58,7 @@ Small standalone MonoGame apps (each its own `.csproj` referencing `MonoPrimitiv
 
 ## `tests/MonoPrimitives.Tests/`
 
-A headless `Game` (`TestRunnerGame`), not an xUnit project — see DECISIONS.md for why. `Collision2DTests`/`Collision3DTests`/`NoiseTests`/`ColorUtilTests` are pure-math, no device needed; `ShapeTests3D` (one call per public 3D shape method, asserting real geometry got emitted) and `LightingRegressionTests` (renders an offscreen lit sphere and reads pixels back) need the real `GraphicsDevice` a running `Game` provides. Run the built exe directly (0 = all passed, 1 = a failure) — not through a test runner.
+A headless `Game` (`TestRunnerGame`), not an xUnit project — see DECISIONS.md for why. `Collision2DTests`/`Collision3DTests`/`NoiseTests`/`ColorUtilTests` are pure-math, no device needed; `ShapeTests3D` (one call per public 3D shape method, asserting real geometry got emitted) and `LightingRegressionTests` (renders an offscreen lit sphere and reads pixels back) need the real `GraphicsDevice` a running `Game` provides. Run the built exe directly (0 = all passed, 1 = a failure) — not through a test runner. `Vector2Benchmark.cs` (informational only, like `FastTexture`'s own benchmark) times MonoGame's `Vector2` against `System.Numerics.Vector2` for common ops and one mixed-scenario particle loop — see DECISIONS.md for the result.
 
 ## Machinery worth knowing before you touch nearby code
 

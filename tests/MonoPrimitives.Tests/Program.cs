@@ -50,6 +50,8 @@ namespace MonoPrimitives.Tests
             using (var spriteBatch = new SpriteBatch(GraphicsDevice))
                 FastTextureTests.Run(GraphicsDevice, spriteBatch, results);
 
+            Vector2Benchmark.Run(results);
+
             bool allPassed = results.PrintSummary();
             Environment.ExitCode = allPassed ? 0 : 1;
             Exit();
