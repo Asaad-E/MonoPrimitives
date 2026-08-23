@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Asaad-E",
+  "classifications": [ "MonoGame", "2D", "Game" ],
+  "identity": "MonoPrimitives.Template",
+  "name": "MonoPrimitives Game (DesktopGL)",
+  "shortName": "monoprimitives",
+  "sourceName": "MonoPrimitives.Template",
+  "preferNameDirectory": true,
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  }
+}
