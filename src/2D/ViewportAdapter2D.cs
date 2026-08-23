@@ -21,6 +21,7 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Device this adapter reads the actual window/viewport size from.</summary>
         protected readonly GraphicsDevice Device;
 
+        /// <summary>For subclasses: stores <paramref name="device"/> as <see cref="Device"/>.</summary>
         protected ViewportAdapter2D(GraphicsDevice device) => Device = device ?? throw new ArgumentNullException(nameof(device));
 
         /// <summary>Fixed width of the virtual coordinate space.</summary>

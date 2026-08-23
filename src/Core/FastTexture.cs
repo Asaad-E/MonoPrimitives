@@ -78,7 +78,10 @@ namespace MonoPrimitives
         /// <summary>The underlying MonoGame texture. Draw with this as normal.</summary>
         public Texture2D Texture => _texture;
 
+        /// <summary>Shorthand for <c>Texture.Width</c>.</summary>
         public int Width => _texture.Width;
+
+        /// <summary>Shorthand for <c>Texture.Height</c>.</summary>
         public int Height => _texture.Height;
 
         /// <summary>
@@ -571,6 +574,7 @@ namespace MonoPrimitives
             if (_disposed) throw new ObjectDisposedException(nameof(FastTexture));
         }
 
+        /// <summary>Disposes the wrapped <see cref="Texture"/> too, but only if this instance was constructed with <c>ownsTexture: true</c>.</summary>
         public void Dispose()
         {
             if (_disposed) return;

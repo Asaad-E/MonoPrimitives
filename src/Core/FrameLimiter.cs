@@ -36,6 +36,7 @@ namespace MonoPrimitives
         /// <summary>Target frames per second. Editable at any time — takes effect on the next <see cref="EndFrame"/>.</summary>
         public float TargetFps { get; set; }
 
+        /// <summary>Disables <paramref name="game"/>'s <see cref="Game.IsFixedTimeStep"/> and vsync (if a <see cref="GraphicsDeviceManager"/> is already registered on it) and starts targeting <paramref name="targetFps"/>.</summary>
         public FrameLimiter(Game game, float targetFps = 60f)
         {
             if (game == null) throw new ArgumentNullException(nameof(game));
