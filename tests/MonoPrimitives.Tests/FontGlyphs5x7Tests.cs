@@ -140,6 +140,72 @@ namespace MonoPrimitives.Tests
                 if (MathF.Abs(wTwoLines - wOneLine) > 1e-4f) return $"two-line width ({wTwoLines}) should match the longer first line's width ({wOneLine})";
                 return null;
             });
+
+            results.Check("WrapText: no-ops for text that already fits, or a non-positive maxWidth/pixelSize", () =>
+            {
+                string text = "SHORT";
+                if (FontGlyphs5x7.WrapText(text, maxWidth: 1000f, pixelSize: 2f, glyphSpacing: 1f) != text) return "expected unchanged text when it already fits";
+                if (FontGlyphs5x7.WrapText(text, maxWidth: 0f, pixelSize: 2f) != text) return "expected unchanged text for maxWidth <= 0";
+                if (FontGlyphs5x7.WrapText(text, maxWidth: 100f, pixelSize: 0f) != text) return "expected unchanged text for pixelSize <= 0";
+                if (FontGlyphs5x7.WrapText("", maxWidth: 100f, pixelSize: 2f) != "") return "expected empty text unchanged";
+                return null;
+            });
+
+            results.Check("WrapText: every resulting line fits within maxWidth (the actual invariant that matters)", () =>
+            {
+                string text = "the quick brown fox jumps over the lazy dog and then keeps running";
+                const float pixelSize = 2f, glyphSpacing = 1f, maxWidth = 60f;
+                string wrapped = FontGlyphs5x7.WrapText(text, maxWidth, pixelSize, glyphSpacing);
+
+                foreach (string line in wrapped.Split('\n'))
+                {
+                    (float width, _) = FontGlyphs5x7.MeasureText(line, pixelSize, glyphSpacing, lineSpacing: 2f);
+                    if (width > maxWidth + 1e-3f) return $"line \"{line}\" measures {width}, exceeding maxWidth {maxWidth}";
+                }
+                if (wrapped.Split('\n').Length < 2) return "expected the text to actually wrap into multiple lines given this maxWidth";
+                return null;
+            });
+
+            results.Check("WrapText: breaks at a word boundary, not mid-word, when a word-boundary break exists", () =>
+            {
+                // "AAAA BBBB" at pixelSize=2, glyphSpacing=1: each 4-letter word is 4*(5+1)*2=48px,
+                // plus the space. A maxWidth that fits exactly one word plus the space, but not both
+                // words, should break right after "AAAA", not partway through either word.
+                string wrapped = FontGlyphs5x7.WrapText("AAAA BBBB", maxWidth: 50f, pixelSize: 2f, glyphSpacing: 1f);
+                string[] lines = wrapped.Split('\n');
+                if (lines.Length != 2) return $"expected exactly 2 lines, got {lines.Length}: \"{wrapped.Replace("\n", "\\n")}\"";
+                if (lines[0] != "AAAA" || lines[1] != "BBBB") return $"expected [\"AAAA\",\"BBBB\"], got [\"{lines[0]}\",\"{lines[1]}\"]";
+                return null;
+            });
+
+            results.Check("WrapText: a single word wider than maxWidth is hard-broken mid-word instead of overflowing", () =>
+            {
+                string longWord = new string('A', 30); // guaranteed wider than any small maxWidth
+                string wrapped = FontGlyphs5x7.WrapText(longWord, maxWidth: 40f, pixelSize: 2f, glyphSpacing: 1f);
+                if (!wrapped.Contains('\n')) return $"expected the long word to be hard-broken across multiple lines, got \"{wrapped}\"";
+
+                foreach (string line in wrapped.Split('\n'))
+                {
+                    (float width, _) = FontGlyphs5x7.MeasureText(line, pixelSize: 2f, glyphSpacing: 1f, lineSpacing: 2f);
+                    if (width > 40f + 1e-3f) return $"hard-broken line \"{line}\" still exceeds maxWidth: {width}";
+                }
+                // Nothing lost: removing the inserted newlines should reconstruct the original word exactly.
+                if (wrapped.Replace("\n", "") != longWord) return $"expected no characters lost/added by the hard break, got \"{wrapped.Replace("\n", "")}\"";
+                return null;
+            });
+
+            results.Check("WrapText: existing '\\n' are preserved as forced breaks, each paragraph wrapped independently", () =>
+            {
+                string text = "AAAA BBBB\nCCCC DDDD";
+                string wrapped = FontGlyphs5x7.WrapText(text, maxWidth: 50f, pixelSize: 2f, glyphSpacing: 1f);
+                string[] lines = wrapped.Split('\n');
+                // Each original paragraph (AAAA BBBB / CCCC DDDD) wraps into 2 lines on its own (same
+                // case as the word-boundary test above), so 2 paragraphs -> 4 lines total.
+                if (lines.Length != 4) return $"expected 4 lines (2 paragraphs x 2 wrapped lines each), got {lines.Length}: \"{wrapped.Replace("\n", "\\n")}\"";
+                if (lines[0] != "AAAA" || lines[1] != "BBBB" || lines[2] != "CCCC" || lines[3] != "DDDD")
+                    return $"unexpected line contents: \"{wrapped.Replace("\n", "\\n")}\"";
+                return null;
+            });
         }
     }
 }

@@ -19,12 +19,15 @@ namespace MonoPrimitives.Primitives3D
         /// scene lighting. Billboarding is "cylindrical" (stays upright relative to world +Y,
         /// rotating only to face the camera around that axis), the usual choice for labels — falls
         /// back to a full camera-facing basis only when looking almost straight up or down, where
-        /// that axis is undefined.
+        /// that axis is undefined. <paramref name="maxWidth"/> greater than 0 (in the same
+        /// world-space unit as <paramref name="pixelSize"/>) word-wraps <paramref name="text"/>
+        /// first (see <see cref="FontGlyphs5x7.WrapText"/>) — 0 (the default) draws exactly as
+        /// given, no wrapping.
         /// </summary>
-        public void DrawString3D(string text, Vector3 position, float pixelSize, Color color, float glyphSpacing = 1f, float lineSpacing = 2f)
+        public void DrawString3D(string text, Vector3 position, float pixelSize, Color color, float glyphSpacing = 1f, float lineSpacing = 2f, float maxWidth = 0f)
         {
             GetBillboardAxes(position, out Vector3 right, out Vector3 up);
-            DrawString3D(text, position, right, up, pixelSize, color, glyphSpacing, lineSpacing);
+            DrawString3D(text, position, right, up, pixelSize, color, glyphSpacing, lineSpacing, maxWidth);
         }
 
         /// <summary>
@@ -37,11 +40,14 @@ namespace MonoPrimitives.Primitives3D
         /// exactly orthogonal — each glyph pixel is simply offset by <c>col * pixelSize</c> along
         /// <paramref name="right"/> and <c>row * pixelSize</c> along <paramref name="up"/>, so a
         /// scaled or sheared basis skews the text the same way it would skew any other quad.
+        /// <paramref name="maxWidth"/> greater than 0 word-wraps <paramref name="text"/> first, same
+        /// as the billboarded overload.
         /// </summary>
-        public void DrawString3D(string text, Vector3 position, Vector3 right, Vector3 up, float pixelSize, Color color, float glyphSpacing = 1f, float lineSpacing = 2f)
+        public void DrawString3D(string text, Vector3 position, Vector3 right, Vector3 up, float pixelSize, Color color, float glyphSpacing = 1f, float lineSpacing = 2f, float maxWidth = 0f)
         {
             ThrowIfNotBegun();
             if (string.IsNullOrEmpty(text) || pixelSize <= 0f) return;
+            if (maxWidth > 0f) text = FontGlyphs5x7.WrapText(text, maxWidth, pixelSize, glyphSpacing);
 
             Vector3 lineStart = position;
             Vector3 cursor = position;

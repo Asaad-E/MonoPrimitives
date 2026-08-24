@@ -143,6 +143,44 @@ namespace MonoPrimitives.Tests
                 Color hole = At(pixels, Center); // dead center, inside the inner radius -- should NOT be filled
                 return CloseTo(hole, Color.Black) ? null : $"expected the ring's inner hole to stay background, got {hole}";
             });
+
+            // ---- DrawString(maxWidth) -- confirms the word-wrap plumbing, not just the string algorithm ----
+            results.Check("DrawString (maxWidth): no glyph pixel renders past position.X + maxWidth", () =>
+            {
+                const float maxWidth = 60f;
+                Vector2 textPos = new(10f, 10f);
+                var pixels = RenderToPixels(device, batch, () => batch.DrawString("HELLO WORLD THIS WRAPS", textPos, pixelSize: 3f, Color.White, maxWidth: maxWidth));
+
+                int boundaryX = (int)(textPos.X + maxWidth);
+                for (int y = 0; y < Size; y++)
+                {
+                    for (int x = boundaryX; x < Size; x++)
+                    {
+                        if (!CloseTo(pixels[y * Size + x], Color.Black))
+                            return $"found a non-background pixel at ({x},{y}), past the maxWidth boundary at x={boundaryX}";
+                    }
+                }
+                return null;
+            });
+
+            results.Check("DrawString (maxWidth = 0, the default): draws exactly as given, no wrapping applied", () =>
+            {
+                // Same text/pixelSize as above but with NO maxWidth -- should overflow well past
+                // where the wrapped version was constrained to, proving maxWidth=0 truly means "off"
+                // rather than some hidden always-on wrap.
+                Vector2 textPos = new(10f, 10f);
+                var pixels = RenderToPixels(device, batch, () => batch.DrawString("HELLO WORLD THIS WRAPS", textPos, pixelSize: 3f, Color.White));
+
+                int pastOldBoundary = (int)(textPos.X + 60f) + 5;
+                bool foundPixelPastOldBoundary = false;
+                for (int y = (int)textPos.Y; y < textPos.Y + 21 && !foundPixelPastOldBoundary; y++) // full glyph height (7 rows * pixelSize 3)
+                {
+                    for (int x = pastOldBoundary; x < Size && !foundPixelPastOldBoundary; x++)
+                        if (!CloseTo(At(pixels, new Vector2(x, y)), Color.Black)) foundPixelPastOldBoundary = true;
+                }
+
+                return foundPixelPastOldBoundary ? null : "expected unwrapped text to draw past where maxWidth=60 would have wrapped it -- did DrawString silently wrap anyway?";
+            });
         }
     }
 }

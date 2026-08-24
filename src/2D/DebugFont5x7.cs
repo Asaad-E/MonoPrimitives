@@ -35,11 +35,14 @@ namespace MonoPrimitives.Primitives2D
         /// <c>SpriteBatch.DrawString</c>, the API this stands in for. <paramref name="pixelSize"/>
         /// is the screen size of one font pixel (a glyph is therefore <c>5*pixelSize</c> wide,
         /// <c>7*pixelSize</c> tall). <c>'\n'</c> starts a new line. Characters with no glyph
-        /// draw as a hollow box instead of silently vanishing.
+        /// draw as a hollow box instead of silently vanishing. <paramref name="maxWidth"/> greater
+        /// than 0 word-wraps <paramref name="text"/> first (see <see cref="FontGlyphs5x7.WrapText"/>)
+        /// — 0 (the default) draws exactly as given, no wrapping.
         /// </summary>
-        public static void DrawString(this Primitive2DBatch batch, string text, Vector2 position, float pixelSize, Color color, float glyphSpacing = 1f, float lineSpacing = 2f)
+        public static void DrawString(this Primitive2DBatch batch, string text, Vector2 position, float pixelSize, Color color, float glyphSpacing = 1f, float lineSpacing = 2f, float maxWidth = 0f)
         {
             if (string.IsNullOrEmpty(text) || pixelSize <= 0f) return;
+            if (maxWidth > 0f) text = FontGlyphs5x7.WrapText(text, maxWidth, pixelSize, glyphSpacing);
 
             float x = position.X;
             float y = position.Y;

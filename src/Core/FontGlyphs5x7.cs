@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Text;
 
 namespace MonoPrimitives
 {
@@ -199,6 +200,80 @@ namespace MonoPrimitives
             if (lineWidth > maxWidth) maxWidth = lineWidth;
 
             return (maxWidth, height);
+        }
+
+        /// <summary>
+        /// Greedy word-wrap: breaks <paramref name="text"/> into lines no wider than
+        /// <paramref name="maxWidth"/> (already scaled by <paramref name="pixelSize"/>), inserting
+        /// <c>'\n'</c> at word boundaries — feed the result straight into <c>DrawString</c>/<c>DrawString3D</c>
+        /// (both already handle multi-line via <c>MeasureText</c>/<c>MeasureText3D</c>), or call this
+        /// directly for your own layout. Existing <c>'\n'</c> in <paramref name="text"/> are preserved
+        /// as forced breaks and each resulting paragraph is wrapped independently — a blank line
+        /// stays blank. A single word wider than <paramref name="maxWidth"/> on its own is hard-broken
+        /// mid-word (there's no earlier valid break point, and silently overflowing or dropping it
+        /// would be worse) rather than left overflowing. Returns <paramref name="text"/> unchanged
+        /// for a non-positive <paramref name="maxWidth"/>/<paramref name="pixelSize"/> or empty input.
+        /// </summary>
+        public static string WrapText(string text, float maxWidth, float pixelSize, float glyphSpacing = 1f)
+        {
+            if (string.IsNullOrEmpty(text) || maxWidth <= 0f || pixelSize <= 0f) return text ?? string.Empty;
+
+            var result = new StringBuilder(text.Length + 8);
+            string[] paragraphs = text.Split('\n');
+            for (int i = 0; i < paragraphs.Length; i++)
+            {
+                if (i > 0) result.Append('\n');
+                WrapParagraph(paragraphs[i], maxWidth, pixelSize, glyphSpacing, result);
+            }
+            return result.ToString();
+        }
+
+        /// <summary>Word-wraps one already-newline-free paragraph, appending the (possibly now multi-line) result to <paramref name="result"/>.</summary>
+        private static void WrapParagraph(string paragraph, float maxWidth, float pixelSize, float glyphSpacing, StringBuilder result)
+        {
+            float spaceAdvance = AdvanceFor(' ', pixelSize, glyphSpacing);
+            float lineWidth = 0f;
+            bool lineStarted = false;
+
+            foreach (string word in paragraph.Split(' '))
+            {
+                float wordWidth = 0f;
+                foreach (char c in word) wordWidth += AdvanceFor(c, pixelSize, glyphSpacing);
+
+                float additional = (lineStarted ? spaceAdvance : 0f) + wordWidth;
+                if (lineStarted && lineWidth + additional > maxWidth)
+                {
+                    result.Append('\n');
+                    lineWidth = 0f;
+                    lineStarted = false;
+                }
+
+                if (wordWidth > maxWidth)
+                {
+                    // Doesn't fit on a line by itself even alone -- hard-break character by character.
+                    // Guaranteed to start from a clean (lineStarted=false) line: either it already was
+                    // (no wrap above), or the wrap just above cleared it.
+                    foreach (char c in word)
+                    {
+                        float charWidth = AdvanceFor(c, pixelSize, glyphSpacing);
+                        if (lineStarted && lineWidth + charWidth > maxWidth)
+                        {
+                            result.Append('\n');
+                            lineWidth = 0f;
+                            lineStarted = false;
+                        }
+                        result.Append(c);
+                        lineWidth += charWidth;
+                        lineStarted = true;
+                    }
+                    continue;
+                }
+
+                if (lineStarted) { result.Append(' '); lineWidth += spaceAdvance; }
+                result.Append(word);
+                lineWidth += wordWidth;
+                lineStarted = true;
+            }
         }
     }
 }
