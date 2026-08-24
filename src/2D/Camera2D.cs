@@ -62,7 +62,7 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>
         /// Viewport adapter this camera was constructed with, if any — MonoGame.Extended-style:
         /// set once at construction, then every viewport-dependent method (<see cref="GetTransformMatrix"/>,
-        /// <see cref="ScreenToWorld"/>, <see cref="WorldToScreen"/>, <see cref="GetVisibleWorldBounds"/>,
+        /// <see cref="ScreenToWorld"/>, <see cref="WorldToScreen"/>, <see cref="GetVisibleWorldBounds(GraphicsDevice?)"/>,
         /// <see cref="UpdateWithInput(PrimitiveInput, float)"/>'s mouse-drag pan) uses it
         /// automatically instead of requiring it passed in again at every call site. <c>null</c> for the raw-screen-space
         /// constructors — those methods then fall back to assuming <see cref="Offset"/> is
@@ -382,7 +382,7 @@ namespace MonoPrimitives.Primitives2D
         /// wants baked into its camera; use the plain <see cref="Update(float)"/> if you're
         /// driving the camera from your own logic, or query <paramref name="input"/> yourself
         /// and set <see cref="Target"/>/<see cref="Zoom"/> directly for custom bindings.
-        /// Doesn't call <see cref="PrimitiveInput.Update"/> itself — <paramref name="input"/> is
+        /// Doesn't call <see cref="PrimitiveInput.Update(GameTime)"/> itself — <paramref name="input"/> is
         /// expected to already be current for this frame (the caller's own <c>Update</c> updates
         /// it once, then hands the same instance to everything that reads it, this camera
         /// included). Pan speed is divided by <see cref="Zoom"/> so keyboard panning covers the

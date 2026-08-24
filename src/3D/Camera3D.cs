@@ -355,6 +355,7 @@ namespace MonoPrimitives.Primitives3D
             ?? throw new InvalidOperationException($"Needs either a {nameof(ViewportAdapter)} (set at construction) or an explicit {nameof(Viewport)} argument.");
 
         /// <summary>Projects a world position to screen coordinates (pixels, origin top-left).</summary>
+        /// <param name="position">World-space position to project.</param>
         /// <param name="viewport">Explicit viewport to project with; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
         public Vector2 WorldToScreen(Vector3 position, Viewport? viewport = null)
         {
@@ -364,6 +365,8 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Projects a world position to screen coordinates, also returning normalized depth (0 near, 1 far; outside [0,1] means outside the frustum).</summary>
+        /// <param name="position">World-space position to project.</param>
+        /// <param name="depth">Normalized depth of the projected position (0 near, 1 far).</param>
         /// <param name="viewport">Explicit viewport to project with; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
         public Vector2 WorldToScreen(Vector3 position, out float depth, Viewport? viewport = null)
         {
@@ -374,6 +377,8 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Unprojects a screen position at the given depth back into world space.</summary>
+        /// <param name="screenPosition">Screen-space position (pixels, origin top-left).</param>
+        /// <param name="depth">Normalized depth to unproject at (0 near, 1 far).</param>
         /// <param name="viewport">Explicit viewport to unproject with; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
         public Vector3 ScreenToWorld(Vector2 screenPosition, float depth, Viewport? viewport = null)
         {
@@ -382,6 +387,7 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Builds a picking ray from a screen position (e.g. the mouse cursor).</summary>
+        /// <param name="screenPosition">Screen-space position (pixels, origin top-left).</param>
         /// <param name="viewport">Explicit viewport to unproject with; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
         public Ray GetScreenToWorldRay(Vector2 screenPosition, Viewport? viewport = null)
         {
@@ -485,7 +491,7 @@ namespace MonoPrimitives.Primitives3D
         /// <see cref="Update(float)"/> if you're driving the camera from your own logic, or query
         /// <paramref name="input"/> yourself and call <see cref="Yaw"/>/<see cref="Pitch"/>/
         /// <see cref="MoveForward"/>/etc. directly for custom bindings. Doesn't call
-        /// <see cref="PrimitiveInput.Update"/> itself — <paramref name="input"/> is expected to
+        /// <see cref="PrimitiveInput.Update(GameTime)"/> itself — <paramref name="input"/> is expected to
         /// already be current for this frame (the caller's own <c>Update</c> updates it once,
         /// then hands the same instance to everything that reads it, this camera included).
         /// <c>R</c> calls <see cref="Reset"/> directly and skips movement for that frame, so a

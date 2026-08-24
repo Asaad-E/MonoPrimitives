@@ -30,7 +30,7 @@ namespace MonoPrimitives
     /// queries plus a couple of composite helpers (<see cref="GetAxis"/>/<see cref="GetVector2"/>)
     /// that turn a handful of individual key bindings into one float or <see cref="Vector2"/> —
     /// the same shape as a game engine's "get movement direction" call, one line instead of six
-    /// `if (IsKeyDown(...))` checks. Call <see cref="Update"/> once per frame (before reading
+    /// `if (IsKeyDown(...))` checks. Call <see cref="Update(GameTime)"/> once per frame (before reading
     /// anything else this frame) — typically the first line of your own <c>Game.Update</c>.
     /// </summary>
     public sealed class PrimitiveInput : IDisposable
@@ -170,7 +170,7 @@ namespace MonoPrimitives
             }
         }
 
-        /// <summary>Resets mouse-delta tracking to zero for the next <see cref="Update"/> — call after teleporting the cursor or regaining window focus, to avoid a one-frame snap in <see cref="MouseDelta"/>.</summary>
+        /// <summary>Resets mouse-delta tracking to zero for the next <see cref="Update(GameTime)"/> — call after teleporting the cursor or regaining window focus, to avoid a one-frame snap in <see cref="MouseDelta"/>.</summary>
         public void ResetMouseDelta() => _hasPrevMouse = false;
 
         // ---------------------------------------------------------------------
@@ -283,7 +283,7 @@ namespace MonoPrimitives
         /// <summary>
         /// Sets the OS cursor's shape — one of <see cref="MouseCursor"/>'s built-in system shapes
         /// (<c>Arrow</c>, <c>IBeam</c>, <c>Hand</c>, <c>Crosshair</c>, the resize arrows, etc.) or a
-        /// fully custom one via <see cref="MouseCursor.FromTexture2D(Texture2D,int,int)"/>. A thin
+        /// fully custom one via <see cref="MouseCursor.FromTexture2D(Microsoft.Xna.Framework.Graphics.Texture2D,int,int)"/>. A thin
         /// passthrough to <see cref="Mouse.SetCursor(MouseCursor)"/> — kept here so mouse commands
         /// live alongside the mouse queries above instead of requiring a separate
         /// <c>using Microsoft.Xna.Framework.Input;</c> just for this one call.

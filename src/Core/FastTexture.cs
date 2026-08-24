@@ -116,6 +116,8 @@ namespace MonoPrimitives
         /// <summary>
         /// Wraps an existing texture (including a <see cref="RenderTarget2D"/>).
         /// </summary>
+        /// <param name="device">Device the texture belongs to.</param>
+        /// <param name="texture">Existing texture to wrap.</param>
         /// <param name="ownsTexture">
         /// If true, disposing this wrapper disposes the texture too. Pass false (the default) when
         /// the texture's lifetime is managed elsewhere.

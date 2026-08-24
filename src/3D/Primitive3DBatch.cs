@@ -11,7 +11,7 @@ namespace MonoPrimitives.Primitives3D
     /// converted to triangles so that a single vertex buffer / draw path is used.
     /// <para>
     /// The batch is fully non-invasive: all graphics device state it modifies is
-    /// captured on <see cref="Begin"/> and restored on <see cref="End"/>, so it can
+    /// captured on <see cref="Begin(Camera3D,BlendState?,DepthStencilState?,RasterizerState?,Matrix?)"/> and restored on <see cref="End"/>, so it can
     /// be interleaved with <see cref="SpriteBatch"/> or custom 3D rendering.
     /// </para>
     /// </summary>
@@ -115,13 +115,13 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>Total vertex capacity before an automatic flush.</summary>
         public int Capacity => _maxVertices;
 
-        /// <summary>Number of draw calls issued since the last <see cref="Begin"/>.</summary>
+        /// <summary>Number of draw calls issued since the last <see cref="Begin(Camera3D,BlendState?,DepthStencilState?,RasterizerState?,Matrix?)"/>.</summary>
         public int DrawCalls { get; private set; }
 
-        /// <summary>Total triangles submitted since the last <see cref="Begin"/>.</summary>
+        /// <summary>Total triangles submitted since the last <see cref="Begin(Camera3D,BlendState?,DepthStencilState?,RasterizerState?,Matrix?)"/>.</summary>
         public int TrianglesSubmitted { get; private set; }
 
-        /// <summary>Total Lines submitted since the last <see cref="Begin"/>.</summary>
+        /// <summary>Total Lines submitted since the last <see cref="Begin(Camera3D,BlendState?,DepthStencilState?,RasterizerState?,Matrix?)"/>.</summary>
         public int LinesSubmitted { get; private set; }
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace MonoPrimitives.Primitives3D
         /// </summary>
         public float DefaultLineThickness { get; set; } = 0.5f;
 
-        /// <summary>Camera position used to orient line quads. Set by <see cref="Begin"/>.</summary>
+        /// <summary>Camera position used to orient line quads. Set by <see cref="Begin(Camera3D,BlendState?,DepthStencilState?,RasterizerState?,Matrix?)"/>.</summary>
         private Vector3 _cameraPosition;
 
         /// <summary>Approximate world-units-per-pixel scale factor at unit distance.</summary>
@@ -153,7 +153,7 @@ namespace MonoPrimitives.Primitives3D
         /// FillTriangle3D/FillCircle3D) are flat-shaded: each triangle/quad's own
         /// face normal (from its own points, via cross product — no stored per-vertex
         /// normals, so the vertex format stays untouched) is dotted against
-        /// <see cref="LightDirection"/> and used to darken <paramref name="color"/>
+        /// <see cref="LightDirection"/> and used to darken the face's color
         /// toward <see cref="AmbientLight"/>. Off by default — zero behavior change
         /// for existing callers. Lines, points and the grid are never shaded (a
         /// camera-facing line quad has no meaningful surface normal to light).
@@ -207,7 +207,7 @@ namespace MonoPrimitives.Primitives3D
         /// Appends a lit quad using an explicit, caller-supplied normal instead of deriving
         /// one from the quad's own edges. Needed wherever two of the four corners can
         /// coincide (a sphere/hemisphere pole ring) — the edge-cross-product normal goes
-        /// zero-length there and <see cref="Vector3.Normalize"/> turns that into NaN, which
+        /// zero-length there and <see cref="Vector3.Normalize(Vector3)"/> turns that into NaN, which
         /// then blackens the whole quad once it reaches <see cref="Shade"/>.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

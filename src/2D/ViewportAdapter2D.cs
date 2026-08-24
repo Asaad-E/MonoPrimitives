@@ -65,7 +65,7 @@ namespace MonoPrimitives.Primitives2D
         /// (only visible for adapters with a nonzero Offset, e.g. <see cref="BoxingViewportAdapter2D"/>).
         /// Use one or the other: either skip Apply() and draw with the full <see cref="GetScaleMatrix"/>
         /// against the whole window, or call Apply() and drop Offset from the draw transform
-        /// (<c>Matrix.CreateScale(Scale.X, Scale.Y, 1f)</c> only). <see cref="Primitive3DBatch"/>'s
+        /// (<c>Matrix.CreateScale(Scale.X, Scale.Y, 1f)</c> only). <see cref="MonoPrimitives.Primitives3D.Primitive3DBatch"/>'s
         /// camera-driven 3D path uses Apply() this second way internally and is unaffected.
         ///
         /// <see cref="GraphicsDevice.Clear(Color)"/> ignores a narrowed viewport and always clears

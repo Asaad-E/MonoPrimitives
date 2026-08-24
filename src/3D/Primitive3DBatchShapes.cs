@@ -19,7 +19,10 @@ namespace MonoPrimitives.Primitives3D
             => DrawLine3D(startPos, endPos, DefaultLineThickness, color);
 
         /// <summary>Draws a line in 3D world space as a camera-facing quad (two triangles).</summary>
+        /// <param name="startPos">Start point of the line.</param>
+        /// <param name="endPos">End point of the line.</param>
         /// <param name="thickness">Thickness in pixels when <see cref="SmoothLines"/> is enabled, otherwise in world units.</param>
+        /// <param name="color">Line color.</param>
         public void DrawLine3D(Vector3 startPos, Vector3 endPos, float thickness, Color color)
         {
             ThrowIfNotBegun();
@@ -50,7 +53,7 @@ namespace MonoPrimitives.Primitives3D
             PushQuad(startPos - offset, endPos - offset, endPos + offset, startPos + offset, color);
         }
 
-        /// <summary>Draws a line as a raw GPU line-list segment (cheaper than <see cref="DrawLine3D"/>, always 1px, no camera facing).</summary>
+        /// <summary>Draws a line as a raw GPU line-list segment (cheaper than <see cref="DrawLine3D(Vector3,Vector3,Color)"/>, always 1px, no camera facing).</summary>
         public void DrawLine3DFast(Vector3 startPos, Vector3 endPos, Color color)
         {
             ReserveLine(2);
@@ -69,6 +72,8 @@ namespace MonoPrimitives.Primitives3D
             => DrawLineStrip3D(points, color, DefaultLineThickness);
 
         /// <inheritdoc cref="DrawLineStrip3D(ReadOnlySpan{Vector3},Color)"/>
+        /// <param name="points">Vertices of the polyline, in order.</param>
+        /// <param name="color">Line color.</param>
         /// <param name="thickness">Thickness in pixels when <see cref="SmoothLines"/> is enabled, otherwise in world units. <c>&lt;= 0</c> uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawLineStrip3D(ReadOnlySpan<Vector3> points, Color color, float thickness)
         {
@@ -91,6 +96,8 @@ namespace MonoPrimitives.Primitives3D
         /// positions at a shared interior vertex are still the one joined offset either of its
         /// two segments uses, so two differently-colored segments still meet without a gap.
         /// </summary>
+        /// <param name="points">Vertices of the polyline, in order.</param>
+        /// <param name="segmentColors">Per-segment flat color, length <c>points.Length - 1</c>.</param>
         /// <param name="thickness"><c>&lt;= 0</c> uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawLineStrip3D(ReadOnlySpan<Vector3> points, ReadOnlySpan<Color> segmentColors, float thickness = -1f)
         {
@@ -305,11 +312,22 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a wireframe circle, rotated by <paramref name="rotationAngle"/> (degrees) around <paramref name="rotationAxis"/>. Segment count picked automatically from distance and radius.</summary>
+        /// <param name="center">Circle center.</param>
+        /// <param name="radius">Circle radius.</param>
+        /// <param name="rotationAxis">Axis the circle's own XY-plane is rotated around.</param>
+        /// <param name="rotationAngle">Rotation around <paramref name="rotationAxis"/>, in degrees.</param>
+        /// <param name="color">Line color.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderCircle3D(Vector3 center, float radius, Vector3 rotationAxis, float rotationAngle, Color color, float thickness = -1f)
             => BorderCircle3D(center, radius, rotationAxis, rotationAngle, -1, color, thickness);
 
         /// <summary>Draws a wireframe circle with an explicit segment count (-1 for automatic LOD).</summary>
+        /// <param name="center">Circle center.</param>
+        /// <param name="radius">Circle radius.</param>
+        /// <param name="rotationAxis">Axis the circle's own XY-plane is rotated around.</param>
+        /// <param name="rotationAngle">Rotation around <paramref name="rotationAxis"/>, in degrees.</param>
+        /// <param name="segments">Number of segments around the perimeter, or -1 for automatic LOD.</param>
+        /// <param name="color">Line color.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderCircle3D(Vector3 center, float radius, Vector3 rotationAxis, float rotationAngle, int segments, Color color, float thickness = -1f)
         {
@@ -331,6 +349,12 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a disc with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="center">Circle center.</param>
+        /// <param name="radius">Circle radius.</param>
+        /// <param name="rotationAxis">Axis the circle's own XY-plane is rotated around.</param>
+        /// <param name="rotationAngle">Rotation around <paramref name="rotationAxis"/>, in degrees.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawCircle3D(Vector3 center, float radius, Vector3 rotationAxis, float rotationAngle, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
@@ -339,6 +363,13 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a disc with fill and wireframe border, with an explicit segment count. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="center">Circle center.</param>
+        /// <param name="radius">Circle radius.</param>
+        /// <param name="rotationAxis">Axis the circle's own XY-plane is rotated around.</param>
+        /// <param name="rotationAngle">Rotation around <paramref name="rotationAxis"/>, in degrees.</param>
+        /// <param name="segments">Number of segments around the perimeter, or -1 for automatic LOD.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawCircle3D(Vector3 center, float radius, Vector3 rotationAxis, float rotationAngle, int segments, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
@@ -377,6 +408,12 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a triangle's three edges only.</summary>
+        /// <param name="v1">First vertex.</param>
+        /// <param name="v2">Second vertex.</param>
+        /// <param name="v3">Third vertex.</param>
+        /// <param name="color">Line color.</param>
+        /// <param name="rotation">Rotation applied to the vertices about <paramref name="origin"/> before drawing; the default (identity) leaves them unrotated.</param>
+        /// <param name="origin">Pivot point for <paramref name="rotation"/>; the triangle's own centroid if null.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderTriangle3D(Vector3 v1, Vector3 v2, Vector3 v3, Color color, Quaternion rotation = default, Vector3? origin = null, float thickness = -1f)
         {
@@ -394,6 +431,13 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a triangle with fill and edge outline. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="v1">First vertex.</param>
+        /// <param name="v2">Second vertex.</param>
+        /// <param name="v3">Third vertex.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
+        /// <param name="rotation">Rotation applied to the vertices about <paramref name="origin"/> before drawing; the default (identity) leaves them unrotated.</param>
+        /// <param name="origin">Pivot point for <paramref name="rotation"/>; the triangle's own centroid if null.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawTriangle3D(Vector3 v1, Vector3 v2, Vector3 v3, Color fillColor, Color? borderColor = null, Quaternion rotation = default, Vector3? origin = null, float thickness = -1f)
         {
@@ -445,11 +489,21 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws the wireframe of a cube.</summary>
+        /// <param name="position">Cube center.</param>
+        /// <param name="width">Size along X.</param>
+        /// <param name="height">Size along Y.</param>
+        /// <param name="length">Size along Z.</param>
+        /// <param name="color">Line color.</param>
+        /// <param name="rotation">Rotation about <paramref name="position"/>; the default (identity) leaves the cube axis-aligned.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderCube(Vector3 position, float width, float height, float length, Color color, Quaternion rotation = default, float thickness = -1f)
             => BorderCube(position, new Vector3(width, height, length), color, rotation, thickness);
 
         /// <summary>Draws the wireframe of a cube (vector size version).</summary>
+        /// <param name="position">Cube center.</param>
+        /// <param name="size">Size along X/Y/Z.</param>
+        /// <param name="color">Line color.</param>
+        /// <param name="rotation">Rotation about <paramref name="position"/>; the default (identity) leaves the cube axis-aligned.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderCube(Vector3 position, Vector3 size, Color color, Quaternion rotation = default, float thickness = -1f)
         {
@@ -467,11 +521,23 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a cube with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="position">Cube center.</param>
+        /// <param name="width">Size along X.</param>
+        /// <param name="height">Size along Y.</param>
+        /// <param name="length">Size along Z.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
+        /// <param name="rotation">Rotation about <paramref name="position"/>; the default (identity) leaves the cube axis-aligned.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawCube(Vector3 position, float width, float height, float length, Color fillColor, Color? borderColor = null, Quaternion rotation = default, float thickness = -1f)
             => DrawCube(position, new Vector3(width, height, length), fillColor, borderColor, rotation, thickness);
 
         /// <summary>Draws a cube (vector size version) with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="position">Cube center.</param>
+        /// <param name="size">Size along X/Y/Z.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
+        /// <param name="rotation">Rotation about <paramref name="position"/>; the default (identity) leaves the cube axis-aligned.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawCube(Vector3 position, Vector3 size, Color fillColor, Color? borderColor = null, Quaternion rotation = default, float thickness = -1f)
         {
@@ -506,6 +572,8 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws the wireframe of a bounding box.</summary>
+        /// <param name="box">Box to draw.</param>
+        /// <param name="color">Line color.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderBoundingBox(BoundingBox box, Color color, float thickness = -1f)
         {
@@ -514,6 +582,9 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a bounding box with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="box">Box to draw.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawBoundingBox(BoundingBox box, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
@@ -584,11 +655,19 @@ namespace MonoPrimitives.Primitives3D
         public void FillSphere(BoundingSphere sphere, Color color) => FillSphere(sphere.Center, sphere.Radius, color);
 
         /// <summary>Draws a sphere wireframe, ring/slice count picked automatically from distance and radius.</summary>
+        /// <param name="centerPos">Sphere center.</param>
+        /// <param name="radius">Sphere radius.</param>
+        /// <param name="color">Line color.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderSphere(Vector3 centerPos, float radius, Color color, float thickness = -1f)
             => BorderSphere(centerPos, radius, -1, -1, color, thickness);
 
         /// <summary>Draws a sphere wireframe (latitude and longitude lines) with an explicit ring/slice count.</summary>
+        /// <param name="centerPos">Sphere center.</param>
+        /// <param name="radius">Sphere radius.</param>
+        /// <param name="rings">Number of latitude rings, or -1 for automatic LOD.</param>
+        /// <param name="slices">Number of longitude slices, or -1 for automatic LOD.</param>
+        /// <param name="color">Line color.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderSphere(Vector3 centerPos, float radius, int rings, int slices, Color color, float thickness = -1f)
         {
@@ -632,6 +711,10 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a sphere with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="centerPos">Sphere center.</param>
+        /// <param name="radius">Sphere radius.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawSphere(Vector3 centerPos, float radius, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
@@ -640,6 +723,12 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a sphere with fill and wireframe border, with an explicit ring/slice count. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="centerPos">Sphere center.</param>
+        /// <param name="radius">Sphere radius.</param>
+        /// <param name="rings">Number of latitude rings, or -1 for automatic LOD.</param>
+        /// <param name="slices">Number of longitude slices, or -1 for automatic LOD.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawSphere(Vector3 centerPos, float radius, int rings, int slices, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
@@ -671,7 +760,12 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a filled cylinder between two arbitrary points.</summary>
+        /// <param name="startPos">Start point (base center).</param>
+        /// <param name="endPos">End point (top center).</param>
+        /// <param name="startRadius">Radius at <paramref name="startPos"/>. Zero produces a cone tip there.</param>
+        /// <param name="endRadius">Radius at <paramref name="endPos"/>. Zero produces a cone tip there.</param>
         /// <param name="sides">Side count, or -1 for automatic level of detail.</param>
+        /// <param name="color">Fill color.</param>
         public void FillCylinder(Vector3 startPos, Vector3 endPos, float startRadius, float endRadius, int sides, Color color)
         {
             ThrowIfNotBegun();
@@ -709,6 +803,13 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a cylinder/cone wireframe standing on <paramref name="position"/>, extending along +Y unless <paramref name="rotation"/> tilts it.</summary>
+        /// <param name="position">Base center.</param>
+        /// <param name="radiusTop">Radius at the top (along +Y before rotation). Zero produces a cone tip there.</param>
+        /// <param name="radiusBottom">Radius at the base. Zero produces a cone tip there.</param>
+        /// <param name="height">Distance from base to top, along +Y before <paramref name="rotation"/>.</param>
+        /// <param name="slices">Side count, or -1 for automatic level of detail.</param>
+        /// <param name="color">Line color.</param>
+        /// <param name="rotation">Tilts the +Y axis the cylinder extends along; the default (identity) leaves it upright.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderCylinder(Vector3 position, float radiusTop, float radiusBottom, float height, int slices, Color color, Quaternion rotation = default, float thickness = -1f)
         {
@@ -717,6 +818,12 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a cylinder wireframe between two arbitrary points.</summary>
+        /// <param name="startPos">Start point (base center).</param>
+        /// <param name="endPos">End point (top center).</param>
+        /// <param name="startRadius">Radius at <paramref name="startPos"/>. Zero produces a cone tip there.</param>
+        /// <param name="endRadius">Radius at <paramref name="endPos"/>. Zero produces a cone tip there.</param>
+        /// <param name="sides">Side count, or -1 for automatic level of detail.</param>
+        /// <param name="color">Line color.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderCylinder(Vector3 startPos, Vector3 endPos, float startRadius, float endRadius, int sides, Color color, float thickness = -1f)
         {
@@ -755,6 +862,14 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a cylinder/cone with fill and wireframe border, standing on <paramref name="position"/>. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="position">Base center.</param>
+        /// <param name="radiusTop">Radius at the top (along +Y before rotation). Zero produces a cone tip there.</param>
+        /// <param name="radiusBottom">Radius at the base. Zero produces a cone tip there.</param>
+        /// <param name="height">Distance from base to top, along +Y before <paramref name="rotation"/>.</param>
+        /// <param name="slices">Side count, or -1 for automatic level of detail.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
+        /// <param name="rotation">Tilts the +Y axis the cylinder extends along; the default (identity) leaves it upright.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawCylinder(Vector3 position, float radiusTop, float radiusBottom, float height, int slices, Color fillColor, Color? borderColor = null, Quaternion rotation = default, float thickness = -1f)
         {
@@ -763,6 +878,13 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a cylinder between two arbitrary points with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="startPos">Start point (base center).</param>
+        /// <param name="endPos">End point (top center).</param>
+        /// <param name="startRadius">Radius at <paramref name="startPos"/>. Zero produces a cone tip there.</param>
+        /// <param name="endRadius">Radius at <paramref name="endPos"/>. Zero produces a cone tip there.</param>
+        /// <param name="sides">Side count, or -1 for automatic level of detail.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawCylinder(Vector3 startPos, Vector3 endPos, float startRadius, float endRadius, int sides, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
@@ -781,8 +903,12 @@ namespace MonoPrimitives.Primitives3D
         // parameter needed (same reasoning as the two-endpoint cylinder overload).
 
         /// <summary>Draws a filled capsule: a cylinder between the two points with hemispherical caps of <paramref name="radius"/>.</summary>
+        /// <param name="startPos">Start point (one cap center).</param>
+        /// <param name="endPos">End point (other cap center).</param>
+        /// <param name="radius">Capsule radius.</param>
         /// <param name="slices">Radial subdivisions, or -1 for automatic LOD.</param>
         /// <param name="rings">Cap subdivisions, or -1 for automatic LOD.</param>
+        /// <param name="color">Fill color.</param>
         public void FillCapsule(Vector3 startPos, Vector3 endPos, float radius, int slices, int rings, Color color)
         {
             ThrowIfNotBegun();
@@ -864,6 +990,12 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a capsule wireframe (body rails plus cap meridians and rings).</summary>
+        /// <param name="startPos">Start point (one cap center).</param>
+        /// <param name="endPos">End point (other cap center).</param>
+        /// <param name="radius">Capsule radius.</param>
+        /// <param name="slices">Radial subdivisions, or -1 for automatic LOD.</param>
+        /// <param name="rings">Cap subdivisions, or -1 for automatic LOD.</param>
+        /// <param name="color">Line color.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderCapsule(Vector3 startPos, Vector3 endPos, float radius, int slices, int rings, Color color, float thickness = -1f)
         {
@@ -945,6 +1077,13 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a capsule with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="startPos">Start point (one cap center).</param>
+        /// <param name="endPos">End point (other cap center).</param>
+        /// <param name="radius">Capsule radius.</param>
+        /// <param name="slices">Radial subdivisions, or -1 for automatic LOD.</param>
+        /// <param name="rings">Cap subdivisions, or -1 for automatic LOD.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawCapsule(Vector3 startPos, Vector3 endPos, float radius, int slices, int rings, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
@@ -961,10 +1100,13 @@ namespace MonoPrimitives.Primitives3D
         // =====================================================================
 
         /// <summary>Draws a filled torus (donut) centered at <paramref name="center"/>, lying flat on XZ (hole facing +Y) unless <paramref name="rotation"/> tilts it.</summary>
+        /// <param name="center">Torus center.</param>
         /// <param name="radius">Distance from the center to the middle of the tube.</param>
         /// <param name="tubeRadius">Radius of the tube itself.</param>
         /// <param name="sides">Tube cross-section subdivisions, or -1 for automatic LOD.</param>
         /// <param name="rings">Ring subdivisions around the main radius, or -1 for automatic LOD.</param>
+        /// <param name="color">Fill color.</param>
+        /// <param name="rotation">Tilts the torus away from lying flat on XZ; the default (identity) leaves the hole facing +Y.</param>
         public void FillTorus(Vector3 center, float radius, float tubeRadius, int sides, int rings, Color color, Quaternion rotation = default)
         {
             ThrowIfNotBegun();
@@ -997,6 +1139,13 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a torus wireframe (ring loops around the tube, plus meridian loops around the main radius).</summary>
+        /// <param name="center">Torus center.</param>
+        /// <param name="radius">Distance from the center to the middle of the tube.</param>
+        /// <param name="tubeRadius">Radius of the tube itself.</param>
+        /// <param name="sides">Tube cross-section subdivisions, or -1 for automatic LOD.</param>
+        /// <param name="rings">Ring subdivisions around the main radius, or -1 for automatic LOD.</param>
+        /// <param name="color">Line color.</param>
+        /// <param name="rotation">Tilts the torus away from lying flat on XZ; the default (identity) leaves the hole facing +Y.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderTorus(Vector3 center, float radius, float tubeRadius, int sides, int rings, Color color, Quaternion rotation = default, float thickness = -1f)
         {
@@ -1041,6 +1190,14 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a torus with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="center">Torus center.</param>
+        /// <param name="radius">Distance from the center to the middle of the tube.</param>
+        /// <param name="tubeRadius">Radius of the tube itself.</param>
+        /// <param name="sides">Tube cross-section subdivisions, or -1 for automatic LOD.</param>
+        /// <param name="rings">Ring subdivisions around the main radius, or -1 for automatic LOD.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
+        /// <param name="rotation">Tilts the torus away from lying flat on XZ; the default (identity) leaves the hole facing +Y.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawTorus(Vector3 center, float radius, float tubeRadius, int sides, int rings, Color fillColor, Color? borderColor = null, Quaternion rotation = default, float thickness = -1f)
         {
@@ -1079,6 +1236,9 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws the wireframe (4 edges) of a plane on the XZ axes.</summary>
+        /// <param name="centerPos">Plane center.</param>
+        /// <param name="size">Plane width/depth along X/Z.</param>
+        /// <param name="color">Line color.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderPlane(Vector3 centerPos, Vector2 size, Color color, float thickness = -1f)
         {
@@ -1089,6 +1249,10 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws the wireframe of a plane with a fully explicit orientation.</summary>
+        /// <param name="centerPos">Plane center.</param>
+        /// <param name="size">Plane width/depth along its own local X/Z axes.</param>
+        /// <param name="rotation">Plane orientation (tilt and twist).</param>
+        /// <param name="color">Line color.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderPlane(Vector3 centerPos, Vector2 size, Quaternion rotation, Color color, float thickness = -1f)
         {
@@ -1099,6 +1263,10 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a plane with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="centerPos">Plane center.</param>
+        /// <param name="size">Plane width/depth along X/Z.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawPlane(Vector3 centerPos, Vector2 size, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
@@ -1107,6 +1275,11 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a plane with a fully explicit orientation, fill, and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="centerPos">Plane center.</param>
+        /// <param name="size">Plane width/depth along its own local X/Z axes.</param>
+        /// <param name="rotation">Plane orientation (tilt and twist).</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawPlane(Vector3 centerPos, Vector2 size, Quaternion rotation, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
@@ -1163,6 +1336,12 @@ namespace MonoPrimitives.Primitives3D
         /// Draws a grid on the XZ plane (the ground). Every parameter past <paramref name="spacing"/>
         /// is optional — omit any of them for a grid centered at the origin with the default subtle colors.
         /// </summary>
+        /// <param name="slices">Number of divisions along each axis.</param>
+        /// <param name="spacing">World-space distance between adjacent lines.</param>
+        /// <param name="origin">Grid center; the world origin if null.</param>
+        /// <param name="lineColor">Minor line color; a subtle default if null.</param>
+        /// <param name="majorLineColor">Major line color, used every <see cref="MajorGridLineInterval"/>th division when <paramref name="showMajorLines"/> is true; a darker default if null.</param>
+        /// <param name="showMajorLines">When true (default), every <see cref="MajorGridLineInterval"/>th division uses <paramref name="majorLineColor"/> and a wider stroke. When false, every line is drawn uniformly with <paramref name="lineColor"/>.</param>
         /// <param name="lineThickness">Minor line thickness; &lt;= 0 (the default) draws minor lines via the cheap fixed-1px <see cref="DrawLine3DFast"/> path, as before. A positive value draws minor lines via <see cref="DrawLine3D(Vector3,Vector3,float,Color)"/> instead, so they can be scaled; major lines are always 1 thicker.</param>
         public void DrawGrid(int slices, float spacing, Vector3? origin = null, Color? lineColor = null, Color? majorLineColor = null, bool showMajorLines = true, float lineThickness = 0f)
             => DrawGridXZ(slices, spacing, origin, lineColor, majorLineColor, showMajorLines, lineThickness);
@@ -1186,6 +1365,13 @@ namespace MonoPrimitives.Primitives3D
         private static readonly Color DefaultGridLineColor = new(0.75f, 0.75f, 0.75f, 0.35f);
         private static readonly Color DefaultGridMajorLineColor = new(0.45f, 0.45f, 0.45f, 0.4f);
 
+        /// <param name="slices">Number of divisions along each axis.</param>
+        /// <param name="spacing">World-space distance between adjacent lines.</param>
+        /// <param name="origin">Grid center.</param>
+        /// <param name="axisA">First in-plane direction the grid lines run along.</param>
+        /// <param name="axisB">Second in-plane direction the grid lines run along.</param>
+        /// <param name="lineColor">Minor line color.</param>
+        /// <param name="majorLineColor">Major line color, used every <see cref="MajorGridLineInterval"/>th division when <paramref name="showMajorLines"/> is true.</param>
         /// <param name="showMajorLines">When true (default), every <see cref="MajorGridLineInterval"/>th division uses <paramref name="majorLineColor"/> and a wider stroke. When false, every line is drawn uniformly with <paramref name="lineColor"/>.</param>
         /// <param name="lineThickness">Minor line thickness; &lt;= 0 (the default) uses the cheap fixed-1px <see cref="DrawLine3DFast"/> path for minor lines. Major thickness is always this plus 1 — both grid directions (A and B) share the same computed thickness, so they can't drift apart.</param>
         private void DrawGridPlane(int slices, float spacing, in Vector3 origin, in Vector3 axisA, in Vector3 axisB, Color lineColor, Color majorLineColor, bool showMajorLines = true, float lineThickness = 0f)
@@ -1238,6 +1424,9 @@ namespace MonoPrimitives.Primitives3D
         /// parameter past <paramref name="size"/> is optional — omit any of them for a triad through
         /// the origin, using a dark, grid-like default color.
         /// </summary>
+        /// <param name="size">Length of each of the three arms, from <paramref name="origin"/>.</param>
+        /// <param name="origin">Center of the triad; the world origin if null.</param>
+        /// <param name="color">Line color for all three arms; a dark, grid-like default if null.</param>
         /// <param name="thickness">&lt;= 0 (the default) draws via the cheap fixed-1px <see cref="DrawLine3DFast"/> path, as before. A positive value draws via <see cref="DrawLine3D(Vector3,Vector3,float,Color)"/> instead, so the triad can be made thicker.</param>
         public void DrawAxis(float size, Vector3? origin = null, Color? color = null, float thickness = 0f)
         {
@@ -1497,6 +1686,10 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a heightmap's wireframe (each grid cell's 4 edges) — useful for seeing the underlying mesh resolution while prototyping.</summary>
+        /// <param name="heights">Grid of vertex heights; <c>heights[x, z]</c> is the Y coordinate of that grid vertex.</param>
+        /// <param name="origin">World position of grid vertex (0, 0).</param>
+        /// <param name="cellSize">World-space spacing between adjacent grid vertices along X/Z.</param>
+        /// <param name="color">Line color.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void BorderHeightmap(float[,] heights, Vector3 origin, Vector2 cellSize, Color color, float thickness = -1f)
         {
@@ -1517,6 +1710,11 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws a heightmap with fill and wireframe. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="heights">Grid of vertex heights; <c>heights[x, z]</c> is the Y coordinate of that grid vertex.</param>
+        /// <param name="origin">World position of grid vertex (0, 0).</param>
+        /// <param name="cellSize">World-space spacing between adjacent grid vertices along X/Z.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
         public void DrawHeightmap(float[,] heights, Vector3 origin, Vector2 cellSize, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
@@ -1551,7 +1749,7 @@ namespace MonoPrimitives.Primitives3D
         // EXTRA HELPERS (debug gizmos — no Fill/Border split, unlike the shapes above)
         // =====================================================================
 
-        /// <summary>Draws a red/green/blue X/Y/Z gizmo at <paramref name="origin"/> — for a single-color axis triad instead (matching a grid's own color), use <see cref="DrawAxis(Vector3,float,Color)"/>.</summary>
+        /// <summary>Draws a red/green/blue X/Y/Z gizmo at <paramref name="origin"/> — for a single-color axis triad instead (matching a grid's own color), use <see cref="DrawAxis(float,Vector3?,Color?,float)"/>.</summary>
         public void DrawAxes(Vector3 origin, float length)
         {
             DrawLine3D(origin, origin + Vector3.UnitX * length, Color.Red);

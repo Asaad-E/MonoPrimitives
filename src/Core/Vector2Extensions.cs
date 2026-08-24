@@ -37,7 +37,7 @@ namespace MonoPrimitives
 
         /// <summary>
         /// Signed angle (radians, in <c>[-PI, PI]</c>) to rotate <paramref name="from"/> by to face
-        /// <paramref name="to"/> — positive is counter-clockwise, matching <see cref="Rotate"/>'s own
+        /// <paramref name="to"/> — positive is counter-clockwise, matching <see cref="Rotated(Vector2,float)"/>'s own
         /// sign convention. Unlike <see cref="AngleTo"/>, this tells you which way to turn.
         /// </summary>
         public static float AngleToSigned(this Vector2 from, Vector2 to)

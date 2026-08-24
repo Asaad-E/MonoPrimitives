@@ -69,7 +69,10 @@ namespace MonoPrimitives.Primitives3D
         /// point, so a sharp bend in the trail no longer shows the gap/overlap a naive per-segment
         /// draw would.
         /// </summary>
+        /// <param name="batch">Batch to draw into; must already be between <c>Begin</c>/<c>End</c>.</param>
+        /// <param name="color">Color at the newest point, before any fade is applied.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="Primitive3DBatch.DefaultLineThickness"/> — the same sentinel convention as the rest of this library's <c>Border*</c>/<c>Draw*</c> methods.</param>
+        /// <param name="fadeToAlpha">Alpha scale applied to <paramref name="color"/> at the oldest point, 0 (default) fading fully to invisible.</param>
         public void Draw(Primitive3DBatch batch, Color color, float thickness = -1f, float fadeToAlpha = 0f)
         {
             if (Count < 2) return;

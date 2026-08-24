@@ -88,7 +88,7 @@ namespace MonoPrimitives.Primitives3D
 
         /// <summary>
         /// Total (width, height) in world units — same unit as <paramref name="pixelSize"/> — that
-        /// <see cref="DrawString3D"/> would occupy along its own billboard axes, for centering
+        /// <see cref="DrawString3D(string,Vector3,float,Color,float,float,float)"/> would occupy along its own billboard axes, for centering
         /// before drawing (e.g. offset by <c>-size.X/2</c> along <c>right</c> to center a label).
         /// </summary>
         public static Vector2 MeasureText3D(string text, float pixelSize, float glyphSpacing = 1f, float lineSpacing = 2f)
@@ -99,7 +99,7 @@ namespace MonoPrimitives.Primitives3D
 
         /// <summary>
         /// Right/up axes for a cylindrical billboard at <paramref name="position"/> facing the
-        /// active camera — shared by <see cref="DrawString3D"/> and available for your own
+        /// active camera — shared by <see cref="DrawString3D(string,Vector3,float,Color,float,float,float)"/> and available for your own
         /// billboarded quads (particles, sprites) that want the same "always upright, rotates to
         /// face camera" behavior instead of full spherical billboarding.
         /// </summary>
