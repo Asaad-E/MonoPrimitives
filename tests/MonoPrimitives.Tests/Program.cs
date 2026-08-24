@@ -54,6 +54,7 @@ namespace MonoPrimitives.Tests
             PolygonInsetRegressionTests.Run(GraphicsDevice, results);
             ClearLetterboxedTests.Run(GraphicsDevice, results);
             BoxingViewportAdapter2DPixelPerfectTests.Run(GraphicsDevice, results);
+            Camera2DTests.Run(GraphicsDevice, results);
 
             using var batch = new Primitive3DBatch(GraphicsDevice);
             var camera = new Camera3D(position: new Vector3(6, 6, 6), target: Vector3.Zero, up: Vector3.Up, fovy: 50f);

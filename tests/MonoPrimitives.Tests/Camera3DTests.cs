@@ -224,6 +224,53 @@ namespace MonoPrimitives.Tests
                 return null;
             });
 
+            results.Check("IsVisible(BoundingSphere/BoundingBox) matches direct frustum intersection tests", () =>
+            {
+                var cam = new Camera3D(new Vector3(0, 0, 10), Vector3.Zero, Vector3.Up, fovy: 60f);
+                var viewport = new Viewport(0, 0, 800, 600);
+
+                var nearSphere = new BoundingSphere(Vector3.Zero, 1f);
+                if (!cam.IsVisible(nearSphere, viewport)) return "a unit sphere at the look target was reported not visible";
+                var farSphere = new BoundingSphere(new Vector3(0, 0, -100_000f), 1f);
+                if (cam.IsVisible(farSphere, viewport)) return "a sphere far behind the camera was reported visible";
+
+                var nearBox = new BoundingBox(new Vector3(-1), new Vector3(1));
+                if (!cam.IsVisible(nearBox, viewport)) return "a unit box at the look target was reported not visible";
+                var farBox = new BoundingBox(new Vector3(-1, -1, -100_001f), new Vector3(1, 1, -99_999f));
+                if (cam.IsVisible(farBox, viewport)) return "a box far behind the camera was reported visible";
+                return null;
+            });
+
+            results.Check("FollowTarget(deadZoneHalfSize) converges toward desiredPosition minus the box edge, and holds still inside the deadzone", () =>
+            {
+                var cam = new Camera3D(Vector3.Zero, new Vector3(0, 0, -5), Vector3.Up) { FollowSmoothTime = 0.1f };
+                var desired = new Vector3(500f, 0f, 0f);
+                for (int i = 0; i < 300; i++) cam.FollowTarget(desired, 1f / 60f, new Vector3(20f, 20f, 20f));
+                if (!Close(cam.Position, new Vector3(480f, 0f, 0f), 1f)) return $"FollowTarget settled at {cam.Position}, expected ~(480,0,0) (desired minus the 20-unit deadzone half-size)";
+
+                var cam2 = new Camera3D(Vector3.Zero, Vector3.Zero, Vector3.Up);
+                cam2.FollowTarget(new Vector3(5f, 0f, 0f), 1f / 60f, new Vector3(20f, 20f, 20f)); // within the deadzone
+                if (!Close(cam2.Position, Vector3.Zero)) return $"FollowTarget moved inside its own deadzone: {cam2.Position}";
+                return null;
+            });
+
+            results.Check("FitBounds (perspective) positions the camera so the frustum fully contains the bounds, tight enough that shrinking distance would clip it", () =>
+            {
+                var cam = new Camera3D(new Vector3(0, 0, 100), Vector3.Zero, Vector3.Up, fovy: 60f);
+                var viewport = new Viewport(0, 0, 800, 600);
+                var bounds = new BoundingBox(new Vector3(-5), new Vector3(5));
+                cam.FitBounds(bounds, padding: 0f, viewport);
+
+                var frustum = cam.GetFrustum(viewport.AspectRatio);
+                if (frustum.Contains(bounds) != ContainmentType.Contains) return $"FitBounds result does not fully contain the bounds (distance={cam.TargetDistance})";
+
+                // Pull the camera closer than FitBounds computed -- the same bounds should no longer fully fit.
+                var closer = new Camera3D(cam.Target + Vector3.Normalize(cam.Position - cam.Target) * (cam.TargetDistance * 0.5f), cam.Target, Vector3.Up, fovy: 60f);
+                var closerFrustum = closer.GetFrustum(viewport.AspectRatio);
+                if (closerFrustum.Contains(bounds) == ContainmentType.Contains) return "FitBounds distance was not tight -- halving it still fully contained the bounds";
+                return null;
+            });
+
             results.Check("Reset restores the construction-time pose and clears zoom/follow/shake state", () =>
             {
                 var cam = new Camera3D(new Vector3(0, 0, 10), Vector3.Zero, Vector3.Up, fovy: 45f);

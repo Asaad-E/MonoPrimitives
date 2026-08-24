@@ -11,12 +11,15 @@ namespace MonoPrimitives.Primitives2D
     /// <summary>
     /// A 2D camera: <see cref="Target"/>/<see cref="Offset"/>/<see cref="Rotation"/>/
     /// <see cref="Zoom"/>, plus the same bounds/padding/smooth-follow/smooth-zoom/easing/
-    /// input-driven-update <c>Camera3D</c> has in the companion 3D library — a 2D prototype (a
-    /// platformer, an asteroids clone, a pan-and-zoom plot) starts from a camera that already
-    /// does the common things. Pass <see cref="GetTransformMatrix"/> into
+    /// input-driven-update <c>Camera3D</c> has in the companion 3D library. Pass
+    /// <see cref="GetTransformMatrix"/> into
     /// <see cref="Primitive2DBatch.Begin(Matrix?,BlendState?,DepthStencilState?,RasterizerState?,Effect?)"/>'s
     /// <c>transformMatrix</c> each frame.
     /// </summary>
+    /// <remarks>
+    /// A 2D prototype (a platformer, an asteroids clone, a pan-and-zoom plot) starts from a
+    /// camera that already does the common things.
+    /// </remarks>
     public sealed class Camera2D
     {
         /// <summary>World point the camera centers on.</summary>
@@ -30,17 +33,21 @@ namespace MonoPrimitives.Primitives2D
         /// When this camera was constructed with a <see cref="ViewportAdapter"/> and <see cref="Offset"/>
         /// has never been assigned directly, it tracks that adapter's virtual center **live**
         /// (<c>VirtualWidth/2, VirtualHeight/2</c>, re-read on every access) rather than freezing the
-        /// value seen at construction — this matters specifically for <see cref="DefaultViewportAdapter2D"/>/
+        /// value seen at construction. Assigning <see cref="Offset"/> at all — even to the same
+        /// value — pins it from then on, matching plain-field behavior exactly; <see cref="Reset"/>
+        /// un-pins it again.
+        /// </summary>
+        /// <remarks>
+        /// This matters specifically for <see cref="DefaultViewportAdapter2D"/>/
         /// <see cref="WindowViewportAdapter2D"/>, whose virtual size tracks the live device/window size and
         /// changes across a resize (for <see cref="BoxingViewportAdapter2D"/>/<see cref="ScalingViewportAdapter2D"/>,
         /// whose virtual size is fixed for their lifetime, this is indistinguishable from the old
-        /// snapshot-once behavior). Assigning <see cref="Offset"/> at all — even to the same value —
-        /// pins it from then on, matching plain-field behavior exactly; <see cref="Reset"/> un-pins it
-        /// again. MonoGame.Extended's own <c>OrthographicCamera.Origin</c> never re-tracks like this
-        /// (it's a snapshot for the camera's whole lifetime, confirmed directly against its source) —
-        /// this goes one step further, in the same "recompute live, no cache to invalidate" spirit
-        /// this library's own <see cref="ViewportAdapter2D"/> family already uses for <c>Scale</c>/<c>Offset</c>.
-        /// </summary>
+        /// snapshot-once behavior). MonoGame.Extended's own <c>OrthographicCamera.Origin</c> never
+        /// re-tracks like this (it's a snapshot for the camera's whole lifetime, confirmed directly
+        /// against its source) — this goes one step further, in the same "recompute live, no cache
+        /// to invalidate" spirit this library's own <see cref="ViewportAdapter2D"/> family already
+        /// uses for <c>Scale</c>/<c>Offset</c>.
+        /// </remarks>
         public Vector2 Offset
         {
             get => !_offsetOverridden && ViewportAdapter is not null
@@ -60,14 +67,17 @@ namespace MonoPrimitives.Primitives2D
         public float Zoom = 1f;
 
         /// <summary>
-        /// Viewport adapter this camera was constructed with, if any — MonoGame.Extended-style:
-        /// set once at construction, then every viewport-dependent method (<see cref="GetTransformMatrix"/>,
+        /// Viewport adapter this camera was constructed with, if any — set once at construction,
+        /// then every viewport-dependent method (<see cref="GetTransformMatrix"/>,
         /// <see cref="ScreenToWorld"/>, <see cref="WorldToScreen"/>, <see cref="GetVisibleWorldBounds(GraphicsDevice?)"/>,
         /// <see cref="UpdateWithInput(PrimitiveInput, float)"/>'s mouse-drag pan) uses it
-        /// automatically instead of requiring it passed in again at every call site. <c>null</c> for the raw-screen-space
-        /// constructors — those methods then fall back to assuming <see cref="Offset"/> is
-        /// already in the same pixel space as raw device/mouse coordinates.
+        /// automatically instead of requiring it passed in again at every call site.
         /// </summary>
+        /// <remarks>
+        /// MonoGame.Extended-style. <c>null</c> for the raw-screen-space constructors — those
+        /// methods then fall back to assuming <see cref="Offset"/> is already in the same pixel
+        /// space as raw device/mouse coordinates.
+        /// </remarks>
         public ViewportAdapter2D? ViewportAdapter { get; }
 
         private readonly Vector2 _initialTarget;
@@ -90,12 +100,12 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>
-        /// MonoGame.Extended's own <c>OrthographicCamera(ViewportAdapter)</c> constructor shape:
         /// <see cref="Offset"/> defaults to the adapter's virtual center, and <see cref="ViewportAdapter"/>
         /// is stored so screen↔world conversions and mouse-drag panning account for letterbox
         /// bars/scaling automatically. Prefer this over the raw <see cref="Camera2D(Vector2,Vector2,float,float)"/>
         /// constructor whenever a <see cref="ViewportAdapter2D"/> is in play.
         /// </summary>
+        /// <remarks>Matches MonoGame.Extended's own <c>OrthographicCamera(ViewportAdapter)</c> constructor shape.</remarks>
         public Camera2D(ViewportAdapter2D viewportAdapter, Vector2 target = default, float rotation = 0f, float zoom = 1f)
         {
             ViewportAdapter = viewportAdapter ?? throw new ArgumentNullException(nameof(viewportAdapter));
@@ -115,19 +125,22 @@ namespace MonoPrimitives.Primitives2D
         public static Camera2D CreateCentered(GraphicsDevice device, Vector2 target = default)
             => new(target, new Vector2(device.Viewport.Width * 0.5f, device.Viewport.Height * 0.5f));
 
-        /// <summary>Creates a camera with every field at its identity default (no pan, no zoom, world origin at the screen's top-left corner) — a placeholder to construct with before a real target/viewport is known. Matches <see cref="Primitives3D.Camera3D.CreateDefault"/>'s role; deliberately no bare parameterless constructor so every <see cref="Camera2D"/> is either explicit about its setup or explicit that it's a placeholder.</summary>
+        /// <summary>Creates a camera with every field at its identity default (no pan, no zoom, world origin at the screen's top-left corner) — a placeholder to construct with before a real target/viewport is known.</summary>
+        /// <remarks>Matches <see cref="Primitives3D.Camera3D.CreateDefault"/>'s role; deliberately no bare parameterless constructor so every <see cref="Camera2D"/> is either explicit about its setup or explicit that it's a placeholder.</remarks>
         public static Camera2D CreateDefault() => new(Vector2.Zero, Vector2.Zero);
 
         /// <summary>
         /// Restores <see cref="Target"/>/<see cref="Offset"/>/<see cref="Rotation"/>/<see cref="Zoom"/>
         /// to the values passed at construction, and clears smooth-zoom/smooth-follow/shake state
-        /// so there's no lingering velocity or trauma to swoop/shake through afterward. Matches
-        /// <see cref="Primitives3D.Camera3D.Reset"/>; bound to <c>R</c> by default in
-        /// <see cref="UpdateWithInput(PrimitiveInput, float)"/> — call directly if you're not using that.
-        /// Also un-pins <see cref="Offset"/> if it had been assigned directly since construction,
-        /// restoring construction-time behavior exactly — live tracking again, when constructed
-        /// with a <see cref="ViewportAdapter"/>.
+        /// so there's no lingering velocity or trauma to swoop/shake through afterward. Bound to
+        /// <c>R</c> by default in <see cref="UpdateWithInput(PrimitiveInput, float)"/> — call
+        /// directly if you're not using that.
         /// </summary>
+        /// <remarks>
+        /// Matches <see cref="Primitives3D.Camera3D.Reset"/>. Also un-pins <see cref="Offset"/> if
+        /// it had been assigned directly since construction, restoring construction-time behavior
+        /// exactly — live tracking again, when constructed with a <see cref="ViewportAdapter"/>.
+        /// </remarks>
         public void Reset()
         {
             Target = _initialTarget;
@@ -147,10 +160,13 @@ namespace MonoPrimitives.Primitives2D
         /// translate by <c>-Target</c>, rotate (<see cref="Rotation"/> plus any screen-shake
         /// rotation — see <see cref="AddTrauma"/>), scale by <see cref="Zoom"/>, then translate
         /// to <see cref="Offset"/> plus any screen-shake offset — the standard 2D camera
-        /// composition. When <see cref="ViewportAdapter"/> is set, its own <c>GetScaleMatrix()</c>
-        /// (virtual → window pixels) is folded in automatically, matching MonoGame.Extended's
-        /// <c>OrthographicCamera.GetViewMatrix()</c> — don't multiply by it again at the call site.
+        /// composition.
         /// </summary>
+        /// <remarks>
+        /// When <see cref="ViewportAdapter"/> is set, its own <c>GetScaleMatrix()</c> (virtual →
+        /// window pixels) is folded in automatically, matching MonoGame.Extended's
+        /// <c>OrthographicCamera.GetViewMatrix()</c> — don't multiply by it again at the call site.
+        /// </remarks>
         public Matrix GetTransformMatrix()
         {
             Matrix cameraMatrix = GetCameraMatrix();
@@ -188,11 +204,13 @@ namespace MonoPrimitives.Primitives2D
 
         /// <summary>
         /// The world-space rectangle currently visible on screen, as its (min, max) corners —
-        /// ignoring <see cref="Rotation"/> (an axis-aligned bound around the rotated view) —
-        /// useful for culling before drawing many objects (boids, cellular-automata cells, plot
+        /// ignoring <see cref="Rotation"/> (an axis-aligned bound around the rotated view).
+        /// </summary>
+        /// <remarks>
+        /// Useful for culling before drawing many objects (boids, cellular-automata cells, plot
         /// points) that are off-screen. Returns corners rather than a framework <c>Rectangle</c>
         /// (whose fields are integers) since world space is floating-point.
-        /// </summary>
+        /// </remarks>
         /// <param name="device">
         /// Only used as a fallback when this camera has no <see cref="ViewportAdapter"/> — pass
         /// <c>null</c> (or omit) when constructed with one, since its virtual resolution is used
@@ -205,6 +223,24 @@ namespace MonoPrimitives.Primitives2D
             int height = ViewportAdapter?.VirtualHeight ?? device!.Viewport.Height;
             return GetVisibleWorldBounds(width, height);
         }
+
+        /// <summary>Same as <see cref="GetVisibleWorldBounds(GraphicsDevice?)"/>, as a <see cref="RectangleF"/> instead of a corner tuple — pairs directly with <see cref="IsVisible(Vector2,GraphicsDevice?)"/>/<see cref="IsVisible(RectangleF,GraphicsDevice?)"/>.</summary>
+        /// <param name="device">Same fallback rule as <see cref="GetVisibleWorldBounds(GraphicsDevice?)"/>.</param>
+        public RectangleF GetVisibleWorldBoundsF(GraphicsDevice? device = null)
+        {
+            (Vector2 min, Vector2 max) = GetVisibleWorldBounds(device);
+            return new RectangleF(min.X, min.Y, max.X - min.X, max.Y - min.Y);
+        }
+
+        /// <summary>True if <paramref name="worldPoint"/> is inside the currently visible world bounds — a cheap "should I bother drawing this" check before drawing many objects.</summary>
+        /// <param name="worldPoint">World-space point to test.</param>
+        /// <param name="device">Same fallback rule as <see cref="GetVisibleWorldBounds(GraphicsDevice?)"/>.</param>
+        public bool IsVisible(Vector2 worldPoint, GraphicsDevice? device = null) => GetVisibleWorldBoundsF(device).Contains(worldPoint);
+
+        /// <summary>True if <paramref name="worldBounds"/> overlaps the currently visible world bounds at all — for culling an object with real extent, not just a point.</summary>
+        /// <param name="worldBounds">World-space bounds to test.</param>
+        /// <param name="device">Same fallback rule as <see cref="GetVisibleWorldBounds(GraphicsDevice?)"/>.</param>
+        public bool IsVisible(RectangleF worldBounds, GraphicsDevice? device = null) => GetVisibleWorldBoundsF(device).Intersects(worldBounds);
 
         private (Vector2 Min, Vector2 Max) GetVisibleWorldBounds(int width, int height)
         {
@@ -242,7 +278,7 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Inward margin subtracted from <see cref="TargetBounds"/> before clamping.</summary>
         public float BoundsPadding { get; set; } = 0f;
 
-        /// <summary>Clamps <see cref="Target"/> into <see cref="TargetBounds"/> (shrunk by <see cref="BoundsPadding"/>) if set. Called automatically by <see cref="FollowTarget"/>; call it yourself after setting <see cref="Target"/> directly if you want the same clamp.</summary>
+        /// <summary>Clamps <see cref="Target"/> into <see cref="TargetBounds"/> (shrunk by <see cref="BoundsPadding"/>) if set. Called automatically by <see cref="FollowTarget(Vector2,float)"/>; call it yourself after setting <see cref="Target"/> directly if you want the same clamp.</summary>
         public void ClampToBounds()
         {
             if (!TargetBounds.HasValue)
@@ -263,10 +299,10 @@ namespace MonoPrimitives.Primitives2D
         // Smooth follow ("follow with delay")
         // ---------------------------------------------------------------------
 
-        /// <summary>Time (seconds) for <see cref="FollowTarget"/> to close ~95% of the remaining distance.</summary>
+        /// <summary>Time (seconds) for <see cref="FollowTarget(Vector2,float)"/> to close ~95% of the remaining distance.</summary>
         public float FollowSmoothTime { get; set; } = 0.2f;
 
-        /// <summary>Deadzone radius (world units): <see cref="FollowTarget"/> doesn't move the camera until the desired position is at least this far away.</summary>
+        /// <summary>Deadzone radius (world units): <see cref="FollowTarget(Vector2,float)"/> doesn't move the camera until the desired position is at least this far away.</summary>
         public float FollowPadding { get; set; } = 0f;
 
         private Vector2 _followVelocity;
@@ -289,8 +325,43 @@ namespace MonoPrimitives.Primitives2D
             ClampToBounds();
         }
 
-        /// <summary>Resets <see cref="FollowTarget"/>'s internal smoothing velocity — call after teleporting the camera or its subject to avoid a lingering swoop.</summary>
+        /// <summary>Same as <see cref="FollowTarget(Vector2,float)"/>, but with an axis-independent rectangular deadzone instead of <see cref="FollowPadding"/>'s circular one — the "camera box" technique (e.g. looser horizontal than vertical, common in platformers).</summary>
+        /// <param name="desiredTarget">World point the camera should end up looking at once outside the box.</param>
+        /// <param name="deltaSeconds">Elapsed time this frame.</param>
+        /// <param name="deadZoneHalfSize">Half-width/height (world units) of the box around <see cref="Target"/> that <paramref name="desiredTarget"/> can move within before the camera reacts, per axis independently.</param>
+        /// <remarks>Eases toward whichever point keeps <paramref name="desiredTarget"/> exactly at the box's edge on the axis (or axes) it left — not snapped, and not toward <paramref name="desiredTarget"/> itself while still inside the box on that axis. Shares <see cref="FollowTarget(Vector2,float)"/>'s own smoothing state; don't alternate between the two per frame on the same camera.</remarks>
+        public void FollowTarget(Vector2 desiredTarget, float deltaSeconds, Vector2 deadZoneHalfSize)
+        {
+            Vector2 delta = desiredTarget - Target;
+            Vector2 boxDesired = Target;
+            if (MathF.Abs(delta.X) > deadZoneHalfSize.X) boxDesired.X = desiredTarget.X - MathF.Sign(delta.X) * deadZoneHalfSize.X;
+            if (MathF.Abs(delta.Y) > deadZoneHalfSize.Y) boxDesired.Y = desiredTarget.Y - MathF.Sign(delta.Y) * deadZoneHalfSize.Y;
+
+            Target = SmoothDamp(Target, boxDesired, ref _followVelocity, FollowSmoothTime, deltaSeconds);
+            ClampToBounds();
+        }
+
+        /// <summary>Resets <see cref="FollowTarget(Vector2,float)"/>'s internal smoothing velocity — call after teleporting the camera or its subject to avoid a lingering swoop.</summary>
         public void ResetFollowVelocity() => _followVelocity = Vector2.Zero;
+
+        /// <summary>Sets <see cref="Target"/> and <see cref="Zoom"/> so that <paramref name="worldBounds"/> (plus <paramref name="padding"/> world units on every side) fits entirely inside the current viewport — a multi-target/RTS-style "keep everything of interest visible" camera. Sets state directly, no easing; wrap the call in your own smoothing if you want it eased.</summary>
+        /// <param name="worldBounds">World-space region that must end up fully visible.</param>
+        /// <param name="padding">Extra world-space margin added around <paramref name="worldBounds"/> on every side before fitting.</param>
+        /// <param name="device">Same fallback rule as <see cref="GetVisibleWorldBounds(GraphicsDevice?)"/>.</param>
+        /// <remarks>Doesn't clamp to <see cref="MinZoom"/>/<see cref="MaxZoom"/> — those are <see cref="SmoothZoom"/>'s own constraint, and clamping here could silently break the "fits" contract this method promises. Clamp the result yourself afterward if you need both.</remarks>
+        public void FitBounds(RectangleF worldBounds, float padding = 0f, GraphicsDevice? device = null)
+        {
+            int width = ViewportAdapter?.VirtualWidth ?? device?.Viewport.Width
+                ?? throw new ArgumentNullException(nameof(device), $"{nameof(FitBounds)} needs either a {nameof(ViewportAdapter)} (set at construction) or a {nameof(GraphicsDevice)} argument.");
+            int height = ViewportAdapter?.VirtualHeight ?? device!.Viewport.Height;
+
+            float requiredWidth = worldBounds.Width + padding * 2f;
+            float requiredHeight = worldBounds.Height + padding * 2f;
+            if (requiredWidth <= 0f || requiredHeight <= 0f) return;
+
+            Zoom = MathF.Min(width / requiredWidth, height / requiredHeight);
+            Target = worldBounds.Center;
+        }
 
         // ---------------------------------------------------------------------
         // Smooth zoom
@@ -311,14 +382,16 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>
         /// Adds <paramref name="delta"/> to <see cref="Zoom"/>'s target, eased over
         /// <see cref="ZoomSmoothTime"/> seconds and clamped to [<see cref="MinZoom"/>,
-        /// <see cref="MaxZoom"/>], instead of changing it instantly. For discrete input
-        /// (a mouse wheel tick) where <paramref name="delta"/> is naturally 0 most frames:
-        /// call every frame, most calls no-op. For continuous input (a key held to zoom),
-        /// don't call this every frame with a small nonzero <paramref name="delta"/> — each
+        /// <see cref="MaxZoom"/>], instead of changing it instantly.
+        /// </summary>
+        /// <remarks>
+        /// For discrete input (a mouse wheel tick) where <paramref name="delta"/> is naturally 0
+        /// most frames: call every frame, most calls no-op. For continuous input (a key held to
+        /// zoom), don't call this every frame with a small nonzero <paramref name="delta"/> — each
         /// call adds onto the target immediately, so a delta repeated every frame races the
         /// target ahead rather than climbing smoothly. Adjust <see cref="Zoom"/> directly by
         /// <c>rate * deltaSeconds</c> for that case instead.
-        /// </summary>
+        /// </remarks>
         public void SmoothZoom(float delta, float deltaSeconds)
         {
             if (delta == 0f && float.IsNaN(_pendingZoomTarget))
@@ -364,12 +437,15 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>
         /// Advances internal state only — screen-shake trauma decay (see <see cref="AddTrauma"/>)
         /// and any in-flight <see cref="SmoothZoom"/> easing — with no movement and no input
-        /// reading. Call this every frame when you're driving <see cref="Target"/>/<see cref="Zoom"/>/
+        /// reading.
+        /// </summary>
+        /// <remarks>
+        /// Call this every frame when you're driving <see cref="Target"/>/<see cref="Zoom"/>/
         /// <see cref="Rotation"/> yourself (a fixed prototype camera, a cutscene) and just want
         /// shake/easing to keep working. For a built-in WASD-pan/drag-pan/wheel-zoom controller
         /// driven by your own <see cref="PrimitiveInput"/>, use
         /// <see cref="UpdateWithInput(PrimitiveInput, float)"/> instead.
-        /// </summary>
+        /// </remarks>
         public void Update(float deltaSeconds) => UpdateShake(deltaSeconds);
 
         /// <inheritdoc cref="Update(float)"/>
@@ -378,24 +454,29 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>
         /// Advances the camera one frame using W/A/S/D pan, left-mouse-drag pan and wheel zoom
         /// read from <paramref name="input"/> — the simplest way to get a working camera with no
-        /// input code of your own. This is a prototyping convenience, not something every game
-        /// wants baked into its camera; use the plain <see cref="Update(float)"/> if you're
-        /// driving the camera from your own logic, or query <paramref name="input"/> yourself
-        /// and set <see cref="Target"/>/<see cref="Zoom"/> directly for custom bindings.
-        /// Doesn't call <see cref="PrimitiveInput.Update(GameTime)"/> itself — <paramref name="input"/> is
+        /// input code of your own. <c>R</c> calls <see cref="Reset"/> directly and skips movement
+        /// for that frame, so a same-frame WASD/mouse delta doesn't immediately fight the reset.
+        /// </summary>
+        /// <remarks>
+        /// This is a prototyping convenience, not something every game wants baked into its
+        /// camera; use the plain <see cref="Update(float)"/> if you're driving the camera from
+        /// your own logic, or query <paramref name="input"/> yourself and set
+        /// <see cref="Target"/>/<see cref="Zoom"/> directly for custom bindings. Doesn't call
+        /// <see cref="PrimitiveInput.Update(GameTime)"/> itself — <paramref name="input"/> is
         /// expected to already be current for this frame (the caller's own <c>Update</c> updates
         /// it once, then hands the same instance to everything that reads it, this camera
-        /// included). Pan speed is divided by <see cref="Zoom"/> so keyboard panning covers the
-        /// same amount of *screen* space per second regardless of zoom level, matching how the
-        /// mouse-drag pan already behaves (a drag always tracks the cursor 1:1 on screen). When
+        /// included).
+        ///
+        /// Pan speed is divided by <see cref="Zoom"/> so keyboard panning covers the same amount
+        /// of *screen* space per second regardless of zoom level, matching how the mouse-drag pan
+        /// already behaves (a drag always tracks the cursor 1:1 on screen). When
         /// <see cref="ViewportAdapter"/> is set, mouse-drag pan is also divided by its
         /// <see cref="ViewportAdapter2D.Scale"/> — <see cref="PrimitiveInput.MouseDelta"/> is
         /// always real window pixels, so without this a drag would pan the wrong amount whenever
         /// the adapter's scale isn't 1:1 (letterbox scaling, a virtual resolution that doesn't
         /// match the window). Keyboard pan doesn't need this — its speed is defined directly in
-        /// world units, not screen pixels. <c>R</c> calls <see cref="Reset"/> directly and skips
-        /// movement for that frame, so a same-frame WASD/mouse delta doesn't immediately fight the reset.
-        /// </summary>
+        /// world units, not screen pixels.
+        /// </remarks>
         public void UpdateWithInput(PrimitiveInput input, float deltaSeconds)
         {
             if (input.IsKeyPressed(Keys.R))

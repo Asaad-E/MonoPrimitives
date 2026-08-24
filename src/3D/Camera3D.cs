@@ -23,7 +23,7 @@ namespace MonoPrimitives.Primitives3D
     /// <summary>Camera behaviour modes.</summary>
     public enum CameraMode
     {
-        /// <summary>No automatic update; the caller drives the camera (or calls <see cref="Camera3D.FollowTarget"/>/<see cref="Camera3D.SmoothZoom"/> directly).</summary>
+        /// <summary>No automatic update; the caller drives the camera (or calls <see cref="Camera3D.FollowTarget(Vector3,float,Vector3?)"/>/<see cref="Camera3D.SmoothZoom"/> directly).</summary>
         Custom = 0,
 
         /// <summary>Free fly camera (WASD + mouse look, no gravity or collision).</summary>
@@ -41,10 +41,12 @@ namespace MonoPrimitives.Primitives3D
 
     /// <summary>
     /// A 3D camera with its own update/input logic folded into one class — a single object
-    /// that owns both its state and its behaviour. Reference type (not a struct) so it can
-    /// hold its own smoothing state (follow velocity, zoom velocity, mouse tracking) without
-    /// every caller needing to pass it by <c>ref</c>.
+    /// that owns both its state and its behaviour.
     /// </summary>
+    /// <remarks>
+    /// Reference type (not a struct) so it can hold its own smoothing state (follow velocity,
+    /// zoom velocity, mouse tracking) without every caller needing to pass it by <c>ref</c>.
+    /// </remarks>
     public sealed class Camera3D
     {
         // =====================================================================
@@ -79,15 +81,18 @@ namespace MonoPrimitives.Primitives3D
         public const float DefaultFar = 1000f;
 
         /// <summary>
-        /// Viewport adapter this camera was constructed with, if any — same MonoGame.Extended-style
-        /// dependency <see cref="Primitives2D.Camera2D"/> takes: set once, then
+        /// Viewport adapter this camera was constructed with, if any — set once, then
         /// <see cref="Primitive3DBatch.Begin(Camera3D,BlendState,DepthStencilState,RasterizerState,Matrix?)"/>
         /// and <see cref="WorldToScreen(Vector3,Viewport?)"/>/<see cref="ScreenToWorld"/>/
         /// <see cref="GetScreenToWorldRay"/> all use it automatically instead of requiring it
-        /// passed in again at every call site. <c>null</c> for the plain constructor — those
-        /// methods then need an explicit <see cref="Viewport"/> argument, or fall back to the
-        /// full device viewport in <c>Begin</c>'s case.
+        /// passed in again at every call site.
         /// </summary>
+        /// <remarks>
+        /// Same MonoGame.Extended-style dependency <see cref="Primitives2D.Camera2D"/> takes.
+        /// <c>null</c> for the plain constructor — those methods then need an explicit
+        /// <see cref="Viewport"/> argument, or fall back to the full device viewport in
+        /// <c>Begin</c>'s case.
+        /// </remarks>
         public ViewportAdapter2D? ViewportAdapter { get; }
 
         // Captured at construction so Reset() has something to restore to.
@@ -137,11 +142,11 @@ namespace MonoPrimitives.Primitives3D
         /// Restores <see cref="Position"/>/<see cref="Target"/>/<see cref="Up"/>/<see cref="Fovy"/>/
         /// <see cref="Projection"/>/<see cref="NearPlane"/>/<see cref="FarPlane"/> to the values
         /// passed at construction, and clears smooth-zoom/smooth-follow/head-bobbing/screen-shake
-        /// state so there's no lingering velocity (or trauma) to swoop through afterward. Bound to <c>R</c> by default
-        /// in <see cref="UpdateWithInput(PrimitiveInput, float)"/>; call directly if you're not
-        /// using that. Deliberately leaves <see cref="Mode"/> alone — that's a control-scheme
-        /// choice, not part of the camera's pose.
+        /// state so there's no lingering velocity (or trauma) to swoop through afterward. Bound to
+        /// <c>R</c> by default in <see cref="UpdateWithInput(PrimitiveInput, float)"/>; call
+        /// directly if you're not using that.
         /// </summary>
+        /// <remarks>Deliberately leaves <see cref="Mode"/> alone — that's a control-scheme choice, not part of the camera's pose.</remarks>
         public void Reset()
         {
             Position = _initialPosition;
@@ -406,6 +411,16 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>Builds the view frustum, useful for culling before submitting primitives.</summary>
         public BoundingFrustum GetFrustum(float aspectRatio) => new(GetViewProjectionMatrix(aspectRatio));
 
+        /// <summary>True if <paramref name="sphere"/> is at least partially inside the view frustum — a cheap "should I bother drawing this" check before drawing many objects.</summary>
+        /// <param name="sphere">World-space bounding sphere to test.</param>
+        /// <param name="viewport">Explicit viewport to derive the aspect ratio from; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
+        public bool IsVisible(BoundingSphere sphere, Viewport? viewport = null) => GetFrustum(ResolveViewport(viewport).AspectRatio).Intersects(sphere);
+
+        /// <summary>True if <paramref name="box"/> is at least partially inside the view frustum.</summary>
+        /// <param name="box">World-space bounding box to test.</param>
+        /// <param name="viewport">Explicit viewport to derive the aspect ratio from; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
+        public bool IsVisible(BoundingBox box, Viewport? viewport = null) => GetFrustum(ResolveViewport(viewport).AspectRatio).Intersects(box);
+
         // =====================================================================
         // Controller: mode + per-frame update
         // =====================================================================
@@ -459,25 +474,30 @@ namespace MonoPrimitives.Primitives3D
 
         /// <summary>
         /// Suggested eye height for <see cref="CameraMode.FirstPerson"/>, in world units above
-        /// ground level — a reference default, not applied automatically. Only the game knows
-        /// ground/terrain height, so <see cref="UpdateWithInput(PrimitiveInput,float)"/>'s
+        /// ground level — a reference default, not applied automatically.
+        /// </summary>
+        /// <remarks>
+        /// Only the game knows ground/terrain height, so <see cref="UpdateWithInput(PrimitiveInput,float)"/>'s
         /// head-bob only ever nudges the existing <c>Position.Y</c>/<c>Target.Y</c> by a small
         /// delta; it's on the caller to set <c>Position.Y</c> (and <c>Target.Y</c>) to
         /// <c>groundY + EyeHeight</c> themselves each frame the way a platformer already tracks
         /// its own ground contact — an auto-applying version would need to track ground height
         /// itself, which would make this a physics/collision system rather than a camera.
-        /// </summary>
+        /// </remarks>
         public float EyeHeight { get; set; } = FirstPersonEyeHeight;
 
         /// <summary>
         /// Advances internal state only — screen-shake trauma decay (see <see cref="AddTrauma"/>)
         /// and any in-flight <see cref="SmoothZoom"/> easing — with no movement and no input
-        /// reading. Call this every frame when you're driving <see cref="Position"/>/<see cref="Target"/>
+        /// reading.
+        /// </summary>
+        /// <remarks>
+        /// Call this every frame when you're driving <see cref="Position"/>/<see cref="Target"/>
         /// yourself (a fixed prototype camera, a cutscene) and just want shake/easing to keep
         /// working. For a built-in WASD/mouse-look controller driven by your own
         /// <see cref="PrimitiveInput"/>, use <see cref="UpdateWithInput(PrimitiveInput, float)"/>
         /// instead.
-        /// </summary>
+        /// </remarks>
         public void Update(float deltaSeconds) => UpdateShake(deltaSeconds);
 
         /// <inheritdoc cref="Update(float)"/>
@@ -486,17 +506,20 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>
         /// Advances the camera one frame using W/A/S/D + Space/Ctrl movement, Q/E yaw, Z/X roll,
         /// right-mouse-drag look and wheel zoom read from <paramref name="input"/> — the simplest
-        /// way to get a working camera with no input code of your own. This is a prototyping
-        /// convenience, not something every game wants baked into its camera; use the plain
-        /// <see cref="Update(float)"/> if you're driving the camera from your own logic, or query
-        /// <paramref name="input"/> yourself and call <see cref="Yaw"/>/<see cref="Pitch"/>/
-        /// <see cref="MoveForward"/>/etc. directly for custom bindings. Doesn't call
-        /// <see cref="PrimitiveInput.Update(GameTime)"/> itself — <paramref name="input"/> is expected to
-        /// already be current for this frame (the caller's own <c>Update</c> updates it once,
-        /// then hands the same instance to everything that reads it, this camera included).
-        /// <c>R</c> calls <see cref="Reset"/> directly and skips movement for that frame, so a
-        /// same-frame WASD/mouse delta doesn't immediately fight the reset.
+        /// way to get a working camera with no input code of your own. <c>R</c> calls
+        /// <see cref="Reset"/> directly and skips movement for that frame, so a same-frame
+        /// WASD/mouse delta doesn't immediately fight the reset.
         /// </summary>
+        /// <remarks>
+        /// This is a prototyping convenience, not something every game wants baked into its
+        /// camera; use the plain <see cref="Update(float)"/> if you're driving the camera from
+        /// your own logic, or query <paramref name="input"/> yourself and call <see cref="Yaw"/>/
+        /// <see cref="Pitch"/>/<see cref="MoveForward"/>/etc. directly for custom bindings.
+        /// Doesn't call <see cref="PrimitiveInput.Update(GameTime)"/> itself — <paramref name="input"/>
+        /// is expected to already be current for this frame (the caller's own <c>Update</c>
+        /// updates it once, then hands the same instance to everything that reads it, this
+        /// camera included).
+        /// </remarks>
         public void UpdateWithInput(PrimitiveInput input, float deltaSeconds)
         {
             UpdateShake(deltaSeconds); // before the Mode switch below, since Custom/Orbital return early
@@ -672,7 +695,7 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>
         /// Optional world-space bounds the camera <see cref="Position"/> is kept
         /// inside (checked after every <see cref="Update(float)"/>/<see cref="UpdateWithInput(PrimitiveInput,float)"/>
-        /// call, and after <see cref="FollowTarget"/>). <c>null</c> (default) disables clamping.
+        /// call, and after <see cref="FollowTarget(Vector3,float,Vector3?)"/>). <c>null</c> (default) disables clamping.
         /// </summary>
         public BoundingBox? PositionBounds { get; set; }
 
@@ -697,14 +720,16 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>
         /// Zooms toward/away from <see cref="Target"/> by <paramref name="delta"/>, eased over
         /// <see cref="ZoomSmoothTime"/> seconds instead of snapping like <see cref="MoveToTarget"/>,
-        /// and clamped to [<see cref="MinDistance"/>, <see cref="MaxDistance"/>]. For discrete
-        /// input (a mouse wheel tick) where <paramref name="delta"/> is naturally 0 most
-        /// frames: call every frame, most calls no-op. For continuous input (a key held to
+        /// and clamped to [<see cref="MinDistance"/>, <see cref="MaxDistance"/>].
+        /// </summary>
+        /// <remarks>
+        /// For discrete input (a mouse wheel tick) where <paramref name="delta"/> is naturally 0
+        /// most frames: call every frame, most calls no-op. For continuous input (a key held to
         /// zoom), don't call this every frame with a small nonzero <paramref name="delta"/> —
         /// each call adds onto the target immediately, so a delta repeated every frame races
         /// the target ahead rather than climbing smoothly. Adjust the distance directly by
         /// <c>rate * deltaSeconds</c> via <see cref="MoveToTarget"/> for that case instead.
-        /// </summary>
+        /// </remarks>
         public void SmoothZoom(float delta, float deltaSeconds)
         {
             if (delta == 0f && float.IsNaN(_pendingZoomTarget))
@@ -767,16 +792,79 @@ namespace MonoPrimitives.Primitives3D
             ClampToBounds();
         }
 
-        /// <summary>Time (seconds) for <see cref="FollowTarget"/> to close ~95% of the remaining distance.</summary>
+        /// <summary>Same as <see cref="FollowTarget(Vector3,float,Vector3?)"/>, with an axis-independent box deadzone instead of <see cref="FollowPadding"/>'s spherical one.</summary>
+        /// <param name="desiredPosition">Where the camera should end up once outside the box.</param>
+        /// <param name="deltaSeconds">Frame time in seconds.</param>
+        /// <param name="deadZoneHalfSize">Half-extents (world units) of the box around <see cref="Position"/> that <paramref name="desiredPosition"/> can move within before the camera reacts, per axis independently.</param>
+        /// <param name="desiredTarget">Same as <see cref="FollowTarget(Vector3,float,Vector3?)"/>'s own parameter.</param>
+        /// <remarks>Eases toward whichever point keeps <paramref name="desiredPosition"/> exactly at the box's edge on the axis (or axes) it left. Shares <see cref="FollowTarget(Vector3,float,Vector3?)"/>'s own smoothing state; don't alternate between the two per frame on the same camera.</remarks>
+        public void FollowTarget(Vector3 desiredPosition, float deltaSeconds, Vector3 deadZoneHalfSize, Vector3? desiredTarget = null)
+        {
+            Vector3 delta = desiredPosition - Position;
+            Vector3 boxDesired = Position;
+            if (MathF.Abs(delta.X) > deadZoneHalfSize.X) boxDesired.X = desiredPosition.X - MathF.Sign(delta.X) * deadZoneHalfSize.X;
+            if (MathF.Abs(delta.Y) > deadZoneHalfSize.Y) boxDesired.Y = desiredPosition.Y - MathF.Sign(delta.Y) * deadZoneHalfSize.Y;
+            if (MathF.Abs(delta.Z) > deadZoneHalfSize.Z) boxDesired.Z = desiredPosition.Z - MathF.Sign(delta.Z) * deadZoneHalfSize.Z;
+
+            Vector3 newPosition = SmoothDamp(Position, boxDesired, ref _followVelocity, FollowSmoothTime, deltaSeconds);
+            Vector3 moveDelta = newPosition - Position;
+            Position = newPosition;
+            Target = desiredTarget.HasValue
+                ? SmoothDamp(Target, desiredTarget.Value, ref _followTargetVelocity, FollowSmoothTime, deltaSeconds)
+                : Target + moveDelta;
+
+            ClampToBounds();
+        }
+
+        /// <summary>Time (seconds) for <see cref="FollowTarget(Vector3,float,Vector3?)"/> to close ~95% of the remaining distance.</summary>
         public float FollowSmoothTime { get; set; } = 0.2f;
 
-        /// <summary>Deadzone radius (world units): <see cref="FollowTarget"/> doesn't move the camera until the desired position is at least this far away.</summary>
+        /// <summary>Deadzone radius (world units): <see cref="FollowTarget(Vector3,float,Vector3?)"/> doesn't move the camera until the desired position is at least this far away.</summary>
         public float FollowPadding { get; set; } = 0f;
 
-        /// <summary>Resets <see cref="FollowTarget"/>'s internal smoothing velocity — call after teleporting the camera or its subject to avoid a lingering swoop.</summary>
+        /// <summary>Resets <see cref="FollowTarget(Vector3,float,Vector3?)"/>'s internal smoothing velocity — call after teleporting the camera or its subject to avoid a lingering swoop.</summary>
         public void ResetFollowVelocity() { _followVelocity = Vector3.Zero; _followTargetVelocity = Vector3.Zero; }
 
-        /// <summary>Clamps <see cref="Position"/> into <see cref="PositionBounds"/> (shrunk by <see cref="BoundsPadding"/>) if set, keeping <see cref="Target"/>'s relative offset. Called automatically by <see cref="UpdateWithInput(PrimitiveInput,float)"/> and <see cref="FollowTarget"/>; call it yourself after setting <see cref="Position"/> directly if you want the same clamp.</summary>
+        /// <summary>Sets <see cref="Target"/> and <see cref="Position"/> (keeping the camera's current viewing direction) so that <paramref name="worldBounds"/> (plus <paramref name="padding"/> world units) fits entirely inside the view frustum — a multi-target/"keep everything of interest visible" camera.</summary>
+        /// <param name="worldBounds">World-space region that must end up fully visible.</param>
+        /// <param name="padding">Extra world-space margin added around <paramref name="worldBounds"/>'s bounding sphere.</param>
+        /// <param name="viewport">Explicit viewport to derive the aspect ratio from; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
+        /// <remarks>Sets state directly, no easing. In <see cref="CameraProjection.Perspective"/>, moves <see cref="Position"/> to the distance a sphere of the bounds' size needs to fully fit within <see cref="Fovy"/> (both axes, via the current aspect ratio); in <see cref="CameraProjection.Orthographic"/>, grows <see cref="Fovy"/> (the projection's own world-height) to fit instead, keeping the existing distance.</remarks>
+        public void FitBounds(BoundingBox worldBounds, float padding = 0f, Viewport? viewport = null)
+        {
+            Vector3 center = (worldBounds.Min + worldBounds.Max) * 0.5f;
+            float radius = Vector3.Distance(worldBounds.Min, worldBounds.Max) * 0.5f + padding;
+            if (radius <= 0f) return;
+
+            Vector3 viewDirection = Normalize(Position - Target, -Vector3.Forward); // preserve current viewing angle
+
+            float aspectRatio = ResolveViewport(viewport).AspectRatio;
+
+            if (Projection == CameraProjection.Orthographic)
+            {
+                // Fovy IS the vertical world height for orthographic (see GetProjectionMatrix); the
+                // horizontal half-extent is Fovy*aspectRatio/2, so satisfy whichever axis is tighter.
+                float currentDistance = TargetDistance;
+                Fovy = MathF.Max(radius * 2f, radius * 2f / aspectRatio);
+                Target = center;
+                Position = center + viewDirection * MathF.Max(currentDistance, radius + NearPlane);
+            }
+            else
+            {
+                // Distance for a sphere of `radius` to exactly fit within a half-angle `theta` cone
+                // from the camera: sin(theta) = radius / distance, i.e. distance = radius / sin(theta).
+                // Computed for both the vertical half-FOV and the derived horizontal one (via the
+                // same tan(halfFovX) = tan(halfFovY) * aspectRatio relationship GetProjectionMatrix's
+                // own orthographic branch uses), and the larger (more constraining) distance wins.
+                float halfFovyRad = MathHelper.ToRadians(Fovy) * 0.5f;
+                float halfFovxRad = MathF.Atan(MathF.Tan(halfFovyRad) * aspectRatio);
+                float distance = MathF.Max(radius / MathF.Sin(halfFovyRad), radius / MathF.Sin(halfFovxRad));
+                Target = center;
+                Position = center + viewDirection * distance;
+            }
+        }
+
+        /// <summary>Clamps <see cref="Position"/> into <see cref="PositionBounds"/> (shrunk by <see cref="BoundsPadding"/>) if set, keeping <see cref="Target"/>'s relative offset. Called automatically by <see cref="UpdateWithInput(PrimitiveInput,float)"/> and <see cref="FollowTarget(Vector3,float,Vector3?)"/>; call it yourself after setting <see cref="Position"/> directly if you want the same clamp.</summary>
         public void ClampToBounds()
         {
             if (!PositionBounds.HasValue)
