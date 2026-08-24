@@ -70,7 +70,7 @@ namespace MonoPrimitives
         /// Average frame time in milliseconds over the window: total time divided by total
         /// frames — the same underlying average <see cref="AverageFps"/> is built on, just
         /// read before the reciprocal instead of after. Fps compresses the low end of the
-        /// scale (60→59 fps is a 0.03 ms difference, 15→14 fps is a 4.8 ms one for the same
+        /// scale (60→59 fps is a 0.28 ms difference, 15→14 fps is a 4.8 ms one for the same
         /// "1 fps") and expands the high end, so a fixed budget — "this frame must fit in
         /// 16.6 ms" — is easier to read and compare directly against here than by eyeballing
         /// fps deltas. 0 before the first <see cref="Update(GameTime)"/> call.
