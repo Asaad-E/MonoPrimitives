@@ -529,6 +529,17 @@ namespace MonoPrimitives.Primitives2D
             return v / MathF.Sqrt(lengthSq);
         }
 
+        /// <inheritdoc cref="SafeNormalize(Vector2)"/>
+        /// <param name="length">The vector's own length (0 if it was too short to normalize) — for a caller that needs both, this avoids computing the same square root twice.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector2 SafeNormalize(Vector2 v, out float length)
+        {
+            float lengthSq = v.LengthSquared();
+            if (lengthSq < 1e-12f) { length = 0f; return Vector2.Zero; }
+            length = MathF.Sqrt(lengthSq);
+            return v / length;
+        }
+
         // ==================================================================
         // POINTS
         // ==================================================================
@@ -4061,12 +4072,20 @@ namespace MonoPrimitives.Primitives2D
             info.Side = side;
 
             float fromAngle = MathF.Atan2(normalIn.Y * side, normalIn.X * side);
-            float toAngle = MathF.Atan2(normalOut.Y * side, normalOut.X * side);
-            float delta = toAngle - fromAngle;
-            while (delta > MathF.PI) delta -= MathHelper.TwoPi;
-            while (delta < -MathF.PI) delta += MathHelper.TwoPi;
+
+            // The sweep angle from normalIn to normalOut equals the sweep from dirIn to dirOut
+            // (rotating both normals by the same 90 degrees doesn't change the angle between
+            // them), and is independent of `side` (scaling both vectors going into atan2 by the
+            // same -1 rotates the two raw angles by an identical +/-PI, which cancels out of
+            // their difference) -- so one atan2(cross, dot) of the ORIGINAL direction vectors
+            // gives the exact wrapped delta the old two-atan2-then-subtract-then-wrap-loop
+            // version computed, without a second atan2 call or the wrap loop. See DECISIONS.md
+            // for the numeric verification and the real per-frame benchmark this was measured
+            // against before keeping it.
+            float dot = dirIn.X * dirOut.X + dirIn.Y * dirOut.Y;
+            float delta = MathF.Atan2(cross, dot);
             if (MathF.Abs(delta) < 1e-4f) return info; // straight enough, nothing to bridge
-            toAngle = fromAngle + delta;
+            float toAngle = fromAngle + delta;
 
             // The fillet center sits on the bisector of the two outer normals (same bisector the
             // original miter join uses). Both "how far the center sits from curr" and "how far
@@ -4157,11 +4176,11 @@ namespace MonoPrimitives.Primitives2D
                 Vector2 prev = points[(i - 1 + n) % n];
                 Vector2 curr = points[i];
                 Vector2 next = points[(i + 1) % n];
-                Vector2 dirIn = SafeNormalize(curr - prev);
-                Vector2 dirOut = SafeNormalize(next - curr);
+                Vector2 dirIn = SafeNormalize(curr - prev, out float lenIn);
+                Vector2 dirOut = SafeNormalize(next - curr, out float lenOut);
                 if (dirIn == Vector2.Zero || dirOut == Vector2.Zero) { buffer[count++] = curr; continue; }
 
-                JointInfo joint = ComputeJoint(curr, dirIn, dirOut, 0f, innerOffsetForClamp, radius, join, Vector2.Distance(curr, prev), Vector2.Distance(curr, next));
+                JointInfo joint = ComputeJoint(curr, dirIn, dirOut, 0f, innerOffsetForClamp, radius, join, lenIn, lenOut);
                 if (!joint.HasArc) { buffer[count++] = curr; continue; }
 
                 buffer[count++] = joint.TangentIn;
@@ -4241,11 +4260,11 @@ namespace MonoPrimitives.Primitives2D
                 Vector2 prev = points[(i - 1 + n) % n];
                 Vector2 curr = points[i];
                 Vector2 next = points[(i + 1) % n];
-                Vector2 dirIn = SafeNormalize(curr - prev);
-                Vector2 dirOut = SafeNormalize(next - curr);
+                Vector2 dirIn = SafeNormalize(curr - prev, out float lenIn);
+                Vector2 dirOut = SafeNormalize(next - curr, out float lenOut);
                 if (dirIn == Vector2.Zero || dirOut == Vector2.Zero) continue; // degenerate segment either side, leave HasArc=false
 
-                joints[i] = ComputeJoint(curr, dirIn, dirOut, outerOffset, innerOffset, radius, join, Vector2.Distance(curr, prev), Vector2.Distance(curr, next));
+                joints[i] = ComputeJoint(curr, dirIn, dirOut, outerOffset, innerOffset, radius, join, lenIn, lenOut);
             }
 
             bool startCap = !closed && cap == LineCap.Round && n >= 2 && SafeNormalize(points[1] - points[0]) != Vector2.Zero;
