@@ -284,6 +284,19 @@ namespace MonoPrimitives.Primitives2D
             };
         }
 
+        /// <summary>
+        /// The <see cref="BasicEffect"/> this batch draws with — constructed internally, so this
+        /// is the only way to reach it (the same "escape hatch to the thing this class wraps"
+        /// shape as <see cref="RandomUtil.UnderlyingRandom"/>). Tweak parameters this batch's own
+        /// API has no dedicated call for — <see cref="BasicEffect.Alpha"/> for a global fade,
+        /// <see cref="BasicEffect.FogEnabled"/>, etc. Don't change <see cref="BasicEffect.VertexColorEnabled"/>,
+        /// <see cref="BasicEffect.TextureEnabled"/>, or <see cref="BasicEffect.World"/> — this batch
+        /// depends on those staying exactly as constructed. For swapping the effect entirely
+        /// (not just tweaking a parameter), pass your own via <see cref="Begin(Matrix?,BlendState?,DepthStencilState?,RasterizerState?,Effect?)"/>'s
+        /// <c>effect</c> parameter instead.
+        /// </summary>
+        public BasicEffect Effect => _effect;
+
         // ------------------------------------------------------------------
         // Begin / End
         // ------------------------------------------------------------------

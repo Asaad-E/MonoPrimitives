@@ -36,6 +36,16 @@ namespace MonoPrimitives
         /// <summary>Target frames per second. Editable at any time — takes effect on the next <see cref="EndFrame"/>.</summary>
         public float TargetFps { get; set; }
 
+        /// <summary>
+        /// Time elapsed since the current frame's <see cref="BeginFrame"/> — read this mid-frame
+        /// (e.g. for a debug overlay showing how much of the frame budget is used so far) without
+        /// waiting for <see cref="EndFrame"/> to find out. The internal <see cref="Stopwatch"/> this
+        /// reads is constructed internally and otherwise unreachable; exposed read-only specifically
+        /// so nothing outside this class can <c>Stop()</c>/<c>Reset()</c> it and break the pacing
+        /// <see cref="EndFrame"/> depends on.
+        /// </summary>
+        public TimeSpan Elapsed => _stopwatch.Elapsed;
+
         /// <summary>Disables <paramref name="game"/>'s <see cref="Game.IsFixedTimeStep"/> and vsync (if a <see cref="GraphicsDeviceManager"/> is already registered on it) and starts targeting <paramref name="targetFps"/>.</summary>
         public FrameLimiter(Game game, float targetFps = 60f)
         {

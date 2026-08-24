@@ -10,6 +10,15 @@ namespace MonoPrimitives.Tests
     {
         public static void Run(Primitive3DBatch batch, Camera3D camera, GraphicsDevice device, TestResults results)
         {
+            results.Check("Primitive3DBatch.Effect exposes the same non-null BasicEffect instance every access", () =>
+            {
+                BasicEffect effect = batch.Effect;
+                if (effect is null) return "Effect returned null";
+                if (!ReferenceEquals(effect, batch.Effect)) return "Effect should return the same instance every access, not rebuild one";
+                if (!effect.VertexColorEnabled) return "the batch's own required VertexColorEnabled=true invariant was already violated at construction";
+                return null;
+            });
+
             Check(results, "FillCube", batch, camera, () =>
                 batch.FillCube(Vector3.Zero, 2f, 2f, 2f, Color.Red), expectTriangles: true);
 

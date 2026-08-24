@@ -80,6 +80,17 @@ namespace MonoPrimitives.Tests
                     return $"EndFrame took {sw.Elapsed.TotalMilliseconds:F3}ms extra after the frame already overran -- should return immediately";
                 return null;
             });
+
+            results.Check("FrameLimiter.Elapsed reads mid-frame, before EndFrame, and tracks real wall-clock time", () =>
+            {
+                var limiter = new FrameLimiter(game, 60f);
+                limiter.BeginFrame();
+                System.Threading.Thread.Sleep(15);
+                double elapsedMs = limiter.Elapsed.TotalMilliseconds;
+                if (elapsedMs < 10.0) return $"expected Elapsed to reflect the real ~15ms Sleep mid-frame, got {elapsedMs:F3}ms -- Elapsed isn't reading a live Stopwatch";
+                limiter.EndFrame(); // shouldn't throw or misbehave after reading Elapsed mid-frame
+                return null;
+            });
         }
     }
 }

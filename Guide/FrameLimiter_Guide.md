@@ -38,6 +38,7 @@ Construct `FrameLimiter` **after** your `GraphicsDeviceManager` — the construc
 | `TargetFps` | Editable at any time — takes effect on the very next `EndFrame()`. |
 | `BeginFrame()` | Marks the start of a frame — call once, before doing any of the frame's own work. |
 | `EndFrame()` | Blocks until `TargetFps`'s worth of time has passed since `BeginFrame()`. Returns immediately if the frame's own work already ran long. |
+| `Elapsed` | Time since the current frame's `BeginFrame()`, read live — for a debug overlay showing frame-budget usage mid-frame without waiting for `EndFrame()`. Read-only: the internal `Stopwatch` itself isn't exposed, so nothing outside this class can `Stop()`/`Reset()` it and break `EndFrame()`'s own pacing. |
 
 Call `BeginFrame()`/`EndFrame()` once per real frame — typically the first line of `Update` and the last line of `Draw`.
 

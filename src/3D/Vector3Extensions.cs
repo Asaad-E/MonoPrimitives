@@ -15,6 +15,61 @@ namespace MonoPrimitives.Primitives3D
     /// </summary>
     public static class Vector3Extensions
     {
+        /// <summary>
+        /// Unsigned angle (radians, always in <c>[0, PI]</c>) between <paramref name="from"/> and
+        /// <paramref name="to"/> — how far apart the two directions are, with no sense of which way
+        /// to turn. A 3D vector has no single canonical "which way is positive" the way a 2D one
+        /// does, so there's no signed counterpart without also naming a reference axis — see
+        /// <see cref="AngleToSigned"/> for that.
+        /// </summary>
+        public static float AngleTo(this Vector3 from, Vector3 to)
+        {
+            float lenProduct = MathF.Sqrt(from.LengthSquared() * to.LengthSquared());
+            if (lenProduct < 1e-12f) return 0f;
+            float cos = Math.Clamp(Vector3.Dot(from, to) / lenProduct, -1f, 1f);
+            return MathF.Acos(cos);
+        }
+
+        /// <summary>
+        /// Signed angle (radians, in <c>[-PI, PI]</c>) to rotate <paramref name="from"/> by around
+        /// <paramref name="axis"/> to face <paramref name="to"/> — positive is counter-clockwise
+        /// looking down <paramref name="axis"/> toward the origin (the right-hand rule, matching
+        /// <see cref="Rotated"/>'s own sign convention), Unity's <c>Vector3.SignedAngle</c>.
+        /// <paramref name="axis"/> need not be pre-normalized. Both <paramref name="from"/> and
+        /// <paramref name="to"/> are measured as their projection onto the plane perpendicular to
+        /// <paramref name="axis"/> first, so a component of either vector that runs along
+        /// <paramref name="axis"/> itself doesn't skew the result — e.g. "how much yaw to face that
+        /// point" with <paramref name="axis"/> straight up stays correct even if the point is above
+        /// or below eye level.
+        /// </summary>
+        public static float AngleToSigned(this Vector3 from, Vector3 to, Vector3 axis)
+        {
+            Vector3 n = axis.SafeNormalize();
+            if (n == Vector3.Zero) return 0f;
+            Vector3 fromFlat = (from - Vector3.Dot(from, n) * n).SafeNormalize();
+            Vector3 toFlat = (to - Vector3.Dot(to, n) * n).SafeNormalize();
+            if (fromFlat == Vector3.Zero || toFlat == Vector3.Zero) return 0f;
+            float cos = Math.Clamp(Vector3.Dot(fromFlat, toFlat), -1f, 1f);
+            float sin = Vector3.Dot(Vector3.Cross(fromFlat, toFlat), n);
+            return MathF.Atan2(sin, cos);
+        }
+
+        /// <summary>
+        /// Returns <paramref name="v"/> rotated by <paramref name="radians"/> around
+        /// <paramref name="axis"/> (right-hand rule — positive rotates counter-clockwise looking
+        /// down <paramref name="axis"/> toward the origin, matching <see cref="AngleToSigned"/>'s
+        /// sign convention) as a new vector. A thin wrapper over
+        /// <see cref="Quaternion.CreateFromAxisAngle(Vector3,float)"/> + <see cref="Vector3.Transform(Vector3,Quaternion)"/>,
+        /// sparing you from building the quaternion by hand for a one-off rotation.
+        /// <paramref name="axis"/> need not be pre-normalized; a zero-length <paramref name="axis"/>
+        /// leaves <paramref name="v"/> unchanged rather than producing <c>NaN</c>.
+        /// </summary>
+        public static Vector3 Rotated(this Vector3 v, Vector3 axis, float radians)
+        {
+            Vector3 n = axis.SafeNormalize();
+            return n == Vector3.Zero ? v : Vector3.Transform(v, Quaternion.CreateFromAxisAngle(n, radians));
+        }
+
         /// <summary>Normalized direction from <paramref name="from"/> to <paramref name="to"/> — shorthand for <c>(to - from).SafeNormalize()</c>. Returns <see cref="Vector3.Zero"/> if the two points coincide.</summary>
         public static Vector3 DirectionTo(this Vector3 from, Vector3 to) => (to - from).SafeNormalize();
 

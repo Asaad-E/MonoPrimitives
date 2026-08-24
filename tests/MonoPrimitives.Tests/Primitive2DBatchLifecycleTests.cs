@@ -40,6 +40,16 @@ namespace MonoPrimitives.Tests
                 batch.Dispose(); // must not throw
                 return null;
             });
+
+            results.Check("Primitive2DBatch.Effect exposes the same non-null BasicEffect instance every access", () =>
+            {
+                using var batch = new Primitive2DBatch(device);
+                BasicEffect effect = batch.Effect;
+                if (effect is null) return "Effect returned null";
+                if (!ReferenceEquals(effect, batch.Effect)) return "Effect should return the same instance every access, not rebuild one";
+                if (!effect.VertexColorEnabled) return "the batch's own required VertexColorEnabled=true invariant was already violated at construction";
+                return null;
+            });
         }
     }
 }

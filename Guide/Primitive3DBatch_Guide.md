@@ -38,6 +38,7 @@ Construct one `Primitive3DBatch` per `GraphicsDevice` and keep it — its intern
 | `End()` | Submits any buffered geometry and restores device state. |
 | `Flush()` / `FlushLine()` | Submits buffered triangle/line geometry immediately without ending the batch. |
 | `Dispose()` | Releases the internal effect. |
+| `Effect` | The `BasicEffect` this batch draws with — constructed internally, so this is the only way to reach it. Tweak a parameter this batch's own API has no call for (`Effect.Alpha` for a global fade, etc.); don't touch `VertexColorEnabled`/`TextureEnabled`/`World`, which this batch depends on staying as constructed. `LightingEnabled` (below) is this batch's own flat-shading switch, not this effect's own built-in lighting. |
 | `PendingVertices` / `Capacity` | Vertices currently buffered and not yet flushed / total vertex capacity before an automatic flush. |
 | `DrawCalls` / `TrianglesSubmitted` / `LinesSubmitted` | Reset on every `Begin` — running totals since then, for profiling how many draw calls or how much geometry a frame actually costs. |
 

@@ -109,6 +109,19 @@ namespace MonoPrimitives.Primitives3D
         // Properties
         // ---------------------------------------------------------------------
 
+        /// <summary>
+        /// The <see cref="BasicEffect"/> this batch draws with — constructed internally, so this
+        /// is the only way to reach it (the same "escape hatch to the thing this class wraps"
+        /// shape as <see cref="RandomUtil.UnderlyingRandom"/>). Tweak parameters this batch's own
+        /// API has no dedicated call for — <see cref="BasicEffect.Alpha"/> for a global fade, a
+        /// custom <see cref="BasicEffect.FogEnabled"/> setup, etc. Don't change
+        /// <see cref="BasicEffect.VertexColorEnabled"/>, <see cref="BasicEffect.TextureEnabled"/>,
+        /// or <see cref="BasicEffect.World"/> — this batch depends on those staying exactly as
+        /// constructed. <see cref="LightingEnabled"/> is this batch's own opt-in flat-shading
+        /// switch, not the same thing as this effect's own (always-off) built-in lighting.
+        /// </summary>
+        public BasicEffect Effect => _effect;
+
         /// <summary>Vertices currently buffered and not yet flushed.</summary>
         public int PendingVertices => _vertexCount;
 

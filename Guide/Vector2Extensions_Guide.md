@@ -41,6 +41,8 @@ MonoGame's own `Vector2` already has instance methods `Rotate(float)`/`RotateAro
 ```csharp
 using MonoPrimitives.Primitives3D;
 
+float turn = shipForward.AngleToSigned(toTarget, Vector3.Up); // yaw needed, right-hand rule around +Up
+Vector3 aimed = shipForward.Rotated(Vector3.Up, turn * dt * turnSpeed); // a rotated COPY, not in-place
 Vector3 direction = position.DirectionTo(target);       // normalized, safe if the points coincide
 position = position.Approach(target, speed * dt);        // move toward target, landing exactly on it
 Vector3 clamped = velocity.ClampMagnitude(maxSpeed);      // cap length, keep direction
@@ -48,6 +50,9 @@ Vector3 clamped = velocity.ClampMagnitude(maxSpeed);      // cap length, keep di
 
 | Member | What it does |
 |---|---|
+| `AngleTo(other)` | Unsigned angle in `[0, PI]` between two vectors — how far apart they are, no turning direction. |
+| `AngleToSigned(other, axis)` | Signed angle in `[-PI, PI]` to rotate `this` by **around `axis`** to face `other` — positive is counter-clockwise looking down `axis` toward the origin (the right-hand rule), matching `Rotated`'s convention and Unity's `Vector3.SignedAngle`. `axis` needs naming explicitly — see "Why `AngleToSigned`/`Rotated` need an axis" below. |
+| `Rotated(axis, radians)` | Returns a **copy** of `this` rotated around `axis` by `radians` (right-hand rule) — a thin wrapper over `Quaternion.CreateFromAxisAngle` + `Vector3.Transform`, so you don't build the quaternion by hand for a one-off rotation. |
 | `DirectionTo(other)` | Normalized direction from `this` to `other`. Returns `Vector3.Zero` if the two points coincide, instead of `NaN`. |
 | `SafeNormalize(fallback = default)` | Like `Vector3.Normalize()`, but returns `fallback` (default `Vector3.Zero`) instead of `NaN` for a zero-length vector. |
 | `Approach(target, maxDistance)` | Moves toward `target` by at most `maxDistance`, landing exactly on it instead of overshooting — Godot's `move_toward`/Unity's `Vector3.MoveTowards`. Negative `maxDistance` moves away from `target` instead. |
@@ -57,10 +62,14 @@ Vector3 clamped = velocity.ClampMagnitude(maxSpeed);      // cap length, keep di
 
 **No `Reflect`** — MonoGame's own `Vector3.Reflect(vector, normal)` already exists natively (confirmed by inspecting the referenced assembly, not assumed), so it isn't repeated here. Same for `Clamp`/`Lerp`/`SmoothStep` and friends.
 
-**No `Angle()`/`Rotated()` equivalent** — a 2D vector has one canonical "heading" (its angle from +X); a 3D vector doesn't, since "the" angle depends on which plane you're measuring it in. Nothing here papers over that with an arbitrary default axis; build the specific angle/rotation your own scene needs from `Vector3.Dot`/`Cross`/`Quaternion.CreateFromAxisAngle` directly.
+### Why `AngleToSigned`/`Rotated` need an axis
+
+2D's `AngleToSigned(other)` has no axis parameter because a 2D plane only has one way to rotate — "positive" unambiguously means counter-clockwise. A 3D vector has no such single default: "positive" rotation only means something once you've picked which axis you're turning around (turning `+PI/2` around `+Y` sends `+X` to `-Z`; around `-Y` it would send `+X` to `+Z` instead — genuinely different results, not a sign-flip quirk). So both methods ask for `axis` explicitly rather than picking one for you. `AngleToSigned` measures `from`/`to` as their projection onto the plane perpendicular to `axis` first — a component either vector has running *along* `axis` doesn't skew the result, so "how much yaw to face that point" (`axis = Vector3.Up`) stays correct whether the point is above or below eye level.
+
+**Still no `Angle()`** (a bare heading with no reference) — a 2D vector has one canonical "heading" (its angle from +X); a 3D vector genuinely doesn't without naming a plane, which is exactly what `AngleToSigned`'s `axis` parameter is for.
 
 ## See also
 
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — how the `Rotate`/`Rotated` naming collision was found (a numeric test caught a `void` where a `Vector2` was expected), the `atan2` branch-cut behavior at `Angle(-X)`, and why `Vector3Extensions` stays deliberately smaller than `Vector2Extensions`.
+- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — how the `Rotate`/`Rotated` naming collision was found (a numeric test caught a `void` where a `Vector2` was expected), the `atan2` branch-cut behavior at `Angle(-X)`, and why `Vector3Extensions` has no bare `Angle()`/`PerpendicularClockwise`-style members despite otherwise matching `Vector2Extensions` closely.
 - [`Guide/Camera2D_Guide.md`](Camera2D_Guide.md) / [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) — `rotation` parameters elsewhere in the library use the same radians/counter-clockwise convention as `Rotated`/`AngleToSigned`.
 - [`Guide/Camera3D_Guide.md`](Camera3D_Guide.md) / [`Guide/Primitive3DBatch_Guide.md`](Primitive3DBatch_Guide.md) — where a `Vector3` built with these helpers usually ends up.

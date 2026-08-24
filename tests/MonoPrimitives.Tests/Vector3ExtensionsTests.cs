@@ -12,6 +12,74 @@ namespace MonoPrimitives.Tests
 
         public static void Run(TestResults results)
         {
+            results.Check("Vector3Extensions.AngleTo: unsigned, symmetric, [0,PI]", () =>
+            {
+                if (!CloseF(Vector3.UnitX.AngleTo(Vector3.UnitY), MathHelper.PiOver2)) return "AngleTo(+X,+Y) != PI/2";
+                if (!CloseF(Vector3.UnitX.AngleTo(Vector3.UnitY), Vector3.UnitY.AngleTo(Vector3.UnitX))) return "AngleTo not symmetric";
+                if (!CloseF(Vector3.UnitX.AngleTo(Vector3.UnitX), 0f)) return "AngleTo(v,v) != 0";
+                if (!CloseF(Vector3.UnitX.AngleTo(-Vector3.UnitX), MathF.PI)) return "AngleTo(v,-v) != PI";
+                if (!CloseF(Vector3.Zero.AngleTo(Vector3.UnitX), 0f)) return "AngleTo with a zero vector should degrade to 0, not NaN";
+                return null;
+            });
+
+            results.Check("Vector3Extensions.AngleToSigned: matches Rotated's sign convention (rotating 'from' by the result points toward 'to')", () =>
+            {
+                // +X rotated +PI/2 around +Y (right-hand rule) should land on -Z.
+                if (!CloseF(Vector3.UnitX.AngleToSigned(-Vector3.UnitZ, Vector3.Up), MathHelper.PiOver2))
+                    return "AngleToSigned(+X, -Z, axis=+Y) != +PI/2 -- sign convention disagrees with the right-hand rule";
+
+                var rand = new Random(2);
+                for (int i = 0; i < 200; i++)
+                {
+                    Vector3 axis = new((float)rand.NextDouble() * 2f - 1f, (float)rand.NextDouble() * 2f - 1f, (float)rand.NextDouble() * 2f - 1f);
+                    if (axis.LengthSquared() < 1e-6f) continue;
+                    Vector3 a = new((float)rand.NextDouble() * 20f - 10f, (float)rand.NextDouble() * 20f - 10f, (float)rand.NextDouble() * 20f - 10f);
+                    Vector3 b = new((float)rand.NextDouble() * 20f - 10f, (float)rand.NextDouble() * 20f - 10f, (float)rand.NextDouble() * 20f - 10f);
+                    if (a.LengthSquared() < 1e-6f || b.LengthSquared() < 1e-6f) continue;
+
+                    float turn = a.AngleToSigned(b, axis);
+
+                    // Rotate a's OWN flattened direction, not 'a' itself: Rotated(a, axis, turn) leaves
+                    // whatever component of 'a' runs along axis untouched (ordinary axis-angle rotation
+                    // behavior), so renormalizing the rotated full vector mixes that untouched axial part
+                    // back in -- it does NOT generally land on toFlat unless 'a' was already perpendicular
+                    // to axis. AngleToSigned/Rotated's real contract is about the flattened (perpendicular)
+                    // component specifically, which this checks directly. (First caught as a real
+                    // mismatch here before realizing it was this test comparing the wrong vectors, not a
+                    // bug in AngleToSigned/Rotated -- rotating fromFlat lands on toFlat exactly.)
+                    Vector3 n = axis.SafeNormalize();
+                    Vector3 fromFlat = (a - Vector3.Dot(a, n) * n).SafeNormalize();
+                    Vector3 bFlat = (b - Vector3.Dot(b, n) * n).SafeNormalize();
+                    if (fromFlat == Vector3.Zero || bFlat == Vector3.Zero) continue; // a or b parallel to axis -- undefined direction, skip
+
+                    Vector3 rotated = fromFlat.Rotated(axis, turn).SafeNormalize();
+                    if (!CloseV(rotated, bFlat, 1e-3f))
+                        return $"Rotating a's flattened direction by AngleToSigned(a,b,axis) didn't point toward b's flattened direction (a={a}, b={b}, axis={axis}, turn={turn})";
+                }
+                return null;
+            });
+
+            results.Check("Vector3Extensions.AngleToSigned: degenerate axis or a from/to parallel to the axis returns 0, not NaN", () =>
+            {
+                if (!CloseF(Vector3.UnitX.AngleToSigned(Vector3.UnitZ, Vector3.Zero), 0f)) return "zero-length axis should degrade to 0";
+                if (!CloseF(Vector3.Up.AngleToSigned(Vector3.UnitX, Vector3.Up), 0f)) return "'from' parallel to axis (no flattened component) should degrade to 0";
+                return null;
+            });
+
+            results.Check("Vector3Extensions.Rotated: doesn't mutate the source, Rotated(axis,0) is a no-op, matches Quaternion.CreateFromAxisAngle directly", () =>
+            {
+                Vector3 original = new(1, 0, 0);
+                Vector3 rotated = original.Rotated(Vector3.Up, MathHelper.PiOver2);
+                if (!CloseV(original, new Vector3(1, 0, 0))) return "Rotated mutated its receiver";
+                if (!CloseV(original.Rotated(Vector3.Up, 0f), original)) return "Rotated(axis, 0) should be a no-op";
+
+                Vector3 expected = Vector3.Transform(original, Quaternion.CreateFromAxisAngle(Vector3.Up, MathHelper.PiOver2));
+                if (!CloseV(rotated, expected)) return $"Rotated disagrees with a hand-built Quaternion.CreateFromAxisAngle + Transform: {rotated} vs {expected}";
+
+                if (!CloseV(original.Rotated(Vector3.Zero, MathHelper.PiOver2), original)) return "Rotated with a zero-length axis should leave v unchanged, not produce NaN";
+                return null;
+            });
+
             results.Check("Vector3Extensions.DirectionTo/SafeNormalize: unit length, safe at zero with a configurable fallback", () =>
             {
                 if (!CloseV(Vector3.Zero.DirectionTo(new Vector3(10, 0, 0)), Vector3.UnitX)) return "DirectionTo not unit length/direction";
