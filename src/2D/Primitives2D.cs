@@ -790,12 +790,9 @@ namespace MonoPrimitives.Primitives2D
             BuildOutlineGeometry(pts, thickness, color, closed: true, join, LineCap.Butt, jointRadius, inwardOnly: true);
         }
 
-        /// <summary>Draws a triangle with both fill and border (same color), border growing inward.</summary>
-        public void DrawTriangle(Vector2 v1, Vector2 v2, Vector2 v3, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
-            => DrawTriangle(v1, v2, v3, color, color, thickness, rotation, origin, join, jointRadius);
-
         /// <summary>
-        /// Draws a triangle with an independently colored fill and border, border growing inward.
+        /// Draws a triangle with fill and border, border growing inward. Omit
+        /// <paramref name="borderColor"/> for the same color on both.
         /// For Round/Bevel <paramref name="join"/> with <paramref name="thickness"/> &gt; 0, the
         /// fill is rounded off the same way <see cref="BorderTriangle"/>'s inward-only stroke
         /// rounds its own outer edge (same <see cref="ComputeJoint"/> call, same clamp against
@@ -803,8 +800,9 @@ namespace MonoPrimitives.Primitives2D
         /// always agree exactly — no sliver of sharp-cornered fill left showing past a rounded
         /// border corner, and no mismatch even when the requested radius has to be clamped down.
         /// </summary>
-        public void DrawTriangle(Vector2 v1, Vector2 v2, Vector2 v3, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
+        public void DrawTriangle(Vector2 v1, Vector2 v2, Vector2 v3, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
+            Color border = borderColor ?? fillColor;
             RotateTriangle(ref v1, ref v2, ref v3, rotation, origin);
             if (join == LineJoin.Miter || !jointRadius.HasValue || jointRadius.Value <= 0f || thickness <= 0f)
             {
@@ -818,7 +816,7 @@ namespace MonoPrimitives.Primitives2D
                 int count = BuildRoundedCornerBoundary(pts, jointRadius.Value, join, thickness, boundary);
                 FillPolygon(boundary[..count], fillColor);
             }
-            if (thickness > 0f) BorderTriangle(v1, v2, v3, borderColor, thickness, join: join, jointRadius: jointRadius);
+            if (thickness > 0f) BorderTriangle(v1, v2, v3, border, thickness, join: join, jointRadius: jointRadius);
         }
 
         /// <summary>
@@ -852,16 +850,12 @@ namespace MonoPrimitives.Primitives2D
             BorderTriangle(v1, v2, v3, color, thickness, 0f, null, LineJoin.Round, safeRadius);
         }
 
-        /// <summary>Draws a rounded-corner triangle with both fill and border (same color), border growing inward.</summary>
-        public void DrawTriangleRounded(Vector2 v1, Vector2 v2, Vector2 v3, float cornerRadius, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
-            => DrawTriangleRounded(v1, v2, v3, cornerRadius, color, color, thickness, rotation, origin);
-
-        /// <summary>Draws a rounded-corner triangle with an independently colored fill and border, border growing inward. Radius pre-clamped so neighboring corners can't overlap (see <see cref="ClampCornerRadiusToFit"/>).</summary>
-        public void DrawTriangleRounded(Vector2 v1, Vector2 v2, Vector2 v3, float cornerRadius, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
+        /// <summary>Draws a rounded-corner triangle with fill and border, border growing inward. Omit <paramref name="borderColor"/> for the same color on both. Radius pre-clamped so neighboring corners can't overlap (see <see cref="ClampCornerRadiusToFit"/>).</summary>
+        public void DrawTriangleRounded(Vector2 v1, Vector2 v2, Vector2 v3, float cornerRadius, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
         {
             RotateTriangle(ref v1, ref v2, ref v3, rotation, origin);
             float safeRadius = ClampCornerRadiusToFit([v1, v2, v3], cornerRadius);
-            DrawTriangle(v1, v2, v3, fillColor, borderColor, thickness, 0f, null, LineJoin.Round, safeRadius);
+            DrawTriangle(v1, v2, v3, fillColor, borderColor ?? fillColor, thickness, 0f, null, LineJoin.Round, safeRadius);
         }
 
         /// <summary>
@@ -1219,26 +1213,16 @@ namespace MonoPrimitives.Primitives2D
         public void BorderRectangle(Vector2 position, Vector2 size, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
             => BorderRectangle(position.X, position.Y, size.X, size.Y, color, thickness, rotation, origin, join, jointRadius);
 
-        /// <summary>Draws a rectangle with both fill and border (same color), border growing inward.</summary>
-        public void DrawRectangle(float x, float y, float width, float height, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
-            => DrawRectangle(x, y, width, height, color, color, thickness, rotation, origin, join, jointRadius);
-
-        /// <inheritdoc cref="DrawRectangle(float,float,float,float,Color,float,float,Vector2?,LineJoin,float?)"/>
-        public void DrawRectangle(Rectangle rect, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
-            => DrawRectangle(rect.X, rect.Y, rect.Width, rect.Height, color, thickness, rotation, origin, join, jointRadius);
-
-        /// <inheritdoc cref="DrawRectangle(float,float,float,float,Color,float,float,Vector2?,LineJoin,float?)"/>
-        public void DrawRectangle(Vector2 position, Vector2 size, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
-            => DrawRectangle(position.X, position.Y, size.X, size.Y, color, thickness, rotation, origin, join, jointRadius);
-
         /// <summary>
-        /// Draws a rectangle with an independently colored fill and border, border growing inward.
+        /// Draws a rectangle with fill and border, border growing inward. Omit
+        /// <paramref name="borderColor"/> for the same color on both.
         /// For Round/Bevel <paramref name="join"/>, the fill is rounded off the same way the
         /// border is (see <see cref="BuildRoundedCornerBoundary"/>) so the two share one boundary
         /// instead of a sharp-cornered fill showing past a rounded border corner.
         /// </summary>
-        public void DrawRectangle(float x, float y, float width, float height, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
+        public void DrawRectangle(float x, float y, float width, float height, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
+            Color border = borderColor ?? fillColor;
             if (join == LineJoin.Miter || !jointRadius.HasValue || jointRadius.Value <= 0f || thickness <= 0f)
             {
                 FillRectangle(x, y, width, height, fillColor, rotation, origin);
@@ -1272,15 +1256,15 @@ namespace MonoPrimitives.Primitives2D
                 int count = BuildRoundedCornerBoundary(pts, jointRadius.Value, join, t, boundary);
                 FillPolygon(boundary[..count], fillColor);
             }
-            if (thickness > 0f) BorderRectangle(x, y, width, height, borderColor, thickness, rotation, origin, join, jointRadius);
+            if (thickness > 0f) BorderRectangle(x, y, width, height, border, thickness, rotation, origin, join, jointRadius);
         }
 
-        /// <inheritdoc cref="DrawRectangle(float,float,float,float,Color,Color,float,float,Vector2?,LineJoin,float?)"/>
-        public void DrawRectangle(Rectangle rect, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
+        /// <inheritdoc cref="DrawRectangle(float,float,float,float,Color,Color?,float,float,Vector2?,LineJoin,float?)"/>
+        public void DrawRectangle(Rectangle rect, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
             => DrawRectangle(rect.X, rect.Y, rect.Width, rect.Height, fillColor, borderColor, thickness, rotation, origin, join, jointRadius);
 
-        /// <inheritdoc cref="DrawRectangle(float,float,float,float,Color,Color,float,float,Vector2?,LineJoin,float?)"/>
-        public void DrawRectangle(Vector2 position, Vector2 size, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
+        /// <inheritdoc cref="DrawRectangle(float,float,float,float,Color,Color?,float,float,Vector2?,LineJoin,float?)"/>
+        public void DrawRectangle(Vector2 position, Vector2 size, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
             => DrawRectangle(position.X, position.Y, size.X, size.Y, fillColor, borderColor, thickness, rotation, origin, join, jointRadius);
 
         /// <summary>
@@ -1562,25 +1546,16 @@ namespace MonoPrimitives.Primitives2D
         public void BorderRectangleRounded(Vector2 position, Vector2 size, RectCorners radius, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
             => BorderRectangleRounded(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), radius, color, thickness, rotation, origin);
 
-        /// <summary>Draws a rounded rectangle with both fill and border (same color), border growing inward.</summary>
-        public void DrawRectangleRounded(Rectangle rect, RectCorners radius, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
-            => DrawRectangleRounded(rect, radius, color, color, thickness, rotation, origin);
-
-        /// <inheritdoc cref="DrawRectangleRounded(Rectangle,RectCorners,Color,float,float,Vector2?)"/>
-        /// <remarks><paramref name="position"/>/<paramref name="size"/> are truncated to <see cref="Rectangle"/>'s integer fields.</remarks>
-        public void DrawRectangleRounded(Vector2 position, Vector2 size, RectCorners radius, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
-            => DrawRectangleRounded(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), radius, color, thickness, rotation, origin);
-
-        /// <summary>Draws a rounded rectangle with an independently colored fill and border, border growing inward.</summary>
-        public void DrawRectangleRounded(Rectangle rect, RectCorners radius, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
+        /// <summary>Draws a rounded rectangle with fill and border, border growing inward. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        public void DrawRectangleRounded(Rectangle rect, RectCorners radius, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
         {
             FillRectangleRounded(rect, radius, fillColor, rotation, origin);
-            if (thickness > 0f) BorderRectangleRounded(rect, radius, borderColor, thickness, rotation, origin);
+            if (thickness > 0f) BorderRectangleRounded(rect, radius, borderColor ?? fillColor, thickness, rotation, origin);
         }
 
-        /// <inheritdoc cref="DrawRectangleRounded(Rectangle,RectCorners,Color,Color,float,float,Vector2?)"/>
+        /// <inheritdoc cref="DrawRectangleRounded(Rectangle,RectCorners,Color,Color?,float,float,Vector2?)"/>
         /// <remarks><paramref name="position"/>/<paramref name="size"/> are truncated to <see cref="Rectangle"/>'s integer fields.</remarks>
-        public void DrawRectangleRounded(Vector2 position, Vector2 size, RectCorners radius, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
+        public void DrawRectangleRounded(Vector2 position, Vector2 size, RectCorners radius, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
             => DrawRectangleRounded(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), radius, fillColor, borderColor, thickness, rotation, origin);
 
         /// <summary>
@@ -1730,25 +1705,16 @@ namespace MonoPrimitives.Primitives2D
         public void BorderRectangleChamfer(Vector2 position, Vector2 size, RectCorners chamfer, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
             => BorderRectangleChamfer(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), chamfer, color, thickness, rotation, origin);
 
-        /// <summary>Draws a chamfered rectangle with both fill and border (same color), border growing inward.</summary>
-        public void DrawRectangleChamfer(Rectangle rect, RectCorners chamfer, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
-            => DrawRectangleChamfer(rect, chamfer, color, color, thickness, rotation, origin);
-
-        /// <inheritdoc cref="DrawRectangleChamfer(Rectangle,RectCorners,Color,float,float,Vector2?)"/>
-        /// <remarks><paramref name="position"/>/<paramref name="size"/> are truncated to <see cref="Rectangle"/>'s integer fields.</remarks>
-        public void DrawRectangleChamfer(Vector2 position, Vector2 size, RectCorners chamfer, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
-            => DrawRectangleChamfer(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), chamfer, color, thickness, rotation, origin);
-
-        /// <summary>Draws a chamfered rectangle with an independently colored fill and border, border growing inward.</summary>
-        public void DrawRectangleChamfer(Rectangle rect, RectCorners chamfer, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
+        /// <summary>Draws a chamfered rectangle with fill and border, border growing inward. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        public void DrawRectangleChamfer(Rectangle rect, RectCorners chamfer, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
         {
             FillRectangleChamfer(rect, chamfer, fillColor, rotation, origin);
-            if (thickness > 0f) BorderRectangleChamfer(rect, chamfer, borderColor, thickness, rotation, origin);
+            if (thickness > 0f) BorderRectangleChamfer(rect, chamfer, borderColor ?? fillColor, thickness, rotation, origin);
         }
 
-        /// <inheritdoc cref="DrawRectangleChamfer(Rectangle,RectCorners,Color,Color,float,float,Vector2?)"/>
+        /// <inheritdoc cref="DrawRectangleChamfer(Rectangle,RectCorners,Color,Color?,float,float,Vector2?)"/>
         /// <remarks><paramref name="position"/>/<paramref name="size"/> are truncated to <see cref="Rectangle"/>'s integer fields.</remarks>
-        public void DrawRectangleChamfer(Vector2 position, Vector2 size, RectCorners chamfer, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
+        public void DrawRectangleChamfer(Vector2 position, Vector2 size, RectCorners chamfer, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
             => DrawRectangleChamfer(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), chamfer, fillColor, borderColor, thickness, rotation, origin);
 
         /// <summary>
@@ -2265,15 +2231,11 @@ namespace MonoPrimitives.Primitives2D
             FillRing(center, radius - t, radius, 0f, 1f, SegmentsForArc(radius, MathHelper.TwoPi), color);
         }
 
-        /// <summary>Draws a circle with both fill and border (same color), border growing inward.</summary>
-        public void DrawCircle(Vector2 center, float radius, Color color, float thickness = 1f)
-            => DrawCircle(center, radius, color, color, thickness);
-
-        /// <summary>Draws a circle with an independently colored fill and border, border growing inward.</summary>
-        public void DrawCircle(Vector2 center, float radius, Color fillColor, Color borderColor, float thickness = 1f)
+        /// <summary>Draws a circle with fill and border, border growing inward. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        public void DrawCircle(Vector2 center, float radius, Color fillColor, Color? borderColor = null, float thickness = 1f)
         {
             FillCircle(center, radius, fillColor);
-            if (thickness > 0f) BorderCircle(center, radius, borderColor, thickness);
+            if (thickness > 0f) BorderCircle(center, radius, borderColor ?? fillColor, thickness);
         }
 
         /// <summary>Draws a filled ellipse, no border.</summary>
@@ -2349,15 +2311,11 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
-        /// <summary>Draws an ellipse with both fill and border (same color), border growing inward.</summary>
-        public void DrawEllipse(Vector2 center, float radiusH, float radiusV, Color color, float thickness = 1f, float rotation = 0f)
-            => DrawEllipse(center, radiusH, radiusV, color, color, thickness, rotation);
-
-        /// <summary>Draws an ellipse with an independently colored fill and border, border growing inward.</summary>
-        public void DrawEllipse(Vector2 center, float radiusH, float radiusV, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f)
+        /// <summary>Draws an ellipse with fill and border, border growing inward. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        public void DrawEllipse(Vector2 center, float radiusH, float radiusV, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f)
         {
             FillEllipse(center, radiusH, radiusV, fillColor, rotation);
-            if (thickness > 0f) BorderEllipse(center, radiusH, radiusV, borderColor, thickness, rotation);
+            if (thickness > 0f) BorderEllipse(center, radiusH, radiusV, borderColor ?? fillColor, thickness, rotation);
         }
 
         /// <summary>
@@ -2671,23 +2629,15 @@ namespace MonoPrimitives.Primitives2D
             BorderCapsule(start, end, radius, color, thickness);
         }
 
-        /// <summary>Draws a capsule with both fill and border (same color), border growing inward.</summary>
-        public void DrawCapsule(Vector2 start, Vector2 end, float radius, Color color, float thickness = 1f)
-            => DrawCapsule(start, end, radius, color, color, thickness);
-
-        /// <summary>Draws a capsule with an independently colored fill and border, border growing inward.</summary>
-        public void DrawCapsule(Vector2 start, Vector2 end, float radius, Color fillColor, Color borderColor, float thickness = 1f)
+        /// <summary>Draws a capsule with fill and border, border growing inward. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        public void DrawCapsule(Vector2 start, Vector2 end, float radius, Color fillColor, Color? borderColor = null, float thickness = 1f)
         {
             FillCapsule(start, end, radius, fillColor);
-            if (thickness > 0f) BorderCapsule(start, end, radius, borderColor, thickness);
+            if (thickness > 0f) BorderCapsule(start, end, radius, borderColor ?? fillColor, thickness);
         }
 
         /// <inheritdoc cref="FillCapsule(Vector2,float,float,Color,float)"/>
-        public void DrawCapsule(Vector2 center, float length, float radius, Color color, float thickness = 1f, float rotation = 0f)
-            => DrawCapsule(center, length, radius, color, color, thickness, rotation);
-
-        /// <inheritdoc cref="FillCapsule(Vector2,float,float,Color,float)"/>
-        public void DrawCapsule(Vector2 center, float length, float radius, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f)
+        public void DrawCapsule(Vector2 center, float length, float radius, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f)
         {
             CapsuleEndpointsFromCenter(center, length, rotation, out Vector2 start, out Vector2 end);
             DrawCapsule(start, end, radius, fillColor, borderColor, thickness);
@@ -2840,18 +2790,18 @@ namespace MonoPrimitives.Primitives2D
             DrawLineStrip([a, center, c], thickness, color, LineJoin.Round);
         }
 
-        /// <summary>Draws a circle sector (pie slice) with independently colored fill and border.</summary>
-        public void DrawCircleSector(Vector2 center, float radius, float startAngle, float endAngle, Color fillColor, Color borderColor, float thickness = 1f)
+        /// <summary>Draws a circle sector (pie slice) with fill and border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        public void DrawCircleSector(Vector2 center, float radius, float startAngle, float endAngle, Color fillColor, Color? borderColor = null, float thickness = 1f)
         {
             FillCircleSector(center, radius, startAngle, endAngle, fillColor);
-            BorderCircleSector(center, radius, startAngle, endAngle, thickness, borderColor);
+            BorderCircleSector(center, radius, startAngle, endAngle, thickness, borderColor ?? fillColor);
         }
 
-        /// <inheritdoc cref="DrawCircleSector(Vector2,float,float,float,Color,Color,float)"/>
-        public void DrawCircleSector(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color fillColor, Color borderColor, float thickness = 1f)
+        /// <inheritdoc cref="DrawCircleSector(Vector2,float,float,float,Color,Color?,float)"/>
+        public void DrawCircleSector(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color fillColor, Color? borderColor = null, float thickness = 1f)
         {
             FillCircleSector(center, radius, startAngle, endAngle, segments, fillColor);
-            BorderCircleSector(center, radius, startAngle, endAngle, thickness, borderColor);
+            BorderCircleSector(center, radius, startAngle, endAngle, thickness, borderColor ?? fillColor);
         }
 
         /// <summary>
@@ -3000,18 +2950,18 @@ namespace MonoPrimitives.Primitives2D
             => BorderRing(center, innerRadius, outerRadius, 0f, 1f,
                           SegmentsForArc(outerRadius, MathHelper.TwoPi), color, thickness);
 
-        /// <summary>Draws a ring (or partial arc band) with independently colored fill and border.</summary>
-        public void DrawRing(Vector2 center, float innerRadius, float outerRadius, float startAngle, float endAngle, int segments, Color fillColor, Color borderColor, float thickness = 1f)
+        /// <summary>Draws a ring (or partial arc band) with fill and border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        public void DrawRing(Vector2 center, float innerRadius, float outerRadius, float startAngle, float endAngle, int segments, Color fillColor, Color? borderColor = null, float thickness = 1f)
         {
             FillRing(center, innerRadius, outerRadius, startAngle, endAngle, segments, fillColor);
-            BorderRing(center, innerRadius, outerRadius, startAngle, endAngle, segments, borderColor, thickness);
+            BorderRing(center, innerRadius, outerRadius, startAngle, endAngle, segments, borderColor ?? fillColor, thickness);
         }
 
-        /// <inheritdoc cref="DrawRing(Vector2,float,float,float,float,int,Color,Color,float)"/>
-        public void DrawRing(Vector2 center, float innerRadius, float outerRadius, Color fillColor, Color borderColor, float thickness = 1f)
+        /// <inheritdoc cref="DrawRing(Vector2,float,float,float,float,int,Color,Color?,float)"/>
+        public void DrawRing(Vector2 center, float innerRadius, float outerRadius, Color fillColor, Color? borderColor = null, float thickness = 1f)
         {
             FillRing(center, innerRadius, outerRadius, fillColor);
-            BorderRing(center, innerRadius, outerRadius, borderColor, thickness);
+            BorderRing(center, innerRadius, outerRadius, borderColor ?? fillColor, thickness);
         }
 
         // ==================================================================
@@ -3073,19 +3023,17 @@ namespace MonoPrimitives.Primitives2D
             BuildOutlineGeometry(pts, thickness, color, closed: true, join, LineCap.Butt, jointRadius, inwardOnly: true);
         }
 
-        /// <summary>Draws a regular polygon with both fill and border (same color), border growing inward.</summary>
-        public void DrawPoly(Vector2 center, int sides, float radius, Color color, float thickness = 1f, float rotation = 0f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
-            => DrawPoly(center, sides, radius, color, color, thickness, rotation, join, jointRadius);
-
         /// <summary>
-        /// Draws a regular polygon with an independently colored fill and border, border growing
-        /// inward. For Round/Bevel <paramref name="join"/>, the fill is rounded off the same way
+        /// Draws a regular polygon with fill and border, border growing inward. Omit
+        /// <paramref name="borderColor"/> for the same color on both.
+        /// For Round/Bevel <paramref name="join"/>, the fill is rounded off the same way
         /// <see cref="BorderPoly"/>'s inward-only stroke rounds its own outer edge (same clamp
         /// against <paramref name="thickness"/>, see <see cref="BuildRoundedCornerBoundary"/>) so
         /// the two always agree, even once the requested radius has to be clamped down.
         /// </summary>
-        public void DrawPoly(Vector2 center, int sides, float radius, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
+        public void DrawPoly(Vector2 center, int sides, float radius, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
+            Color border = borderColor ?? fillColor;
             if (join == LineJoin.Miter || !jointRadius.HasValue || jointRadius.Value <= 0f || sides < 3 || thickness <= 0f)
             {
                 FillPoly(center, sides, radius, fillColor, rotation);
@@ -3107,7 +3055,7 @@ namespace MonoPrimitives.Primitives2D
                 int count = BuildRoundedCornerBoundary(pts, jointRadius.Value, join, thickness, boundary);
                 FillPolygon(boundary[..count], fillColor);
             }
-            if (thickness > 0f) BorderPoly(center, sides, radius, borderColor, thickness, rotation, join, jointRadius);
+            if (thickness > 0f) BorderPoly(center, sides, radius, border, thickness, rotation, join, jointRadius);
         }
 
         /// <summary>
@@ -3153,12 +3101,8 @@ namespace MonoPrimitives.Primitives2D
             BorderPoly(center, sides, radius, color, thickness, rotation, LineJoin.Round, safeRadius);
         }
 
-        /// <summary>Draws a rounded-corner regular polygon with both fill and border (same color), border growing inward.</summary>
-        public void DrawPolyRounded(Vector2 center, int sides, float radius, float cornerRadius, Color color, float thickness = 1f, float rotation = 0f)
-            => DrawPolyRounded(center, sides, radius, cornerRadius, color, color, thickness, rotation);
-
-        /// <summary>Draws a rounded-corner regular polygon with an independently colored fill and border, border growing inward. Radius pre-clamped so neighboring corners can't overlap.</summary>
-        public void DrawPolyRounded(Vector2 center, int sides, float radius, float cornerRadius, Color fillColor, Color borderColor, float thickness = 1f, float rotation = 0f)
+        /// <summary>Draws a rounded-corner regular polygon with fill and border, border growing inward. Omit <paramref name="borderColor"/> for the same color on both. Radius pre-clamped so neighboring corners can't overlap.</summary>
+        public void DrawPolyRounded(Vector2 center, int sides, float radius, float cornerRadius, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f)
         {
             if (sides < 3) { DrawPoly(center, sides, radius, fillColor, borderColor, thickness, rotation); return; }
             float rotationTurns = rotation / MathHelper.TwoPi;
@@ -3167,7 +3111,7 @@ namespace MonoPrimitives.Primitives2D
             for (int i = 0; i < sides; i++)
                 pts[i] = SampleUnitCircle(rotationTurns + i * step) * radius + center;
             float safeRadius = ClampCornerRadiusToFit(pts, cornerRadius);
-            DrawPoly(center, sides, radius, fillColor, borderColor, thickness, rotation, LineJoin.Round, safeRadius);
+            DrawPoly(center, sides, radius, fillColor, borderColor ?? fillColor, thickness, rotation, LineJoin.Round, safeRadius);
         }
 
         /// <summary>
@@ -3530,19 +3474,17 @@ namespace MonoPrimitives.Primitives2D
             BuildOutlineGeometry(points, thickness, color, closed: true, join, LineCap.Butt, jointRadius, inwardOnly: true);
         }
 
-        /// <summary>Draws an arbitrary polygon with both fill and border (same color), border growing inward.</summary>
-        public void DrawPolygon(ReadOnlySpan<Vector2> points, Color color, float thickness = 1f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
-            => DrawPolygon(points, color, color, thickness, join, jointRadius);
-
         /// <summary>
-        /// Draws an arbitrary polygon with an independently colored fill and border, border
-        /// growing inward. For Round/Bevel <paramref name="join"/>, the fill is rounded off the
+        /// Draws an arbitrary polygon with fill and border, border growing inward. Omit
+        /// <paramref name="borderColor"/> for the same color on both.
+        /// For Round/Bevel <paramref name="join"/>, the fill is rounded off the
         /// same way <see cref="BorderPolygon"/>'s inward-only stroke rounds its own outer edge
         /// (same clamp against <paramref name="thickness"/>, see
         /// <see cref="BuildRoundedCornerBoundary"/>) so the two always agree.
         /// </summary>
-        public void DrawPolygon(ReadOnlySpan<Vector2> points, Color fillColor, Color borderColor, float thickness = 1f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
+        public void DrawPolygon(ReadOnlySpan<Vector2> points, Color fillColor, Color? borderColor = null, float thickness = 1f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
+            Color border = borderColor ?? fillColor;
             if (join == LineJoin.Miter || !jointRadius.HasValue || jointRadius.Value <= 0f || thickness <= 0f)
             {
                 FillPolygon(points, fillColor);
@@ -3556,7 +3498,7 @@ namespace MonoPrimitives.Primitives2D
                 int count = BuildRoundedCornerBoundary(points, jointRadius.Value, join, thickness, boundary);
                 FillPolygon(boundary[..count], fillColor);
             }
-            if (thickness > 0f) BorderPolygon(points, borderColor, thickness, join, jointRadius);
+            if (thickness > 0f) BorderPolygon(points, border, thickness, join, jointRadius);
         }
 
         /// <summary>
@@ -3584,13 +3526,9 @@ namespace MonoPrimitives.Primitives2D
         public void BorderPolygonRounded(ReadOnlySpan<Vector2> points, float cornerRadius, Color color, float thickness = 1f)
             => BorderPolygon(points, color, thickness, LineJoin.Round, ClampCornerRadiusToFit(points, cornerRadius));
 
-        /// <summary>Draws a rounded-corner polygon with both fill and border (same color), border growing inward.</summary>
-        public void DrawPolygonRounded(ReadOnlySpan<Vector2> points, float cornerRadius, Color color, float thickness = 1f)
-            => DrawPolygonRounded(points, cornerRadius, color, color, thickness);
-
-        /// <summary>Draws a rounded-corner polygon with an independently colored fill and border, border growing inward. Radius pre-clamped so neighboring corners can't overlap (see <see cref="ClampCornerRadiusToFit"/>).</summary>
-        public void DrawPolygonRounded(ReadOnlySpan<Vector2> points, float cornerRadius, Color fillColor, Color borderColor, float thickness = 1f)
-            => DrawPolygon(points, fillColor, borderColor, thickness, LineJoin.Round, ClampCornerRadiusToFit(points, cornerRadius));
+        /// <summary>Draws a rounded-corner polygon with fill and border, border growing inward. Omit <paramref name="borderColor"/> for the same color on both. Radius pre-clamped so neighboring corners can't overlap (see <see cref="ClampCornerRadiusToFit"/>).</summary>
+        public void DrawPolygonRounded(ReadOnlySpan<Vector2> points, float cornerRadius, Color fillColor, Color? borderColor = null, float thickness = 1f)
+            => DrawPolygon(points, fillColor, borderColor ?? fillColor, thickness, LineJoin.Round, ClampCornerRadiusToFit(points, cornerRadius));
 
         /// <summary>
         /// Draws a filled arbitrary polygon fading from <paramref name="from"/> at

@@ -93,7 +93,7 @@ Stroke primitives — no Fill/Border split, since a line has no "inside." `thick
 | `FillTriangle(v1, v2, v3, color, rotation, origin)` | Solid triangle. |
 | `FillTriangle(v1, c1, v2, c2, v3, c3, rotation, origin)` | Solid triangle with an independent color per vertex (a 3-point gradient). |
 | `BorderTriangle(v1, v2, v3, color, thickness, rotation, origin, join, jointRadius)` | Outline only, inward. |
-| `DrawTriangle(v1, v2, v3, [fillColor, borderColor,] thickness, rotation, origin, join, jointRadius)` | Fill + border. |
+| `DrawTriangle(v1, v2, v3, fillColor, borderColor = null, thickness, rotation, origin, join, jointRadius)` | Fill + border — omit `borderColor` for the same color on both. |
 | `FillTriangleRounded(v1, v2, v3, cornerRadius, color, rotation, origin)` | Solid triangle with rounded corners. |
 | `BorderTriangleRounded(v1, v2, v3, cornerRadius, color, thickness, rotation, origin)` | Rounded-corner outline only. |
 | `DrawTriangleRounded(v1, v2, v3, cornerRadius, [fillColor, borderColor,] thickness, rotation, origin)` | Rounded-corner fill + border. |
@@ -119,7 +119,7 @@ Three corner families, all sharing the same Fill/Border/Draw/Gradient/Shadow pat
 | `FillRectangle(x, y, w, h \| position, size \| rect, color, rotation, origin)` | Solid rectangle. |
 | `FillRectangle(rect, topLeft, topRight, bottomRight, bottomLeft)` | Solid rectangle with an independent color per corner. No rotation — it's a fixed 4-corner-color mapping, not a shape rotation. |
 | `BorderRectangle(..., color, thickness, rotation, origin, join, jointRadius)` | Outline only, inward. |
-| `DrawRectangle(..., [fillColor, borderColor,] thickness, rotation, origin, join, jointRadius)` | Fill + border. |
+| `DrawRectangle(..., fillColor, borderColor = null, thickness, rotation, origin, join, jointRadius)` | Fill + border — omit `borderColor` for the same color on both. |
 | `FillRectangleGradient(..., from, to, horizontal, rotation, origin, innerOffset, outerOffset)` | Linear gradient fill, `horizontal` picks the fade axis. |
 | `DrawRectangleGradient(..., from, to, horizontal, borderColor, thickness, rotation, origin, innerOffset, outerOffset)` | Gradient fill (inset by `thickness`) + solid border, both rotating together about the same pivot. |
 | `FillRectangleShadow(rect \| position, size, RectCorners radius, color, spread, rotation, origin)` | Solid rectangle (optionally rounded via `radius`) with a soft outward drop shadow. Pass `0f` for `radius` for a sharp-cornered shadow. |
@@ -152,7 +152,7 @@ Plain circles have **no rotation parameter anywhere** — a solid or radially-gr
 | `FillCircle(center, radius, color)` / `FillCircle(x, y, radius, color)` | Solid circle. |
 | `FillCircle(center, radius, segments, color)` | Solid circle with an explicit segment count (normally chosen automatically from the radius — see "Segment counts" below). |
 | `BorderCircle(center, radius, color, thickness)` | Outline only. |
-| `DrawCircle(center, radius, [fillColor, borderColor,] thickness)` | Fill + border. |
+| `DrawCircle(center, radius, fillColor, borderColor = null, thickness)` | Fill + border — omit `borderColor` for the same color on both. |
 | `FillCircleGradient(center, radius, inner, outer, innerOffset, outerOffset)` | Radial gradient, center → rim. |
 | `DrawCircleGradient(center, radius, innerFill, outerFill, borderColor, thickness, innerOffset, outerOffset)` | Radial gradient + border. |
 | `FillCircleGradientLinear(center, radius, from, to, horizontal, rotation, innerOffset, outerOffset)` | A **straight** (non-radial) gradient across the circle — `horizontal` picks the default axis, `rotation` turns it, so a top-to-bottom fade is just `horizontal: false`. |
@@ -168,7 +168,7 @@ Ellipses **do** take a `rotation` parameter (radians) on every method — unlike
 | `FillEllipse(center, radiusH, radiusV, color, rotation)` | Solid ellipse. |
 | `FillEllipse(center, radiusH, radiusV, segments, inner, outer, rotation)` | Radial-gradient fan version with an explicit segment count. |
 | `BorderEllipse(center, radiusH, radiusV, color, thickness, rotation)` | Outline only. |
-| `DrawEllipse(center, radiusH, radiusV, [fillColor, borderColor,] thickness, rotation)` | Fill + border. |
+| `DrawEllipse(center, radiusH, radiusV, fillColor, borderColor = null, thickness, rotation)` | Fill + border — omit `borderColor` for the same color on both. |
 | `FillEllipseGradient(center, radiusH, radiusV, inner, outer, rotation, innerOffset, outerOffset)` | Radial gradient. |
 | `DrawEllipseGradient(center, radiusH, radiusV, innerFill, outerFill, borderColor, thickness, rotation, innerOffset, outerOffset)` | Radial gradient + border. |
 | `FillEllipseGradientLinear(center, radiusH, radiusV, from, to, horizontal, rotation, innerOffset, outerOffset)` | Straight gradient. `rotation` does **double duty** here — it tilts both the ellipse's own H/V axes *and* the gradient's reading axis together, unlike `FillCircleGradientLinear` (where only the axis rotates, since a circle has no shape-orientation of its own to lock the gradient to). |
@@ -183,7 +183,7 @@ A stadium shape: two round end caps joined by a straight body — the shape `Dra
 |---|---|
 | `FillCapsule(start, end, radius, color)` / `FillCapsule(center, length, radius, color, rotation)` | Solid capsule. |
 | `BorderCapsule(start, end, radius, color, thickness)` / `BorderCapsule(center, length, radius, color, thickness, rotation)` | Outline only, inward. |
-| `DrawCapsule(start, end, radius, [fillColor, borderColor,] thickness)` / `DrawCapsule(center, length, radius, [fillColor, borderColor,] thickness, rotation)` | Fill + border. |
+| `DrawCapsule(start, end, radius, fillColor, borderColor = null, thickness)` / `DrawCapsule(center, length, radius, fillColor, borderColor = null, thickness, rotation)` | Fill + border — omit `borderColor` for the same color on both. |
 | `FillCapsuleGradient(start, end, radius, inner, outer)` / `FillCapsuleGradient(center, length, radius, inner, outer, rotation)` | Gradient measured from the capsule's own axis **segment**, not a single point — every boundary vertex fades from whichever pole (`start` or `end`) its own cap arc surrounds, so the straight-side quads interpolate the true closest-point-to-segment distance exactly, not an approximation of it. |
 | `DrawCapsuleGradient(start, end, radius, innerFill, outerFill, borderColor, thickness)` / `DrawCapsuleGradient(center, length, radius, innerFill, outerFill, borderColor, thickness, rotation)` | Gradient fill + border. |
 | `FillCapsuleShadow(start, end, radius, color, spread)` / `FillCapsuleShadow(center, length, radius, color, spread, rotation)` | Solid capsule with a soft outward drop shadow. |
@@ -196,7 +196,7 @@ A triangle/square/hexagon/etc. defined by a center, side count, and radius. `rot
 |---|---|
 | `FillPoly(center, sides, radius, color, rotation)` | Solid N-gon. |
 | `BorderPoly(center, sides, radius, color, thickness, rotation, join, jointRadius)` | Outline only. |
-| `DrawPoly(center, sides, radius, [fillColor, borderColor,] thickness, rotation, join, jointRadius)` | Fill + border. |
+| `DrawPoly(center, sides, radius, fillColor, borderColor = null, thickness, rotation, join, jointRadius)` | Fill + border — omit `borderColor` for the same color on both. |
 | `FillPolyRounded(center, sides, radius, cornerRadius, color, rotation)` | Solid N-gon with rounded corners — the same capability `BorderPoly`/`DrawPoly`'s `join: LineJoin.Round` already gave the outline, exposed under a discoverable standalone name matching Triangle/Rectangle/Polygon. |
 | `BorderPolyRounded(center, sides, radius, cornerRadius, color, thickness, rotation)` | Rounded-corner outline only. |
 | `DrawPolyRounded(center, sides, radius, cornerRadius, [fillColor, borderColor,] thickness, rotation)` | Rounded-corner fill + border. |
@@ -215,7 +215,7 @@ Takes a `ReadOnlySpan<Vector2>` of points instead of center/sides/radius — dra
 |---|---|
 | `FillPolygon(points, color)` | Solid fill, fan-triangulated from `points[0]`. |
 | `BorderPolygon(points, color, thickness, join, jointRadius)` | Outline only, inward (correct for convex input; a reflex corner on a non-convex input isn't guaranteed to resolve exactly right). |
-| `DrawPolygon(points, [fillColor, borderColor,] thickness, join, jointRadius)` | Fill + border. |
+| `DrawPolygon(points, fillColor, borderColor = null, thickness, join, jointRadius)` | Fill + border — omit `borderColor` for the same color on both. |
 | `FillPolygonRounded(points, cornerRadius, color)` | Solid fill with every corner rounded. |
 | `BorderPolygonRounded(points, cornerRadius, color, thickness)` | Rounded-corner outline only. |
 | `DrawPolygonRounded(points, cornerRadius, [fillColor, borderColor,] thickness)` | Rounded-corner fill + border. |
@@ -236,12 +236,12 @@ Same Fill/Border/Draw pattern as every other shape. Remember: `startAngle`/`endA
 | `FillCircleSector(center, radius, startAngle, endAngle, [segments,] color)` | A filled pie slice. |
 | `FillCircleSectorGradient(center, radius, startAngle, endAngle, [segments,] inner, outer)` | Radial-gradient pie slice, center → rim. |
 | `BorderCircleSector(center, radius, startAngle, endAngle, thickness, color)` | The pie slice's outline (arc + the two straight radii). |
-| `DrawCircleSector(center, radius, startAngle, endAngle, [segments,] fillColor, borderColor, thickness = 1f)` | Fill + border together. |
+| `DrawCircleSector(center, radius, startAngle, endAngle, [segments,] fillColor, borderColor = null, thickness = 1f)` | Fill + border together — omit `borderColor` for the same color on both. |
 | `FillCircleSectorShadow(center, radius, startAngle, endAngle, color, spread)` | Pie slice with a soft outward drop shadow. Special-cases a full-turn sweep (no center-point "spike," since a full circle has no radial cut edges to shadow). |
 | `FillRing(center, innerRadius, outerRadius, [startAngle, endAngle, segments,] color)` | A filled annulus (donut), or a partial donut wedge if you pass an angle range. `innerRadius <= 0` degenerates to a sector. |
 | `FillRingGradient(center, innerRadius, outerRadius, [startAngle, endAngle, segments,] innerColor, outerColor)` | Same, with a radial fade across the band's own width (inner edge → outer edge — a ring has no center point within its filled area to fade from). |
 | `BorderRing(center, innerRadius, outerRadius, [startAngle, endAngle, segments,] color, thickness)` | The ring's outline: outer + inner arcs, plus (for a partial ring) the two straight radial edges. |
-| `DrawRing(center, innerRadius, outerRadius, [startAngle, endAngle, segments,] fillColor, borderColor, thickness = 1f)` | Fill + border together. |
+| `DrawRing(center, innerRadius, outerRadius, [startAngle, endAngle, segments,] fillColor, borderColor = null, thickness = 1f)` | Fill + border together — omit `borderColor` for the same color on both. |
 | `FillRingShadow(center, innerRadius, outerRadius, startAngle, endAngle, color, spread)` | Ring (or partial wedge) with a soft outward drop shadow. A full ring's shadow only glows on its outer edge, matching `FillCircleShadow`'s own precedent (no inner-hole glow). |
 
 ## Splines

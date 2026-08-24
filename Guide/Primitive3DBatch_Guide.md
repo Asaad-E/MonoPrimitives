@@ -43,7 +43,7 @@ Construct one `Primitive3DBatch` per `GraphicsDevice` and keep it — its intern
 
 ## Core conventions
 
-**Fill / Border / Draw**, same as 2D: `Fill<Shape>` is solid color, `Border<Shape>` is outline only (defaults to `DefaultLineThickness` via a `thickness <= 0` sentinel), `Draw<Shape>` is both together as a `fillColor, borderColor` overload.
+**Fill / Border / Draw**, same as 2D: `Fill<Shape>` is solid color, `Border<Shape>` is outline only (defaults to `DefaultLineThickness` via a `thickness <= 0` sentinel), `Draw<Shape>` is both together — `fillColor` required, `borderColor = null` optional (defaults to `fillColor`, so a single-color call needs no repeated argument).
 
 **Segment/ring/slice counts are explicit parameters** on every curved shape except `Sphere`/`Circle3D`, whose simple overloads pick automatically (see "Segment counts" below). Pass `-1` for automatic level-of-detail (picked from distance-to-camera and radius so each edge stays roughly constant-size on screen), or `0` to use the shape's own default.
 
@@ -70,10 +70,10 @@ Construct one `Primitive3DBatch` per `GraphicsDevice` and keep it — its intern
 |---|---|
 | `FillCircle3D(center, radius, rotationAxis, rotationAngle, [segments,] color)` | A filled disc in an arbitrary plane. |
 | `BorderCircle3D(center, radius, rotationAxis, rotationAngle, [segments,] color, thickness)` | Outline only. |
-| `DrawCircle3D(center, radius, rotationAxis, rotationAngle, [segments,] fillColor, borderColor, thickness)` | Fill + border. |
+| `DrawCircle3D(center, radius, rotationAxis, rotationAngle, [segments,] fillColor, borderColor = null, thickness)` | Fill + border. |
 | `FillTriangle3D(v1, v2, v3, color, rotation, origin)` | A filled triangle; vertices counter-clockwise when viewed from the front. `rotation`/`origin` let you spin it around a pivot without recomputing the three points. |
 | `BorderTriangle3D(v1, v2, v3, color, rotation, origin, thickness)` | Outline (the three edges) only. |
-| `DrawTriangle3D(v1, v2, v3, fillColor, borderColor, rotation, origin, thickness)` | Fill + border. |
+| `DrawTriangle3D(v1, v2, v3, fillColor, borderColor = null, rotation, origin, thickness)` | Fill + border. |
 | `DrawTriangleStrip3D(points, color)` | A raw triangle-strip mesh, points submitted as given — no Fill/Border split, since a strip has no single "inside." |
 
 ## Cube and bounding box
@@ -82,8 +82,8 @@ Construct one `Primitive3DBatch` per `GraphicsDevice` and keep it — its intern
 |---|---|
 | `FillCube(position, width, height, length, color, rotation)` / `FillCube(position, size, color, rotation)` | A filled cube (or box), centered at `position`. |
 | `BorderCube(..., color, rotation, thickness)` | Wireframe only. |
-| `DrawCube(..., fillColor, borderColor, rotation, thickness)` | Fill + border. |
-| `FillBoundingBox(box, color)` / `BorderBoundingBox(box, color, thickness)` / `DrawBoundingBox(box, fillColor, borderColor, thickness)` | Same, from a `BoundingBox` directly — always axis-aligned, no rotation parameter. |
+| `DrawCube(..., fillColor, borderColor = null, rotation, thickness)` | Fill + border. |
+| `FillBoundingBox(box, color)` / `BorderBoundingBox(box, color, thickness)` / `DrawBoundingBox(box, fillColor, borderColor = null, thickness)` | Same, from a `BoundingBox` directly — always axis-aligned, no rotation parameter. |
 
 ## Sphere
 
@@ -95,7 +95,7 @@ No `rotation` parameter anywhere — a solid-color sphere is rotationally symmet
 | `FillSphere(center, radius, rings, slices, color)` | Same, with an explicit ring/slice count. |
 | `FillSphere(BoundingSphere, color)` | Same, from a `BoundingSphere` directly. |
 | `BorderSphere(center, radius, color, thickness)` / `(center, radius, rings, slices, color, thickness)` | Wireframe (latitude + longitude lines) only. |
-| `DrawSphere(center, radius, fillColor, borderColor, thickness)` / `(..., rings, slices, ...)` | Fill + border. |
+| `DrawSphere(center, radius, fillColor, borderColor = null, thickness)` / `(..., rings, slices, ...)` | Fill + border. |
 
 ## Cylinder and cone
 
@@ -106,7 +106,7 @@ Two overload families with deliberately different parameter names: `radiusTop`/`
 | `FillCylinder(position, radiusTop, radiusBottom, height, slices, color, rotation)` | Standing form. |
 | `FillCylinder(startPos, endPos, startRadius, endRadius, sides, color)` | Two-point form. |
 | `BorderCylinder(...)` (both forms, `+ thickness`) | Wireframe only. |
-| `DrawCylinder(...)` (both forms, `+ fillColor, borderColor, thickness`) | Fill + border. |
+| `DrawCylinder(...)` (both forms, `+ fillColor, borderColor = null, thickness`) | Fill + border. |
 
 ## Capsule
 
@@ -116,7 +116,7 @@ A cylinder between two points with hemispherical caps of `radius` — already fu
 |---|---|
 | `FillCapsule(startPos, endPos, radius, slices, rings, color)` | Filled capsule. |
 | `BorderCapsule(startPos, endPos, radius, slices, rings, color, thickness)` | Wireframe only. |
-| `DrawCapsule(startPos, endPos, radius, slices, rings, fillColor, borderColor, thickness)` | Fill + border. |
+| `DrawCapsule(startPos, endPos, radius, slices, rings, fillColor, borderColor = null, thickness)` | Fill + border. |
 
 ## Torus
 
@@ -126,7 +126,7 @@ A donut shape, lying flat on XZ (hole facing `+Y`) unless `rotation` tilts it. `
 |---|---|
 | `FillTorus(center, radius, tubeRadius, sides, rings, color, rotation)` | Filled torus. |
 | `BorderTorus(..., color, rotation, thickness)` | Wireframe only. |
-| `DrawTorus(..., fillColor, borderColor, rotation, thickness)` | Fill + border. |
+| `DrawTorus(..., fillColor, borderColor = null, rotation, thickness)` | Fill + border. |
 
 ## Plane
 
@@ -136,7 +136,7 @@ A donut shape, lying flat on XZ (hole facing `+Y`) unless `rotation` tilts it. `
 | `FillPlane(centerPos, size, normal, color)` | Tilted so its face normal is `normal`; the in-plane twist is arbitrary. |
 | `FillPlane(centerPos, size, rotation, color)` | Fully explicit orientation (tilt and twist) via a `Quaternion`. |
 | `BorderPlane(centerPos, size, color, thickness)` / `(centerPos, size, rotation, color, thickness)` | The plane's 4 edges only — the default-XZ and `Quaternion` forms (no separate `normal` overload). |
-| `DrawPlane(centerPos, size, fillColor, borderColor, thickness)` / `(centerPos, size, rotation, fillColor, borderColor, thickness)` | Fill + border, same two forms. |
+| `DrawPlane(centerPos, size, fillColor, borderColor = null, thickness)` / `(centerPos, size, rotation, fillColor, borderColor = null, thickness)` | Fill + border, same two forms. |
 
 ## Lighting (flat shading, opt-in)
 

@@ -210,20 +210,20 @@ namespace MonoPrimitives.Primitives3D
             }
         }
 
-        /// <summary>Draws a disc with independently colored fill and wireframe border.</summary>
+        /// <summary>Draws a disc with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawCircle3D(Vector3 center, float radius, Vector3 rotationAxis, float rotationAngle, Color fillColor, Color borderColor, float thickness = -1f)
+        public void DrawCircle3D(Vector3 center, float radius, Vector3 rotationAxis, float rotationAngle, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
             FillCircle3D(center, radius, rotationAxis, rotationAngle, fillColor);
-            BorderCircle3D(center, radius, rotationAxis, rotationAngle, borderColor, thickness);
+            BorderCircle3D(center, radius, rotationAxis, rotationAngle, borderColor ?? fillColor, thickness);
         }
 
-        /// <summary>Draws a disc with independently colored fill and wireframe border, with an explicit segment count.</summary>
+        /// <summary>Draws a disc with fill and wireframe border, with an explicit segment count. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawCircle3D(Vector3 center, float radius, Vector3 rotationAxis, float rotationAngle, int segments, Color fillColor, Color borderColor, float thickness = -1f)
+        public void DrawCircle3D(Vector3 center, float radius, Vector3 rotationAxis, float rotationAngle, int segments, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
             FillCircle3D(center, radius, rotationAxis, rotationAngle, segments, fillColor);
-            BorderCircle3D(center, radius, rotationAxis, rotationAngle, segments, borderColor, thickness);
+            BorderCircle3D(center, radius, rotationAxis, rotationAngle, segments, borderColor ?? fillColor, thickness);
         }
 
         /// <summary>Shared radial basis for both circle methods — an XY-plane circle rotated by <paramref name="rotationAngle"/> degrees around <paramref name="rotationAxis"/>.</summary>
@@ -273,12 +273,12 @@ namespace MonoPrimitives.Primitives3D
             DrawLine3D(v3, v1, w, color);
         }
 
-        /// <summary>Draws a triangle with independently colored fill and edge outline.</summary>
+        /// <summary>Draws a triangle with fill and edge outline. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawTriangle3D(Vector3 v1, Vector3 v2, Vector3 v3, Color fillColor, Color borderColor, Quaternion rotation = default, Vector3? origin = null, float thickness = -1f)
+        public void DrawTriangle3D(Vector3 v1, Vector3 v2, Vector3 v3, Color fillColor, Color? borderColor = null, Quaternion rotation = default, Vector3? origin = null, float thickness = -1f)
         {
             FillTriangle3D(v1, v2, v3, fillColor, rotation, origin);
-            BorderTriangle3D(v1, v2, v3, borderColor, rotation, origin, thickness);
+            BorderTriangle3D(v1, v2, v3, borderColor ?? fillColor, rotation, origin, thickness);
         }
 
         /// <summary>Draws a triangle strip as a raw mesh (no Fill/Border split — like the 2D library's own <c>DrawTriangleStrip</c>, this submits vertices as given, with no triangulation).</summary>
@@ -346,17 +346,17 @@ namespace MonoPrimitives.Primitives3D
             DrawLine3D(p110, p111, w, color); DrawLine3D(p010, p011, w, color);
         }
 
-        /// <summary>Draws a cube with independently colored fill and wireframe border.</summary>
+        /// <summary>Draws a cube with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawCube(Vector3 position, float width, float height, float length, Color fillColor, Color borderColor, Quaternion rotation = default, float thickness = -1f)
+        public void DrawCube(Vector3 position, float width, float height, float length, Color fillColor, Color? borderColor = null, Quaternion rotation = default, float thickness = -1f)
             => DrawCube(position, new Vector3(width, height, length), fillColor, borderColor, rotation, thickness);
 
-        /// <summary>Draws a cube (vector size version) with independently colored fill and wireframe border.</summary>
+        /// <summary>Draws a cube (vector size version) with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawCube(Vector3 position, Vector3 size, Color fillColor, Color borderColor, Quaternion rotation = default, float thickness = -1f)
+        public void DrawCube(Vector3 position, Vector3 size, Color fillColor, Color? borderColor = null, Quaternion rotation = default, float thickness = -1f)
         {
             FillCube(position, size, fillColor, rotation);
-            BorderCube(position, size, borderColor, rotation, thickness);
+            BorderCube(position, size, borderColor ?? fillColor, rotation, thickness);
         }
 
         private static void GetCubeCorners(in Vector3 position, in Vector3 size, in Quaternion rotation,
@@ -393,12 +393,12 @@ namespace MonoPrimitives.Primitives3D
             BorderCube(box.Min + size * 0.5f, size, color, default, thickness);
         }
 
-        /// <summary>Draws a bounding box with independently colored fill and wireframe border.</summary>
+        /// <summary>Draws a bounding box with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawBoundingBox(BoundingBox box, Color fillColor, Color borderColor, float thickness = -1f)
+        public void DrawBoundingBox(BoundingBox box, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
             FillBoundingBox(box, fillColor);
-            BorderBoundingBox(box, borderColor, thickness);
+            BorderBoundingBox(box, borderColor ?? fillColor, thickness);
         }
 
         // =====================================================================
@@ -511,20 +511,20 @@ namespace MonoPrimitives.Primitives3D
             }
         }
 
-        /// <summary>Draws a sphere with independently colored fill and wireframe border.</summary>
+        /// <summary>Draws a sphere with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawSphere(Vector3 centerPos, float radius, Color fillColor, Color borderColor, float thickness = -1f)
+        public void DrawSphere(Vector3 centerPos, float radius, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
             FillSphere(centerPos, radius, fillColor);
-            BorderSphere(centerPos, radius, borderColor, thickness);
+            BorderSphere(centerPos, radius, borderColor ?? fillColor, thickness);
         }
 
-        /// <summary>Draws a sphere with independently colored fill and wireframe border, with an explicit ring/slice count.</summary>
+        /// <summary>Draws a sphere with fill and wireframe border, with an explicit ring/slice count. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawSphere(Vector3 centerPos, float radius, int rings, int slices, Color fillColor, Color borderColor, float thickness = -1f)
+        public void DrawSphere(Vector3 centerPos, float radius, int rings, int slices, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
             FillSphere(centerPos, radius, rings, slices, fillColor);
-            BorderSphere(centerPos, radius, rings, slices, borderColor, thickness);
+            BorderSphere(centerPos, radius, rings, slices, borderColor ?? fillColor, thickness);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -634,20 +634,20 @@ namespace MonoPrimitives.Primitives3D
             }
         }
 
-        /// <summary>Draws a cylinder/cone with independently colored fill and wireframe border, standing on <paramref name="position"/>.</summary>
+        /// <summary>Draws a cylinder/cone with fill and wireframe border, standing on <paramref name="position"/>. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawCylinder(Vector3 position, float radiusTop, float radiusBottom, float height, int slices, Color fillColor, Color borderColor, Quaternion rotation = default, float thickness = -1f)
+        public void DrawCylinder(Vector3 position, float radiusTop, float radiusBottom, float height, int slices, Color fillColor, Color? borderColor = null, Quaternion rotation = default, float thickness = -1f)
         {
             FillCylinder(position, radiusTop, radiusBottom, height, slices, fillColor, rotation);
-            BorderCylinder(position, radiusTop, radiusBottom, height, slices, borderColor, rotation, thickness);
+            BorderCylinder(position, radiusTop, radiusBottom, height, slices, borderColor ?? fillColor, rotation, thickness);
         }
 
-        /// <summary>Draws a cylinder between two arbitrary points with independently colored fill and wireframe border.</summary>
+        /// <summary>Draws a cylinder between two arbitrary points with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawCylinder(Vector3 startPos, Vector3 endPos, float startRadius, float endRadius, int sides, Color fillColor, Color borderColor, float thickness = -1f)
+        public void DrawCylinder(Vector3 startPos, Vector3 endPos, float startRadius, float endRadius, int sides, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
             FillCylinder(startPos, endPos, startRadius, endRadius, sides, fillColor);
-            BorderCylinder(startPos, endPos, startRadius, endRadius, sides, borderColor, thickness);
+            BorderCylinder(startPos, endPos, startRadius, endRadius, sides, borderColor ?? fillColor, thickness);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -824,12 +824,12 @@ namespace MonoPrimitives.Primitives3D
             }
         }
 
-        /// <summary>Draws a capsule with independently colored fill and wireframe border.</summary>
+        /// <summary>Draws a capsule with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawCapsule(Vector3 startPos, Vector3 endPos, float radius, int slices, int rings, Color fillColor, Color borderColor, float thickness = -1f)
+        public void DrawCapsule(Vector3 startPos, Vector3 endPos, float radius, int slices, int rings, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
             FillCapsule(startPos, endPos, radius, slices, rings, fillColor);
-            BorderCapsule(startPos, endPos, radius, slices, rings, borderColor, thickness);
+            BorderCapsule(startPos, endPos, radius, slices, rings, borderColor ?? fillColor, thickness);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -920,12 +920,12 @@ namespace MonoPrimitives.Primitives3D
             }
         }
 
-        /// <summary>Draws a torus with independently colored fill and wireframe border.</summary>
+        /// <summary>Draws a torus with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawTorus(Vector3 center, float radius, float tubeRadius, int sides, int rings, Color fillColor, Color borderColor, Quaternion rotation = default, float thickness = -1f)
+        public void DrawTorus(Vector3 center, float radius, float tubeRadius, int sides, int rings, Color fillColor, Color? borderColor = null, Quaternion rotation = default, float thickness = -1f)
         {
             FillTorus(center, radius, tubeRadius, sides, rings, fillColor, rotation);
-            BorderTorus(center, radius, tubeRadius, sides, rings, borderColor, rotation, thickness);
+            BorderTorus(center, radius, tubeRadius, sides, rings, borderColor ?? fillColor, rotation, thickness);
         }
 
         // =====================================================================
@@ -978,20 +978,20 @@ namespace MonoPrimitives.Primitives3D
             DrawLine3D(a, b, w, color); DrawLine3D(b, c, w, color); DrawLine3D(c, d, w, color); DrawLine3D(d, a, w, color);
         }
 
-        /// <summary>Draws a plane with independently colored fill and wireframe border.</summary>
+        /// <summary>Draws a plane with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawPlane(Vector3 centerPos, Vector2 size, Color fillColor, Color borderColor, float thickness = -1f)
+        public void DrawPlane(Vector3 centerPos, Vector2 size, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
             FillPlane(centerPos, size, fillColor);
-            BorderPlane(centerPos, size, borderColor, thickness);
+            BorderPlane(centerPos, size, borderColor ?? fillColor, thickness);
         }
 
-        /// <summary>Draws a plane with a fully explicit orientation and independently colored fill and wireframe border.</summary>
+        /// <summary>Draws a plane with a fully explicit orientation, fill, and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawPlane(Vector3 centerPos, Vector2 size, Quaternion rotation, Color fillColor, Color borderColor, float thickness = -1f)
+        public void DrawPlane(Vector3 centerPos, Vector2 size, Quaternion rotation, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
             FillPlane(centerPos, size, rotation, fillColor);
-            BorderPlane(centerPos, size, rotation, borderColor, thickness);
+            BorderPlane(centerPos, size, rotation, borderColor ?? fillColor, thickness);
         }
 
         private static void GetPlaneCorners(in Vector3 centerPos, in Vector2 size, out Vector3 a, out Vector3 b, out Vector3 c, out Vector3 d)
@@ -1396,12 +1396,12 @@ namespace MonoPrimitives.Primitives3D
                     DrawLine3D(HeightmapVertex(heights, origin, cellSize, x, z), HeightmapVertex(heights, origin, cellSize, x, z + 1), w, color);
         }
 
-        /// <summary>Draws a heightmap with independently colored fill and wireframe.</summary>
+        /// <summary>Draws a heightmap with fill and wireframe. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
-        public void DrawHeightmap(float[,] heights, Vector3 origin, Vector2 cellSize, Color fillColor, Color borderColor, float thickness = -1f)
+        public void DrawHeightmap(float[,] heights, Vector3 origin, Vector2 cellSize, Color fillColor, Color? borderColor = null, float thickness = -1f)
         {
             FillHeightmap(heights, origin, cellSize, fillColor);
-            BorderHeightmap(heights, origin, cellSize, borderColor, thickness);
+            BorderHeightmap(heights, origin, cellSize, borderColor ?? fillColor, thickness);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
