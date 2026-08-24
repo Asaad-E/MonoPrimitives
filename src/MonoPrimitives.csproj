@@ -18,7 +18,7 @@
   <!-- NuGet metadata -->
   <PropertyGroup>
     <PackageId>MonoPrimitives</PackageId>
-    <Version>0.5.0</Version>
+    <Version>0.5.5</Version>
     <Authors>Asaad-E</Authors>
     <Description>Immediate-mode 2D and 3D primitive drawing for MonoGame, plus the small set of helpers a fast prototype usually needs — camera, input, easing, color, noise, and collision/raycast tests — in one package.</Description>
     <PackageTags>monogame;2d;3d;primitives;drawing;prototyping</PackageTags>
