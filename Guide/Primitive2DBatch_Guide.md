@@ -285,7 +285,7 @@ batch.DrawString("FPS: 60", new Vector2(10, 10), pixelSize: 4, Color.White);
 
 | Member | What it does |
 |---|---|
-| `DrawString(this Primitive2DBatch, text, position, pixelSize, color, glyphSpacing = 1f, lineSpacing = 2f)` | Draws text starting at `position` (top-left of the first character). `'\n'` starts a new line. Named to match `SpriteBatch.DrawString`. |
+| `DrawString(this Primitive2DBatch, text, position, pixelSize, color, glyphSpacing = 1f, lineSpacing = 2f, maxWidth = 0f)` | Draws text starting at `position` (top-left of the first character). `'\n'` starts a new line. Named to match `SpriteBatch.DrawString`. `maxWidth` greater than `0` word-wraps first — see [`Guide/DebugFont5x7_Guide.md`](DebugFont5x7_Guide.md#word-wrap) for the full word-wrap story. |
 | `MeasureText(text, pixelSize, glyphSpacing, lineSpacing)` | Total size in pixels the text would occupy — for centering/layout before drawing. |
 | `DebugFont5x7.SpaceWidthScale` (static field, default `0.3f`) | How wide a space character is, as a fraction of a normal glyph's width. Change it once globally for tighter/looser spacing. |
 | `DebugFont5x7.GlyphWidth` / `GlyphHeight` (constants, `5`/`7`) | The font's cell size in pixels, before `pixelSize` scaling. |
@@ -318,3 +318,4 @@ Circles/arcs/ellipses pick their own triangle-fan segment count automatically fr
 - [`Camera2D_Guide.md`](Camera2D_Guide.md) — `Camera2D` and the letterbox/scaling `ViewportAdapter2D` family for keeping a `Primitive2DBatch` scene correctly projected across resolutions.
 - [`Color_Guide.md`](Color_Guide.md) — `Palette`/`ColorUtil`, the colors this guide's shapes are drawn with.
 - [`Trail2D_Guide.md`](Trail2D_Guide.md) — a fading position-history trail built on `DrawLine`.
+- [`DebugFont5x7_Guide.md`](DebugFont5x7_Guide.md) — the full `DrawString`/`MeasureText` reference, word-wrap, and the 2D/3D text-rendering split.

@@ -67,7 +67,7 @@ All of these preserve alpha and take an existing `Color` in, returning a new one
 
 ### Blend modes
 
-Pure `Color x Color -> Color` functions computing a blended color *value* to draw normally afterward — **not** a GPU blend-state operation (`Primitive2DBatch` already uses one `NonPremultiplied` state throughout these are for tinting/layering colors in code, procedural palette mixing). **Alpha always comes from `a` unchanged** in every mode — these blend color, not transparency.
+Pure `Color x Color -> Color` functions computing a blended color *value* to draw normally afterward — **not** a GPU blend-state operation (`Primitive2DBatch` already uses one `NonPremultiplied` state throughout). Use these for tinting/layering colors in code — procedural palette mixing, not a per-pixel GPU effect. **Alpha always comes from `a` unchanged** in every mode — these blend color, not transparency.
 
 | Method | What it does |
 |---|---|

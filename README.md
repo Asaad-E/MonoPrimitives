@@ -24,7 +24,7 @@ One NuGet package, one assembly, one DLL — 2D and 3D both come with it, no sep
 
 | Namespace | Source folder | What's there |
 |---|---|---|
-| `MonoPrimitives` | `src/Core/` | Shared: `PrimitiveInput`, `Easing`, `Palette`/`ColorUtil`, `Noise`, `RandomUtil`, `FontGlyphs5x7` |
+| `MonoPrimitives` | `src/Core/` | Shared: `PrimitiveInput`, `Easing`, `Palette`/`ColorUtil`, `Noise`, `RandomUtil`, `FontGlyphs5x7`, `Vector2Extensions`, `RectangleF`, `FrameLimiter`, `FastTexture`, `FpsCounter`, `ScreenshotUtil` |
 | `MonoPrimitives.Primitives2D` | `src/2D/` | `Primitive2DBatch`, `Camera2D` + `ViewportAdapter2D`, `Collision2D`, `Trail2D`, `UnitCircleLut` |
 | `MonoPrimitives.Primitives3D` | `src/3D/` | `Primitive3DBatch`, `Camera3D`, `Collision3D`, `Trail3D`, `TrigLut` |
 
@@ -80,7 +80,7 @@ Every shape follows the same `Fill<Shape>` (solid) / `Border<Shape>` (outline, g
 
 ## Documentation
 
-Each class has its own guide — start with whichever one covers what you're touching:
+Each class has its own guide — start with whichever one covers what you're touching, or see [`Guide/README.md`](Guide/README.md) for a "brand new here" reading order:
 
 **Drawing**
 - [`Primitive2DBatch_Guide.md`](Guide/Primitive2DBatch_Guide.md) — every 2D shape (rectangles, circles, ellipses, capsules, polygons, sectors/rings, splines), gradients, shadows, rounded/chamfered corners.
@@ -105,6 +105,14 @@ Each class has its own guide — start with whichever one covers what you're tou
 - [`Color_Guide.md`](Guide/Color_Guide.md) — a curated color palette plus hex/HSV conversion and adjustment.
 - [`Trail2D_Guide.md`](Guide/Trail2D_Guide.md) — a fading position-history trail, 2D and 3D.
 - [`UnitCircleLut_Guide.md`](Guide/UnitCircleLut_Guide.md) / [`TrigLut_Guide.md`](Guide/TrigLut_Guide.md) — the trig-free lookup tables the shape batches are themselves built on, for your own curved geometry.
+- [`Vector2Extensions_Guide.md`](Guide/Vector2Extensions_Guide.md) — angle/rotation/approach/clamp helpers on MonoGame's own `Vector2`.
+- [`RectangleF_Guide.md`](Guide/RectangleF_Guide.md) — a float-precision counterpart to MonoGame's integer-only `Rectangle`.
+
+**App helpers**
+- [`FrameLimiter_Guide.md`](Guide/FrameLimiter_Guide.md) — sleep+spin frame pacing, more precise than `IsFixedTimeStep` alone.
+- [`FastTexture_Guide.md`](Guide/FastTexture_Guide.md) — raw-GL texture upload, 2.5-2.7x faster than `SetData` for frequent updates.
+- [`FpsCounter_Guide.md`](Guide/FpsCounter_Guide.md) — rolling-average FPS measurement.
+- [`ScreenshotUtil_Guide.md`](Guide/ScreenshotUtil_Guide.md) — one-call back-buffer capture to `.png`/`.jpg`.
 
 For the project's own internals (architecture map, conventions, the reasoning behind non-obvious choices), see [`Design/README.md`](Design/README.md).
 

@@ -19,15 +19,24 @@ Shared (`Core/`, namespace `MonoPrimitives`):
 | Color | `Palette`, `ColorUtil` |
 | Noise | `Noise` |
 | Random | `RandomUtil` (+ static `RandomUtil.Shared`) |
+| Bitmap font | `FontGlyphs5x7` (2D/3D each draw it separately, see ARCHITECTURE.md) |
+| Vector2 helpers | `Vector2Extensions` |
+| Float rectangle | `RectangleF` |
+| Frame pacing | `FrameLimiter` |
+| Fast texture upload | `FastTexture` |
+| FPS measurement | `FpsCounter` |
+| Screenshot capture | `ScreenshotUtil` |
 
 Per-namespace (not shared — genuinely different code):
 
 | | 2D (`MonoPrimitives.Primitives2D`) | 3D (`MonoPrimitives.Primitives3D`) |
 |---|---|---|
 | Shape drawing | `Primitive2DBatch` | `Primitive3DBatch` |
-| Camera | `Camera2D` | `Camera3D` |
+| Camera + viewport | `Camera2D`, `ViewportAdapter2D` family | `Camera3D` (reuses `ViewportAdapter2D`) |
 | Collision & raycasts | `Collision2D` | `Collision3D` |
 | Trail | `Trail2D` | `Trail3D` |
+| Debug text rendering | `DebugFont5x7` | `DebugFont5x7` (billboarded) |
+| Fast-trig LUT | `UnitCircleLut` | `TrigLut` |
 
 See DECISIONS.md for the Core-vs-duplicated rule.
 

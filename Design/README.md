@@ -10,7 +10,7 @@ For a fresh session (AI or human) to pick up this project without reading the wh
 
 These five are kept short on purpose — current state only, no narrative. Deeper reference (pull into context only when actually working in that area):
 
-- **[../Guide/](../Guide/)** — the current, actively-maintained per-topic guides, one file per topic, being built up incrementally (not all topics are migrated here yet — see below). Start here for anything it already covers.
+- **[../Guide/](../Guide/)** ([`Guide/README.md`](../Guide/README.md) is its index) — the current, actively-maintained per-topic guides, one file per topic, covering every public class in `Core/`/`2D/`/`3D`. Start here for anything it covers before reading source.
   - **[RandomUtil_Guide.md](../Guide/RandomUtil_Guide.md)** — `RandomUtil`: every method, what it computes and when to reach for it, the algorithms behind Gaussian/Poisson/Binomial sampling, and single-threaded vs. multi-threaded usage.
   - **[Primitive2DBatch_Guide.md](../Guide/Primitive2DBatch_Guide.md)** — `Primitive2DBatch`: every 2D shape method grouped by family, the Fill/Border/Draw/Gradient/Shadow conventions, and how shadows/gradients/segment counts actually work.
   - **[Primitive3DBatch_Guide.md](../Guide/Primitive3DBatch_Guide.md)** — `Primitive3DBatch`: every 3D shape grouped by family, opt-in flat-shading lighting, the now-complete spline family, and the confirmed raylib `rmodels.h` superset comparison.
@@ -23,7 +23,7 @@ These five are kept short on purpose — current state only, no narrative. Deepe
   - **[Easing_Guide.md](../Guide/Easing_Guide.md)** — `Easing`: all 11 families (including `Quint`/`Circ`), which curve to reach for, and the two universal properties (`InOut`'s midpoint, `Out = 1 - In(1-t)`) every function satisfies.
   - **[UnitCircleLut_Guide.md](../Guide/UnitCircleLut_Guide.md)** — `UnitCircleLut`: the trig-free `Sample(t01)`/`SampleRadians`/`SampleDegrees` table `Primitive2DBatch` itself is built on.
   - **[TrigLut_Guide.md](../Guide/TrigLut_Guide.md)** — `TrigLut`: the 3D counterpart (`out float` sin/cos pairs), `SinCosStep`'s ring/slice-building shape, and `Sample`/`SampleRadians`/`SampleDegrees` for a continuous angle.
-  - **[DebugFont5x7_Guide.md](../Guide/DebugFont5x7_Guide.md)** — `DebugFont5x7`/`FontGlyphs5x7` (2D and 3D): `DrawString`/`MeasureText`, 3D's billboarded `DrawString3D`/`GetBillboardAxes`, the row-span convention every glyph follows, and the glyph bugs found and fixed this session.
+  - **[DebugFont5x7_Guide.md](../Guide/DebugFont5x7_Guide.md)** — `DebugFont5x7`/`FontGlyphs5x7` (2D and 3D): `DrawString`/`MeasureText`, 3D's billboarded `DrawString3D`/`GetBillboardAxes`, the row-span convention every glyph follows, and word-wrap (`FontGlyphs5x7.WrapText`).
   - **[Collision2D_Guide.md](../Guide/Collision2D_Guide.md)** — `Collision2D`: every overlap/ray check by shape, and which ones need convex input (SAT) vs. work on any simple polygon.
   - **[Collision3D_Guide.md](../Guide/Collision3D_Guide.md)** — `Collision3D`: sphere/box/capsule/plane/triangle/quad overlap and raycasts, and the `RayCollision3D` result struct every raycast returns.
   - **[Vector2Extensions_Guide.md](../Guide/Vector2Extensions_Guide.md)** — `Vector2Extensions`: `Angle`/`AngleTo`/`AngleToSigned`/`Rotated`/`Approach`/`ClampMagnitude`/etc., and why `Rotated` isn't named `Rotate`.

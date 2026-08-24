@@ -4,7 +4,7 @@ Follow these rather than re-deriving a convention or introducing an inconsistent
 
 ## API naming
 
-- `Fill<Shape>` / `Border<Shape>` / `Draw<Shape>` for every closed shape. `Fill` = solid, no outline. `Border` = outline only, grows **inward**, clamps gracefully instead of overflowing a small shape (2D) / defaults to `DefaultLineWidth` when no explicit thickness is given (3D). `Draw` = both, ONE overload: `Draw<Shape>(..., Color fillColor, Color? borderColor = null, ...)` — omit `borderColor` for the same color on both. Never a separate single-color overload alongside a `fillColor, borderColor` one; that duplication was audited out (see DECISIONS.md) in favor of this single signature, matching Apos.Shapes' own approach (a `Color` converts implicitly wherever it takes a richer fill/border type). Position/size still gets a real overload per encoding where more than one makes sense (`Rectangle`, `Vector2 position, Vector2 size`, raw floats) — that duplication is real (different types, not just a color default) and stays.
+- `Fill<Shape>` / `Border<Shape>` / `Draw<Shape>` for every closed shape. `Fill` = solid, no outline. `Border` = outline only, grows **inward**, clamps gracefully instead of overflowing a small shape (2D) / defaults to `DefaultLineThickness` when no explicit thickness is given (3D). `Draw` = both, ONE overload: `Draw<Shape>(..., Color fillColor, Color? borderColor = null, ...)` — omit `borderColor` for the same color on both. Never a separate single-color overload alongside a `fillColor, borderColor` one; that duplication was audited out (see DECISIONS.md) in favor of this single signature, matching Apos.Shapes' own approach (a `Color` converts implicitly wherever it takes a richer fill/border type). Position/size still gets a real overload per encoding where more than one makes sense (`Rectangle`, `Vector2 position, Vector2 size`, raw floats) — that duplication is real (different types, not just a color default) and stays.
 - No `Ex`/`V`/etc. suffix for a parameter variant — it's an overload of the same name instead (e.g. a two-endpoint cylinder or a vector-size cube is `FillCylinder`/`FillCube` with a different signature, not `FillCylinderEx`/`FillCubeV`). A genuinely different shape family (`*Rounded`, `*Gradient`, `*Chamfer`) still gets its own suffix — see below.
 - Rounded-corner variants: `*Rounded` suffix (`FillTriangleRounded`), not a separate verb.
 - Multi-point primitives with no "inside" (`DrawTriangleFan`, `DrawTriangleStrip`) keep a single `Draw` name.
@@ -20,6 +20,7 @@ Follow these rather than re-deriving a convention or introducing an inconsistent
 
 - `2D`/`3D` namespaces are independent of each other; `Core/` holds only code that's byte-identical between them (see DECISIONS.md). Don't duplicate something that belongs in Core, and don't force genuinely different code into a shared abstraction just to avoid duplication.
 - No per-frame heap allocation on hot paths — `stackalloc` with a heap fallback (`MaxStackAllocElements = 4096`) for caller-controlled sizes.
+- `Nullable` is enabled project-wide. A field always assigned in `Begin()` (never the constructor) gets `= null!`, not a nullable type — reserve an actual `?` for a field that's genuinely sometimes null at runtime (see DECISIONS.md's Testing & tooling section).
 
 ## Comments and docs
 
