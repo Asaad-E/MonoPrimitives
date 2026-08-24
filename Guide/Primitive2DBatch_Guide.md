@@ -96,13 +96,14 @@ Stroke primitives — no Fill/Border split, since a line has no "inside." `thick
 | `DrawTriangle(v1, v2, v3, fillColor, borderColor = null, thickness, rotation, origin, join, jointRadius)` | Fill + border — omit `borderColor` for the same color on both. |
 | `FillTriangleRounded(v1, v2, v3, cornerRadius, color, rotation, origin)` | Solid triangle with rounded corners. |
 | `BorderTriangleRounded(v1, v2, v3, cornerRadius, color, thickness, rotation, origin)` | Rounded-corner outline only. |
-| `DrawTriangleRounded(v1, v2, v3, cornerRadius, [fillColor, borderColor,] thickness, rotation, origin)` | Rounded-corner fill + border. |
+| `DrawTriangleRounded(v1, v2, v3, cornerRadius, fillColor, borderColor = null, thickness, rotation, origin)` | Rounded-corner fill + border — omit `borderColor` for the same color on both. |
 | `FillTriangleGradient(v1, v2, v3, from, to, rotation, origin)` | `v1` → `from`, `v2` and `v3` → `to`. |
 | `FillTriangleGradientRounded(v1, v2, v3, cornerRadius, from, to, rotation, origin)` | Same gradient, rounded corners. |
 | `DrawTriangleGradient(v1, v2, v3, from, to, borderColor, thickness, rotation, origin, join, jointRadius)` | Gradient fill + solid border, fill inset so it stops at the border. |
 | `DrawTriangleGradientRounded(v1, v2, v3, cornerRadius, from, to, borderColor, thickness, rotation, origin)` | Same, rounded corners. |
 | `FillTriangleShadow(v1, v2, v3, color, spread, rotation, origin)` | Solid triangle with a soft outward drop shadow. |
 | `FillTriangleShadowRounded(v1, v2, v3, cornerRadius, color, spread, rotation, origin)` | Same, rounded corners. |
+| `FillTriangle(center, radius, color, rotation)` / `BorderTriangle(center, radius, color, thickness, rotation, join, jointRadius)` / `DrawTriangle(center, radius, fillColor, borderColor = null, thickness, rotation, join, jointRadius)` | An equilateral triangle inscribed in a circle of `radius` — shorthand for `FillPoly`/`BorderPoly`/`DrawPoly` with `sides: 3`. `rotation = 0` points along +X, same convention as `FillPoly`. |
 | `DrawTriangleFan(points, color)` | Raw triangle fan from the first point — for arbitrary fan-shaped meshes, not a "triangle" in the geometric sense. |
 | `DrawTriangleStrip(points, color)` | Raw triangle strip. |
 
@@ -199,7 +200,7 @@ A triangle/square/hexagon/etc. defined by a center, side count, and radius. `rot
 | `DrawPoly(center, sides, radius, fillColor, borderColor = null, thickness, rotation, join, jointRadius)` | Fill + border — omit `borderColor` for the same color on both. |
 | `FillPolyRounded(center, sides, radius, cornerRadius, color, rotation)` | Solid N-gon with rounded corners — the same capability `BorderPoly`/`DrawPoly`'s `join: LineJoin.Round` already gave the outline, exposed under a discoverable standalone name matching Triangle/Rectangle/Polygon. |
 | `BorderPolyRounded(center, sides, radius, cornerRadius, color, thickness, rotation)` | Rounded-corner outline only. |
-| `DrawPolyRounded(center, sides, radius, cornerRadius, [fillColor, borderColor,] thickness, rotation)` | Rounded-corner fill + border. |
+| `DrawPolyRounded(center, sides, radius, cornerRadius, fillColor, borderColor = null, thickness, rotation)` | Rounded-corner fill + border — omit `borderColor` for the same color on both. |
 | `FillPolyGradient(center, sides, radius, inner, outer, rotation, innerOffset, outerOffset)` | Radial gradient. |
 | `FillPolyGradientRounded(center, sides, radius, cornerRadius, inner, outer, rotation)` | Same gradient, rounded corners (no `innerOffset`/`outerOffset` here — matches `FillTriangleGradientRounded`'s simpler rounded-corner variant). |
 | `DrawPolyGradient(center, sides, radius, innerFill, outerFill, borderColor, thickness, rotation, innerOffset, outerOffset)` | Radial gradient + border. |
@@ -218,7 +219,7 @@ Takes a `ReadOnlySpan<Vector2>` of points instead of center/sides/radius — dra
 | `DrawPolygon(points, fillColor, borderColor = null, thickness, join, jointRadius)` | Fill + border — omit `borderColor` for the same color on both. |
 | `FillPolygonRounded(points, cornerRadius, color)` | Solid fill with every corner rounded. |
 | `BorderPolygonRounded(points, cornerRadius, color, thickness)` | Rounded-corner outline only. |
-| `DrawPolygonRounded(points, cornerRadius, [fillColor, borderColor,] thickness)` | Rounded-corner fill + border. |
+| `DrawPolygonRounded(points, cornerRadius, fillColor, borderColor = null, thickness)` | Rounded-corner fill + border — omit `borderColor` for the same color on both. |
 | `FillPolygonGradient(points, from, to)` | `points[0]` → `from`, every other point → `to`. |
 | `FillPolygonGradientRounded(points, cornerRadius, from, to)` | Same gradient, rounded corners. |
 | `DrawPolygonGradient(points, from, to, borderColor, thickness, join, jointRadius)` | Gradient fill (inset by `thickness`) + border. |

@@ -819,6 +819,18 @@ namespace MonoPrimitives.Primitives2D
             if (thickness > 0f) BorderTriangle(v1, v2, v3, border, thickness, join: join, jointRadius: jointRadius);
         }
 
+        /// <summary>Draws a filled equilateral triangle centered at <paramref name="center"/>, inscribed in a circle of <paramref name="radius"/> — shorthand for <see cref="FillPoly"/> with <c>sides: 3</c>.</summary>
+        public void FillTriangle(Vector2 center, float radius, Color color, float rotation = 0f)
+            => FillPoly(center, 3, radius, color, rotation);
+
+        /// <summary>Draws an equilateral triangle's border only, growing inward — shorthand for <see cref="BorderPoly"/> with <c>sides: 3</c>.</summary>
+        public void BorderTriangle(Vector2 center, float radius, Color color, float thickness = 1f, float rotation = 0f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
+            => BorderPoly(center, 3, radius, color, thickness, rotation, join, jointRadius);
+
+        /// <summary>Draws an equilateral triangle with fill and border, border growing inward. Omit <paramref name="borderColor"/> for the same color on both — shorthand for <see cref="DrawPoly"/> with <c>sides: 3</c>.</summary>
+        public void DrawTriangle(Vector2 center, float radius, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
+            => DrawPoly(center, 3, radius, fillColor, borderColor, thickness, rotation, join, jointRadius);
+
         /// <summary>
         /// Draws a filled triangle with each corner rounded by <paramref name="cornerRadius"/>
         /// world units, no border pass at all — the standalone counterpart to calling

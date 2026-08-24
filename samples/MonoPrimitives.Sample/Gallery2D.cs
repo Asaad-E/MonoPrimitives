@@ -123,6 +123,10 @@ internal static class Gallery2D
         cells.Add(new Cell("Draw gradient", (b, p) => { var (v1, v2, v3) = Tri(p); b.DrawTriangleGradient(v1, v2, v3, GradientFrom2, GradientTo2, BorderColor, 4f); }));
         cells.Add(new Cell("Draw gradient rounded", (b, p) => { var (v1, v2, v3) = Tri(p); b.DrawTriangleGradientRounded(v1, v2, v3, 20f, GradientFrom2, GradientTo2, BorderColor, 4f); }));
 
+        cells.Add(new Cell("Equilateral fill", (b, p) => b.FillTriangle(p, 55f, FillColor)));
+        cells.Add(new Cell("Equilateral border", (b, p) => b.BorderTriangle(p, 55f, BorderColor, 4f)));
+        cells.Add(new Cell("Equilateral draw", (b, p) => b.DrawTriangle(p, 55f, FillColor, BorderColor, 4f)));
+
         return cells;
     }
 
