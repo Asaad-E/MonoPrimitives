@@ -65,5 +65,36 @@ namespace MonoPrimitives
                 return dt > 0f ? 1f / dt : 0f;
             }
         }
+
+        /// <summary>
+        /// Average frame time in milliseconds over the window: total time divided by total
+        /// frames — the same underlying average <see cref="AverageFps"/> is built on, just
+        /// read before the reciprocal instead of after. Fps compresses the low end of the
+        /// scale (60→59 fps is a 0.03 ms difference, 15→14 fps is a 4.8 ms one for the same
+        /// "1 fps") and expands the high end, so a fixed budget — "this frame must fit in
+        /// 16.6 ms" — is easier to read and compare directly against here than by eyeballing
+        /// fps deltas. 0 before the first <see cref="Update(GameTime)"/> call.
+        /// </summary>
+        public float AverageFrameTimeMs
+        {
+            get
+            {
+                if (_filled == 0) return 0f;
+                float sum = 0f;
+                for (int i = 0; i < _filled; i++) sum += _frameTimes[i];
+                return sum / _filled * 1000f;
+            }
+        }
+
+        /// <summary>Frame time in milliseconds for the single most recent frame alone — noisier than <see cref="AverageFrameTimeMs"/>, useful for spotting an isolated spike/stall.</summary>
+        public float CurrentFrameTimeMs
+        {
+            get
+            {
+                if (_filled == 0) return 0f;
+                int lastIndex = (_index - 1 + _frameTimes.Length) % _frameTimes.Length;
+                return _frameTimes[lastIndex] * 1000f;
+            }
+        }
     }
 }

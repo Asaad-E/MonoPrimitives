@@ -28,8 +28,10 @@ protected override void Draw(GameTime gameTime)
 | `Update(GameTime)` / `Update(float deltaSeconds)` | Records one frame's elapsed time. Call exactly once per frame. |
 | `AverageFps` | Frames ÷ total time over the window — a *true* windowed average, not an average of each frame's own instantaneous FPS (which would over-weight a few unusually fast frames instead of reflecting how long the window actually took). `0` before the first `Update`. |
 | `CurrentFps` | FPS implied by the single most recent frame alone — noisier than `AverageFps`, useful for spotting an isolated spike or stall. |
+| `AverageFrameTimeMs` | Total time ÷ frames over the window, in milliseconds — the same average `AverageFps` is built on, read before the reciprocal. Fps compresses the low end and expands the high end of the scale (60→59 fps is 0.03 ms, 15→14 fps is 4.8 ms, same "1 fps"), so this is the more precise number for comparing against a fixed frame budget (e.g. 16.6 ms for 60 fps). `0` before the first `Update`. |
+| `CurrentFrameTimeMs` | Milliseconds for the single most recent frame alone — noisier than `AverageFrameTimeMs`, useful for spotting an isolated spike or stall. |
 
-Before the window fills up (fewer than `SampleCount` calls to `Update` so far), `AverageFps` is computed only from the samples actually recorded — it isn't diluted by empty slots.
+Before the window fills up (fewer than `SampleCount` calls to `Update` so far), the averages are computed only from the samples actually recorded — they aren't diluted by empty slots.
 
 ## See also
 
