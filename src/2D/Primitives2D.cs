@@ -373,6 +373,32 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>
+        /// Clears the window for a letterboxed/pillarboxed <paramref name="adapter"/> — the bars in
+        /// <paramref name="barColor"/>, the boxed "inside" in <paramref name="backgroundColor"/>.
+        /// Must be called with the batch NOT already begun (it manages its own internal
+        /// <see cref="Begin()"/>/<see cref="End"/>), before your own scene's <c>Begin</c> for the frame.
+        /// </summary>
+        /// <param name="adapter">The letterboxing adapter (typically a <see cref="BoxingViewportAdapter2D"/>) whose boxed viewport this clears around.</param>
+        /// <param name="barColor">Color of the letterbox/pillarbox bars. Defaults to <see cref="Color.Black"/>.</param>
+        /// <param name="backgroundColor">Color of the boxed "inside" area, drawn under your own scene. Defaults to <paramref name="barColor"/> (a plain single-color clear) when omitted.</param>
+        public void ClearLetterboxed(ViewportAdapter2D adapter, Color? barColor = null, Color? backgroundColor = null)
+        {
+            Color bars = barColor ?? Color.Black;
+            Color background = backgroundColor ?? bars;
+
+            // GraphicsDevice.Clear() ignores a narrowed viewport and always clears the whole
+            // render target -- clear the bars first, full window, before narrowing (see
+            // ViewportAdapter2D.Apply's doc comment).
+            adapter.Reset();
+            _device.Clear(bars);
+
+            adapter.Apply();
+            Begin();
+            FillRectangle(0, 0, _device.Viewport.Width, _device.Viewport.Height, background);
+            End();
+        }
+
+        /// <summary>
         /// Submits everything accumulated so far without ending the batch.
         /// Called automatically when buffers fill up.
         /// </summary>

@@ -4,10 +4,9 @@ using MonoPrimitives.Primitives2D;
 
 namespace MonoPrimitives.Template
 {
-    /// <summary>Everything a draw call typically needs, bundled so it's one parameter instead of four.</summary>
     public readonly record struct RenderContext(
         GraphicsDevice GraphicsDevice,
-        GraphicsDeviceManager GraphicsDeviceManager,
+        GraphicsDeviceManager Graphics,
         SpriteBatch SpriteBatch,
-        Primitive2DBatch Primitive2DBatch);
+        Primitive2DBatch Batch2D);
 }

@@ -239,6 +239,8 @@ batch3d.Begin(camera3d); // calls Apply() again internally -- same rect, harmles
 batch3d.End();
 ```
 
+For a 2D-only scene (no 3D layer sharing the window), `Primitive2DBatch.ClearLetterboxed(adapter, barColor, backgroundColor)` does the above in one call — see `Guide/Primitive2DBatch_Guide.md`.
+
 ## See also
 
 - [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) — everything `Camera2D.GetTransformMatrix()` feeds into.

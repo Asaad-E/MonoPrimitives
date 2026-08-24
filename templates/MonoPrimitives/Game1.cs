@@ -13,7 +13,7 @@ namespace MonoPrimitives.Template
         private const int TargetFps = 60;
 
         private readonly GraphicsDeviceManager _graphics;
-        private BoxingViewportAdapter2D _viewportAdapter;
+        private ViewportAdapter2D _viewportAdapter;
         private Camera2D _camera;
         private PrimitiveInput _input;
         private RenderContext _render;
@@ -26,6 +26,13 @@ namespace MonoPrimitives.Template
                 PreferredBackBufferHeight = 720,
                 PreferMultiSampling = true,
             };
+            _graphics.PreparingDeviceSettings += (sender, e) =>
+            {
+                e.GraphicsDeviceInformation.PresentationParameters.MultiSampleCount = 4;
+            };
+
+            Window.AllowUserResizing = true;
+
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
@@ -35,12 +42,8 @@ namespace MonoPrimitives.Template
 
         protected override void Initialize()
         {
-            GraphicsDevice.PresentationParameters.MultiSampleCount = 4;
-            _graphics.ApplyChanges();
 
             _viewportAdapter = new BoxingViewportAdapter2D(GraphicsDevice, VirtualWidth, VirtualHeight);
-            // Offset = Zero: without it, Camera2D's default Offset tracks the viewport's virtual
-            // center, so world (0,0) renders at screen-center instead of top-left.
             _camera = new Camera2D(_viewportAdapter) { Offset = Vector2.Zero };
             _input = new PrimitiveInput();
 
@@ -68,16 +71,14 @@ namespace MonoPrimitives.Template
 
         protected override void Draw(GameTime gameTime)
         {
-            _viewportAdapter.Reset();
-            _render.GraphicsDevice.Clear(Palette.Background);
+            _render.Batch2D.ClearLetterboxed(_viewportAdapter, backgroundColor: Palette.Background);
 
-            var batch = _render.Primitive2DBatch;
-            batch.Begin(_camera.GetTransformMatrix());
+            _render.Batch2D.Begin(_camera.GetTransformMatrix());
 
             var (inner, outer) = Palette.GradientPairs[0];
-            batch.FillCircleGradient(new Vector2(VirtualWidth / 2f, VirtualHeight / 2f), 150f, inner, outer);
+            _render.Batch2D.FillCircleGradient(new Vector2(VirtualWidth / 2f, VirtualHeight / 2f), 150f, inner, outer);
 
-            batch.End();
+            _render.Batch2D.End();
 
             base.Draw(gameTime);
         }
