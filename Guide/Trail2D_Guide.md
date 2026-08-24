@@ -73,7 +73,7 @@ protected override void Draw(GameTime gameTime)
 | `this[indexFromOldest]` | Same as `Trail2D`, returning a `Vector3`. |
 | `Draw(batch, color, thickness = -1f, fadeToAlpha = 0f)` | Draws `Count - 1` `DrawLine3D` segments, same fade behavior as `Trail2D.Draw`. `thickness <= 0` (the default, `-1f`) falls back to `Primitive3DBatch.DefaultLineThickness` — the same sentinel convention as this library's other `Border*`/`Draw*` methods, unlike `Trail2D.Draw`'s fixed `2f` default. |
 
-`DrawLineStrip3D`/`Trail3D.Draw` share a known limitation: at non-trivial `thickness`, a sharp bend between two segments can show a visible gap or overlap, since each segment is drawn as its own independent camera-facing quad rather than a single joined strip — see [`Design/ROADMAP.md`](../Design/ROADMAP.md). Fine for thin-to-moderate trails; not a shape to rely on for a very thick, sharp-cornered ribbon.
+`DrawLineStrip3D`/`Trail3D.Draw` draw a single joined camera-facing strip — adjacent segments share one miter-joined offset at each interior vertex, so a sharp bend doesn't show a gap or overlap even at non-trivial `thickness`. See [`Design/DECISIONS.md`](../Design/DECISIONS.md) for how this was verified.
 
 ## See also
 

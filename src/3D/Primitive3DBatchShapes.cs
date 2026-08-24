@@ -57,12 +57,132 @@ namespace MonoPrimitives.Primitives3D
             PushLine(startPos, endPos, color);
         }
 
-        /// <summary>Draws a polyline through the supplied points.</summary>
+        /// <summary>
+        /// Draws a polyline through the supplied points as a single joined camera-facing strip.
+        /// Each interior vertex shares one offset direction (miter-joined, clamped against
+        /// spiking on a very sharp bend) between its two adjacent segments, instead of each
+        /// segment computing an independent one from its own midpoint — a bend no longer shows a
+        /// visible gap/overlap the way calling <see cref="DrawLine3D(Vector3,Vector3,float,Color)"/>
+        /// once per segment would.
+        /// </summary>
         public void DrawLineStrip3D(ReadOnlySpan<Vector3> points, Color color)
+            => DrawLineStrip3D(points, color, DefaultLineThickness);
+
+        /// <inheritdoc cref="DrawLineStrip3D(ReadOnlySpan{Vector3},Color)"/>
+        /// <param name="thickness">Thickness in pixels when <see cref="SmoothLines"/> is enabled, otherwise in world units. <c>&lt;= 0</c> uses <see cref="DefaultLineThickness"/>.</param>
+        public void DrawLineStrip3D(ReadOnlySpan<Vector3> points, Color color, float thickness)
         {
             ThrowIfNotBegun();
-            for (int i = 1; i < points.Length; i++)
-                DrawLine3D(points[i - 1], points[i], DefaultLineThickness, color);
+            int n = points.Length;
+            if (n < 2) return;
+            if (thickness <= 0f) thickness = DefaultLineThickness;
+
+            Span<Vector3> offsets = n <= MaxStackAllocVertices3D ? stackalloc Vector3[n] : new Vector3[n];
+            ComputeLineStripOffsets(points, thickness, offsets);
+
+            for (int i = 0; i < n - 1; i++)
+                PushQuad(points[i] - offsets[i], points[i + 1] - offsets[i + 1], points[i + 1] + offsets[i + 1], points[i] + offsets[i], color);
+        }
+
+        /// <summary>
+        /// Same as <see cref="DrawLineStrip3D(ReadOnlySpan{Vector3},Color,float)"/>, but each
+        /// segment gets its own flat color from <paramref name="segmentColors"/> (length
+        /// <c>points.Length - 1</c>) — e.g. <see cref="Trail3D"/>'s own fade-along-length. Corner
+        /// positions at a shared interior vertex are still the one joined offset either of its
+        /// two segments uses, so two differently-colored segments still meet without a gap.
+        /// </summary>
+        /// <param name="thickness"><c>&lt;= 0</c> uses <see cref="DefaultLineThickness"/>.</param>
+        public void DrawLineStrip3D(ReadOnlySpan<Vector3> points, ReadOnlySpan<Color> segmentColors, float thickness = -1f)
+        {
+            ThrowIfNotBegun();
+            int n = points.Length;
+            if (n < 2) return;
+            if (segmentColors.Length != n - 1)
+                throw new ArgumentException($"Expected {n - 1} colors (one per segment), got {segmentColors.Length}.", nameof(segmentColors));
+            if (thickness <= 0f) thickness = DefaultLineThickness;
+
+            Span<Vector3> offsets = n <= MaxStackAllocVertices3D ? stackalloc Vector3[n] : new Vector3[n];
+            ComputeLineStripOffsets(points, thickness, offsets);
+
+            for (int i = 0; i < n - 1; i++)
+                PushQuad(points[i] - offsets[i], points[i + 1] - offsets[i + 1], points[i + 1] + offsets[i + 1], points[i] + offsets[i], segmentColors[i]);
+        }
+
+        /// <summary>
+        /// Cap on stack-allocating the per-vertex offset scratch buffer in <see cref="ComputeLineStripOffsets"/>
+        /// before falling back to the heap — same "no unbounded stackalloc" spirit as 2D's own
+        /// <c>MaxStackAllocElements</c>, sized for <see cref="Vector3"/> instead of <see cref="Vector2"/>.
+        /// </summary>
+        private const int MaxStackAllocVertices3D = 2048;
+
+        /// <summary>
+        /// Fills <paramref name="offsets"/> (same length as <paramref name="points"/>) with the
+        /// per-vertex camera-facing perpendicular offset for a joined line strip: <c>points[i] ±
+        /// offsets[i]</c> are the strip's two edges at that vertex, shared by both segments that
+        /// touch it. An endpoint uses its one adjacent segment's own direction; an interior vertex
+        /// averages (miters) its incoming and outgoing segments' directions, scaled up to keep the
+        /// strip's visual width constant through the bend (clamped so a near-180° reversal doesn't
+        /// spike toward infinity) — the same shape as 2D's <c>ComputeMiterOffset</c>, one dimension
+        /// higher and re-projected onto whichever plane currently faces the camera at each vertex.
+        /// </summary>
+        private void ComputeLineStripOffsets(ReadOnlySpan<Vector3> points, float thickness, Span<Vector3> offsets)
+        {
+            int n = points.Length;
+            for (int i = 0; i < n; i++)
+            {
+                Vector3 toCamera = _cameraPosition - points[i];
+                Vector3 side;
+
+                if (i == 0)
+                {
+                    Vector3 dirOut = SafeNormalize(points[1] - points[0], Vector3.Zero);
+                    side = CameraFacingSide(dirOut, toCamera);
+                }
+                else if (i == n - 1)
+                {
+                    Vector3 dirIn = SafeNormalize(points[i] - points[i - 1], Vector3.Zero);
+                    side = CameraFacingSide(dirIn, toCamera);
+                }
+                else
+                {
+                    Vector3 dirIn = SafeNormalize(points[i] - points[i - 1], Vector3.Zero);
+                    Vector3 dirOut = SafeNormalize(points[i + 1] - points[i], Vector3.Zero);
+                    Vector3 sideIn = CameraFacingSide(dirIn, toCamera);
+                    Vector3 sideOut = CameraFacingSide(dirOut, toCamera);
+
+                    Vector3 miter = sideIn + sideOut;
+                    float miterLenSq = miter.LengthSquared();
+                    if (miterLenSq < 1e-6f)
+                    {
+                        side = sideOut; // near-180 reversal: incoming/outgoing sides cancel, no sensible miter direction
+                    }
+                    else
+                    {
+                        miter = Vector3.Normalize(miter);
+                        float cosHalfAngle = Vector3.Dot(miter, sideIn);
+                        side = miter * (1f / MathF.Max(cosHalfAngle, 0.2f));
+                    }
+                }
+
+                float halfWidth = SmoothLines
+                    ? thickness * 0.5f * MathF.Max(toCamera.Length(), 1e-4f) * _pixelScale
+                    : thickness * 0.5f;
+                offsets[i] = side * halfWidth;
+            }
+        }
+
+        /// <summary>A unit vector perpendicular to <paramref name="dir"/>, in the plane facing <paramref name="toCamera"/> — falls back to an arbitrary basis vector when <paramref name="dir"/> points straight at/away from the camera.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector3 CameraFacingSide(Vector3 dir, Vector3 toCamera)
+        {
+            Vector3 side = Vector3.Cross(dir, toCamera);
+            float sideLenSq = side.LengthSquared();
+            if (sideLenSq < 1e-12f)
+            {
+                BuildBasis(dir, out side, out _);
+                return side;
+            }
+            return side * (1f / MathF.Sqrt(sideLenSq));
         }
 
         /// <summary>Draws a point in 3D space as a short line, sized from <see cref="DefaultPointSize"/>.</summary>

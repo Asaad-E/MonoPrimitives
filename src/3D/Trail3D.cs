@@ -15,6 +15,11 @@ namespace MonoPrimitives.Primitives3D
     public sealed class Trail3D
     {
         private readonly Vector3[] _points;
+        // Reused every Draw() call, sized once -- no per-frame allocation. _scratchPoints exists
+        // because DrawLineStrip3D needs a CONTIGUOUS oldest-to-newest span, but _points is a ring
+        // buffer (wraps around _newestIndex), so the logical order isn't contiguous in general.
+        private readonly Vector3[] _scratchPoints;
+        private readonly Color[] _scratchSegmentColors;
         private int _newestIndex = -1;
 
         /// <summary>Maximum number of points this trail holds — its "length" in frames of history, not world units.</summary>
@@ -29,6 +34,8 @@ namespace MonoPrimitives.Primitives3D
             if (capacity < 2)
                 throw new ArgumentOutOfRangeException(nameof(capacity), "A trail needs at least 2 points to draw a line.");
             _points = new Vector3[capacity];
+            _scratchPoints = new Vector3[capacity];
+            _scratchSegmentColors = new Color[capacity - 1];
         }
 
         /// <summary>Appends the current position, evicting the oldest point once <see cref="Capacity"/> is reached.</summary>
@@ -55,27 +62,30 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>
-        /// Draws the trail as <see cref="Count"/>-1 segments, fading from <paramref name="color"/>
-        /// at the newest point down to <paramref name="color"/> scaled by <paramref name="fadeToAlpha"/>
-        /// at the oldest — the default (0) fades all the way to invisible. Cost is proportional to
-        /// <see cref="Count"/> (one <c>DrawLine3D</c> call per segment, since a single-color
-        /// <c>DrawLineStrip3D</c> can't fade along its own length) — keep <see cref="Capacity"/> no
-        /// bigger than the trail actually needs to look right, especially with many trails on screen.
+        /// Draws the trail as one joined camera-facing strip (<see cref="Primitive3DBatch.DrawLineStrip3D(ReadOnlySpan{Vector3},ReadOnlySpan{Color},float)"/>),
+        /// fading from <paramref name="color"/> at the newest point down to <paramref name="color"/>
+        /// scaled by <paramref name="fadeToAlpha"/> at the oldest — the default (0) fades all the
+        /// way to invisible. Shares one offset direction between adjacent segments at each interior
+        /// point, so a sharp bend in the trail no longer shows the gap/overlap a naive per-segment
+        /// draw would.
         /// </summary>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="Primitive3DBatch.DefaultLineThickness"/> — the same sentinel convention as the rest of this library's <c>Border*</c>/<c>Draw*</c> methods.</param>
         public void Draw(Primitive3DBatch batch, Color color, float thickness = -1f, float fadeToAlpha = 0f)
         {
             if (Count < 2) return;
-            if (thickness <= 0f) thickness = batch.DefaultLineThickness;
             fadeToAlpha = Math.Clamp(fadeToAlpha, 0f, 1f);
+
+            for (int i = 0; i < Count; i++) _scratchPoints[i] = this[i];
+
             float denom = Count - 1;
             for (int i = 1; i < Count; i++)
             {
                 float t = (i - 0.5f) / denom; // segment midpoint's position along the trail, 0=oldest..1=newest
                 float alphaFrac = fadeToAlpha + (1f - fadeToAlpha) * t;
-                Color segColor = new(color.R, color.G, color.B, (byte)(color.A * alphaFrac));
-                batch.DrawLine3D(this[i - 1], this[i], thickness, segColor);
+                _scratchSegmentColors[i - 1] = new Color(color.R, color.G, color.B, (byte)(color.A * alphaFrac));
             }
+
+            batch.DrawLineStrip3D(_scratchPoints.AsSpan(0, Count), _scratchSegmentColors.AsSpan(0, Count - 1), thickness);
         }
     }
 }

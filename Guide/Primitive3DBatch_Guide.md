@@ -55,7 +55,8 @@ Construct one `Primitive3DBatch` per `GraphicsDevice` and keep it — its intern
 |---|---|
 | `DrawLine3D(start, end, color)` / `(start, end, thickness, color)` | A camera-facing quad, so it reads as a real 3D line with thickness from any angle. `thickness` is in pixels when `SmoothLines` (default `true`) is on, world units otherwise. |
 | `DrawLine3DFast(start, end, color)` | A raw GPU line-list segment — always 1px, no camera facing, the cheapest option for large numbers of lines. |
-| `DrawLineStrip3D(points, color)` | A connected polyline through any number of points. Each segment is its own independent camera-facing quad, so at non-trivial thickness a sharp bend can show a visible gap or overlap — fine for thin-to-moderate lines, not a shape to rely on for a thick, sharp-cornered ribbon (see [`Design/ROADMAP.md`](../Design/ROADMAP.md)). |
+| `DrawLineStrip3D(points, color, thickness?)` | A connected polyline through any number of points, drawn as one joined camera-facing strip — adjacent segments share a miter-joined offset at each interior vertex, so a sharp bend doesn't gap or overlap even at non-trivial thickness. |
+| `DrawLineStrip3D(points, segmentColors, thickness?)` | Same, with an independent flat color per segment (`segmentColors.Length == points.Length - 1`) — e.g. a fade along the strip's length. Shared corner positions mean two differently-colored segments still meet cleanly. `Trail3D.Draw` is built on this. |
 | `DrawLine3DDashed(start, end, dashLength, gapLength, color)` / `(..., thickness, color)` | A dashed line. |
 | `DrawPoint3D(position, color)` / `(position, size, color)` | A point drawn as a short line along local X. `size` defaults to `DefaultPointSize`. |
 | `DrawPoint3DCross(position, color)` / `(position, size, color)` | A point drawn as a 3-axis cross — more readable when the camera angle is unknown. `size` defaults to `DefaultPointSize`. |
