@@ -2078,10 +2078,8 @@ namespace MonoPrimitives.Primitives2D
         /// <see cref="FillPolygon(ReadOnlySpan{Vector2},Color)"/> would draw, fading to fully
         /// transparent over <paramref name="spread"/> world units beyond its boundary. Uses
         /// <see cref="OutsetConvexPolygon"/> (via <see cref="FillOutsetGradientRing"/>) to build
-        /// the fading outer edge, which shares <see cref="InsetConvexPolygon"/>'s documented
-        /// reflex-vertex limitation (see ROADMAP.md's "Known bugs" section) — on a strongly
-        /// concave <paramref name="points"/>, the shadow's outer edge can distort at a reflex
-        /// vertex the same way a Miter-joined border can.
+        /// the fading outer edge — correct for concave (reflex-vertex) <paramref name="points"/>
+        /// too, same winding-based fix as <see cref="InsetConvexPolygon"/> (see DECISIONS.md).
         /// </summary>
         public void FillPolygonShadow(ReadOnlySpan<Vector2> points, Color color, float spread = 20f)
         {
@@ -3551,12 +3549,11 @@ namespace MonoPrimitives.Primitives2D
         private static float EdgeCross(in Vector2 p, in Vector2 a, in Vector2 b) => (a.X - p.X) * (b.Y - p.Y) - (a.Y - p.Y) * (b.X - p.X);
 
         /// <summary>
-        /// Draws an arbitrary closed polygon's border only, growing inward from its own
-        /// edges via <see cref="InsetConvexPolygon"/> — correct for a convex input; a
-        /// non-convex (reflex-vertex) input's inward direction isn't guaranteed to resolve
-        /// exactly right at every corner. See ROADMAP.md's "Known bugs" section for the exact
-        /// failure mechanism (a centroid-distance tie at some reflex vertices) and what a real
-        /// fix needs to account for — not fixed here, left as a documented limitation.
+        /// Draws an arbitrary closed polygon's border only, growing inward from its own edges via
+        /// <see cref="InsetConvexPolygon"/> — despite the name, correct for concave (reflex-vertex)
+        /// input too, since the winding-based fix (see DECISIONS.md) resolves every vertex from the
+        /// polygon's overall winding rather than per-vertex, with no convex/reflex distinction to get
+        /// wrong. Regression-covered on an L-shape in <c>tests/MonoPrimitives.Tests/PolygonInsetRegressionTests.cs</c>.
         /// For <see cref="LineJoin.Round"/>/<see cref="LineJoin.Bevel"/>, strokes the true
         /// vertices directly with an inward-only stroke instead — see
         /// <see cref="BuildRoundedOutlineGeometry"/>'s <c>inwardOnly</c> doc for why
@@ -3770,11 +3767,7 @@ namespace MonoPrimitives.Primitives2D
         /// (via <see cref="ComputeDistanceGradientColors"/>) and then mapped onto the inset
         /// geometry by nearest original vertex (<see cref="FillPolygonGradientByNearestVertex"/>),
         /// never recomputed from the inset points directly — keeps color consistent with the
-        /// un-bordered fill even when <see cref="InsetConvexPolygon"/> itself distorts a concave
-        /// polygon's shape at a reflex vertex (see ROADMAP.md's "Known bugs" section — that
-        /// distortion is a separate, NOT-yet-fixed geometry issue this color fix does not solve;
-        /// confirmed by rendering the L-shape gallery cell, where the fill's shape is still
-        /// visibly wrong at the reflex corner even with this correction in place).
+        /// un-bordered fill regardless of how the border inset shifted each vertex.
         /// </summary>
         public void DrawPolygonGradient(ReadOnlySpan<Vector2> points, Color from, Color to, Color borderColor, float thickness = 1f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
