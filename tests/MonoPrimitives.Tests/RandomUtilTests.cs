@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 using MonoPrimitives;
 
 namespace MonoPrimitives.Tests
@@ -228,6 +229,46 @@ namespace MonoPrimitives.Tests
                 if (!Throws(() => rng.NextWeightedIndex(Array.Empty<float>()))) return "empty weights did not throw";
                 if (!Throws(() => rng.NextWeightedIndex(new float[] { 0f, 0f }))) return "all-zero weights did not throw";
                 if (!Throws(() => rng.NextWeightedIndex(new float[] { 1f, -1f }))) return "a negative weight did not throw";
+                return null;
+            });
+
+            results.Check("NextItem always returns an element from the span, covers all of them, and throws on empty", () =>
+            {
+                var rng = new RandomUtil(12);
+                string[] items = { "a", "b", "c" };
+                var seen = new System.Collections.Generic.HashSet<string>();
+                for (int i = 0; i < 1000; i++)
+                {
+                    string picked = rng.NextItem<string>(items);
+                    if (Array.IndexOf(items, picked) < 0) return $"NextItem returned '{picked}', not one of the input items";
+                    seen.Add(picked);
+                }
+                if (seen.Count != 3) return $"NextItem only ever returned {seen.Count}/3 distinct items over 1000 draws (suspicious)";
+
+                bool threw = false;
+                try { rng.NextItem<string>(Array.Empty<string>()); } catch (ArgumentException) { threw = true; }
+                return threw ? null : "NextItem on an empty span did not throw";
+            });
+
+            results.Check("NextGaussianVector2/3: per-axis sample mean/stddev match the requested parameters", () =>
+            {
+                var rng = new RandomUtil(13);
+                double sumX = 0, sumY = 0, sumZ = 0, sumSqX = 0, sumSqY = 0, sumSqZ = 0;
+                for (int i = 0; i < LargeSampleCount; i++)
+                {
+                    var v2 = rng.NextGaussianVector2(new Vector2(5f, -5f), 2f);
+                    sumX += v2.X; sumSqX += (double)v2.X * v2.X;
+                    sumY += v2.Y; sumSqY += (double)v2.Y * v2.Y;
+
+                    var v3 = rng.NextGaussianVector3(new Vector3(1f, 2f, 3f), 1f);
+                    sumZ += v3.Z; sumSqZ += (double)v3.Z * v3.Z;
+                }
+                double meanX = sumX / LargeSampleCount, stdDevX = Math.Sqrt(sumSqX / LargeSampleCount - meanX * meanX);
+                double meanY = sumY / LargeSampleCount, stdDevY = Math.Sqrt(sumSqY / LargeSampleCount - meanY * meanY);
+                double meanZ = sumZ / LargeSampleCount, stdDevZ = Math.Sqrt(sumSqZ / LargeSampleCount - meanZ * meanZ);
+                if (Math.Abs(meanX - 5.0) > 0.05 || Math.Abs(stdDevX - 2.0) > 0.05) return $"Vector2.X: mean {meanX:F3} stdDev {stdDevX:F3}, expected ~5/~2";
+                if (Math.Abs(meanY - -5.0) > 0.05 || Math.Abs(stdDevY - 2.0) > 0.05) return $"Vector2.Y: mean {meanY:F3} stdDev {stdDevY:F3}, expected ~-5/~2";
+                if (Math.Abs(meanZ - 3.0) > 0.05 || Math.Abs(stdDevZ - 1.0) > 0.05) return $"Vector3.Z: mean {meanZ:F3} stdDev {stdDevZ:F3}, expected ~3/~1";
                 return null;
             });
 

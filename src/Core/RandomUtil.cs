@@ -9,20 +9,18 @@ namespace MonoPrimitives
     /// <summary>
     /// Seedable float-based random sampling across the distributions a simulation typically
     /// reaches for (uniform, Bernoulli, Gaussian, exponential, Poisson, binomial, log-normal,
-    /// plus points on/inside a unit circle or sphere) — one class instead of hand-rolling each
-    /// via <see cref="Random"/> per call site. Construct once per seed and reuse, same as
-    /// <see cref="Noise"/>.
-    ///
-    /// The instance API is not thread-safe (wraps one <see cref="Random"/> stream) — same
-    /// single-threaded assumption every other stateful class in this library makes
-    /// (<see cref="Noise"/>, <c>PrimitiveInput</c>, the cameras). Parallelizing a large
-    /// agent-based simulation should give each thread/task its own <see cref="RandomUtil"/>
-    /// instance (e.g. seeded <c>baseSeed + taskIndex</c>) rather than share one across threads —
-    /// cheaper than locking, and reproducibility across threads is impossible either way since
-    /// interleaving order isn't deterministic. If a seeded/reproducible stream isn't needed,
-    /// <see cref="Shared"/> is a static, genuinely thread-safe alternative built on
-    /// <see cref="Random.Shared"/> instead.
+    /// plus points on/inside a unit circle or sphere). Construct once per seed and reuse, same
+    /// as <see cref="Noise"/>.
     /// </summary>
+    /// <remarks>
+    /// Not thread-safe — same single-threaded assumption every other stateful class in this
+    /// library makes (<see cref="Noise"/>, <c>PrimitiveInput</c>, the cameras). Parallelizing a
+    /// large agent-based simulation should give each thread/task its own <see cref="RandomUtil"/>
+    /// instance (e.g. seeded <c>baseSeed + taskIndex</c>) rather than share one — cheaper than
+    /// locking, and reproducibility across threads is impossible either way since interleaving
+    /// order isn't deterministic. If a seeded/reproducible stream isn't needed, <see cref="Shared"/>
+    /// is a static, genuinely thread-safe alternative built on <see cref="Random.Shared"/>.
+    /// </remarks>
     public sealed class RandomUtil
     {
         private readonly Random _rng;
@@ -32,15 +30,14 @@ namespace MonoPrimitives
         // average cost of NextGaussian instead of throwing it away.
         private float? _spareGaussian;
 
-        /// <summary>
-        /// The underlying seeded <see cref="Random"/> stream every method above advances — drop
-        /// down to it directly for anything not wrapped here (<see cref="Random.NextBytes(byte[])"/>,
-        /// <see cref="Random.NextInt64()"/>, <see cref="Random.NextDouble()"/>,
-        /// <see cref="Random.Shuffle{T}(T[])"/>, or any future addition to <see cref="Random"/>
-        /// itself), while staying on the exact same deterministic sequence as every
-        /// <see cref="RandomUtil"/> call around it. Constructing a separate <c>new Random(seed)</c>
-        /// yourself would desync into its own independent stream instead of sharing this one.
-        /// </summary>
+        /// <summary>The underlying seeded <see cref="Random"/> stream every method above advances — drop down to it directly for anything not wrapped here.</summary>
+        /// <remarks>
+        /// E.g. <see cref="Random.NextBytes(byte[])"/>, <see cref="Random.NextInt64()"/>,
+        /// <see cref="Random.NextDouble()"/>, <see cref="Random.Shuffle{T}(T[])"/>. Reading this
+        /// stays on the exact same deterministic sequence as every <see cref="RandomUtil"/> call
+        /// around it; constructing a separate <c>new Random(seed)</c> yourself would desync into
+        /// its own independent stream instead.
+        /// </remarks>
         public Random UnderlyingRandom => _rng;
 
         /// <summary>Creates a generator whose stream is fully determined by <paramref name="seed"/> — same seed always gives the same sequence of samples.</summary>
@@ -71,6 +68,14 @@ namespace MonoPrimitives
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float NextLogNormal(float mean = 0f, float stdDev = 1f) => MathF.Exp(NextGaussian(mean, stdDev));
 
+        /// <summary>Gaussian-scattered point around <paramref name="mean"/> — each axis sampled independently via <see cref="NextGaussian"/>. Useful for jitter/scatter around a spawn point (denser near the center than a uniform disc).</summary>
+        public Vector2 NextGaussianVector2(Vector2 mean = default, float stdDev = 1f) =>
+            new Vector2(NextGaussian(mean.X, stdDev), NextGaussian(mean.Y, stdDev));
+
+        /// <inheritdoc cref="NextGaussianVector2(Vector2, float)"/>
+        public Vector3 NextGaussianVector3(Vector3 mean = default, float stdDev = 1f) =>
+            new Vector3(NextGaussian(mean.X, stdDev), NextGaussian(mean.Y, stdDev), NextGaussian(mean.Z, stdDev));
+
         /// <summary>Exponentially-distributed sample (mean 1/<paramref name="rate"/>) via inverse-CDF (<c>-ln(1-U)/rate</c>). <paramref name="rate"/> must be &gt; 0.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float NextExponential(float rate) => SampleExponential(_rng, rate);
@@ -96,22 +101,21 @@ namespace MonoPrimitives
         /// <inheritdoc cref="SampleWeightedIndex(Random, ReadOnlySpan{float})"/>
         public int NextWeightedIndex(ReadOnlySpan<float> weights) => SampleWeightedIndex(_rng, weights);
 
+        /// <summary>Picks a uniformly-random element from <paramref name="items"/> — a loot table, a random spawn point, a dialogue line. Throws if <paramref name="items"/> is empty.</summary>
+        public T NextItem<T>(ReadOnlySpan<T> items) => SampleItem(_rng, items);
+
         // ------------------------------------------------------------------
         // Thread-safe static counterpart
         // ------------------------------------------------------------------
 
-        /// <summary>
-        /// Static, thread-safe mirror of every instance method above, built on
-        /// <see cref="Random.Shared"/> (itself thread-safe — .NET gives each thread its own
-        /// internal stream) instead of a seeded per-instance stream. No seed constructor here:
-        /// <see cref="Random.Shared"/> has no single reproducible sequence to seed in the first
-        /// place once more than one thread touches it, so reproducibility was never on the table
-        /// for this path — use the instance API instead when a deterministic sequence matters.
-        /// <see cref="NextGaussian(float, float)"/>'s spare-value cache is <c>[ThreadStatic]</c>
-        /// here rather than a single shared field, so each thread gets its own cache slot with no
-        /// locking needed — the same strategy .NET's own <see cref="Random.Shared"/> uses
-        /// internally for its underlying stream.
-        /// </summary>
+        /// <summary>Static, thread-safe mirror of every instance method above, built on <see cref="Random.Shared"/> instead of a seeded per-instance stream.</summary>
+        /// <remarks>
+        /// No seed constructor: <see cref="Random.Shared"/> has no single reproducible sequence
+        /// once more than one thread touches it, so use the instance API instead when a
+        /// deterministic sequence matters. <see cref="NextGaussian(float, float)"/>'s spare-value
+        /// cache is <c>[ThreadStatic]</c> here (not a shared field), so each thread gets its own
+        /// cache slot with no locking needed.
+        /// </remarks>
         public static class Shared
         {
             // Named distinctly from RandomUtil's own _spareGaussian instance field (not just
@@ -138,6 +142,14 @@ namespace MonoPrimitives
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static float NextLogNormal(float mean = 0f, float stdDev = 1f) => MathF.Exp(NextGaussian(mean, stdDev));
 
+            /// <inheritdoc cref="RandomUtil.NextGaussianVector2(Vector2, float)"/>
+            public static Vector2 NextGaussianVector2(Vector2 mean = default, float stdDev = 1f) =>
+                new Vector2(NextGaussian(mean.X, stdDev), NextGaussian(mean.Y, stdDev));
+
+            /// <inheritdoc cref="RandomUtil.NextGaussianVector3(Vector3, float)"/>
+            public static Vector3 NextGaussianVector3(Vector3 mean = default, float stdDev = 1f) =>
+                new Vector3(NextGaussian(mean.X, stdDev), NextGaussian(mean.Y, stdDev), NextGaussian(mean.Z, stdDev));
+
             /// <inheritdoc cref="RandomUtil.NextExponential(float)"/>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static float NextExponential(float rate) => SampleExponential(Random.Shared, rate);
@@ -162,6 +174,9 @@ namespace MonoPrimitives
 
             /// <inheritdoc cref="RandomUtil.NextWeightedIndex(ReadOnlySpan{float})"/>
             public static int NextWeightedIndex(ReadOnlySpan<float> weights) => SampleWeightedIndex(Random.Shared, weights);
+
+            /// <inheritdoc cref="RandomUtil.NextItem{T}(ReadOnlySpan{T})"/>
+            public static T NextItem<T>(ReadOnlySpan<T> items) => SampleItem(Random.Shared, items);
         }
 
         // ------------------------------------------------------------------
@@ -350,6 +365,14 @@ namespace MonoPrimitives
                 if (pick < cumulative) return i;
             }
             return weights.Length - 1; // float-rounding safety net -- pick can land exactly at total
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static T SampleItem<T>(Random rng, ReadOnlySpan<T> items)
+        {
+            if (items.IsEmpty)
+                throw new ArgumentException("items must not be empty.", nameof(items));
+            return items[rng.Next(items.Length)];
         }
     }
 }
