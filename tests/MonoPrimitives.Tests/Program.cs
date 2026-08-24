@@ -43,6 +43,7 @@ namespace MonoPrimitives.Tests
             FrameLimiterTests.Run(this, results);
             RectangleFTests.Run(results);
             FpsCounterTests.Run(results);
+            ScreenshotUtilTests.Run(GraphicsDevice, results);
             ShapeTests2D.Run(GraphicsDevice, results);
             PolygonInsetRegressionTests.Run(GraphicsDevice, results);
             ClearLetterboxedTests.Run(GraphicsDevice, results);
