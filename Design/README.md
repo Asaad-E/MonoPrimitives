@@ -29,7 +29,7 @@ These five are kept short on purpose — current state only, no narrative. Deepe
   - **[Vector2Extensions_Guide.md](../Guide/Vector2Extensions_Guide.md)** — `Vector2Extensions`: `Angle`/`AngleTo`/`AngleToSigned`/`Rotated`/`Approach`/`ClampMagnitude`/etc., and why `Rotated` isn't named `Rotate`.
   - **[FrameLimiter_Guide.md](../Guide/FrameLimiter_Guide.md)** — `FrameLimiter`: sleep+spin frame pacing, why it disables `IsFixedTimeStep`/vsync, and the measured Sleep-jitter limitation.
   - **[FastTexture_Guide.md](../Guide/FastTexture_Guide.md)** — `FastTexture`: raw-GL texture upload with a safe `SetData` fallback, mip/RenderTarget2D caveats, and the texture-slot cache gotcha.
-- **[2D/Primitives2D_Audit_Report.md](2D/Primitives2D_Audit_Report.md)**, **[2D/Overnight_Changes_2026-08-19.md](2D/Overnight_Changes_2026-08-19.md)**, **[3D/Primitive3D_Changes.md](3D/Primitive3D_Changes.md)** — historical session logs. Archaeology only ("why does this bug fix exist") — the five docs above already capture current state. Long; don't load by default.
+- **[archive/2D/Primitives2D_Audit_Report.md](archive/2D/Primitives2D_Audit_Report.md)**, **[archive/2D/Overnight_Changes_2026-08-19.md](archive/2D/Overnight_Changes_2026-08-19.md)**, **[archive/3D/Primitive3D_Changes.md](archive/3D/Primitive3D_Changes.md)** — historical session logs. Archaeology only ("why does this bug fix exist") — the five docs above already capture current state. Long; don't load by default.
 
 ## Repo layout
 

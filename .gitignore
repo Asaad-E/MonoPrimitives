@@ -1,18 +1,17 @@
 # Build output
 bin/
 obj/
-Primitives2D/
 
 # Content pipeline build output
 Content/bin/
 Content/obj/
+.mgstats
 
 # Visual Studio / Rider / VS Code
 .vs/
 .idea/
 *.user
 *.suo
-CLAUDE.md
 
 # OS
 .DS_Store
