@@ -24,9 +24,9 @@ One NuGet package, one assembly, one DLL — 2D and 3D both come with it, no sep
 
 | Namespace | Source folder | What's there |
 |---|---|---|
-| `MonoPrimitives` | `src/Core/` | Shared: `PrimitiveInput`, `Easing`, `Palette`/`ColorUtil`, `Noise`, `RandomUtil`, `FontGlyphs5x7`, `Vector2Extensions`, `RectangleF`, `FrameLimiter`, `FastTexture`, `FpsCounter`, `ScreenshotUtil` |
+| `MonoPrimitives` | `src/Core/` | Shared: `PrimitiveInput`, `Easing`, `Palette`/`ColorUtil`, `Noise`, `RandomUtil`, `FontGlyphs5x7`, `Vector2Extensions`, `RectangleF`, `FrameLimiter`, `FastTexture`, `FpsCounter`, `ScreenshotUtil`, `ObjectPool<T>`, `RingBuffer<T>`, `Cooldown` |
 | `MonoPrimitives.Primitives2D` | `src/2D/` | `Primitive2DBatch`, `Camera2D` + `ViewportAdapter2D`, `Collision2D`, `Trail2D`, `UnitCircleLut` |
-| `MonoPrimitives.Primitives3D` | `src/3D/` | `Primitive3DBatch`, `Camera3D`, `Collision3D`, `Trail3D`, `TrigLut` |
+| `MonoPrimitives.Primitives3D` | `src/3D/` | `Primitive3DBatch`, `Camera3D`, `Collision3D`, `Trail3D`, `TrigLut`, `Vector3Extensions` |
 
 ## Quick start
 
@@ -92,7 +92,7 @@ Each class has its own guide — start with whichever one covers what you're tou
 - [`Camera3D_Guide.md`](Guide/Camera3D_Guide.md) — the 3D counterpart: 5 behaviour modes, free-fly/orbit/first-/third-person controllers.
 
 **Input**
-- [`PrimitiveInput_Guide.md`](Guide/PrimitiveInput_Guide.md) — keyboard/mouse/gamepad polling, vibration, typed text.
+- [`PrimitiveInput_Guide.md`](Guide/PrimitiveInput_Guide.md) — keyboard/mouse/gamepad polling, vibration, typed text, and raw `KeyboardState`/`MouseState`/`GamePadState` access for anything not wrapped.
 
 **Collision**
 - [`Collision2D_Guide.md`](Guide/Collision2D_Guide.md) — every 2D overlap/ray check by shape.
@@ -105,14 +105,17 @@ Each class has its own guide — start with whichever one covers what you're tou
 - [`Color_Guide.md`](Guide/Color_Guide.md) — a curated color palette plus hex/HSV conversion and adjustment.
 - [`Trail2D_Guide.md`](Guide/Trail2D_Guide.md) — a fading position-history trail, 2D and 3D.
 - [`UnitCircleLut_Guide.md`](Guide/UnitCircleLut_Guide.md) / [`TrigLut_Guide.md`](Guide/TrigLut_Guide.md) — the trig-free lookup tables the shape batches are themselves built on, for your own curved geometry.
-- [`Vector2Extensions_Guide.md`](Guide/Vector2Extensions_Guide.md) — angle/rotation/approach/clamp helpers on MonoGame's own `Vector2`.
+- [`Vector2Extensions_Guide.md`](Guide/Vector2Extensions_Guide.md) — angle/rotation/approach/clamp helpers on MonoGame's own `Vector2`, plus `Vector3Extensions` (3D) in the same guide.
 - [`RectangleF_Guide.md`](Guide/RectangleF_Guide.md) — a float-precision counterpart to MonoGame's integer-only `Rectangle`.
+- [`RingBuffer_Guide.md`](Guide/RingBuffer_Guide.md) — a generic fixed-capacity ring buffer for your own history/log/sample-window need.
+- [`ObjectPool_Guide.md`](Guide/ObjectPool_Guide.md) — a generic object pool for anything spawned/discarded often enough to want reuse over reallocation.
 
 **App helpers**
 - [`FrameLimiter_Guide.md`](Guide/FrameLimiter_Guide.md) — sleep+spin frame pacing, more precise than `IsFixedTimeStep` alone.
 - [`FastTexture_Guide.md`](Guide/FastTexture_Guide.md) — raw-GL texture upload, 2.5-2.7x faster than `SetData` for frequent updates.
 - [`FpsCounter_Guide.md`](Guide/FpsCounter_Guide.md) — rolling-average FPS measurement.
 - [`ScreenshotUtil_Guide.md`](Guide/ScreenshotUtil_Guide.md) — one-call back-buffer capture to `.png`/`.jpg`.
+- [`Cooldown_Guide.md`](Guide/Cooldown_Guide.md) — a simple countdown struct for attack cooldowns, spawn timers, input debouncing.
 
 For the project's own internals (architecture map, conventions, the reasoning behind non-obvious choices), see [`Design/README.md`](Design/README.md).
 

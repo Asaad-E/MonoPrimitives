@@ -177,6 +177,20 @@ namespace MonoPrimitives
         // Keyboard
         // ---------------------------------------------------------------------
 
+        /// <summary>
+        /// This frame's raw <see cref="KeyboardState"/>, exactly as captured by the last
+        /// <see cref="Update(GameTime)"/> — for anything this class doesn't wrap itself (e.g.
+        /// <see cref="KeyboardState.GetPressedKeys()"/> for every currently-held key at once).
+        /// Reach here instead of calling <see cref="Keyboard.GetState()"/> yourself, which would
+        /// return a second, independent snapshot that can desync from this frame's — the same
+        /// reasoning as <see cref="RandomUtil.UnderlyingRandom"/> exposing its own wrapped stream
+        /// instead of a caller constructing a second, unsynchronized one.
+        /// </summary>
+        public KeyboardState CurrentKeyboardState => _keyboard;
+
+        /// <summary>The previous frame's raw <see cref="KeyboardState"/> — for building your own custom transition check (pressed/released/held-for-N-frames) beyond what <see cref="IsKeyPressed"/>/<see cref="IsKeyReleased"/> already cover.</summary>
+        public KeyboardState PreviousKeyboardState => _prevKeyboard;
+
         /// <summary>True while <paramref name="key"/> is held.</summary>
         public bool IsKeyDown(Keys key) => _keyboard.IsKeyDown(key);
 
@@ -208,6 +222,17 @@ namespace MonoPrimitives
         // ---------------------------------------------------------------------
         // Mouse
         // ---------------------------------------------------------------------
+
+        /// <summary>
+        /// This frame's raw <see cref="MouseState"/>, exactly as captured by the last
+        /// <see cref="Update(GameTime)"/> — for anything this class doesn't wrap itself. Reach
+        /// here instead of calling <see cref="Mouse.GetState()"/> yourself, which would return a
+        /// second, independent snapshot that can desync from this frame's.
+        /// </summary>
+        public MouseState CurrentMouseState => _mouse;
+
+        /// <summary>The previous frame's raw <see cref="MouseState"/> — for building your own custom transition/delta check beyond what this class already covers.</summary>
+        public MouseState PreviousMouseState => _prevMouse;
 
         /// <summary>Cursor position in screen pixels, origin top-left.</summary>
         public Vector2 MousePosition => new(_mouse.X, _mouse.Y);
@@ -303,6 +328,19 @@ namespace MonoPrimitives
         // ---------------------------------------------------------------------
         // Gamepad (player index 0-3)
         // ---------------------------------------------------------------------
+
+        /// <summary>
+        /// <paramref name="player"/>'s raw <see cref="GamePadState"/> for this frame, exactly as
+        /// captured by the last <see cref="Update(GameTime)"/> — for anything this class doesn't
+        /// wrap itself (e.g. <see cref="GamePadState.Buttons"/>'s packed flags, or a button this
+        /// class has no named query for). Reach here instead of calling
+        /// <see cref="GamePad.GetState(PlayerIndex)"/> yourself, which would return a second,
+        /// independent snapshot that can desync from this frame's.
+        /// </summary>
+        public GamePadState GetCurrentGamePadState(int player = 0) => _gamePads[player];
+
+        /// <summary><paramref name="player"/>'s previous-frame raw <see cref="GamePadState"/> — for building your own custom transition check beyond what this class already covers.</summary>
+        public GamePadState GetPreviousGamePadState(int player = 0) => _prevGamePads[player];
 
         /// <summary>True if a gamepad is plugged in at <paramref name="player"/>'s slot.</summary>
         public bool IsConnected(int player = 0) => _gamePads[player].IsConnected;

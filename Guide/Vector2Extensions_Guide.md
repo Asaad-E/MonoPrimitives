@@ -1,6 +1,6 @@
-# Vector2Extensions — Guide
+# Vector2Extensions / Vector3Extensions — Guide
 
-`Vector2Extensions` (namespace `MonoPrimitives`, file [`src/Core/Vector2Extensions.cs`](../src/Core/Vector2Extensions.cs)) is a set of extension methods on MonoGame's own `Vector2` — everyday 2D vector math it doesn't provide itself. They show up on any `Vector2` once `using MonoPrimitives;` is in scope; none of this is a native MonoGame member.
+`Vector2Extensions` (namespace `MonoPrimitives`, file [`src/Core/Vector2Extensions.cs`](../src/Core/Vector2Extensions.cs)) is a set of extension methods on MonoGame's own `Vector2` — everyday 2D vector math it doesn't provide itself. They show up on any `Vector2` once `using MonoPrimitives;` is in scope; none of this is a native MonoGame member. Its 3D counterpart, `Vector3Extensions`, is covered in its own section near the bottom of this guide.
 
 ## Quick start
 
@@ -32,7 +32,35 @@ position = position.Approach(target, speed * dt); // move toward target, landing
 
 MonoGame's own `Vector2` already has instance methods `Rotate(float)`/`RotateAround(Vector2, float)` — both **mutating** (`void`, in place). An extension method named `Rotate` would be silently unreachable: a same-named instance method always wins over an extension method in C#, so `v.Rotate(angle)` would just call MonoGame's own mutating version, not this one — no compile error, no warning, just the wrong behavior. Named `Rotated` instead (Godot's own convention for the same "give me a rotated copy" shape) to sidestep the collision entirely.
 
+---
+
+## 3D: Vector3Extensions
+
+`Vector3Extensions` (namespace `MonoPrimitives.Primitives3D`, file [`src/3D/Vector3Extensions.cs`](../src/3D/Vector3Extensions.cs)) is the 3D counterpart — everyday `Vector3` math XNA doesn't provide itself. Lives in `MonoPrimitives.Primitives3D` rather than alongside `Vector2Extensions` in `Core/`, since — unlike `Vector2`, which both halves of this library use for screen-space positions — nothing in this library's 2D half ever touches a `Vector3`.
+
+```csharp
+using MonoPrimitives.Primitives3D;
+
+Vector3 direction = position.DirectionTo(target);       // normalized, safe if the points coincide
+position = position.Approach(target, speed * dt);        // move toward target, landing exactly on it
+Vector3 clamped = velocity.ClampMagnitude(maxSpeed);      // cap length, keep direction
+```
+
+| Member | What it does |
+|---|---|
+| `DirectionTo(other)` | Normalized direction from `this` to `other`. Returns `Vector3.Zero` if the two points coincide, instead of `NaN`. |
+| `SafeNormalize(fallback = default)` | Like `Vector3.Normalize()`, but returns `fallback` (default `Vector3.Zero`) instead of `NaN` for a zero-length vector. |
+| `Approach(target, maxDistance)` | Moves toward `target` by at most `maxDistance`, landing exactly on it instead of overshooting — Godot's `move_toward`/Unity's `Vector3.MoveTowards`. Negative `maxDistance` moves away from `target` instead. |
+| `ClampMagnitude(maxLength)` | Shrinks a vector to at most `maxLength`, preserving direction — a no-op if it's already shorter. |
+
+**No `float` overload of `Approach` here** — reuse `MonoPrimitives.Vector2Extensions`'s own `Approach(float, float, float)` directly (`using MonoPrimitives;`); it's already dimension-agnostic (plain 1D scalar math, nothing 2D-specific about it), and duplicating it in this namespace too would make any call site with both namespaces in scope ambiguous (`CS0121`) instead of picking one.
+
+**No `Reflect`** — MonoGame's own `Vector3.Reflect(vector, normal)` already exists natively (confirmed by inspecting the referenced assembly, not assumed), so it isn't repeated here. Same for `Clamp`/`Lerp`/`SmoothStep` and friends.
+
+**No `Angle()`/`Rotated()` equivalent** — a 2D vector has one canonical "heading" (its angle from +X); a 3D vector doesn't, since "the" angle depends on which plane you're measuring it in. Nothing here papers over that with an arbitrary default axis; build the specific angle/rotation your own scene needs from `Vector3.Dot`/`Cross`/`Quaternion.CreateFromAxisAngle` directly.
+
 ## See also
 
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — how the `Rotate`/`Rotated` naming collision was found (a numeric test caught a `void` where a `Vector2` was expected) and the `atan2` branch-cut behavior at `Angle(-X)`.
+- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — how the `Rotate`/`Rotated` naming collision was found (a numeric test caught a `void` where a `Vector2` was expected), the `atan2` branch-cut behavior at `Angle(-X)`, and why `Vector3Extensions` stays deliberately smaller than `Vector2Extensions`.
 - [`Guide/Camera2D_Guide.md`](Camera2D_Guide.md) / [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) — `rotation` parameters elsewhere in the library use the same radians/counter-clockwise convention as `Rotated`/`AngleToSigned`.
+- [`Guide/Camera3D_Guide.md`](Camera3D_Guide.md) / [`Guide/Primitive3DBatch_Guide.md`](Primitive3DBatch_Guide.md) — where a `Vector3` built with these helpers usually ends up.

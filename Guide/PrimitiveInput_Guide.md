@@ -29,6 +29,7 @@ Call `Update` exactly once per frame, before reading anything else — every `Is
 
 | Method | What it does |
 |---|---|
+| `CurrentKeyboardState` / `PreviousKeyboardState` | This/last frame's raw `KeyboardState`, exactly as captured by `Update` — for anything this class doesn't wrap itself (e.g. `KeyboardState.GetPressedKeys()` for every currently-held key at once), or building your own custom transition check. See "Raw state" below for why this beats calling `Keyboard.GetState()` yourself. |
 | `IsKeyDown(key)` / `IsKeyUp(key)` | Held / not held. |
 | `IsKeyPressed(key)` / `IsKeyReleased(key)` | True for exactly one frame — the up→down or down→up transition. |
 | `IsAnyKeyPressed()` | True the frame any key at all transitions to down — a "press any key to continue" prompt in one call. |
@@ -38,6 +39,7 @@ Call `Update` exactly once per frame, before reading anything else — every `Is
 
 | Member | What it does |
 |---|---|
+| `CurrentMouseState` / `PreviousMouseState` | This/last frame's raw `MouseState`, exactly as captured by `Update` — for anything this class doesn't wrap itself. See "Raw state" below. |
 | `MousePosition` | Cursor position in screen pixels, origin top-left. |
 | `MouseDelta` | Movement since the last `Update`, in pixels. |
 | `MouseScrollDelta` / `MouseHorizontalScrollDelta` | Wheel movement since the last `Update` (120 units per notch). |
@@ -55,6 +57,7 @@ Call `Update` exactly once per frame, before reading anything else — every `Is
 
 | Member | What it does |
 |---|---|
+| `GetCurrentGamePadState(player = 0)` / `GetPreviousGamePadState(player = 0)` | `player`'s this/last-frame raw `GamePadState`, exactly as captured by `Update` — for anything this class doesn't wrap itself (e.g. `GamePadState.Buttons`'s packed flags). See "Raw state" below. |
 | `IsConnected(player = 0)` | Whether a controller is plugged into that slot. |
 | `IsButtonDown/Up/Pressed/Released(button, player = 0)` | Same shape as keyboard/mouse, for MonoGame's `Buttons` enum (face buttons, shoulders, stick clicks, D-pad, Start/Back, BigButton). |
 | `IsAnyButtonPressed(player = 0)` | True the frame any **digital** button transitions to down — face/shoulder/stick-click/D-pad/Start/Back only. Deliberately excludes the analog stick/trigger "as digital button" flags MonoGame also reports under `Buttons`, so idle stick drift or a light trigger rest can't misfire a "press any button to join" screen. |
@@ -98,6 +101,10 @@ if (_input.IsKeyPressed(Keys.Back) && typedText.Length > 0)
 - The queue is a fixed 64-character ring buffer, not a growable list — if you never drain it, new characters are dropped once full rather than growing memory unboundedly.
 - `PrimitiveInput` implements `IDisposable` solely to unsubscribe the `TextInput` handler when you're done with a `GameWindow`-backed instance; skipping `Dispose()` costs nothing for the common case of one `PrimitiveInput` living the whole game.
 - See `examples/test/InputPanelTest` for a working "type here" box, including Spanish accents.
+
+## Raw state (for anything this class doesn't wrap)
+
+`CurrentKeyboardState`/`CurrentMouseState`/`GetCurrentGamePadState` (and their `Previous*` counterparts) expose the exact `KeyboardState`/`MouseState`/`GamePadState` snapshot this instance's own `Update` already captured this frame — the same "reach the underlying thing instead of only what got wrapped" escape hatch [`RandomUtil.UnderlyingRandom`](RandomUtil_Guide.md) offers. Reach for these instead of calling `Keyboard.GetState()`/`Mouse.GetState()`/`GamePad.GetState()` yourself: a fresh call returns a **second, independent** snapshot, which can genuinely disagree with what this instance is reporting elsewhere in the same frame (e.g. right after an OS focus change or a mid-frame poll) — reading the one `Update` already took keeps everything consistent. Use these for anything this class has no named query for yet — every currently-held key at once (`KeyboardState.GetPressedKeys()`), a packed `GamePadState.Buttons` check, or your own custom pressed/released/held-for-N-frames logic built from `Current`/`Previous` together.
 
 ## What this can't do (and why)
 

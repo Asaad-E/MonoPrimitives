@@ -17,7 +17,7 @@ These five are kept short on purpose — current state only, no narrative. Deepe
   - **[Camera2D_Guide.md](../Guide/Camera2D_Guide.md)** — `Camera2D` (pan/rotate/zoom, bounds, follow, shake, input controller) and the 4 `ViewportAdapter2D` types, when to use each, and how 2D/3D scenes share one for letterbox-aware projection.
   - **[Camera3D_Guide.md](../Guide/Camera3D_Guide.md)** — `Camera3D`: `rcamera.h`-parity basis/movement/rotation, the 5 `CameraMode`s and `UpdateWithInput`'s bindings, and the bounds/follow/zoom/shake surface shared with `Camera2D`.
   - **[Trail2D_Guide.md](../Guide/Trail2D_Guide.md)** — `Trail2D`/`Trail3D`: the ring-buffer API and its per-segment fade cost/tradeoff.
-  - **[PrimitiveInput_Guide.md](../Guide/PrimitiveInput_Guide.md)** — `PrimitiveInput`: keyboard/mouse/gamepad polling, vibration, `GetCharPressed`'s `GameWindow` requirement, and what it deliberately can't/won't do.
+  - **[PrimitiveInput_Guide.md](../Guide/PrimitiveInput_Guide.md)** — `PrimitiveInput`: keyboard/mouse/gamepad polling, vibration, `GetCharPressed`'s `GameWindow` requirement, raw `KeyboardState`/`MouseState`/`GamePadState` access for anything unwrapped, and what it deliberately can't/won't do.
   - **[Color_Guide.md](../Guide/Color_Guide.md)** — `Palette` (curated colors, `Cycle`, `GradientPairs`) and `ColorUtil` (hex/HSV conversions, adjustments, blend modes) together, plus what's deliberately not there.
   - **[Noise_Guide.md](../Guide/Noise_Guide.md)** — `Noise`: `Sample1D`/`2D`/`3D`, the `Fbm`/`RidgeNoise`/`Turbulence` families and their shared `Octaves`/`Lacunarity`/`Gain` properties, why `Sample1D` is special, and what's deliberately not there.
   - **[Easing_Guide.md](../Guide/Easing_Guide.md)** — `Easing`: all 11 families (including `Quint`/`Circ`), which curve to reach for, and the two universal properties (`InOut`'s midpoint, `Out = 1 - In(1-t)`) every function satisfies.
@@ -26,12 +26,15 @@ These five are kept short on purpose — current state only, no narrative. Deepe
   - **[DebugFont5x7_Guide.md](../Guide/DebugFont5x7_Guide.md)** — `DebugFont5x7`/`FontGlyphs5x7` (2D and 3D): `DrawString`/`MeasureText`, 3D's billboarded `DrawString3D`/`GetBillboardAxes`, the row-span convention every glyph follows, and word-wrap (`FontGlyphs5x7.WrapText`).
   - **[Collision2D_Guide.md](../Guide/Collision2D_Guide.md)** — `Collision2D`: every overlap/ray check by shape, and which ones need convex input (SAT) vs. work on any simple polygon.
   - **[Collision3D_Guide.md](../Guide/Collision3D_Guide.md)** — `Collision3D`: sphere/box/capsule/plane/triangle/quad overlap and raycasts, and the `RayCollision3D` result struct every raycast returns.
-  - **[Vector2Extensions_Guide.md](../Guide/Vector2Extensions_Guide.md)** — `Vector2Extensions`: `Angle`/`AngleTo`/`AngleToSigned`/`Rotated`/`Approach`/`ClampMagnitude`/etc., and why `Rotated` isn't named `Rotate`.
+  - **[Vector2Extensions_Guide.md](../Guide/Vector2Extensions_Guide.md)** — `Vector2Extensions`: `Angle`/`AngleTo`/`AngleToSigned`/`Rotated`/`Approach`/`ClampMagnitude`/etc., why `Rotated` isn't named `Rotate`, and `Vector3Extensions` (3D) in the same guide.
   - **[FrameLimiter_Guide.md](../Guide/FrameLimiter_Guide.md)** — `FrameLimiter`: sleep+spin frame pacing, why it disables `IsFixedTimeStep`/vsync, and the measured Sleep-jitter limitation.
   - **[FastTexture_Guide.md](../Guide/FastTexture_Guide.md)** — `FastTexture`: raw-GL texture upload with a safe `SetData` fallback, mip/RenderTarget2D caveats, and the texture-slot cache gotcha.
   - **[RectangleF_Guide.md](../Guide/RectangleF_Guide.md)** — `RectangleF`: float-precision counterpart to MonoGame's integer-only `Rectangle`, same member shape.
   - **[FpsCounter_Guide.md](../Guide/FpsCounter_Guide.md)** — `FpsCounter`: rolling-average FPS measurement, pairs with your own `DrawString` call.
   - **[ScreenshotUtil_Guide.md](../Guide/ScreenshotUtil_Guide.md)** — `ScreenshotUtil`: one-call back-buffer capture to `.png`/`.jpg`.
+  - **[ObjectPool_Guide.md](../Guide/ObjectPool_Guide.md)** — `ObjectPool<T>`: `Get`/`Return`, `onGet`/`onReturn` hooks, `maxSize`, and the utility-vs-system filter that decided it belonged here.
+  - **[RingBuffer_Guide.md](../Guide/RingBuffer_Guide.md)** — `RingBuffer<T>`: the same ring-buffer logic `Trail2D`/`Trail3D`/`FpsCounter` each already hand-roll privately, generalized and public.
+  - **[Cooldown_Guide.md](../Guide/Cooldown_Guide.md)** — `Cooldown`: a countdown struct, `TryUse()`, and the mutable-struct-as-a-field caveat.
 - **[archive/2D/Primitives2D_Audit_Report.md](archive/2D/Primitives2D_Audit_Report.md)**, **[archive/2D/Overnight_Changes_2026-08-19.md](archive/2D/Overnight_Changes_2026-08-19.md)**, **[archive/3D/Primitive3D_Changes.md](archive/3D/Primitive3D_Changes.md)** — historical session logs. Archaeology only ("why does this bug fix exist") — the five docs above already capture current state. Long; don't load by default.
 
 ## Repo layout

@@ -54,15 +54,18 @@ Then, whichever you picked, add a camera ([`Camera2D_Guide.md`](Camera2D_Guide.m
 - [`RandomUtil_Guide.md`](RandomUtil_Guide.md) — seedable distribution sampling (Gaussian, Poisson, Binomial, uniform disc/sphere, weighted picks) for simulations.
 - [`Color_Guide.md`](Color_Guide.md) — a curated color palette plus hex/HSV conversion, adjustment, and blend modes.
 - [`Trail2D_Guide.md`](Trail2D_Guide.md) — a fading position-history trail, 2D and 3D.
-- [`Vector2Extensions_Guide.md`](Vector2Extensions_Guide.md) — angle/rotation/approach/clamp helpers on MonoGame's own `Vector2`.
+- [`Vector2Extensions_Guide.md`](Vector2Extensions_Guide.md) — angle/rotation/approach/clamp helpers on MonoGame's own `Vector2`, plus `Vector3Extensions` (its 3D counterpart) in the same guide.
 - [`RectangleF_Guide.md`](RectangleF_Guide.md) — a float-precision counterpart to MonoGame's integer-only `Rectangle`.
 - [`UnitCircleLut_Guide.md`](UnitCircleLut_Guide.md) / [`TrigLut_Guide.md`](TrigLut_Guide.md) — the trig-free lookup tables the shape batches are themselves built on, for your own curved geometry.
+- [`RingBuffer_Guide.md`](RingBuffer_Guide.md) — a generic fixed-capacity ring buffer, the same building block `Trail2D`/`Trail3D`/`FpsCounter` each already use privately, exposed for your own history/log/sample-window need.
+- [`ObjectPool_Guide.md`](ObjectPool_Guide.md) — a generic object pool, for anything spawned/discarded often enough (bullets, particles, simulation agents) to want reuse over reallocation.
 
 **App helpers**
 - [`FrameLimiter_Guide.md`](FrameLimiter_Guide.md) — sleep+spin frame pacing, more precise than `IsFixedTimeStep` alone.
 - [`FastTexture_Guide.md`](FastTexture_Guide.md) — raw-GL texture upload, 2.5-2.7x faster than `SetData` for frequent updates.
 - [`FpsCounter_Guide.md`](FpsCounter_Guide.md) — rolling-average FPS measurement.
 - [`ScreenshotUtil_Guide.md`](ScreenshotUtil_Guide.md) — one-call back-buffer capture to `.png`/`.jpg`.
+- [`Cooldown_Guide.md`](Cooldown_Guide.md) — a simple countdown struct for attack cooldowns, spawn timers, input debouncing.
 
 ## Something not working the way a guide says it should?
 

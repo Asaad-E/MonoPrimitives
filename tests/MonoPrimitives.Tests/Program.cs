@@ -40,10 +40,14 @@ namespace MonoPrimitives.Tests
             TrigLutTests.Run(results);
             Camera3DTests.Run(results);
             Vector2ExtensionsTests.Run(results);
+            Vector3ExtensionsTests.Run(results);
             FrameLimiterTests.Run(this, results);
             RectangleFTests.Run(results);
             FpsCounterTests.Run(results);
             PrimitiveInputDeadzoneTests.Run(results);
+            ObjectPoolTests.Run(results);
+            RingBufferTests.Run(results);
+            CooldownTests.Run(results);
             ScreenshotUtilTests.Run(GraphicsDevice, results);
             ShapeTests2D.Run(GraphicsDevice, results);
             Primitive2DBatchLifecycleTests.Run(GraphicsDevice, results);

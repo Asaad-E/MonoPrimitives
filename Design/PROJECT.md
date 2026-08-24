@@ -26,6 +26,9 @@ Shared (`Core/`, namespace `MonoPrimitives`):
 | Fast texture upload | `FastTexture` |
 | FPS measurement | `FpsCounter` |
 | Screenshot capture | `ScreenshotUtil` |
+| Object pooling | `ObjectPool<T>` |
+| Fixed-capacity history | `RingBuffer<T>` |
+| Countdown timer | `Cooldown` (struct) |
 
 Per-namespace (not shared — genuinely different code):
 
@@ -37,6 +40,7 @@ Per-namespace (not shared — genuinely different code):
 | Trail | `Trail2D` | `Trail3D` |
 | Debug text rendering | `DebugFont5x7` | `DebugFont5x7` (billboarded) |
 | Fast-trig LUT | `UnitCircleLut` | `TrigLut` |
+| Vector helpers | (`Vector2Extensions` is shared, see above) | `Vector3Extensions` |
 
 See DECISIONS.md for the Core-vs-duplicated rule.
 
