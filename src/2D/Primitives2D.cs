@@ -3804,9 +3804,32 @@ namespace MonoPrimitives.Primitives2D
             int n = points.Length;
             if (n == 0) return;
 
+            // Closed polygon: the correct inward direction at EVERY vertex -- convex or reflex --
+            // is the same fixed rotational sense of ComputeMiterOffset's own two candidates,
+            // decided once from the polygon's overall winding (signed area), not per vertex. A
+            // per-vertex "whichever candidate is closer to the centroid" guess (still used below
+            // for the open-polyline case, which has no winding to read) only happens to pick right
+            // at a convex vertex; at a reflex one the closer candidate can be the wrong side
+            // entirely -- confirmed on an L-shape whose reflex vertex sits exactly on the
+            // centroid (an exact tie) and a 5-point star (5 reflex vertices, no ties) — see
+            // DECISIONS.md.
+            bool ccw = false;
             Vector2 centroid = Vector2.Zero;
-            for (int i = 0; i < n; i++) centroid += points[i];
-            centroid /= n;
+            if (closed)
+            {
+                float area2 = 0f;
+                for (int i = 0; i < n; i++)
+                {
+                    Vector2 a = points[i], b = points[(i + 1) % n];
+                    area2 += a.X * b.Y - b.X * a.Y;
+                }
+                ccw = area2 > 0f;
+            }
+            else
+            {
+                for (int i = 0; i < n; i++) centroid += points[i];
+                centroid /= n;
+            }
 
             for (int i = 0; i < n; i++)
             {
@@ -3831,27 +3854,49 @@ namespace MonoPrimitives.Primitives2D
                 if (dirIn == Vector2.Zero && dirOut == Vector2.Zero) { result[i] = curr; continue; }
 
                 Vector2 offset = ComputeMiterOffset(dirIn, dirOut, distance);
-                Vector2 plus = curr + offset;
-                Vector2 minus = curr - offset;
-                result[i] = Vector2.DistanceSquared(plus, centroid) < Vector2.DistanceSquared(minus, centroid) ? plus : minus;
+                if (closed)
+                {
+                    result[i] = ccw ? curr + offset : curr - offset;
+                }
+                else
+                {
+                    Vector2 plus = curr + offset;
+                    Vector2 minus = curr - offset;
+                    result[i] = Vector2.DistanceSquared(plus, centroid) < Vector2.DistanceSquared(minus, centroid) ? plus : minus;
+                }
             }
         }
 
         /// <summary>
-        /// <see cref="InsetConvexPolygon"/>'s mirror image: grows a convex polygon outward by
-        /// <paramref name="distance"/> instead of shrinking it — same miter-offset math, just
-        /// picking the candidate point FARTHER from the centroid instead of closer. Used to
-        /// build a drop shadow's outer (fully transparent) edge from a shape's own boundary —
-        /// see the <c>Fill*Shadow</c> methods.
+        /// <see cref="InsetConvexPolygon"/>'s mirror image: grows a polygon outward by
+        /// <paramref name="distance"/> instead of shrinking it — same miter-offset math and same
+        /// winding-based fix for reflex vertices, just the opposite candidate at every vertex
+        /// (whichever one <see cref="InsetConvexPolygon"/> would call "inward," this is the
+        /// other). Used to build a drop shadow's outer (fully transparent) edge from a shape's
+        /// own boundary — see the <c>Fill*Shadow</c> methods.
         /// </summary>
         private static void OutsetConvexPolygon(ReadOnlySpan<Vector2> points, float distance, Span<Vector2> result, bool closed)
         {
             int n = points.Length;
             if (n == 0) return;
 
+            bool ccw = false;
             Vector2 centroid = Vector2.Zero;
-            for (int i = 0; i < n; i++) centroid += points[i];
-            centroid /= n;
+            if (closed)
+            {
+                float area2 = 0f;
+                for (int i = 0; i < n; i++)
+                {
+                    Vector2 a = points[i], b = points[(i + 1) % n];
+                    area2 += a.X * b.Y - b.X * a.Y;
+                }
+                ccw = area2 > 0f;
+            }
+            else
+            {
+                for (int i = 0; i < n; i++) centroid += points[i];
+                centroid /= n;
+            }
 
             for (int i = 0; i < n; i++)
             {
@@ -3876,9 +3921,16 @@ namespace MonoPrimitives.Primitives2D
                 if (dirIn == Vector2.Zero && dirOut == Vector2.Zero) { result[i] = curr; continue; }
 
                 Vector2 offset = ComputeMiterOffset(dirIn, dirOut, distance);
-                Vector2 plus = curr + offset;
-                Vector2 minus = curr - offset;
-                result[i] = Vector2.DistanceSquared(plus, centroid) > Vector2.DistanceSquared(minus, centroid) ? plus : minus;
+                if (closed)
+                {
+                    result[i] = ccw ? curr - offset : curr + offset;
+                }
+                else
+                {
+                    Vector2 plus = curr + offset;
+                    Vector2 minus = curr - offset;
+                    result[i] = Vector2.DistanceSquared(plus, centroid) > Vector2.DistanceSquared(minus, centroid) ? plus : minus;
+                }
             }
         }
 
