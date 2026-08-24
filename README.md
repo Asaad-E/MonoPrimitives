@@ -16,8 +16,8 @@ dotnet add package MonoPrimitives
 Or scaffold a whole starter project (`Camera2D`, letterboxed 1080p virtual resolution, MSAA, input, a `RenderContext` bundle) with the `dotnet new` template — not yet published as its own package, so install it from a clone of this repo for now:
 
 ```bash
-dotnet new install ./templates/MonoPrimitives
-dotnet new monoprimitives -n YourGame
+dotnet new install ./templates/PrimitiveBase
+dotnet new primitivebase -n YourGame
 ```
 
 One NuGet package, one assembly, one DLL — 2D and 3D both come with it, no separate sub-packages to resolve. Internally it's still organized into three namespaces so nothing is duplicated between them:

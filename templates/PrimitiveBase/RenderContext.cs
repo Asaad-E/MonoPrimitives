@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoPrimitives.Primitives2D;
 
-namespace MonoPrimitives.Template
+namespace PrimitiveBase
 {
     public readonly record struct RenderContext(
         GraphicsDevice GraphicsDevice,

@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoPrimitives;
 using MonoPrimitives.Primitives2D;
 
-namespace MonoPrimitives.Template
+namespace PrimitiveBase
 {
     public class Game1 : Game
     {
