@@ -330,22 +330,54 @@ namespace MonoPrimitives
         /// <summary>Right trigger pull, [0,1] — 0 released, 1 fully pressed.</summary>
         public float RightTrigger(int player = 0) => _gamePads[player].Triggers.Right;
 
-        /// <summary><see cref="LeftStick"/> with a circular deadzone applied — snaps to zero within <paramref name="deadzone"/> of center instead of reporting idle stick drift as movement.</summary>
+        /// <summary>
+        /// <see cref="LeftStick"/> with a scaled radial deadzone applied — zero within
+        /// <paramref name="deadzone"/> of center (a circular cutoff, not a per-axis square one,
+        /// so diagonal drift isn't rejected less than a cardinal direction's), and the remaining
+        /// <c>[deadzone, 1]</c> range rescaled back to a full <c>[0, 1]</c> output rather than
+        /// jumping straight to <paramref name="deadzone"/>'s own magnitude the instant the stick
+        /// crosses the cutoff. Direction is preserved exactly; only magnitude is remapped.
+        /// </summary>
         public Vector2 LeftStickDeadzoned(int player = 0, float deadzone = 0.15f) => ApplyDeadzone(LeftStick(player), deadzone);
 
-        /// <summary><see cref="RightStick"/> with a circular deadzone applied, same as <see cref="LeftStickDeadzoned"/>.</summary>
+        /// <summary><see cref="RightStick"/> with a scaled radial deadzone applied, same as <see cref="LeftStickDeadzoned"/>.</summary>
         public Vector2 RightStickDeadzoned(int player = 0, float deadzone = 0.15f) => ApplyDeadzone(RightStick(player), deadzone);
 
-        /// <summary><see cref="LeftTrigger"/> with a deadzone applied — snaps to zero below <paramref name="deadzone"/> instead of reporting a controller's resting trigger noise as a pull.</summary>
+        /// <summary><see cref="LeftTrigger"/> with a deadzone applied — zero below <paramref name="deadzone"/> instead of reporting a controller's resting trigger noise as a pull, and the remaining range rescaled back to <c>[0, 1]</c> instead of jumping straight to <paramref name="deadzone"/>'s own value.</summary>
         public float LeftTriggerDeadzoned(int player = 0, float deadzone = 0.05f) => ApplyDeadzone(LeftTrigger(player), deadzone);
 
         /// <summary><see cref="RightTrigger"/> with a deadzone applied, same as <see cref="LeftTriggerDeadzoned"/>.</summary>
         public float RightTriggerDeadzoned(int player = 0, float deadzone = 0.05f) => ApplyDeadzone(RightTrigger(player), deadzone);
 
-        private static Vector2 ApplyDeadzone(Vector2 v, float deadzone)
-            => v.LengthSquared() < deadzone * deadzone ? Vector2.Zero : v;
+        /// <summary>
+        /// Applies a scaled radial deadzone to an analog stick reading: zero within
+        /// <paramref name="deadzone"/> of center, and the surviving <c>[deadzone, 1]</c> range
+        /// rescaled back onto a full <c>[0, 1]</c> output — not just clamped, which would leave a
+        /// discontinuity right at the cutoff (output jumps straight from 0 to ~<paramref name="deadzone"/>
+        /// the instant the stick crosses it, instead of a continuous ramp). Direction/sign is
+        /// untouched; only magnitude is remapped. A degenerate <paramref name="deadzone"/> ≥ 1
+        /// (nothing could ever pass it) returns zero rather than dividing by a zero-or-negative
+        /// range. Public because the same curve is useful for any other analog 2D input this class
+        /// doesn't itself read (a custom joystick, a mouse-driven virtual stick) — <see cref="LeftStickDeadzoned"/>/
+        /// <see cref="RightStickDeadzoned"/> are thin wrappers over this applied to <see cref="LeftStick"/>/<see cref="RightStick"/>.
+        /// </summary>
+        public static Vector2 ApplyDeadzone(Vector2 v, float deadzone)
+        {
+            float magnitude = v.Length();
+            if (magnitude < deadzone) return Vector2.Zero;
+            float range = 1f - deadzone;
+            if (range <= 0f) return Vector2.Zero;
+            float scaled = MathF.Min((magnitude - deadzone) / range, 1f);
+            return v / magnitude * scaled;
+        }
 
-        private static float ApplyDeadzone(float value, float deadzone) => value < deadzone ? 0f : value;
+        /// <summary>1D counterpart of <see cref="ApplyDeadzone(Vector2,float)"/>, for a trigger or any other single-axis analog reading in <c>[0, 1]</c>.</summary>
+        public static float ApplyDeadzone(float value, float deadzone)
+        {
+            if (value < deadzone) return 0f;
+            float range = 1f - deadzone;
+            return range > 0f ? MathF.Min((value - deadzone) / range, 1f) : 0f;
+        }
 
         /// <summary>
         /// Sets <paramref name="player"/>'s gamepad rumble motor speeds, each [0,1] (0 stops, 1 is

@@ -60,8 +60,9 @@ Call `Update` exactly once per frame, before reading anything else — every `Is
 | `IsAnyButtonPressed(player = 0)` | True the frame any **digital** button transitions to down — face/shoulder/stick-click/D-pad/Start/Back only. Deliberately excludes the analog stick/trigger "as digital button" flags MonoGame also reports under `Buttons`, so idle stick drift or a light trigger rest can't misfire a "press any button to join" screen. |
 | `LeftStick(player = 0)` / `RightStick(player = 0)` | Raw thumbstick, MonoGame's convention (X right-positive, Y up-positive), no deadzone. |
 | `LeftTrigger(player = 0)` / `RightTrigger(player = 0)` | Trigger pull, `[0,1]`. |
-| `LeftStickDeadzoned` / `RightStickDeadzoned` (`deadzone = 0.15f`) | Stick with a circular deadzone — snaps to zero within `deadzone` of center instead of reporting idle drift as movement. |
+| `LeftStickDeadzoned` / `RightStickDeadzoned` (`deadzone = 0.15f`) | Stick with a scaled radial deadzone — zero within `deadzone` of center (a circle, not a per-axis square), and the surviving `[deadzone, 1]` range rescaled back onto a full `[0, 1]` output so there's no jump right at the cutoff. Direction is untouched; only magnitude is remapped. |
 | `LeftTriggerDeadzoned` / `RightTriggerDeadzoned` (`deadzone = 0.05f`) | Same idea for triggers, since some controllers rest slightly above `0`. |
+| `PrimitiveInput.ApplyDeadzone(Vector2, float)` / `ApplyDeadzone(float, float)` | The static curve the 4 methods above are built on, exposed directly for any other analog input this class doesn't read itself (a custom joystick, a mouse-driven virtual stick). |
 | `SetVibration(leftMotor, rightMotor, player = 0)` | Sets rumble motor speeds, `[0,1]` each. Returns `false` if the slot isn't connected or the platform/controller doesn't support it. |
 | `SetVibration(leftMotor, rightMotor, leftTrigger, rightTrigger, player = 0)` | Same, plus the two trigger-impulse motors some controllers (Xbox One/Series) have separately from the main motors. |
 
