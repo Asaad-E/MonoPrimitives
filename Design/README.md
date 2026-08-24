@@ -44,12 +44,15 @@ MonogameLibs/
 │   ├── 3D/          — namespace MonoPrimitives.Primitives3D
 │   └── MonoPrimitives.csproj   — one project → one MonoPrimitives.dll
 ├── samples/MonoPrimitives.Sample/
+├── tests/MonoPrimitives.Tests/
+├── examples/        — 13 standalone demos/tests, each its own .csproj (see ARCHITECTURE.md)
+├── templates/PrimitiveBase/   — dotnet new template; deliberately outside MonoPrimitives.slnx (see below)
 ├── Design/          — you are here
 ├── Guide/           — actively-maintained per-topic user guides (see "Deeper reference" above)
 └── MonoPrimitives.slnx
 ```
 
-`dotnet build MonoPrimitives.slnx` builds everything.
+`dotnet build MonoPrimitives.slnx` builds everything except `templates/PrimitiveBase` — that project deliberately resolves the *published* MonoPrimitives NuGet package instead of this commit's own `src/` (see ARCHITECTURE.md), so it isn't part of "does this commit's source still hold together" and is built as its own separate CI job instead.
 
 ## Keeping this useful
 

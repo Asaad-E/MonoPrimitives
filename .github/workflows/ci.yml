@@ -15,9 +15,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # No global.json: src/MonoPrimitives.csproj targets net8.0, the test suite and the
-      # sample both target net10.0. Installing both SDKs side by side lets the same runner
-      # build every project at its own TargetFramework.
+      # No global.json: src/MonoPrimitives.csproj targets net8.0, everything else in the
+      # solution (tests, sample, all 13 examples) targets net10.0. Installing both SDKs
+      # side by side lets the same runner build every project at its own TargetFramework.
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -25,14 +25,14 @@ jobs:
             8.0.x
             10.0.x
 
-      - name: Build MonoPrimitives (net8.0)
-        run: dotnet build src/MonoPrimitives.csproj -c Release
-
-      - name: Build test suite (net10.0)
-        run: dotnet build tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj -c Release
-
-      - name: Build sample (net10.0)
-        run: dotnet build samples/MonoPrimitives.Sample/MonoPrimitives.Sample.csproj -c Release
+      # MonoPrimitives.slnx lists src, tests, the sample, and all 13 examples/ projects
+      # (see Design/README.md) -- one build call covers all of them, so a public-API
+      # change that breaks an example is caught here instead of only being found the next
+      # time someone opens that example by hand. templates/PrimitiveBase is deliberately
+      # NOT in this solution (it resolves the published NuGet package, not this commit's
+      # source -- see build-template below) and so isn't covered by this step.
+      - name: Build solution (src, tests, sample, all examples)
+        run: dotnet build MonoPrimitives.slnx -c Release
 
       # The test project is not xunit/nunit -- it's a headless MonoGame Game (see the note
       # at the top of its own .csproj) that runs every check once in Draw() and exits with
@@ -40,9 +40,31 @@ jobs:
       # MonoGame.Framework.DesktopGL creates its OpenGL context through SDL2, which needs a
       # real (or virtual) X display -- xvfb-run supplies one so GPU-backed tests
       # (ShapeTests2D/3D, LightingRegressionTests, etc.) can actually create a GraphicsDevice
-      # on a display-less Ubuntu runner.
+      # on a display-less Ubuntu runner. Building above doesn't need a GraphicsDevice at
+      # all, so xvfb is only installed here, right before the one step that runs code.
       - name: Install virtual display (xvfb)
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
       - name: Run test suite
         run: xvfb-run --auto-servernum dotnet tests/MonoPrimitives.Tests/bin/Release/net10.0/MonoPrimitives.Tests.dll
+
+  # Separate, parallel job (not a step in build-and-test above) on purpose: this project
+  # resolves the MonoPrimitives package already published on nuget.org, not this commit's
+  # own src/ -- a failure here means the currently-pinned published version no longer
+  # builds against the rest of the template, a different kind of problem than "this PR's
+  # source change broke something," and worth reading as such at a glance in the Actions
+  # UI rather than buried as one more step in the main build.
+  build-template:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build template (published NuGet package, not local source)
+        run: dotnet build templates/PrimitiveBase/PrimitiveBase.csproj -c Release

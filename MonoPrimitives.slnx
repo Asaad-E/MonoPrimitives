@@ -5,4 +5,24 @@
   <Folder Name="/src/">
     <Project Path="src/MonoPrimitives.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj" />
+  </Folder>
+  <Folder Name="/examples/demos/">
+    <Project Path="examples/demos/Asteroids2D/Asteroids2D.csproj" />
+    <Project Path="examples/demos/Asteroids3D/Asteroids3D.csproj" />
+    <Project Path="examples/demos/Boids/Boids.csproj" />
+    <Project Path="examples/demos/Breakout/Breakout.csproj" />
+    <Project Path="examples/demos/Platformer2D/Platformer2D.csproj" />
+    <Project Path="examples/demos/Snake/Snake.csproj" />
+    <Project Path="examples/demos/Tetris/Tetris.csproj" />
+  </Folder>
+  <Folder Name="/examples/test/">
+    <Project Path="examples/test/CollisionTest/CollisionTest.csproj" />
+    <Project Path="examples/test/InputPanelTest/InputPanelTest.csproj" />
+    <Project Path="examples/test/NoiseTest/NoiseTest.csproj" />
+    <Project Path="examples/test/ParticleTrailTest/ParticleTrailTest.csproj" />
+    <Project Path="examples/test/TextReadabilityTest/TextReadabilityTest.csproj" />
+    <Project Path="examples/test/ViewportTest/ViewportTest.csproj" />
+  </Folder>
 </Solution>
