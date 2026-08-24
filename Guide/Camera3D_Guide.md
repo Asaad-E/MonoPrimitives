@@ -54,6 +54,7 @@ var camera = new Camera3D(adapter, position, target, up, fovy: 45f);
 | `GetViewMatrix()` | `Matrix.CreateLookAt(Position, Target, UpNormalized)`, with any screen-shake offset/roll (see below) folded in — `Position`/`Target`/`Up` themselves are never modified by shake. |
 | `GetProjectionMatrix(aspectRatio)` | Perspective (`Fovy` in degrees) or orthographic (`Fovy` as world height) depending on `Projection`. |
 | `GetViewProjectionMatrix(aspectRatio)` / `GetFrustum(aspectRatio)` | Combined matrix / `BoundingFrustum` built from it, for culling before submitting primitives. |
+| `IsVisible(BoundingSphere/BoundingBox, viewport?)` | Cheap "should I bother drawing this" check — true if the sphere/box is at least partially inside the view frustum. `viewport` is only a fallback when there's no `ViewportAdapter`; omit it when one is set. |
 | `GetPixelScale(viewportHeight)` | Approximate world units per screen pixel at unit distance — what `Primitive3DBatch` uses internally to size pixel-width lines. |
 | `WorldToScreen`/`ScreenToWorld`/`GetScreenToWorldRay` | Project/unproject/picking-ray, resolving `ViewportAdapter` automatically when set (pass an explicit `Viewport` to override) — same shape as `Camera2D`'s screen↔world conversions. See `Guide/Camera2D_Guide.md`'s "Using an adapter with 3D content" for the full adapter story. |
 
@@ -96,6 +97,8 @@ Identical shape and API to `Camera2D`'s (see its guide for the full rationale) �
 
 - `SmoothZoom` moves `Position` along `Forward` to change `TargetDistance` (not a `Zoom` scalar like 2D, since 3D zoom is dolly-in/out distance) — call it once per discrete request (a wheel tick), not every frame with the same nonzero `delta`, or the target races ahead instead of easing.
 - Shake is applied along the camera's own `Right`/`UpNormalized` axes (not world axes) plus a roll around `Forward` (`MaxShakeRoll`, radians at maximum trauma — alongside `MaxShakeOffset` for the positional part), so it reads as camera shake regardless of which way the camera faces. `ShakeNoiseSpeed` controls how fast the underlying noise is sampled — higher reads as a faster, more frantic shake.
+- `FollowTarget` also has a box-deadzone overload — `FollowTarget(desiredPosition, deltaSeconds, deadZoneHalfSize, desiredTarget?)` — independent per-axis tolerance instead of `FollowPadding`'s radial one. Shares the same smoothing state as the plain overload; don't alternate between the two per frame.
+- `FitBounds(BoundingBox worldBounds, float padding = 0, Viewport? viewport = null)` sets state directly, no easing: in `Perspective`, moves `Position` along the current view direction to the distance a sphere of `worldBounds`' size needs to fully fit within `Fovy` on both axes; in `Orthographic`, grows `Fovy` (the world-height) to fit instead, keeping the existing distance. Good for "frame this whole scene/selection."
 
 `Camera3D.SmoothDamp(float current, float target, ref float velocity, float smoothTime, float deltaTime)` and its `Vector3` overload are the public static critically-damped-spring functions `FollowTarget`/`SmoothZoom` are built on — reach for them directly to ease any other float/`Vector3` value the same way.
 
@@ -109,7 +112,7 @@ Restores `Position`/`Target`/`Up`/`Fovy`/`Projection`/`NearPlane`/`FarPlane` to 
 
 ## Testing
 
-[`tests/MonoPrimitives.Tests/Camera3DTests.cs`](../tests/MonoPrimitives.Tests/Camera3DTests.cs) covers the basis vectors, movement/rotation (including `Pitch`'s pole-lock), zoom/follow/bounds clamping, screen shake, matrix/projection correctness (a `WorldToScreen`↔`ScreenToWorld` round-trip, `GetScreenToWorldRay`'s direction), and `Reset()`'s full state restoration. Run with:
+[`tests/MonoPrimitives.Tests/Camera3DTests.cs`](../tests/MonoPrimitives.Tests/Camera3DTests.cs) covers the basis vectors, movement/rotation (including `Pitch`'s pole-lock), zoom/follow/bounds clamping, screen shake, matrix/projection correctness (a `WorldToScreen`↔`ScreenToWorld` round-trip, `GetScreenToWorldRay`'s direction), `IsVisible` against direct frustum intersection tests, the box-deadzone `FollowTarget` overload, `FitBounds` (checked against `BoundingFrustum.Contains`, including that halving the fitted distance breaks full containment), and `Reset()`'s full state restoration. Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj

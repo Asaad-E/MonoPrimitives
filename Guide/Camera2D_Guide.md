@@ -43,6 +43,17 @@ protected override void Draw(GameTime gameTime)
 | `GetTransformMatrix()` | Builds the matrix for `Primitive2DBatch.Begin`: translate by `-Target`, rotate, scale by `Zoom`, translate to `Offset` (screen shake folded in — see below), then — if constructed with a `ViewportAdapter` — the adapter's own `GetScaleMatrix()` on top. Composition order matches MonoGame.Extended's `OrthographicCamera.GetViewMatrix()`; don't multiply by the adapter's matrix again yourself. |
 | `ScreenToWorld(Vector2)` / `WorldToScreen(Vector2)` | Convert between screen pixels and world space, inverse of each other. With an adapter, `screenPosition`/the result are real window pixels — the adapter's virtual↔window mapping is applied automatically. Without one, screen space is assumed to already share the same pixel space as `Offset` (raw device/mouse coordinates). |
 | `GetVisibleWorldBounds(GraphicsDevice? device = null)` | The world-space rectangle currently visible on screen, as `(Vector2 Min, Vector2 Max)` corners (axis-aligned even under rotation) — for culling before drawing many world objects. `device` is only a fallback when there's no adapter; omit it when one is set. |
+| `GetVisibleWorldBoundsF(device)` | Same as above, as a `RectangleF` — pairs directly with `IsVisible`. |
+| `IsVisible(Vector2 worldPoint, device)` / `IsVisible(RectangleF worldBounds, device)` | Cheap "should I bother drawing this" check — is a point/rect inside the currently visible world bounds. |
+
+## Culling and fitting
+
+```csharp
+if (camera.IsVisible(enemy.Bounds)) DrawEnemy(enemy);       // skip off-screen objects
+camera.FitBounds(levelBounds, padding: 20f);                 // frame a rect exactly, no easing
+```
+
+`FitBounds(RectangleF worldBounds, float padding = 0, GraphicsDevice? device = null)` sets `Zoom`/`Target` directly — a cut, not a smoothed pan — so `worldBounds` (plus `padding` world units of margin) exactly fits the viewport (the tighter axis wins; the other axis ends up with extra room, never cropped). Doesn't clamp to `MinZoom`/`MaxZoom` on purpose — clamping here could silently break the "fits" contract; clamp the result yourself afterward if you need both. Good for "zoom to fit the whole level" or "frame this group of selected objects."
 
 ## Constructing a camera
 
@@ -92,7 +103,15 @@ camera.FollowPadding = 8f;      // deadzone radius in world units
 camera.FollowTarget(player.Position, deltaSeconds);
 ```
 
-Eases `Target` toward `desiredTarget` via critically-damped spring smoothing (`SmoothDamp`, the same algorithm as Unity's `Mathf.SmoothDamp` — no overshoot across varying frame rates) instead of snapping. Within `FollowPadding` world units of the goal, the camera holds still — a deadzone, not constant low-amplitude jitter. `ResetFollowVelocity()` clears the internal smoothing velocity; call it after teleporting the camera or its subject to avoid a lingering swoop.
+Eases `Target` toward `desiredTarget` via critically-damped spring smoothing (`SmoothDamp`, the same algorithm as Unity's `Mathf.SmoothDamp` — no overshoot across varying frame rates) instead of snapping. Within `FollowPadding` world units of the goal, the camera holds still — a radial deadzone, not constant low-amplitude jitter. `ResetFollowVelocity()` clears the internal smoothing velocity; call it after teleporting the camera or its subject to avoid a lingering swoop.
+
+For an independent per-axis deadzone instead of a radial one — the classic platformer/top-down "camera box" (e.g. wide horizontal slack, none vertical) — use the overload that takes `deadZoneHalfSize` directly instead of relying on `FollowPadding`:
+
+```csharp
+camera.FollowTarget(player.Position, deltaSeconds, deadZoneHalfSize: new Vector2(64f, 16f));
+```
+
+Shares the same smoothing-velocity state as the plain overload — don't alternate between the two per frame on the same camera.
 
 `Camera2D.SmoothDamp(float current, float target, ref float velocity, float smoothTime, float deltaTime)` and its `Vector2` overload are public static methods — reach for them directly on any float/`Vector2` value you want to ease the same way (a health bar filling in, a UI panel sliding into place), not just for the camera's own `Target`/`Zoom`.
 
@@ -242,6 +261,14 @@ batch3d.End();
 ```
 
 For a 2D-only scene (no 3D layer sharing the window), `Primitive2DBatch.ClearLetterboxed(adapter, barColor, backgroundColor)` does the above in one call — see `Guide/Primitive2DBatch_Guide.md`.
+
+## Testing
+
+[`tests/MonoPrimitives.Tests/Camera2DTests.cs`](../tests/MonoPrimitives.Tests/Camera2DTests.cs) covers `GetVisibleWorldBoundsF`/`IsVisible`, the box-deadzone `FollowTarget` overload, and `FitBounds`'s resulting `Zoom`/`Target`, using the headless test runner's own `GraphicsDevice`. Run with:
+
+```bash
+dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
+```
 
 ## See also
 

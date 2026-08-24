@@ -46,6 +46,8 @@ Need something this class doesn't wrap (`NextBytes`, `NextDouble`, `NextInt64`, 
 | `NextOnUnitSphere()` | `Vector3` | Uniform point on the unit sphere's surface (length exactly 1) | Random initial 3D direction/orientation |
 | `NextInsideUnitSphere()` | `Vector3` | Uniform point inside the unit ball, by volume | 3D volumetric jitter or scatter (particle puffs, spawn clouds) |
 | `NextWeightedIndex(weights)` | `int` | An index into `weights`, with probability proportional to each entry's own weight. Throws if `weights` is empty, contains a negative value, or sums to `0` | A loot table, a weighted spawn/decision table — `rng.NextWeightedIndex([0.1f, 0.3f, 0.6f])` picks index 2 60% of the time |
+| `NextItem<T>(items)` | `T` | A uniformly-random element from a `ReadOnlySpan<T>`. Throws if `items` is empty | Picking a random dialogue line, enemy type, or drop from a plain list — `rng.NextItem<string>(lines)` |
+| `NextGaussianVector2(mean = default, stdDev = 1)` / `NextGaussianVector3(...)` | `Vector2`/`Vector3` | Each axis sampled independently via `NextGaussian` | Scatter/jitter around a point — denser near the center than `NextInsideUnitCircle`/`Sphere`, e.g. spawn positions clustered around a hotspot |
 
 **Choosing between `NextUniform`, `NextGaussian`, and `NextExponential`/`NextPoisson`/`NextBinomial` for "randomness in a simulation":** ask what shape the real-world quantity has. No natural center (any value equally likely) → `NextUniform`. A typical value with symmetric variation around it → `NextGaussian`. A count of discrete events at a known rate → `NextPoisson`. A count of successes out of a known number of independent attempts → `NextBinomial`. A waiting time between independent events → `NextExponential`.
 
@@ -132,7 +134,7 @@ Parallel.For(0, agentCount, i =>
 
 ## Testing
 
-[`tests/MonoPrimitives.Tests/RandomUtilTests.cs`](../tests/MonoPrimitives.Tests/RandomUtilTests.cs) checks determinism (same seed → same sequence), every distribution's sample mean/variance against its theoretical value over large sample counts (including all three `Poisson`/`Binomial` regimes separately), the circle/sphere sampling's area/volume-uniformity specifically (`E[r²] ≈ 0.5` for the disc, `E[z²] ≈ 1/3` and `E[r³] ≈ 0.5` for the sphere — chosen because a regression back to a naive uniform-radius or uniform-latitude approach would visibly miss these exact numbers), `NextWeightedIndex`'s proportions and error handling, that `UnderlyingRandom` shares `RandomUtil`'s own stream rather than a separate one, and a 16-thread concurrent stress test of `Shared`. Run with:
+[`tests/MonoPrimitives.Tests/RandomUtilTests.cs`](../tests/MonoPrimitives.Tests/RandomUtilTests.cs) checks determinism (same seed → same sequence), every distribution's sample mean/variance against its theoretical value over large sample counts (including all three `Poisson`/`Binomial` regimes separately), the circle/sphere sampling's area/volume-uniformity specifically (`E[r²] ≈ 0.5` for the disc, `E[z²] ≈ 1/3` and `E[r³] ≈ 0.5` for the sphere — chosen because a regression back to a naive uniform-radius or uniform-latitude approach would visibly miss these exact numbers), `NextWeightedIndex`'s proportions and error handling, `NextItem`'s coverage/empty-input error, `NextGaussianVector2`/`3`'s per-axis mean/stddev, that `UnderlyingRandom` shares `RandomUtil`'s own stream rather than a separate one, and a 16-thread concurrent stress test of `Shared`. Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
