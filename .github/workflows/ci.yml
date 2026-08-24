@@ -1,0 +1,48 @@
+name: CI
+
+# Runs on every push and every pull request, no branch restriction -- this repo has a
+# single developer who mostly commits straight to main, so limiting the trigger to
+# pull_request alone would skip the most common case entirely.
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # No global.json: src/MonoPrimitives.csproj targets net8.0, the test suite and the
+      # sample both target net10.0. Installing both SDKs side by side lets the same runner
+      # build every project at its own TargetFramework.
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Build MonoPrimitives (net8.0)
+        run: dotnet build src/MonoPrimitives.csproj -c Release
+
+      - name: Build test suite (net10.0)
+        run: dotnet build tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj -c Release
+
+      - name: Build sample (net10.0)
+        run: dotnet build samples/MonoPrimitives.Sample/MonoPrimitives.Sample.csproj -c Release
+
+      # The test project is not xunit/nunit -- it's a headless MonoGame Game (see the note
+      # at the top of its own .csproj) that runs every check once in Draw() and exits with
+      # 0 (all passed) or 1 (a failure), so it's run directly like any other console app.
+      # MonoGame.Framework.DesktopGL creates its OpenGL context through SDL2, which needs a
+      # real (or virtual) X display -- xvfb-run supplies one so GPU-backed tests
+      # (ShapeTests2D/3D, LightingRegressionTests, etc.) can actually create a GraphicsDevice
+      # on a display-less Ubuntu runner.
+      - name: Install virtual display (xvfb)
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Run test suite
+        run: xvfb-run --auto-servernum dotnet tests/MonoPrimitives.Tests/bin/Release/net10.0/MonoPrimitives.Tests.dll
