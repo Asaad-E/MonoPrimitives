@@ -377,6 +377,12 @@ namespace MonoPrimitives.Primitives2D
         /// <paramref name="barColor"/>, the boxed "inside" in <paramref name="backgroundColor"/>.
         /// Must be called with the batch NOT already begun (it manages its own internal
         /// <see cref="Begin()"/>/<see cref="End"/>), before your own scene's <c>Begin</c> for the frame.
+        /// Leaves the device viewport <see cref="ViewportAdapter2D.Reset"/> (full window) when it
+        /// returns — the right state for a following <c>Begin(camera.GetTransformMatrix())</c>, which
+        /// already bakes the adapter's offset into the matrix itself (see <see cref="ViewportAdapter2D.Apply"/>'s
+        /// doc comment on why narrowing the viewport too would double it). If a 3D layer sharing the
+        /// same window draws next via its own <c>Apply()</c>-based <c>Begin(camera3d)</c>, that's
+        /// unaffected either way — it narrows the viewport itself.
         /// </summary>
         /// <param name="adapter">The letterboxing adapter (typically a <see cref="BoxingViewportAdapter2D"/>) whose boxed viewport this clears around.</param>
         /// <param name="barColor">Color of the letterbox/pillarbox bars. Defaults to <see cref="Color.Black"/>.</param>
@@ -396,6 +402,11 @@ namespace MonoPrimitives.Primitives2D
             Begin();
             FillRectangle(0, 0, _device.Viewport.Width, _device.Viewport.Height, background);
             End();
+
+            // Leave the viewport un-narrowed: GetTransformMatrix() (the normal next call for a 2D
+            // scene) already folds the adapter's offset into the matrix, so a still-narrowed
+            // viewport here would double-apply it -- exactly the footgun this method exists to hide.
+            adapter.Reset();
         }
 
         /// <summary>
