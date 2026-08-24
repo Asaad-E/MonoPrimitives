@@ -39,7 +39,7 @@ namespace MonoPrimitives
             using var texture = new Texture2D(device, width, height);
             texture.SetData(pixels);
 
-            string directory = Path.GetDirectoryName(Path.GetFullPath(filePath));
+            string? directory = Path.GetDirectoryName(Path.GetFullPath(filePath));
             if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
 
             using var stream = File.Create(filePath);

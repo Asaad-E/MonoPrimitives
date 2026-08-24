@@ -53,13 +53,15 @@ namespace MonoPrimitives.Primitives3D
         private bool _began;
         private bool _disposed;
 
-        // Captured device state (restored on End).
-        private BlendState _prevBlend;
-        private DepthStencilState _prevDepth;
-        private RasterizerState _prevRasterizer;
-        private SamplerState _prevSampler0;
-        private VertexBuffer _prevVertexBuffer;
-        private IndexBuffer _prevIndexBuffer;
+        // Captured device state (restored on End) -- always assigned in Begin() before use, not the
+        // constructor, so the null-forgiving initializer just tells the analyzer what's already true
+        // rather than forcing every read site to null-check a value that can't actually be null there.
+        private BlendState _prevBlend = null!;
+        private DepthStencilState _prevDepth = null!;
+        private RasterizerState _prevRasterizer = null!;
+        private SamplerState _prevSampler0 = null!;
+        private VertexBuffer? _prevVertexBuffer; // MonoGame exposes no getter for the current vertex buffer -- genuinely null whenever none was bound, not just "not yet captured" like the fields above.
+        private IndexBuffer _prevIndexBuffer = null!;
 
         // Current render settings for this Begin/End block.
         private Matrix _view;
@@ -67,9 +69,10 @@ namespace MonoPrimitives.Primitives3D
         private Matrix _transform;
         private bool _hasTransform;
 
-        private BlendState _blendState;
-        private DepthStencilState _depthStencilState;
-        private RasterizerState _rasterizerState;
+        // Same "always set in Begin(), not the constructor" reasoning as the _prev* fields above.
+        private BlendState _blendState = null!;
+        private DepthStencilState _depthStencilState = null!;
+        private RasterizerState _rasterizerState = null!;
 
         // ---------------------------------------------------------------------
         // Construction
@@ -236,9 +239,9 @@ namespace MonoPrimitives.Primitives3D
         /// <param name="transform">Optional additional world transform.</param>
         public void Begin(
             Camera3D camera,
-            BlendState blendState = null,
-            DepthStencilState depthStencilState = null,
-            RasterizerState rasterizerState = null,
+            BlendState? blendState = null,
+            DepthStencilState? depthStencilState = null,
+            RasterizerState? rasterizerState = null,
             Matrix? transform = null)
         {
             if (camera is null) throw new ArgumentNullException(nameof(camera));
@@ -260,9 +263,9 @@ namespace MonoPrimitives.Primitives3D
         public void Begin(
             in Matrix view,
             in Matrix projection,
-            BlendState blendState = null,
-            DepthStencilState depthStencilState = null,
-            RasterizerState rasterizerState = null,
+            BlendState? blendState = null,
+            DepthStencilState? depthStencilState = null,
+            RasterizerState? rasterizerState = null,
             Matrix? transform = null)
         {
             // Extract camera position from the inverse view matrix.
@@ -273,8 +276,8 @@ namespace MonoPrimitives.Primitives3D
 
         private void BeginInternal(
             in Matrix view, in Matrix projection, Vector3 cameraPosition, float pixelScale,
-            BlendState blendState, DepthStencilState depthStencilState,
-            RasterizerState rasterizerState, Matrix? transform)
+            BlendState? blendState, DepthStencilState? depthStencilState,
+            RasterizerState? rasterizerState, Matrix? transform)
         {
             ThrowIfDisposed();
             if (_began)
@@ -307,7 +310,7 @@ namespace MonoPrimitives.Primitives3D
             _prevDepth = _device.DepthStencilState;
             _prevRasterizer = _device.RasterizerState;
             _prevSampler0 = _device.SamplerStates[0];
-            _prevVertexBuffer = null; // MonoGame exposes no getter; see notes.
+            _prevVertexBuffer = null;
             _prevIndexBuffer = _device.Indices;
 
             ApplyDeviceState();

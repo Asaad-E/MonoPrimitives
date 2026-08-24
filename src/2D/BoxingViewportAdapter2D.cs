@@ -31,6 +31,9 @@ namespace MonoPrimitives.Primitives2D
         public bool PixelPerfect { get; }
 
         /// <summary>Wraps <paramref name="device"/>, letterboxing a <paramref name="virtualWidth"/>×<paramref name="virtualHeight"/> virtual resolution into it.</summary>
+        /// <param name="device">Device this adapter reads the actual window/viewport size from.</param>
+        /// <param name="virtualWidth">Fixed width of the virtual coordinate space.</param>
+        /// <param name="virtualHeight">Fixed height of the virtual coordinate space.</param>
         /// <param name="pixelPerfect">See <see cref="PixelPerfect"/> — snaps the scale to a whole number for crisp pixel art, at the cost of a larger (all 4 sides) border in the common case where the window isn't an exact multiple of the virtual resolution.</param>
         public BoxingViewportAdapter2D(GraphicsDevice device, int virtualWidth, int virtualHeight, bool pixelPerfect = false) : base(device)
         {

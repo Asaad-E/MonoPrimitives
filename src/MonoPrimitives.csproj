@@ -11,14 +11,15 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <!-- NuGet metadata -->
   <PropertyGroup>
     <PackageId>MonoPrimitives</PackageId>
-    <Version>0.5.7</Version>
+    <Version>0.6.0</Version>
     <Authors>Asaad-E</Authors>
     <Description>Immediate-mode 2D and 3D primitive drawing for MonoGame, plus the small set of helpers a fast prototype usually needs — camera, input, easing, color, noise, and collision/raycast tests — in one package.</Description>
     <PackageTags>monogame;2d;3d;primitives;drawing;prototyping</PackageTags>

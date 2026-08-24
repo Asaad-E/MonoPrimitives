@@ -29,6 +29,7 @@ namespace MonoPrimitives
         /// <summary>A zero-sized rectangle at the origin.</summary>
         public static readonly RectangleF Empty = new(0f, 0f, 0f, 0f);
 
+        /// <summary>Constructs a rectangle directly from its edges' position and size.</summary>
         public RectangleF(float x, float y, float width, float height)
         {
             X = x;
@@ -41,17 +42,26 @@ namespace MonoPrimitives
         public static RectangleF FromCenter(Vector2 center, Vector2 size)
             => new(center.X - size.X * 0.5f, center.Y - size.Y * 0.5f, size.X, size.Y);
 
+        /// <summary>X position of the left edge — same value as <see cref="X"/>.</summary>
         public readonly float Left => X;
+
+        /// <summary>X position of the right edge (<see cref="X"/> + <see cref="Width"/>).</summary>
         public readonly float Right => X + Width;
+
+        /// <summary>Y position of the top edge — same value as <see cref="Y"/>.</summary>
         public readonly float Top => Y;
+
+        /// <summary>Y position of the bottom edge (<see cref="Y"/> + <see cref="Height"/>).</summary>
         public readonly float Bottom => Y + Height;
 
+        /// <summary><see cref="X"/>/<see cref="Y"/> as a <see cref="Vector2"/>.</summary>
         public Vector2 Position
         {
             readonly get => new(X, Y);
             set { X = value.X; Y = value.Y; }
         }
 
+        /// <summary><see cref="Width"/>/<see cref="Height"/> as a <see cref="Vector2"/>.</summary>
         public Vector2 Size
         {
             readonly get => new(Width, Height);
@@ -61,14 +71,19 @@ namespace MonoPrimitives
         /// <summary>Center point — the average of the opposite corners, so it stays correct even for a negative <see cref="Width"/>/<see cref="Height"/>.</summary>
         public readonly Vector2 Center => new(X + Width * 0.5f, Y + Height * 0.5f);
 
+        /// <summary>True when <see cref="Width"/> or <see cref="Height"/> is zero or negative.</summary>
         public readonly bool IsEmpty => Width <= 0f || Height <= 0f;
 
+        /// <summary>True if the point <c>(<paramref name="x"/>, <paramref name="y"/>)</c> lies inside this rectangle.</summary>
         public readonly bool Contains(float x, float y) => x >= X && x < Right && y >= Y && y < Bottom;
+
+        /// <summary>True if <paramref name="point"/> lies inside this rectangle.</summary>
         public readonly bool Contains(Vector2 point) => Contains(point.X, point.Y);
 
         /// <summary>True if <paramref name="other"/> lies entirely within this rectangle.</summary>
         public readonly bool Contains(RectangleF other) => other.X >= X && other.Right <= Right && other.Y >= Y && other.Bottom <= Bottom;
 
+        /// <summary>True if this rectangle and <paramref name="other"/> overlap — edges merely touching does not count.</summary>
         public readonly bool Intersects(RectangleF other) => X < other.Right && Right > other.X && Y < other.Bottom && Bottom > other.Y;
 
         /// <summary>Grows (or shrinks, for a negative amount) the rectangle by <paramref name="horizontalAmount"/>/<paramref name="verticalAmount"/> on each side, keeping the same center — matches <see cref="Rectangle.Inflate(int,int)"/>'s own convention (doubles the total size change), returned rather than mutated in place.</summary>
@@ -102,12 +117,22 @@ namespace MonoPrimitives
         /// <summary>A <see cref="Rectangle"/>'s integer values convert to <see cref="RectangleF"/> for free — no data loss going this direction, unlike <see cref="ToRectangle"/>.</summary>
         public static implicit operator RectangleF(Rectangle r) => new(r.X, r.Y, r.Width, r.Height);
 
+        /// <summary>True if every field matches <paramref name="other"/> exactly (no epsilon tolerance).</summary>
         public readonly bool Equals(RectangleF other) => X == other.X && Y == other.Y && Width == other.Width && Height == other.Height;
-        public override readonly bool Equals(object obj) => obj is RectangleF other && Equals(other);
+
+        /// <inheritdoc cref="Equals(RectangleF)"/>
+        public override readonly bool Equals(object? obj) => obj is RectangleF other && Equals(other);
+
+        /// <summary>Hash combining all 4 fields, consistent with <see cref="Equals(RectangleF)"/>.</summary>
         public override readonly int GetHashCode() => HashCode.Combine(X, Y, Width, Height);
+
+        /// <inheritdoc cref="Equals(RectangleF)"/>
         public static bool operator ==(RectangleF a, RectangleF b) => a.Equals(b);
+
+        /// <summary>The negation of <c>==</c>.</summary>
         public static bool operator !=(RectangleF a, RectangleF b) => !a.Equals(b);
 
+        /// <summary>Debug-friendly string, matching <see cref="Rectangle"/>'s own <c>ToString</c> format.</summary>
         public override readonly string ToString() => $"{{X:{X} Y:{Y} Width:{Width} Height:{Height}}}";
     }
 }

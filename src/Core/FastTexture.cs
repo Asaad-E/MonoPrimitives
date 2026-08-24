@@ -505,14 +505,14 @@ namespace MonoPrimitives
             // Name candidates cover the variations seen across MonoGame forks and versions.
             string[] names = { "glTexture", "_glTexture", "GLTexture" };
 
-            for (Type t = texture.GetType(); t != null; t = t.BaseType)
+            for (Type? t = texture.GetType(); t != null; t = t.BaseType)
             {
                 foreach (string name in names)
                 {
-                    FieldInfo f = t.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                    FieldInfo? f = t.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
                     if (f == null) continue;
 
-                    object value = f.GetValue(texture);
+                    object? value = f.GetValue(texture);
                     if (value == null) continue;
 
                     try
