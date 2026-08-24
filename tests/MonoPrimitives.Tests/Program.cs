@@ -41,6 +41,8 @@ namespace MonoPrimitives.Tests
             Camera3DTests.Run(results);
             Vector2ExtensionsTests.Run(results);
             FrameLimiterTests.Run(this, results);
+            RectangleFTests.Run(results);
+            FpsCounterTests.Run(results);
 
             using var batch = new Primitive3DBatch(GraphicsDevice);
             var camera = new Camera3D(position: new Vector3(6, 6, 6), target: Vector3.Zero, up: Vector3.Up, fovy: 50f);
@@ -51,6 +53,7 @@ namespace MonoPrimitives.Tests
                 FastTextureTests.Run(GraphicsDevice, spriteBatch, results);
 
             LineStrip3DJoinTests.Run(GraphicsDevice, results);
+            RectangleGradient4ColorTests.Run(GraphicsDevice, results);
 
             Vector2Benchmark.Run(results);
 

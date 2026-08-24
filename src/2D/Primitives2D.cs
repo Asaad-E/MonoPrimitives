@@ -1190,17 +1190,61 @@ namespace MonoPrimitives.Primitives2D
         public void FillRectangle(Rectangle rect, Color color, float rotation = 0f, Vector2? origin = null)
             => FillRectangle(rect.X, rect.Y, rect.Width, rect.Height, color, rotation, origin);
 
-        /// <summary>Draws a filled rectangle with four independently colored corners (no rotation).</summary>
-        public void FillRectangle(Rectangle rect, Color topLeft, Color topRight, Color bottomRight, Color bottomLeft)
+        /// <summary>
+        /// Draws a filled rectangle with four independently colored corners — for a gradient that
+        /// isn't a plain two-stop linear fade (see <see cref="FillRectangleGradient(float,float,float,float,Color,Color,bool,float,Vector2?,float,float)"/>
+        /// for that simpler case), e.g. all 4 corners distinct, or a warm-to-cool diagonal. The quad
+        /// is 2 triangles sharing the <paramref name="topLeft"/>-<paramref name="bottomRight"/>
+        /// diagonal (ordinary GPU-quad triangulation, same as a textured sprite quad) — each
+        /// triangle's own 3 colors interpolate linearly, which is NOT the same as true 4-corner
+        /// bilinear: a point exactly on that diagonal blends only <paramref name="topLeft"/>/
+        /// <paramref name="bottomRight"/>, with zero contribution from <paramref name="topRight"/>/
+        /// <paramref name="bottomLeft"/> — a standard, expected property of triangulated-quad color
+        /// interpolation, not a bug, and invisible at typical corner-color contrast.
+        /// <paramref name="rotation"/>/<paramref name="origin"/> work exactly like
+        /// <see cref="FillRectangle(float,float,float,float,Color,float,Vector2?)"/>'s own.
+        /// </summary>
+        public void FillRectangle(float x, float y, float width, float height, Color topLeft, Color topRight, Color bottomRight, Color bottomLeft, float rotation = 0f, Vector2? origin = null)
         {
             ThrowIfNotBegun();
-            int b = Reserve(4, 6);
-            PushVertex(rect.X, rect.Y, topLeft);
-            PushVertex(rect.X + rect.Width, rect.Y, topRight);
-            PushVertex(rect.X + rect.Width, rect.Y + rect.Height, bottomRight);
-            PushVertex(rect.X, rect.Y + rect.Height, bottomLeft);
-            PushQuadIndices(b);
+
+            if (rotation == 0f)
+            {
+                int b = Reserve(4, 6);
+                PushVertex(x, y, topLeft);
+                PushVertex(x + width, y, topRight);
+                PushVertex(x + width, y + height, bottomRight);
+                PushVertex(x, y + height, bottomLeft);
+                PushQuadIndices(b);
+                return;
+            }
+
+            Vector2 pivot = origin ?? new Vector2(width * 0.5f, height * 0.5f);
+            float cos = MathF.Cos(rotation);
+            float sin = MathF.Sin(rotation);
+            float ox = x + pivot.X;
+            float oy = y + pivot.Y;
+
+            float left = -pivot.X;
+            float top = -pivot.Y;
+            float right = left + width;
+            float bottom = top + height;
+
+            int bi = Reserve(4, 6);
+            PushVertex(ox + left * cos - top * sin, oy + left * sin + top * cos, topLeft);
+            PushVertex(ox + right * cos - top * sin, oy + right * sin + top * cos, topRight);
+            PushVertex(ox + right * cos - bottom * sin, oy + right * sin + bottom * cos, bottomRight);
+            PushVertex(ox + left * cos - bottom * sin, oy + left * sin + bottom * cos, bottomLeft);
+            PushQuadIndices(bi);
         }
+
+        /// <inheritdoc cref="FillRectangle(float,float,float,float,Color,Color,Color,Color,float,Vector2?)"/>
+        public void FillRectangle(Rectangle rect, Color topLeft, Color topRight, Color bottomRight, Color bottomLeft, float rotation = 0f, Vector2? origin = null)
+            => FillRectangle(rect.X, rect.Y, rect.Width, rect.Height, topLeft, topRight, bottomRight, bottomLeft, rotation, origin);
+
+        /// <inheritdoc cref="FillRectangle(float,float,float,float,Color,Color,Color,Color,float,Vector2?)"/>
+        public void FillRectangle(Vector2 position, Vector2 size, Color topLeft, Color topRight, Color bottomRight, Color bottomLeft, float rotation = 0f, Vector2? origin = null)
+            => FillRectangle(position.X, position.Y, size.X, size.Y, topLeft, topRight, bottomRight, bottomLeft, rotation, origin);
 
         /// <summary>
         /// Draws a rectangle's border only, growing inward from the rectangle's own edge —

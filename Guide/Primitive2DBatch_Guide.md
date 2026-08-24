@@ -119,7 +119,7 @@ Three corner families, all sharing the same Fill/Border/Draw/Gradient/Shadow pat
 | Method | What it does |
 |---|---|
 | `FillRectangle(x, y, w, h \| position, size \| rect, color, rotation, origin)` | Solid rectangle. |
-| `FillRectangle(rect, topLeft, topRight, bottomRight, bottomLeft)` | Solid rectangle with an independent color per corner. No rotation — it's a fixed 4-corner-color mapping, not a shape rotation. |
+| `FillRectangle(x, y, w, h \| position, size \| rect, topLeft, topRight, bottomRight, bottomLeft, rotation, origin)` | Solid rectangle with an independent color per corner — for a gradient that isn't a plain 2-stop fade. The quad is 2 triangles sharing the `topLeft`-`bottomRight` diagonal, so a point exactly on that diagonal (e.g. dead center) blends only those 2 corners, not all 4 (standard triangulated-quad behavior, not true bilinear). |
 | `BorderRectangle(..., color, thickness, rotation, origin, join, jointRadius)` | Outline only, inward. |
 | `DrawRectangle(..., fillColor, borderColor = null, thickness, rotation, origin, join, jointRadius)` | Fill + border — omit `borderColor` for the same color on both. |
 | `FillRectangleGradient(..., from, to, horizontal, rotation, origin, innerOffset, outerOffset)` | Linear gradient fill, `horizontal` picks the fade axis. |
