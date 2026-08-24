@@ -171,6 +171,8 @@ All four share one surface (`VirtualWidth`/`VirtualHeight`/`Scale`/`Offset`/`Bou
 var adapter = new BoxingViewportAdapter2D(GraphicsDevice, virtualWidth: 480, virtualHeight: 270);
 ```
 
+`BoxingViewportAdapter2D` also takes an optional `pixelPerfect: true` — floors the fit-scale to a whole number (minimum 1) instead of a continuous fit, so every source pixel scales to the exact same number of screen pixels everywhere (no shimmer/uneven pixels in pixel art). Expect a border on all 4 sides rather than 2 opposite bars in the common case where the window size isn't an exact multiple of the virtual resolution — `Offset` still centers it correctly either way.
+
 Unlike MonoGame.Extended's adapters, none of these subscribe to `GameWindow.ClientSizeChanged` — `Scale`/`Offset`/`BoundingRectangle` read `Device.Viewport` (or `PresentationParameters`/`GameWindow.ClientBounds`) live on every access instead of caching a value that needs an event to invalidate. Simpler, and correct by construction; the cost is a few extra property reads per frame, irrelevant next to actual draw calls.
 
 ## Using an adapter with 2D content

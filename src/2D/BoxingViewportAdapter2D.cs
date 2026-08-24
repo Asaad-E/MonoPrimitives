@@ -18,16 +18,30 @@ namespace MonoPrimitives.Primitives2D
         /// <inheritdoc/>
         public override int VirtualHeight { get; }
 
+        /// <summary>
+        /// When true, <see cref="Scale"/> floors to the nearest whole number (minimum 1) instead of
+        /// a continuous fit. A non-integer scale (e.g. 2.37x) draws some source pixels 2 screen
+        /// pixels wide and others 3 — fine for smooth art, but pixel art shimmers/distorts under it,
+        /// since every source pixel needs to become the exact same whole number of screen pixels.
+        /// Flooring to a whole number almost always leaves leftover space on BOTH axes now (not just
+        /// the one axis a continuous fit leaves bars on), so expect a border on all 4 sides rather
+        /// than 2 opposite bars, except when the window size happens to be an exact multiple of the
+        /// virtual resolution. <see cref="Offset"/> centers it either way — nothing else to configure.
+        /// </summary>
+        public bool PixelPerfect { get; }
+
         /// <summary>Wraps <paramref name="device"/>, letterboxing a <paramref name="virtualWidth"/>×<paramref name="virtualHeight"/> virtual resolution into it.</summary>
-        public BoxingViewportAdapter2D(GraphicsDevice device, int virtualWidth, int virtualHeight) : base(device)
+        /// <param name="pixelPerfect">See <see cref="PixelPerfect"/> — snaps the scale to a whole number for crisp pixel art, at the cost of a larger (all 4 sides) border in the common case where the window isn't an exact multiple of the virtual resolution.</param>
+        public BoxingViewportAdapter2D(GraphicsDevice device, int virtualWidth, int virtualHeight, bool pixelPerfect = false) : base(device)
         {
             if (virtualWidth <= 0 || virtualHeight <= 0)
                 throw new ArgumentOutOfRangeException(nameof(virtualWidth), "Virtual resolution must be positive.");
             VirtualWidth = virtualWidth;
             VirtualHeight = virtualHeight;
+            PixelPerfect = pixelPerfect;
         }
 
-        /// <summary>Uniform scale factor (same on both axes) that fits the virtual resolution inside the window without cropping.</summary>
+        /// <summary>Uniform scale factor (same on both axes) that fits the virtual resolution inside the window without cropping — floored to a whole number when <see cref="PixelPerfect"/> is set.</summary>
         public override Vector2 Scale
         {
             get
@@ -47,6 +61,7 @@ namespace MonoPrimitives.Primitives2D
                 float scaleX = (float)pp.BackBufferWidth / VirtualWidth;
                 float scaleY = (float)pp.BackBufferHeight / VirtualHeight;
                 float scale = MathF.Min(scaleX, scaleY);
+                if (PixelPerfect) scale = MathF.Max(1f, MathF.Floor(scale));
                 return new Vector2(scale, scale);
             }
         }
