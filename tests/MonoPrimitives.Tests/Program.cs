@@ -46,6 +46,7 @@ namespace MonoPrimitives.Tests
             PrimitiveInputDeadzoneTests.Run(results);
             ScreenshotUtilTests.Run(GraphicsDevice, results);
             ShapeTests2D.Run(GraphicsDevice, results);
+            Primitive2DBatchLifecycleTests.Run(GraphicsDevice, results);
             PolygonInsetRegressionTests.Run(GraphicsDevice, results);
             ClearLetterboxedTests.Run(GraphicsDevice, results);
             BoxingViewportAdapter2DPixelPerfectTests.Run(GraphicsDevice, results);

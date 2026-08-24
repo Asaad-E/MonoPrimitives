@@ -3,9 +3,10 @@
   <!--
     One assembly, raylib/MonoGame.Extended-style: 2D, 3D, and the shared Core pieces all live
     here (see the Core/, 2D/, 3D/ subfolders — same source, still organized the same way, just
-    compiled into one DLL instead of three). Namespaces stay as they were (MonoPrimitives,
-    Primitives2D, MonoPrimitives3D) — nothing about how you reference a type changes, only how
-    many separate assemblies you needed to install to get it.
+    compiled into one DLL instead of three). Namespaces are unified under one root
+    (MonoPrimitives, MonoPrimitives.Primitives2D, MonoPrimitives.Primitives3D — see
+    DECISIONS.md) — nothing about how you reference a type changes based on assembly count,
+    only how many separate packages you needed to install to get it.
   -->
 
   <PropertyGroup>

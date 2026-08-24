@@ -234,6 +234,7 @@ namespace MonoPrimitives.Primitives2D
         // ------------------------------------------------------------------
 
         private bool _began;
+        private bool _disposed;
 
         // Saved device state, restored on End(). Null until the first Begin() call.
         private BlendState? _savedBlend;
@@ -325,6 +326,7 @@ namespace MonoPrimitives.Primitives2D
             RasterizerState? rasterizerState = null,
             Effect? effect = null)
         {
+            ThrowIfDisposed();
             if (_began)
                 throw new InvalidOperationException("Begin cannot be called again until End has been called.");
 
@@ -471,6 +473,12 @@ namespace MonoPrimitives.Primitives2D
         {
             if (!_began)
                 throw new InvalidOperationException("Begin must be called before drawing.");
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(Primitive2DBatch));
         }
 
         // ------------------------------------------------------------------
@@ -4831,6 +4839,12 @@ namespace MonoPrimitives.Primitives2D
         // ------------------------------------------------------------------
 
         /// <inheritdoc />
-        public void Dispose() => _effect?.Dispose();
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+            _effect.Dispose();
+            _disposed = true;
+        }
     }
 }
