@@ -10,9 +10,11 @@ namespace MonoPrimitives
     /// <summary>
     /// A thin wrapper over a MonoGame <see cref="Texture2D"/> (or <see cref="RenderTarget2D"/>) that
     /// uploads full-texture or sub-rectangle pixel data via a direct <c>glTexSubImage2D</c> call,
-    /// bypassing <see cref="Texture2D.SetData{T}(T[])"/>'s own per-call managed overhead. Measured
-    /// ~2.5-2.7x faster than <c>SetData</c> for a 2500x2500 full-texture update once per real frame
-    /// (DesktopGL, Windows) — see <c>tests/MonoPrimitives.Tests/FastTextureTests.cs</c>.
+    /// bypassing <see cref="Texture2D.SetData{T}(T[])"/>'s own per-call managed overhead.
+    /// </summary>
+    /// <remarks>
+    /// Measured ~2.5-2.7x faster than <c>SetData</c> for a 2500x2500 full-texture update once per
+    /// real frame (DesktopGL, Windows) — see <c>tests/MonoPrimitives.Tests/FastTextureTests.cs</c>.
     ///
     /// This reaches into MonoGame's private internal GL texture handle via reflection — a
     /// supported-until-it-isn't arrangement that can break on a future MonoGame release. It is built
@@ -26,7 +28,7 @@ namespace MonoPrimitives
     /// background task. <see cref="RenderTarget2D"/> is supported but must not be the active render
     /// target during <c>Update</c> — call <c>GraphicsDevice.SetRenderTarget(null)</c> first. Only mip
     /// level 0 is written; create textures for this with <c>mipMap: false</c>.
-    /// </summary>
+    /// </remarks>
     public sealed unsafe class FastTexture : IDisposable
     {
         // ------------------------------------------------------------------
@@ -290,8 +292,11 @@ namespace MonoPrimitives
 
         /// <summary>
         /// Clears MonoGame's cached knowledge of which texture is bound to each sampler slot.
-        ///
-        /// WHY: GraphicsDevice keeps a per-slot cache of what it believes is bound, and skips a
+        /// Called automatically after every raw upload unless <see cref="AutoInvalidateDeviceCache"/>
+        /// is turned off.
+        /// </summary>
+        /// <remarks>
+        /// GraphicsDevice keeps a per-slot cache of what it believes is bound, and skips a
         /// redundant glBindTexture -- along with the sampler-state application that rides with a
         /// real bind -- whenever it thinks nothing changed. Our raw glBindTexture happens entirely
         /// outside that cache, so MonoGame has no way to know the GL binding moved underneath it.
@@ -299,10 +304,7 @@ namespace MonoPrimitives
         /// without any other texture switching in between can skip a bind it actually needed.
         /// Nulling the affected slots forces the next assignment to read as a genuine change,
         /// guaranteeing a real re-bind.
-        ///
-        /// Called automatically after every raw upload unless <see cref="AutoInvalidateDeviceCache"/>
-        /// is turned off.
-        /// </summary>
+        /// </remarks>
         public void InvalidateDeviceTextureCache()
         {
             // Slot 0 is what SpriteBatch uses and is the one that always matters. Higher slots only

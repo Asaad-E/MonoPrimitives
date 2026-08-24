@@ -7,11 +7,13 @@ namespace MonoPrimitives
     /// Float-precision counterpart to MonoGame's own <see cref="Rectangle"/> (integer-only) — for
     /// anything that needs sub-pixel positions/sizes (a zoomed camera's visible bounds, a smoothly
     /// scaling UI panel, a hitbox that shouldn't snap to whole pixels) without truncating them.
+    /// </summary>
+    /// <remarks>
     /// Mirrors <see cref="Rectangle"/>'s own member shape (<see cref="Left"/>/<see cref="Right"/>/
     /// <see cref="Top"/>/<see cref="Bottom"/>/<see cref="Contains(Vector2)"/>/<see cref="Intersects"/>/
     /// <see cref="Inflate"/>/<see cref="Union"/>/<see cref="Intersect"/>) so it behaves exactly like
     /// the type you already know, just without the integer rounding.
-    /// </summary>
+    /// </remarks>
     public struct RectangleF : IEquatable<RectangleF>
     {
         /// <summary>X position of the rectangle's left edge.</summary>

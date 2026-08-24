@@ -8,11 +8,14 @@ namespace MonoPrimitives.Primitives2D
 {
     /// <summary>
     /// 1:1 with the game window's own client area (<see cref="GameWindow.ClientBounds"/>), not
-    /// the device's viewport — the distinction matters right after a resize, on some backends,
-    /// before the device has caught up to the new window size. Scale is always (1,1), offset
-    /// always zero, same as <see cref="DefaultViewportAdapter2D"/>; use this one specifically
-    /// when you need window-client-area size rather than device-viewport size.
+    /// the device's viewport. Scale is always (1,1), offset always zero, same as
+    /// <see cref="DefaultViewportAdapter2D"/>.
     /// </summary>
+    /// <remarks>
+    /// The distinction matters right after a resize, on some backends, before the device has
+    /// caught up to the new window size. Use this one specifically when you need
+    /// window-client-area size rather than device-viewport size.
+    /// </remarks>
     public sealed class WindowViewportAdapter2D : ViewportAdapter2D
     {
         private readonly GameWindow _window;

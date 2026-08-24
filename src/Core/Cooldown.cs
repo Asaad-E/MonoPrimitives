@@ -6,13 +6,15 @@ namespace MonoPrimitives
     /// <summary>
     /// A simple countdown: <see cref="Update(float)"/> it down every frame, then check
     /// <see cref="IsReady"/> — or call <see cref="TryUse"/> to check-and-restart in one step — for
-    /// an attack cooldown, a spawn timer, a debounce on repeated input. A plain <c>struct</c>, not a
-    /// class: cheap enough to be a field on hundreds of entities in a simulation without each one
-    /// costing a separate heap allocation. Store it as a field, not a local re-assigned each frame —
-    /// the usual caveat for any mutable struct (mutating a copy pulled into a local, an array
-    /// element accessed by value, or a <c>foreach</c> loop variable never writes back to the
-    /// original).
+    /// an attack cooldown, a spawn timer, a debounce on repeated input.
     /// </summary>
+    /// <remarks>
+    /// A plain <c>struct</c>, not a class: cheap enough to be a field on hundreds of entities in a
+    /// simulation without each one costing a separate heap allocation. Store it as a field, not a
+    /// local re-assigned each frame — the usual caveat for any mutable struct (mutating a copy
+    /// pulled into a local, an array element accessed by value, or a <c>foreach</c> loop variable
+    /// never writes back to the original).
+    /// </remarks>
     public struct Cooldown
     {
         private float _remaining;

@@ -4,11 +4,13 @@ namespace MonoPrimitives
 {
     /// <summary>
     /// Classic 0→1 tweening curves for one-shot animations with a known duration — a menu
-    /// sliding in, an object scaling up, a color fading out. Complements <c>Camera2D</c>/
-    /// <c>Camera3D</c>'s own <c>SmoothDamp</c> (a physical spring, good for open-ended
-    /// following/zoom instead). Typical use:
-    /// <c>float eased = Easing.CubicOut(Math.Clamp(elapsed / duration, 0f, 1f));</c>
+    /// sliding in, an object scaling up, a color fading out.
     /// </summary>
+    /// <remarks>
+    /// Complements <c>Camera2D</c>/<c>Camera3D</c>'s own <c>SmoothDamp</c> (a physical spring,
+    /// good for open-ended following/zoom instead). Typical use:
+    /// <c>float eased = Easing.CubicOut(Math.Clamp(elapsed / duration, 0f, 1f));</c>
+    /// </remarks>
     public static class Easing
     {
         /// <summary>No easing — passes <paramref name="t"/> through unchanged. The baseline every other curve bends away from.</summary>

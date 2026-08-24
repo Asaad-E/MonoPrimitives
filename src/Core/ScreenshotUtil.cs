@@ -6,12 +6,15 @@ using Microsoft.Xna.Framework.Graphics;
 namespace MonoPrimitives
 {
     /// <summary>
-    /// Saves the current back buffer to an image file — MonoGame has no built-in equivalent
-    /// (<see cref="Texture2D.SaveAsPng"/>/<see cref="Texture2D.SaveAsJpeg"/> exist, but only for a
-    /// <see cref="Texture2D"/> you already own; getting the actual on-screen frame into one is left
-    /// entirely to you). Call after <c>End()</c>/before <c>Present()</c> — typically the last thing
-    /// in <c>Draw</c> — so the buffer actually holds this frame's finished image.
+    /// Saves the current back buffer to an image file. Call after <c>End()</c>/before <c>Present()</c>
+    /// — typically the last thing in <c>Draw</c> — so the buffer actually holds this frame's
+    /// finished image.
     /// </summary>
+    /// <remarks>
+    /// MonoGame has no built-in equivalent (<see cref="Texture2D.SaveAsPng"/>/<see cref="Texture2D.SaveAsJpeg"/>
+    /// exist, but only for a <see cref="Texture2D"/> you already own; getting the actual
+    /// on-screen frame into one is left entirely to you).
+    /// </remarks>
     public static class ScreenshotUtil
     {
         /// <summary>

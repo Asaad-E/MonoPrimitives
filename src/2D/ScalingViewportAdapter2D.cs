@@ -9,9 +9,9 @@ namespace MonoPrimitives.Primitives2D
     /// <summary>
     /// Stretches a fixed virtual resolution to exactly fill the window — independent X/Y scale
     /// factors, no letterbox/pillarbox bars, but distorts the aspect ratio if the window's
-    /// proportions don't match the virtual resolution's. Use <see cref="BoxingViewportAdapter2D"/>
-    /// instead when preserving aspect ratio matters more than filling the whole window.
+    /// proportions don't match the virtual resolution's.
     /// </summary>
+    /// <remarks>Use <see cref="BoxingViewportAdapter2D"/> instead when preserving aspect ratio matters more than filling the whole window.</remarks>
     public sealed class ScalingViewportAdapter2D : ViewportAdapter2D
     {
         /// <inheritdoc/>

@@ -9,8 +9,9 @@ namespace MonoPrimitives.Primitives2D
     /// <summary>
     /// Letterboxes/pillarboxes a fixed virtual resolution into the window: uniform scale (the
     /// larger of the two axes' fit), preserving aspect ratio — black bars on the short axis
-    /// instead of stretching. The common choice for pixel-art or fixed-composition prototypes.
+    /// instead of stretching.
     /// </summary>
+    /// <remarks>The common choice for pixel-art or fixed-composition prototypes.</remarks>
     public sealed class BoxingViewportAdapter2D : ViewportAdapter2D
     {
         /// <inheritdoc/>
@@ -20,14 +21,17 @@ namespace MonoPrimitives.Primitives2D
 
         /// <summary>
         /// When true, <see cref="Scale"/> floors to the nearest whole number (minimum 1) instead of
-        /// a continuous fit. A non-integer scale (e.g. 2.37x) draws some source pixels 2 screen
-        /// pixels wide and others 3 — fine for smooth art, but pixel art shimmers/distorts under it,
-        /// since every source pixel needs to become the exact same whole number of screen pixels.
-        /// Flooring to a whole number almost always leaves leftover space on BOTH axes now (not just
-        /// the one axis a continuous fit leaves bars on), so expect a border on all 4 sides rather
-        /// than 2 opposite bars, except when the window size happens to be an exact multiple of the
-        /// virtual resolution. <see cref="Offset"/> centers it either way — nothing else to configure.
+        /// a continuous fit. <see cref="Offset"/> centers it either way — nothing else to configure.
         /// </summary>
+        /// <remarks>
+        /// A non-integer scale (e.g. 2.37x) draws some source pixels 2 screen pixels wide and
+        /// others 3 — fine for smooth art, but pixel art shimmers/distorts under it, since every
+        /// source pixel needs to become the exact same whole number of screen pixels. Flooring to
+        /// a whole number almost always leaves leftover space on BOTH axes now (not just the one
+        /// axis a continuous fit leaves bars on), so expect a border on all 4 sides rather than 2
+        /// opposite bars, except when the window size happens to be an exact multiple of the
+        /// virtual resolution.
+        /// </remarks>
         public bool PixelPerfect { get; }
 
         /// <summary>Wraps <paramref name="device"/>, letterboxing a <paramref name="virtualWidth"/>×<paramref name="virtualHeight"/> virtual resolution into it.</summary>

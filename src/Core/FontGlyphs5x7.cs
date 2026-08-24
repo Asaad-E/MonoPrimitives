@@ -9,11 +9,13 @@ namespace MonoPrimitives
     /// The raw bitmap data behind both libraries' 5x7 debug font — no rendering here (that's
     /// <c>DebugFont5x7</c> in each library, which draws it differently: flat rectangles in 2D
     /// screen space, camera-facing billboard quads in 3D world space). Covers full basic ASCII
-    /// (32-126) plus the Spanish characters (ñ Ñ á é í ó ú Á É Í Ó Ú ü Ü ¿ ¡). Not production
-    /// typography: lowercase letters have no true descenders (g, j, p, q, y are compressed to
-    /// fit the same 7-row cell as everything else), and unknown characters fall back to a
-    /// hollow box instead of silently vanishing.
+    /// (32-126) plus the Spanish characters (ñ Ñ á é í ó ú Á É Í Ó Ú ü Ü ¿ ¡).
     /// </summary>
+    /// <remarks>
+    /// Not production typography: lowercase letters have no true descenders (g, j, p, q, y are
+    /// compressed to fit the same 7-row cell as everything else), and unknown characters fall
+    /// back to a hollow box instead of silently vanishing.
+    /// </remarks>
     public static class FontGlyphs5x7
     {
         /// <summary>Every glyph is 5 columns wide, before any <c>pixelSize</c> scaling a caller applies.</summary>
@@ -205,15 +207,18 @@ namespace MonoPrimitives
         /// <summary>
         /// Greedy word-wrap: breaks <paramref name="text"/> into lines no wider than
         /// <paramref name="maxWidth"/> (already scaled by <paramref name="pixelSize"/>), inserting
-        /// <c>'\n'</c> at word boundaries — feed the result straight into <c>DrawString</c>/<c>DrawString3D</c>
-        /// (both already handle multi-line via <c>MeasureText</c>/<c>MeasureText3D</c>), or call this
-        /// directly for your own layout. Existing <c>'\n'</c> in <paramref name="text"/> are preserved
-        /// as forced breaks and each resulting paragraph is wrapped independently — a blank line
-        /// stays blank. A single word wider than <paramref name="maxWidth"/> on its own is hard-broken
-        /// mid-word (there's no earlier valid break point, and silently overflowing or dropping it
-        /// would be worse) rather than left overflowing. Returns <paramref name="text"/> unchanged
-        /// for a non-positive <paramref name="maxWidth"/>/<paramref name="pixelSize"/> or empty input.
+        /// <c>'\n'</c> at word boundaries. Returns <paramref name="text"/> unchanged for a
+        /// non-positive <paramref name="maxWidth"/>/<paramref name="pixelSize"/> or empty input.
         /// </summary>
+        /// <remarks>
+        /// Feed the result straight into <c>DrawString</c>/<c>DrawString3D</c> (both already handle
+        /// multi-line via <c>MeasureText</c>/<c>MeasureText3D</c>), or call this directly for your
+        /// own layout. Existing <c>'\n'</c> in <paramref name="text"/> are preserved as forced
+        /// breaks and each resulting paragraph is wrapped independently — a blank line stays blank.
+        /// A single word wider than <paramref name="maxWidth"/> on its own is hard-broken mid-word
+        /// (there's no earlier valid break point, and silently overflowing or dropping it would be
+        /// worse) rather than left overflowing.
+        /// </remarks>
         public static string WrapText(string text, float maxWidth, float pixelSize, float glyphSpacing = 1f)
         {
             if (string.IsNullOrEmpty(text) || maxWidth <= 0f || pixelSize <= 0f) return text ?? string.Empty;

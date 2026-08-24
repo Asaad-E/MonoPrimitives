@@ -6,11 +6,14 @@ namespace MonoPrimitives
     /// <summary>
     /// A generic object pool: reuses instances instead of letting them fall to the GC, for anything
     /// spawned and discarded often enough to matter — bullets, particles, agents in a large
-    /// simulation. Doesn't know or care what <typeparamref name="T"/> is or does; it only hands out
-    /// and takes back instances between <see cref="Get"/>/<see cref="Return"/> calls you make
-    /// yourself, the same "give you the building block, not the system" shape as this library's own
-    /// zero-per-frame-allocation internals.
+    /// simulation.
     /// </summary>
+    /// <remarks>
+    /// Doesn't know or care what <typeparamref name="T"/> is or does; it only hands out and takes
+    /// back instances between <see cref="Get"/>/<see cref="Return"/> calls you make yourself, the
+    /// same "give you the building block, not the system" shape as this library's own
+    /// zero-per-frame-allocation internals.
+    /// </remarks>
     /// <typeparam name="T">The pooled type. Constrained to a reference type — pooling exists to avoid heap allocation, which a value type doesn't need help avoiding.</typeparam>
     public sealed class ObjectPool<T> where T : class
     {
@@ -57,12 +60,15 @@ namespace MonoPrimitives
         /// Gives <paramref name="item"/> back to the pool for a future <see cref="Get"/> to reuse —
         /// runs the constructor's <c>onReturn</c> on it first if one was given. Don't touch
         /// <paramref name="item"/> again after this call; a later <see cref="Get"/> may hand the
-        /// same instance to someone else at any time. Once <see cref="CountInactive"/> would exceed
-        /// the constructor's <c>maxSize</c>, <paramref name="item"/> is simply dropped (left for the
-        /// GC) instead of growing the pool further. Returning something never obtained from
-        /// <see cref="Get"/>, or returning the same instance twice, is caller misuse — not guarded
-        /// against, the same trust-the-caller boundary this library draws everywhere else.
+        /// same instance to someone else at any time.
         /// </summary>
+        /// <remarks>
+        /// Once <see cref="CountInactive"/> would exceed the constructor's <c>maxSize</c>,
+        /// <paramref name="item"/> is simply dropped (left for the GC) instead of growing the pool
+        /// further. Returning something never obtained from <see cref="Get"/>, or returning the
+        /// same instance twice, is caller misuse — not guarded against, the same trust-the-caller
+        /// boundary this library draws everywhere else.
+        /// </remarks>
         public void Return(T item)
         {
             if (item is null) throw new ArgumentNullException(nameof(item));

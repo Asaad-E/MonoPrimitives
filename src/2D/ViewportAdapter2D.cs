@@ -7,15 +7,17 @@ using Microsoft.Xna.Framework.Graphics;
 namespace MonoPrimitives.Primitives2D
 {
     /// <summary>
-    /// Maps a fixed "virtual" resolution onto the actual window — the same family MonoGame.Extended
-    /// offers (<c>DefaultViewportAdapter</c>/<c>BoxingViewportAdapter</c>/<c>ScalingViewportAdapter</c>/
-    /// <c>WindowViewportAdapter</c>), folded into this library so a prototype doesn't need the
-    /// Extended package just for resolution independence. Game logic and drawing work in
+    /// Maps a fixed "virtual" resolution onto the actual window. Game logic and drawing work in
     /// <see cref="VirtualWidth"/>×<see cref="VirtualHeight"/> coordinates regardless of the
     /// actual window size; <see cref="GetScaleMatrix"/> maps that virtual space onto the window.
+    /// </summary>
+    /// <remarks>
+    /// The same family MonoGame.Extended offers (<c>DefaultViewportAdapter</c>/<c>BoxingViewportAdapter</c>/
+    /// <c>ScalingViewportAdapter</c>/<c>WindowViewportAdapter</c>), folded into this library so a
+    /// prototype doesn't need the Extended package just for resolution independence.
     /// <see cref="Camera2D"/> folds this in automatically when constructed with an adapter —
     /// <c>camera.GetTransformMatrix()</c> alone is enough to pass into <c>Primitive2DBatch.Begin</c>.
-    /// </summary>
+    /// </remarks>
     public abstract class ViewportAdapter2D
     {
         /// <summary>Device this adapter reads the actual window/viewport size from.</summary>
@@ -60,6 +62,8 @@ namespace MonoPrimitives.Primitives2D
         /// Sets the <see cref="GraphicsDevice"/>'s active viewport to <see cref="BoundingRectangle"/>,
         /// so hardware clears/clips stop at the virtual viewport's edge instead of covering the
         /// full window. Call once after resizing (or once per frame before drawing, if simplest).
+        /// </summary>
+        /// <remarks>
         /// Don't combine this with <see cref="GetScaleMatrix"/> for 2D drawing — the matrix already
         /// bakes in <see cref="Offset"/>, so narrowing the device viewport too double-applies it
         /// (only visible for adapters with a nonzero Offset, e.g. <see cref="BoxingViewportAdapter2D"/>).
@@ -74,7 +78,7 @@ namespace MonoPrimitives.Primitives2D
         /// current viewport, draw a rectangle sized to it instead (its bounds are already respected
         /// by an actual draw, unlike Clear) — e.g. after narrowing, a <c>Primitive2DBatch.Begin()</c>/
         /// <c>FillRectangle(0, 0, Device.Viewport.Width, Device.Viewport.Height, color)</c>/<c>End()</c>.
-        /// </summary>
+        /// </remarks>
         public virtual void Apply() => Device.Viewport = new Viewport(BoundingRectangle);
 
         /// <summary>Restores the <see cref="GraphicsDevice"/>'s viewport to the full window.</summary>

@@ -6,12 +6,14 @@ namespace MonoPrimitives
 {
     /// <summary>
     /// Color conversions and adjustments that are awkward directly in RGB — hex strings, HSV,
-    /// lightening/darkening/saturating, and a hue-aware lerp for vivid color-wheel transitions
-    /// (a straight RGB lerp between two saturated hues muddies through gray on the way).
+    /// lightening/darkening/saturating, and a hue-aware lerp for vivid color-wheel transitions.
+    /// </summary>
+    /// <remarks>
     /// Hue is a normalized turn in [0,1) (0 = red, 1/3 = green, 2/3 = blue), matching this
     /// project's own convention elsewhere for angle-like values (see <c>FillCircleSector</c>),
-    /// not degrees or radians.
-    /// </summary>
+    /// not degrees or radians. A hue-aware lerp exists because a straight RGB lerp between two
+    /// saturated hues muddies through gray on the way — see <see cref="LerpHSV"/>.
+    /// </remarks>
     public static class ColorUtil
     {
         // ---------------------------------------------------------------------
@@ -148,12 +150,14 @@ namespace MonoPrimitives
         public static Color Invert(Color color) => new((byte)(255 - color.R), (byte)(255 - color.G), (byte)(255 - color.B), color.A);
 
         /// <summary>
-        /// Adjusts contrast around each RGB channel's midpoint (127.5) — <paramref name="amount"/>
+        /// Adjusts contrast around each RGB channel's midpoint (127.5). <paramref name="amount"/>
         /// in [-1,1]: 0 leaves the color unchanged, 1 doubles every channel's distance from the
-        /// midpoint (clamped), -1 flattens every channel to exactly mid-gray. Unlike
-        /// <see cref="Saturate"/>/<see cref="Desaturate"/>, this operates directly on RGB, not
-        /// hue/value — a contrast pull can shift a color's apparent hue slightly, which is expected.
+        /// midpoint (clamped), -1 flattens every channel to exactly mid-gray.
         /// </summary>
+        /// <remarks>
+        /// Unlike <see cref="Saturate"/>/<see cref="Desaturate"/>, this operates directly on RGB,
+        /// not hue/value — a contrast pull can shift a color's apparent hue slightly, which is expected.
+        /// </remarks>
         public static Color Contrast(Color color, float amount)
         {
             float factor = 1f + Math.Clamp(amount, -1f, 1f);
@@ -167,12 +171,14 @@ namespace MonoPrimitives
         public static Color Lerp(Color a, Color b, float t) => Color.Lerp(a, b, t);
 
         /// <summary>
-        /// Interpolates through HSV space instead of RGB — a straight RGB lerp from a saturated
-        /// red to a saturated blue passes through a muddy gray/purple at t=0.5; this instead
-        /// sweeps the hue wheel, staying vivid the whole way. Hue takes the SHORT way around the
-        /// wheel (e.g. red→violet goes backward through magenta, not forward through the whole
-        /// spectrum) unless <paramref name="longWay"/> is set.
+        /// Interpolates through HSV space instead of RGB, staying vivid the whole way. Hue takes
+        /// the SHORT way around the wheel (e.g. red→violet goes backward through magenta, not
+        /// forward through the whole spectrum) unless <paramref name="longWay"/> is set.
         /// </summary>
+        /// <remarks>
+        /// A straight RGB lerp from a saturated red to a saturated blue passes through a muddy
+        /// gray/purple at t=0.5; this sweeps the hue wheel instead to avoid that.
+        /// </remarks>
         public static Color LerpHSV(Color a, Color b, float t, bool longWay = false)
         {
             ToHSV(a, out float h1, out float s1, out float v1);
@@ -228,9 +234,9 @@ namespace MonoPrimitives
         /// <summary>
         /// Overlay blend: <see cref="Multiply"/> where <paramref name="a"/> is dark, <see cref="Screen"/>
         /// where it's light — boosts contrast instead of uniformly darkening or lightening.
-        /// <paramref name="a"/> is the base color; <paramref name="b"/> is the color overlaid on it
-        /// (the two aren't interchangeable, unlike <see cref="Multiply"/>/<see cref="Screen"/>).
+        /// <paramref name="a"/> is the base color; <paramref name="b"/> is the color overlaid on it.
         /// </summary>
+        /// <remarks>The two arguments aren't interchangeable, unlike <see cref="Multiply"/>/<see cref="Screen"/>.</remarks>
         public static Color Overlay(Color a, Color b)
             => new(OverlayChannel(a.R, b.R), OverlayChannel(a.G, b.G), OverlayChannel(a.B, b.B), a.A);
 

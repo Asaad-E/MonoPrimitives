@@ -5,11 +5,13 @@ namespace MonoPrimitives
     /// <summary>
     /// Seedable gradient (Perlin-style) noise — smooth, deterministic pseudo-randomness for
     /// terrain heightmaps, procedural texture-like effects, or any "organic" variation that
-    /// needs to look continuous rather than static-y. Output is roughly in [-1, 1] (not hard
-    /// clamped — gradient noise can slightly overshoot that range at some inputs, same as any
-    /// standard Perlin implementation). Construct once per seed and reuse — the seed only
-    /// affects a one-time permutation-table shuffle, not the cost of each sample.
+    /// needs to look continuous rather than static-y. Construct once per seed and reuse.
     /// </summary>
+    /// <remarks>
+    /// Output is roughly in [-1, 1] (not hard clamped — gradient noise can slightly overshoot
+    /// that range at some inputs, same as any standard Perlin implementation). The seed only
+    /// affects a one-time permutation-table shuffle, not the cost of each sample.
+    /// </remarks>
     public sealed class Noise
     {
         private readonly int[] _perm = new int[512];
@@ -27,13 +29,15 @@ namespace MonoPrimitives
         /// Creates a noise generator whose permutation table is shuffled from <paramref name="seed"/>
         /// — same seed always gives the same sequence of samples. <paramref name="octaves"/>/
         /// <paramref name="lacunarity"/>/<paramref name="gain"/> set the initial
-        /// <see cref="Octaves"/>/<see cref="Lacunarity"/>/<see cref="Gain"/> (editable afterward) —
-        /// one consistent fBm configuration per generator, the same shape <see cref="Primitives2D.Camera2D"/>'s
+        /// <see cref="Octaves"/>/<see cref="Lacunarity"/>/<see cref="Gain"/> (editable afterward).
+        /// </summary>
+        /// <remarks>
+        /// One consistent fBm configuration per generator, the same shape <see cref="Primitives2D.Camera2D"/>'s
         /// <c>MoveSpeed</c> or <see cref="PrimitiveInput"/>'s <c>DoubleClickTime</c> use, rather than
         /// repeating the same three values at every <see cref="Fbm2D"/> call site. Construct a second
         /// <see cref="Noise"/> with the same seed (cheap — just a permutation shuffle) if you
         /// genuinely need two different fBm configurations sampling the same underlying gradient field.
-        /// </summary>
+        /// </remarks>
         public Noise(int seed = 0, int octaves = 4, float lacunarity = 2f, float gain = 0.5f)
         {
             Octaves = octaves;
@@ -123,11 +127,14 @@ namespace MonoPrimitives
 
         /// <summary>
         /// Fractal Brownian motion: sums <see cref="Octaves"/> layers of <see cref="Sample2D"/> at
-        /// increasing frequency (<see cref="Lacunarity"/> per octave) and decreasing amplitude
-        /// (<see cref="Gain"/> per octave) — rougher, more natural-looking terrain than a single
-        /// noise octave. Result is normalized back to roughly the same [-1,1] range as a single
-        /// sample regardless of octave count.
+        /// increasing frequency and decreasing amplitude, normalized back to roughly the same
+        /// [-1,1] range as a single sample regardless of octave count.
         /// </summary>
+        /// <remarks>
+        /// Frequency scales by <see cref="Lacunarity"/> and amplitude by <see cref="Gain"/> each
+        /// octave — more octaves means rougher, more natural-looking terrain than a single noise
+        /// octave alone.
+        /// </remarks>
         public float Fbm2D(float x, float y)
         {
             float sum = 0f, amplitude = 1f, frequency = 1f, maxAmplitude = 0f;
@@ -170,13 +177,16 @@ namespace MonoPrimitives
         }
 
         /// <summary>
-        /// Ridged multifractal noise: each octave folds <see cref="Sample2D"/> through
-        /// <c>(1 - |sample|)²</c> before summing, so values near a lattice's zero-crossings (where
-        /// <c>|sample|</c> is smallest) become sharp ridges instead of smooth rolling hills — the
-        /// standard look for mountain-ridge terrain. Unlike <see cref="Fbm2D"/>, the result is
-        /// naturally in roughly <c>[0,1]</c>, not <c>[-1,1]</c> (squaring a folded, already-positive
-        /// value can never go negative). Uses <see cref="Octaves"/>/<see cref="Lacunarity"/>/<see cref="Gain"/>, same as <see cref="Fbm2D"/>.
+        /// Ridged multifractal noise — the standard look for mountain-ridge terrain. Result is
+        /// naturally in roughly <c>[0,1]</c>, not <c>[-1,1]</c> like <see cref="Fbm2D"/>. Uses
+        /// <see cref="Octaves"/>/<see cref="Lacunarity"/>/<see cref="Gain"/>, same as <see cref="Fbm2D"/>.
         /// </summary>
+        /// <remarks>
+        /// Each octave folds <see cref="Sample2D"/> through <c>(1 - |sample|)²</c> before summing, so
+        /// values near a lattice's zero-crossings (where <c>|sample|</c> is smallest) become sharp
+        /// ridges instead of smooth rolling hills. Squaring a folded, already-positive value can
+        /// never go negative, which is why the result stays non-negative unlike <see cref="Fbm2D"/>.
+        /// </remarks>
         public float RidgeNoise2D(float x, float y)
         {
             float sum = 0f, amplitude = 1f, frequency = 1f, maxAmplitude = 0f;
@@ -207,11 +217,14 @@ namespace MonoPrimitives
         }
 
         /// <summary>
-        /// Turbulence: sums <c>|<see cref="Sample2D"/>|</c> per octave instead of the signed value
-        /// — a rougher, "billowy" look (creases at every zero-crossing instead of smooth troughs).
-        /// Naturally in roughly <c>[0,1]</c>, like <see cref="RidgeNoise2D"/>, not <c>[-1,1]</c> like
-        /// <see cref="Fbm2D"/>. Uses <see cref="Octaves"/>/<see cref="Lacunarity"/>/<see cref="Gain"/>.
+        /// Turbulence: a rougher, "billowy" look than <see cref="Fbm2D"/>. Naturally in roughly
+        /// <c>[0,1]</c>, like <see cref="RidgeNoise2D"/>, not <c>[-1,1]</c>. Uses
+        /// <see cref="Octaves"/>/<see cref="Lacunarity"/>/<see cref="Gain"/>.
         /// </summary>
+        /// <remarks>
+        /// Sums <c>|<see cref="Sample2D"/>|</c> per octave instead of the signed value, which creases
+        /// at every zero-crossing instead of leaving smooth troughs.
+        /// </remarks>
         public float Turbulence2D(float x, float y)
         {
             float sum = 0f, amplitude = 1f, frequency = 1f, maxAmplitude = 0f;

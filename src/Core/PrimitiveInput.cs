@@ -68,17 +68,14 @@ namespace MonoPrimitives
         /// <summary>Creates an input poller with no typed-text support — <see cref="GetCharPressed"/> always returns <c>'\0'</c>, since there's no <see cref="GameWindow"/> to subscribe to. Use <see cref="PrimitiveInput(GameWindow)"/> instead if you need real typed text.</summary>
         public PrimitiveInput() { }
 
-        /// <summary>
-        /// Creates an input poller that also subscribes to <paramref name="window"/>'s
-        /// <c>TextInput</c> event, enabling <see cref="GetCharPressed"/> — the only correct way to
-        /// get typed characters. Keyboard-state polling (everything else in this class) can't
-        /// produce them correctly: <see cref="Keys"/> is physical key identity, not the character a
-        /// layout/shift/dead-key combination actually produces (e.g. this library's own
-        /// <c>DebugFont5x7</c> supports Spanish accents like 'á', which are typically composed from
-        /// a dead-key sequence only the OS can resolve), and OS key-repeat timing can't be
-        /// reconstructed by guessing at settings the OS already knows. Call <see cref="Dispose"/>
-        /// when done to unsubscribe.
-        /// </summary>
+        /// <summary>Creates an input poller that also subscribes to <paramref name="window"/>'s <c>TextInput</c> event, enabling <see cref="GetCharPressed"/>. Call <see cref="Dispose"/> when done to unsubscribe.</summary>
+        /// <remarks>
+        /// The only correct way to get typed characters — keyboard-state polling (everything else
+        /// in this class) can't produce them: <see cref="Keys"/> is physical key identity, not the
+        /// character a layout/shift/dead-key combination actually produces (e.g. Spanish 'á' is
+        /// typically composed from a dead-key sequence only the OS can resolve), and OS key-repeat
+        /// timing can't be reconstructed by guessing at settings the OS already knows.
+        /// </remarks>
         public PrimitiveInput(GameWindow window)
         {
             _window = window ?? throw new ArgumentNullException(nameof(window));
@@ -99,13 +96,8 @@ namespace MonoPrimitives
             _textInputCount++;
         }
 
-        /// <summary>
-        /// Dequeues the next typed character since the last call, or <c>'\0'</c> if none are
-        /// queued — call in a loop (<c>while ((c = input.GetCharPressed()) != '\0') ...</c>) to
-        /// drain everything typed since you last checked, same shape as raylib's own
-        /// <c>GetCharPressed</c>. Always <c>'\0'</c> if this instance was constructed without a
-        /// <see cref="GameWindow"/> (the parameterless constructor).
-        /// </summary>
+        /// <summary>Dequeues the next typed character since the last call, or <c>'\0'</c> if none are queued.</summary>
+        /// <remarks>Call in a loop (<c>while ((c = input.GetCharPressed()) != '\0') ...</c>) to drain everything typed since you last checked. Always <c>'\0'</c> if this instance was constructed without a <see cref="GameWindow"/> (the parameterless constructor).</remarks>
         public char GetCharPressed()
         {
             if (_textInputCount == 0) return '\0';
@@ -177,15 +169,8 @@ namespace MonoPrimitives
         // Keyboard
         // ---------------------------------------------------------------------
 
-        /// <summary>
-        /// This frame's raw <see cref="KeyboardState"/>, exactly as captured by the last
-        /// <see cref="Update(GameTime)"/> — for anything this class doesn't wrap itself (e.g.
-        /// <see cref="KeyboardState.GetPressedKeys()"/> for every currently-held key at once).
-        /// Reach here instead of calling <see cref="Keyboard.GetState()"/> yourself, which would
-        /// return a second, independent snapshot that can desync from this frame's — the same
-        /// reasoning as <see cref="RandomUtil.UnderlyingRandom"/> exposing its own wrapped stream
-        /// instead of a caller constructing a second, unsynchronized one.
-        /// </summary>
+        /// <summary>This frame's raw <see cref="KeyboardState"/>, exactly as captured by the last <see cref="Update(GameTime)"/> — for anything this class doesn't wrap itself (e.g. <see cref="KeyboardState.GetPressedKeys()"/>).</summary>
+        /// <remarks>Reach here instead of calling <see cref="Keyboard.GetState()"/> yourself, which would return a second, independent snapshot that can desync from this frame's — same reasoning as <see cref="RandomUtil.UnderlyingRandom"/>.</remarks>
         public KeyboardState CurrentKeyboardState => _keyboard;
 
         /// <summary>The previous frame's raw <see cref="KeyboardState"/> — for building your own custom transition check (pressed/released/held-for-N-frames) beyond what <see cref="IsKeyPressed"/>/<see cref="IsKeyReleased"/> already cover.</summary>
@@ -223,12 +208,8 @@ namespace MonoPrimitives
         // Mouse
         // ---------------------------------------------------------------------
 
-        /// <summary>
-        /// This frame's raw <see cref="MouseState"/>, exactly as captured by the last
-        /// <see cref="Update(GameTime)"/> — for anything this class doesn't wrap itself. Reach
-        /// here instead of calling <see cref="Mouse.GetState()"/> yourself, which would return a
-        /// second, independent snapshot that can desync from this frame's.
-        /// </summary>
+        /// <summary>This frame's raw <see cref="MouseState"/>, exactly as captured by the last <see cref="Update(GameTime)"/> — for anything this class doesn't wrap itself.</summary>
+        /// <remarks>Reach here instead of calling <see cref="Mouse.GetState()"/> yourself, which would return a second, independent snapshot that can desync from this frame's.</remarks>
         public MouseState CurrentMouseState => _mouse;
 
         /// <summary>The previous frame's raw <see cref="MouseState"/> — for building your own custom transition/delta check beyond what this class already covers.</summary>
@@ -273,14 +254,13 @@ namespace MonoPrimitives
             return false;
         }
 
-        /// <summary>
-        /// Total movement since <paramref name="button"/> was last pressed — live-tracking
-        /// <see cref="MousePosition"/> while still held, or the drag's final distance for the
-        /// rest of the frame it's released on (and after, until the next press starts a new
-        /// drag) — so checking this from inside an <c>if (IsMouseButtonReleased(button))</c>
-        /// block (a swipe/flick gesture, "did I drag far enough to count") sees the real
-        /// distance instead of a stale zero. <see cref="Vector2.Zero"/> if never pressed.
-        /// </summary>
+        /// <summary>Total movement since <paramref name="button"/> was last pressed. <see cref="Vector2.Zero"/> if never pressed.</summary>
+        /// <remarks>
+        /// Live-tracks <see cref="MousePosition"/> while still held, or reports the drag's final
+        /// distance for the rest of the frame it's released on (and after, until the next press
+        /// starts a new drag) — so checking this from inside <c>if (IsMouseButtonReleased(button))</c>
+        /// (a swipe/flick gesture) sees the real distance instead of a stale zero.
+        /// </remarks>
         public Vector2 DragDelta(MouseButton button)
         {
             int i = (int)button;
@@ -305,14 +285,8 @@ namespace MonoPrimitives
         /// </summary>
         public void SetMousePosition(int x, int y) => Mouse.SetPosition(x, y);
 
-        /// <summary>
-        /// Sets the OS cursor's shape — one of <see cref="MouseCursor"/>'s built-in system shapes
-        /// (<c>Arrow</c>, <c>IBeam</c>, <c>Hand</c>, <c>Crosshair</c>, the resize arrows, etc.) or a
-        /// fully custom one via <see cref="MouseCursor.FromTexture2D(Microsoft.Xna.Framework.Graphics.Texture2D,int,int)"/>. A thin
-        /// passthrough to <see cref="Mouse.SetCursor(MouseCursor)"/> — kept here so mouse commands
-        /// live alongside the mouse queries above instead of requiring a separate
-        /// <c>using Microsoft.Xna.Framework.Input;</c> just for this one call.
-        /// </summary>
+        /// <summary>Sets the OS cursor's shape — one of <see cref="MouseCursor"/>'s built-in system shapes (<c>Arrow</c>, <c>IBeam</c>, <c>Hand</c>, <c>Crosshair</c>, the resize arrows, etc.) or a fully custom one via <see cref="MouseCursor.FromTexture2D(Microsoft.Xna.Framework.Graphics.Texture2D,int,int)"/>.</summary>
+        /// <remarks>A thin passthrough to <see cref="Mouse.SetCursor(MouseCursor)"/>, kept here so mouse commands live alongside the mouse queries above.</remarks>
         public void SetCursor(MouseCursor cursor) => Mouse.SetCursor(cursor);
 
         private static ButtonState GetMouseButtonState(in MouseState state, MouseButton button) => button switch
@@ -329,14 +303,8 @@ namespace MonoPrimitives
         // Gamepad (player index 0-3)
         // ---------------------------------------------------------------------
 
-        /// <summary>
-        /// <paramref name="player"/>'s raw <see cref="GamePadState"/> for this frame, exactly as
-        /// captured by the last <see cref="Update(GameTime)"/> — for anything this class doesn't
-        /// wrap itself (e.g. <see cref="GamePadState.Buttons"/>'s packed flags, or a button this
-        /// class has no named query for). Reach here instead of calling
-        /// <see cref="GamePad.GetState(PlayerIndex)"/> yourself, which would return a second,
-        /// independent snapshot that can desync from this frame's.
-        /// </summary>
+        /// <summary><paramref name="player"/>'s raw <see cref="GamePadState"/> for this frame — for anything this class doesn't wrap itself (e.g. <see cref="GamePadState.Buttons"/>'s packed flags).</summary>
+        /// <remarks>Reach here instead of calling <see cref="GamePad.GetState(PlayerIndex)"/> yourself, which would return a second, independent snapshot that can desync from this frame's.</remarks>
         public GamePadState GetCurrentGamePadState(int player = 0) => _gamePads[player];
 
         /// <summary><paramref name="player"/>'s previous-frame raw <see cref="GamePadState"/> — for building your own custom transition check beyond what this class already covers.</summary>
@@ -368,14 +336,7 @@ namespace MonoPrimitives
         /// <summary>Right trigger pull, [0,1] — 0 released, 1 fully pressed.</summary>
         public float RightTrigger(int player = 0) => _gamePads[player].Triggers.Right;
 
-        /// <summary>
-        /// <see cref="LeftStick"/> with a scaled radial deadzone applied — zero within
-        /// <paramref name="deadzone"/> of center (a circular cutoff, not a per-axis square one,
-        /// so diagonal drift isn't rejected less than a cardinal direction's), and the remaining
-        /// <c>[deadzone, 1]</c> range rescaled back to a full <c>[0, 1]</c> output rather than
-        /// jumping straight to <paramref name="deadzone"/>'s own magnitude the instant the stick
-        /// crosses the cutoff. Direction is preserved exactly; only magnitude is remapped.
-        /// </summary>
+        /// <summary><see cref="LeftStick"/> with a scaled radial deadzone applied — see <see cref="ApplyDeadzone(Vector2,float)"/> for the curve. Direction is preserved exactly; only magnitude is remapped.</summary>
         public Vector2 LeftStickDeadzoned(int player = 0, float deadzone = 0.15f) => ApplyDeadzone(LeftStick(player), deadzone);
 
         /// <summary><see cref="RightStick"/> with a scaled radial deadzone applied, same as <see cref="LeftStickDeadzoned"/>.</summary>
@@ -387,18 +348,16 @@ namespace MonoPrimitives
         /// <summary><see cref="RightTrigger"/> with a deadzone applied, same as <see cref="LeftTriggerDeadzoned"/>.</summary>
         public float RightTriggerDeadzoned(int player = 0, float deadzone = 0.05f) => ApplyDeadzone(RightTrigger(player), deadzone);
 
-        /// <summary>
-        /// Applies a scaled radial deadzone to an analog stick reading: zero within
-        /// <paramref name="deadzone"/> of center, and the surviving <c>[deadzone, 1]</c> range
-        /// rescaled back onto a full <c>[0, 1]</c> output — not just clamped, which would leave a
-        /// discontinuity right at the cutoff (output jumps straight from 0 to ~<paramref name="deadzone"/>
-        /// the instant the stick crosses it, instead of a continuous ramp). Direction/sign is
-        /// untouched; only magnitude is remapped. A degenerate <paramref name="deadzone"/> ≥ 1
-        /// (nothing could ever pass it) returns zero rather than dividing by a zero-or-negative
-        /// range. Public because the same curve is useful for any other analog 2D input this class
-        /// doesn't itself read (a custom joystick, a mouse-driven virtual stick) — <see cref="LeftStickDeadzoned"/>/
-        /// <see cref="RightStickDeadzoned"/> are thin wrappers over this applied to <see cref="LeftStick"/>/<see cref="RightStick"/>.
-        /// </summary>
+        /// <summary>Applies a scaled radial deadzone to an analog stick reading: zero within <paramref name="deadzone"/> of center, and the surviving <c>[deadzone, 1]</c> range rescaled back onto a full <c>[0, 1]</c> output. Direction/sign is untouched; only magnitude is remapped.</summary>
+        /// <remarks>
+        /// Rescaled, not just clamped — clamping alone leaves a discontinuity right at the cutoff
+        /// (output jumps straight from 0 to ~<paramref name="deadzone"/> instead of a continuous
+        /// ramp). A degenerate <paramref name="deadzone"/> &gt;= 1 returns zero rather than dividing
+        /// by a zero-or-negative range. Public static because the same curve is useful for any other
+        /// analog 2D input this class doesn't itself read (a custom joystick, a mouse-driven virtual
+        /// stick) — <see cref="LeftStickDeadzoned"/>/<see cref="RightStickDeadzoned"/> are thin
+        /// wrappers over this.
+        /// </remarks>
         public static Vector2 ApplyDeadzone(Vector2 v, float deadzone)
         {
             float magnitude = v.Length();
@@ -417,16 +376,8 @@ namespace MonoPrimitives
             return range > 0f ? MathF.Min((value - deadzone) / range, 1f) : 0f;
         }
 
-        /// <summary>
-        /// Sets <paramref name="player"/>'s gamepad rumble motor speeds, each [0,1] (0 stops, 1 is
-        /// maximum) — clamped internally by MonoGame, so an out-of-range value is safe, not an
-        /// error. Returns false if the slot has no connected gamepad or the platform/controller
-        /// doesn't support vibration; there's nothing further to do in that case; it's a
-        /// best-effort call, not a fire-once instruction. Call <c>SetVibration(0, 0, player)</c>
-        /// to stop — there's no separate <c>duration</c>/timer here, since managing when to stop
-        /// is a per-game decision (a fixed pulse, decaying with distance/trauma, etc.), not
-        /// something a raw building block should decide for you.
-        /// </summary>
+        /// <summary>Sets <paramref name="player"/>'s gamepad rumble motor speeds, each <c>[0,1]</c> (0 stops, 1 is maximum). Returns <see langword="false"/> if the slot has no connected gamepad or the platform/controller doesn't support vibration.</summary>
+        /// <remarks>Stateless — call <c>SetVibration(0, 0, player)</c> to stop. No <c>duration</c>/timer here: deciding when to stop (a fixed pulse, decaying with distance/trauma, etc.) is a per-game decision.</remarks>
         public bool SetVibration(float leftMotor, float rightMotor, int player = 0)
             => GamePad.SetVibration((PlayerIndex)player, leftMotor, rightMotor);
 
@@ -492,15 +443,8 @@ namespace MonoPrimitives
         /// <summary>Arrow-key movement direction — same shape and Y convention as <see cref="GetWASD"/>.</summary>
         public Vector2 GetArrowKeys(bool normalize = true) => GetVector2(Keys.Left, Keys.Right, Keys.Up, Keys.Down, normalize);
 
-        /// <summary>
-        /// Combined movement direction from every source at once — WASD, arrow keys, the left
-        /// thumbstick (deadzoned), and the D-pad — so a caller doesn't have to pick one input method
-        /// or merge them by hand. Every source shares this library's Y-down convention (up is
-        /// negative Y); the thumbstick's own raw Y (hardware convention: up is positive) is flipped
-        /// before summing to match. <paramref name="normalize"/> (default true) caps the combined
-        /// magnitude at 1 without flattening a slower analog-stick push into a full-speed digital
-        /// one — same behavior as <see cref="GetVector2"/>.
-        /// </summary>
+        /// <summary>Combined movement direction from every source at once — WASD, arrow keys, the left thumbstick (deadzoned), and the D-pad — so you don't have to pick one input method or merge them by hand.</summary>
+        /// <remarks>Every source shares this library's Y-down convention; the thumbstick's own raw Y (hardware convention: up is positive) is flipped before summing to match. <paramref name="normalize"/> caps the combined magnitude at 1 without flattening a slower analog push into a full-speed digital one — same behavior as <see cref="GetVector2"/>.</remarks>
         public Vector2 GetInputDirection(int player = 0, bool normalize = true)
         {
             Vector2 v = GetVector2(Keys.A, Keys.D, Keys.W, Keys.S, normalize: false)

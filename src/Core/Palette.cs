@@ -5,9 +5,9 @@ namespace MonoPrimitives
     /// <summary>
     /// A curated, ready-to-use set of vibrant, harmonious colors, each hue paired with a
     /// slightly darker shade (e.g. <see cref="Emerald"/>/<see cref="Nephritis"/>) for a
-    /// border, shadow, or pressed state without hand-picking a second color. For prototypes
-    /// and demos where the point is the simulation or the gameplay, not a color pass.
+    /// border, shadow, or pressed state without hand-picking a second color.
     /// </summary>
+    /// <remarks>For prototypes and demos where the point is the simulation or the gameplay, not a color pass.</remarks>
     public static class Palette
     {
         /// <summary>Bright teal — green and cyan meeting halfway, like shallow tropical water.</summary>
@@ -76,11 +76,14 @@ namespace MonoPrimitives
         /// <summary>
         /// All 21 colors above, <see cref="Background"/> included — for code that genuinely
         /// wants every curated color (a palette swatch viewer, a "cycle through all of them"
-        /// debug tool). For picking a random FOREGROUND color (a boid/cell/agent), use
+        /// debug tool).
+        /// </summary>
+        /// <remarks>
+        /// For picking a random FOREGROUND color (a boid/cell/agent), use
         /// <see cref="Primary"/> or <see cref="Cycle"/> instead: <see cref="Background"/> is a
         /// near-black backdrop color, and a random pick from this array can silently return it,
         /// rendering as invisible/near-invisible against the very background it's meant for.
-        /// </summary>
+        /// </remarks>
         public static readonly Color[] All =
         {
             Turquoise, GreenSea, Emerald, Nephritis, PeterRiver, BelizeHole, Amethyst, Wisteria,

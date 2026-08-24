@@ -8,22 +8,23 @@ namespace MonoPrimitives
     /// <summary>
     /// Paces the game loop to a target framerate more precisely than <see cref="Game.IsFixedTimeStep"/>'s
     /// own timer, by sleeping out most of the remaining frame time and busy-spinning the last couple
-    /// of milliseconds for precision. Disables <see cref="Game.IsFixedTimeStep"/> and vsync at
-    /// construction — both would otherwise pace the loop independently and fight this class. Call
-    /// <see cref="BeginFrame"/> once at the top of a frame (typically the first line of <c>Update</c>)
-    /// and <see cref="EndFrame"/> once at the very end of it (typically the last line of <c>Draw</c>).
-    ///
-    /// Construct this AFTER your <see cref="GraphicsDeviceManager"/> — it disables vsync by reading
-    /// the manager already registered as a service, and does nothing if none is found yet.
-    ///
-    /// A rare (~1-5% of frames), OS-level scheduling jitter can make any single call to
-    /// <see cref="Thread.Sleep(int)"/> run nearly a full extra frame long on Windows regardless of
-    /// how the remaining time is split between sleeping and spinning — measured directly, not
-    /// something a larger spin margin or an alternative tail strategy (<see cref="Thread.Yield"/>,
-    /// <see cref="Thread.SpinWait"/>) fixes, since neither changed the measured precision at all. If
-    /// consistently smooth frame times matter more than idle CPU usage, that's an inherent tradeoff
-    /// of any Sleep-based limiter, not a bug here.
+    /// of milliseconds for precision. Call <see cref="BeginFrame"/> once at the top of a frame
+    /// (typically the first line of <c>Update</c>) and <see cref="EndFrame"/> once at the very end
+    /// of it (typically the last line of <c>Draw</c>).
     /// </summary>
+    /// <remarks>
+    /// Disables <see cref="Game.IsFixedTimeStep"/> and vsync at construction — both would otherwise
+    /// pace the loop independently and fight this class. Construct this AFTER your
+    /// <see cref="GraphicsDeviceManager"/> — it disables vsync by reading the manager already
+    /// registered as a service, and does nothing if none is found yet.
+    ///
+    /// A rare (~1-5% of frames) OS-level scheduling jitter can make any single call to
+    /// <see cref="Thread.Sleep(int)"/> run nearly a full extra frame long on Windows, regardless of
+    /// how the remaining time is split between sleeping and spinning — measured directly, not fixed
+    /// by a larger spin margin or an alternative tail strategy (<see cref="Thread.Yield"/>,
+    /// <see cref="Thread.SpinWait"/>). If consistently smooth frame times matter more than idle CPU
+    /// usage, that's an inherent tradeoff of any Sleep-based limiter, not a bug here.
+    /// </remarks>
     public sealed class FrameLimiter
     {
         // How much of the wait is left to a precise busy-spin instead of Thread.Sleep. Empirically,
@@ -36,14 +37,8 @@ namespace MonoPrimitives
         /// <summary>Target frames per second. Editable at any time — takes effect on the next <see cref="EndFrame"/>.</summary>
         public float TargetFps { get; set; }
 
-        /// <summary>
-        /// Time elapsed since the current frame's <see cref="BeginFrame"/> — read this mid-frame
-        /// (e.g. for a debug overlay showing how much of the frame budget is used so far) without
-        /// waiting for <see cref="EndFrame"/> to find out. The internal <see cref="Stopwatch"/> this
-        /// reads is constructed internally and otherwise unreachable; exposed read-only specifically
-        /// so nothing outside this class can <c>Stop()</c>/<c>Reset()</c> it and break the pacing
-        /// <see cref="EndFrame"/> depends on.
-        /// </summary>
+        /// <summary>Time elapsed since the current frame's <see cref="BeginFrame"/> — read mid-frame (e.g. for a debug overlay) without waiting for <see cref="EndFrame"/>.</summary>
+        /// <remarks>Read-only on purpose: the internal <see cref="Stopwatch"/> is otherwise unreachable, so nothing outside this class can <c>Stop()</c>/<c>Reset()</c> it and break <see cref="EndFrame"/>'s own pacing.</remarks>
         public TimeSpan Elapsed => _stopwatch.Elapsed;
 
         /// <summary>Disables <paramref name="game"/>'s <see cref="Game.IsFixedTimeStep"/> and vsync (if a <see cref="GraphicsDeviceManager"/> is already registered on it) and starts targeting <paramref name="targetFps"/>.</summary>

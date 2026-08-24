@@ -5,21 +5,25 @@ namespace MonoPrimitives
 {
     /// <summary>
     /// Extension methods on MonoGame's own <see cref="Vector2"/> — everyday 2D vector math XNA's
-    /// <see cref="Vector2"/>/<see cref="MathHelper"/> don't provide themselves, confirmed missing by
-    /// comparison against raylib's <c>raymath.h</c>, <see cref="System.Numerics"/>, Godot, Unity, and
-    /// Processing/p5.js. Part of <c>MonoPrimitives</c> — these show up on any <see cref="Vector2"/>
-    /// once this namespace is in scope, but they aren't native MonoGame members.
+    /// <see cref="Vector2"/>/<see cref="MathHelper"/> don't provide themselves.
     /// </summary>
+    /// <remarks>
+    /// Confirmed missing by comparison against raylib's <c>raymath.h</c>, <see cref="System.Numerics"/>,
+    /// Godot, Unity, and Processing/p5.js. Part of <c>MonoPrimitives</c> — these show up on any
+    /// <see cref="Vector2"/> once this namespace is in scope, but they aren't native MonoGame members.
+    /// </remarks>
     public static class Vector2Extensions
     {
         /// <summary>
         /// The vector's own heading: the angle in <c>(-PI, PI]</c> (counter-clockwise from +X) that
         /// <c>new Vector2(MathF.Cos(a), MathF.Sin(a))</c> would reproduce. <see cref="Vector2.Zero"/>
-        /// has no defined heading and returns <c>0</c>. Exactly on the negative X axis, the result
-        /// can be either <c>+PI</c> or <c>-PI</c> depending on the sign of a near-zero Y component
-        /// (both represent the same angle) — standard <c>atan2</c> branch-cut behavior, not specific
-        /// to this method.
+        /// has no defined heading and returns <c>0</c>.
         /// </summary>
+        /// <remarks>
+        /// Exactly on the negative X axis, the result can be either <c>+PI</c> or <c>-PI</c>
+        /// depending on the sign of a near-zero Y component (both represent the same angle) —
+        /// standard <c>atan2</c> branch-cut behavior, not specific to this method.
+        /// </remarks>
         public static float Angle(this Vector2 v) => MathF.Atan2(v.Y, v.X);
 
         /// <summary>
@@ -50,12 +54,15 @@ namespace MonoPrimitives
         /// <summary>
         /// Returns <paramref name="v"/> rotated by <paramref name="radians"/> (counter-clockwise for
         /// a positive angle, matching <see cref="AngleToSigned"/>'s sign convention) as a new vector,
-        /// without modifying <paramref name="v"/> itself — <see cref="Vector2"/>'s own
-        /// <see cref="Vector2.Rotate(float)"/>/<see cref="Vector2.RotateAround(Vector2,float)"/> instead
-        /// mutate the vector in place (they return <c>void</c>), which only works on a variable, not
-        /// an expression or a value you want to keep the original of. Named to match Godot's own
-        /// <c>Vector2.rotated()</c> — the same "give me a rotated copy" shape.
+        /// without modifying <paramref name="v"/> itself.
         /// </summary>
+        /// <remarks>
+        /// <see cref="Vector2"/>'s own <see cref="Vector2.Rotate(float)"/>/<see cref="Vector2.RotateAround(Vector2,float)"/>
+        /// instead mutate the vector in place (they return <c>void</c>), which only works on a
+        /// variable, not an expression or a value you want to keep the original of — named
+        /// <c>Rotated</c> rather than <c>Rotate</c> to avoid colliding with those, matching Godot's
+        /// own <c>Vector2.rotated()</c> — the same "give me a rotated copy" shape.
+        /// </remarks>
         public static Vector2 Rotated(this Vector2 v, float radians)
         {
             float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
