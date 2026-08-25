@@ -7,17 +7,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versio
 ## [0.8.2] - 2026-08-25
 
 ### Added
+- `FrameLimiter.MaxFrameTime` (constructor param + live property, `0` = disabled) and `FrameTime` — `BeginFrame()` now returns real seconds since the previous call, clamped to `MaxFrameTime`.
+- `FrameLimiter` now composes an internal `FpsCounter` (constructor's `fpsSampleCount`, default 60): `AverageFps`/`CurrentFps`/`AverageFrameTimeMs`/`CurrentFrameTimeMs`/`FpsSampleCount`, fed the raw unclamped frame time every `BeginFrame()` — pacing your loop with `FrameLimiter` now gets you FPS readouts for free.
+- `DebugTimer` (struct, `IDisposable`) — times a `using` block and prints `[label] X.XX ms` to `Console` on dispose, with an optional divider line (`separator: true`) for marking a new group.
 - `Vector2Extensions`/`Vector3Extensions`: `Dot` (fluent wrapper — MonoGame only exposes it as a static call), `Project` (parallel-component projection, complementing the existing `Slide`), and 2D-only `Cross` (scalar cross product).
 
 ### Changed
 - `SmoothDamp` moved from being duplicated on `Camera2D`/`Camera3D` to a single `Vector2Extensions.SmoothDamp` (`float`/`Vector2`) plus `Vector3Extensions.SmoothDamp` (`Vector3`) — `Camera2D`/`Camera3D` now call it as an extension instead of owning their own copy.
-
-## [0.8.1] - 2026-08-25
-
-### Added
-- `FrameLimiter.MaxFrameTime` (constructor param + live property, `0` = disabled) and `FrameTime` — `BeginFrame()` now returns real seconds since the previous call, clamped to `MaxFrameTime`.
-- `FrameLimiter` now composes an internal `FpsCounter` (constructor's `fpsSampleCount`, default 60): `AverageFps`/`CurrentFps`/`AverageFrameTimeMs`/`CurrentFrameTimeMs`/`FpsSampleCount`, fed the raw unclamped frame time every `BeginFrame()` — pacing your loop with `FrameLimiter` now gets you FPS readouts for free.
-- `DebugTimer` (struct, `IDisposable`) — times a `using` block and prints `[label] X.XX ms` to `Console` on dispose, with an optional divider line (`separator: true`) for marking a new group.
 
 ## [0.8.0] - 2026-08-25
 
