@@ -17,7 +17,7 @@ public Game1()
 
 protected override void Update(GameTime gameTime)
 {
-    _limiter.BeginFrame();
+    float dt = _limiter.BeginFrame(); // real seconds since the previous BeginFrame, clamped to MaxFrameTime
     // ... your update logic ...
 }
 
@@ -34,13 +34,18 @@ Construct `FrameLimiter` **after** your `GraphicsDeviceManager` — the construc
 
 | Member | What it does |
 |---|---|
-| `new FrameLimiter(game, targetFps = 60f)` | Sets `game.IsFixedTimeStep = false` and disables vsync (`SynchronizeWithVerticalRetrace = false`) on the game's `GraphicsDeviceManager`, if one is already registered. Throws on a null `game` or non-positive `targetFps`. |
+| `new FrameLimiter(game, targetFps = 60f, maxFrameTime = 0f, fpsSampleCount = 60)` | Sets `game.IsFixedTimeStep = false` and disables vsync (`SynchronizeWithVerticalRetrace = false`) on the game's `GraphicsDeviceManager`, if one is already registered. Throws on a null `game`, non-positive `targetFps`, negative `maxFrameTime`, or non-positive `fpsSampleCount`. |
 | `TargetFps` | Editable at any time — takes effect on the very next `EndFrame()`. |
-| `BeginFrame()` | Marks the start of a frame — call once, before doing any of the frame's own work. |
+| `MaxFrameTime` | Editable at any time. Upper bound (seconds) `BeginFrame()` clamps its returned/stored frame time to. `0` (default) disables clamping. |
+| `FrameTime` | The value `BeginFrame()` most recently returned. `0` before the first call. |
+| `BeginFrame()` | Marks the start of a frame — call once, before doing any of the frame's own work. Measures real time since the previous call (`0` the first time), feeds that raw value into the FPS readouts below, clamps it to `MaxFrameTime` if that's non-zero and exceeded, stores the clamped result in `FrameTime`, and returns it. |
 | `EndFrame()` | Blocks until `TargetFps`'s worth of time has passed since `BeginFrame()`. Returns immediately if the frame's own work already ran long. |
 | `Elapsed` | Time since the current frame's `BeginFrame()`, read live — for a debug overlay showing frame-budget usage mid-frame without waiting for `EndFrame()`. Read-only: the internal `Stopwatch` itself isn't exposed, so nothing outside this class can `Stop()`/`Reset()` it and break `EndFrame()`'s own pacing. |
+| `AverageFps` / `CurrentFps` / `AverageFrameTimeMs` / `CurrentFrameTimeMs` | Same readouts as `FpsCounter` — `FrameLimiter` keeps one internally, fed automatically by `BeginFrame()`, so pacing your loop with `FrameLimiter` gets you an FPS counter with no separate object to construct or `Update` yourself. Based on the **raw, unclamped** frame time — a real stall still shows up here even when `MaxFrameTime` hides it from `FrameTime`. |
+| `FpsSampleCount` | The rolling-average window size, set once via the constructor's `fpsSampleCount`. |
+| `MeasureDeltaTime()` | Returns the real time (seconds) since the previous call to this method (`0` the first time). A second, independent stopwatch — unaffected by `BeginFrame()`/`EndFrame()`/`MaxFrameTime`. Call it anywhere you want a plain "time since I was last here" reading, e.g. once per `Update` to see the real Update-to-Update gap regardless of `TargetFps` pacing. |
 
-Call `BeginFrame()`/`EndFrame()` once per real frame — typically the first line of `Update` and the last line of `Draw`.
+Call `BeginFrame()`/`EndFrame()` once per real frame — typically the first line of `Update` and the last line of `Draw`. `MaxFrameTime` guards against a huge simulated step after a real stall (breakpoint, GC pause, asset load) — e.g. `maxFrameTime: 0.25f` caps `dt` at a quarter-second no matter how long the actual gap was; the FPS readouts stay unaffected, so you can still see the stall on an on-screen counter. `MeasureDeltaTime()` is unrelated to both pacing and the FPS readouts — use it when you want a raw, unclamped delta between two arbitrary points in the loop (profiling, etc.), independent of whatever `BeginFrame`/`EndFrame`/`MaxFrameTime` are doing.
 
 ## Why disable `IsFixedTimeStep` and vsync
 

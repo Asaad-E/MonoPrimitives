@@ -7,6 +7,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versio
 ## [Unreleased]
 
 ### Added
+- `FrameLimiter.MaxFrameTime` (constructor param + live property, `0` = disabled) and `FrameTime` — `BeginFrame()` now returns real seconds since the previous call, clamped to `MaxFrameTime`.
+- `FrameLimiter.MeasureDeltaTime()` — independent, unclamped "time since I was last called" stopwatch, separate from `BeginFrame`/`EndFrame`/`MaxFrameTime`.
+- `FrameLimiter` now composes an internal `FpsCounter` (constructor's `fpsSampleCount`, default 60): `AverageFps`/`CurrentFps`/`AverageFrameTimeMs`/`CurrentFrameTimeMs`/`FpsSampleCount`, fed the raw unclamped frame time every `BeginFrame()` — pacing your loop with `FrameLimiter` now gets you FPS readouts for free.
 - `DebugTimer` (struct, `IDisposable`) — times a `using` block and prints `[label] X.XX ms` to `Console` on dispose, with an optional divider line (`separator: true`) for marking a new group.
 
 ## [0.8.0] - 2026-08-25
