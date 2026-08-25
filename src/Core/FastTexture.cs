@@ -270,21 +270,12 @@ namespace MonoPrimitives
             UploadRaw(0, 0, _texture.Width, _texture.Height, (void*)data);
         }
 
-        /// <summary>
-        /// Clears MonoGame's cached knowledge of which texture is bound to each sampler slot.
-        /// Called automatically after every raw upload unless <see cref="AutoInvalidateDeviceCache"/>
-        /// is turned off.
-        /// </summary>
-        /// <remarks>
-        /// GraphicsDevice keeps a per-slot cache of what it believes is bound, and skips a
-        /// redundant glBindTexture -- along with the sampler-state application that rides with a
-        /// real bind -- whenever it thinks nothing changed. Our raw glBindTexture happens entirely
-        /// outside that cache, so MonoGame has no way to know the GL binding moved underneath it.
-        /// Left uncorrected, a later SpriteBatch/Effect draw that reuses the same slot reference
-        /// without any other texture switching in between can skip a bind it actually needed.
-        /// Nulling the affected slots forces the next assignment to read as a genuine change,
-        /// guaranteeing a real re-bind.
-        /// </remarks>
+        /// <summary>Clears MonoGame's cached knowledge of which texture is bound to each sampler slot. Called automatically after every raw upload unless <see cref="AutoInvalidateDeviceCache"/> is turned off.</summary>
+        /// <remarks>Needed because the raw GL bind happens outside MonoGame's own binding cache, which can otherwise skip a rebind a later SpriteBatch/Effect draw actually needed.</remarks>
+        // GraphicsDevice skips a redundant glBindTexture (and the sampler-state application that
+        // rides with a real bind) whenever it thinks nothing changed -- but our raw glBindTexture
+        // happens outside that cache, so it has no way to know the binding moved. Nulling the
+        // affected slots forces the next assignment to read as a genuine change.
         public void InvalidateDeviceTextureCache()
         {
             // Slot 0 is what SpriteBatch uses and is the one that always matters. Higher slots only
@@ -332,10 +323,8 @@ namespace MonoPrimitives
                 InvalidateDeviceTextureCache();
         }
 
-        /// <summary>
-        /// Bytes per pixel for the formats this wrapper handles, independent of whether the fast
-        /// path is active (the fallback path still needs it to validate sizes).
-        /// </summary>
+        // Bytes per pixel for the formats this wrapper handles, independent of whether the fast
+        // path is active -- the fallback path still needs it to validate sizes.
         private static int BytesPerPixelOf(SurfaceFormat format)
         {
             switch (format)

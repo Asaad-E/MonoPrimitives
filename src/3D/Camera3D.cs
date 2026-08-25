@@ -80,19 +80,8 @@ namespace MonoPrimitives.Primitives3D
         /// <summary><see cref="FarPlane"/>'s default value.</summary>
         public const float DefaultFar = 1000f;
 
-        /// <summary>
-        /// Viewport adapter this camera was constructed with, if any — set once, then
-        /// <see cref="Primitive3DBatch.Begin(Camera3D,BlendState,DepthStencilState,RasterizerState,Matrix?)"/>
-        /// and <see cref="WorldToScreen(Vector3,Viewport?)"/>/<see cref="ScreenToWorld"/>/
-        /// <see cref="GetScreenToWorldRay"/> all use it automatically instead of requiring it
-        /// passed in again at every call site.
-        /// </summary>
-        /// <remarks>
-        /// Same shape of dependency <see cref="Primitives2D.Camera2D"/> takes.
-        /// <c>null</c> for the plain constructor — those methods then need an explicit
-        /// <see cref="Viewport"/> argument, or fall back to the full device viewport in
-        /// <c>Begin</c>'s case.
-        /// </remarks>
+        /// <summary>Viewport adapter this camera was constructed with, if any — set once, then used automatically by every viewport-dependent method instead of requiring it passed in again at every call site.</summary>
+        /// <remarks><c>null</c> for the plain constructor — those methods then need an explicit <see cref="Viewport"/> argument, or fall back to the full device viewport in <c>Begin</c>'s case.</remarks>
         public ViewportAdapter2D? ViewportAdapter { get; }
 
         // Captured at construction so Reset() has something to restore to.
@@ -349,11 +338,8 @@ namespace MonoPrimitives.Primitives3D
         // Projection utilities
         // ---------------------------------------------------------------------
 
-        /// <summary>
-        /// Resolves the <see cref="Viewport"/> to project/unproject with: the explicit
-        /// <paramref name="viewport"/> if given, otherwise <see cref="ViewportAdapter"/>'s
-        /// <see cref="ViewportAdapter2D.BoundingRectangle"/>. Throws if neither is available.
-        /// </summary>
+        // Resolves the Viewport to project/unproject with: the explicit `viewport` if given,
+        // otherwise ViewportAdapter's BoundingRectangle. Throws if neither is available.
         private Viewport ResolveViewport(Viewport? viewport)
             => viewport
             ?? (ViewportAdapter is not null ? new Viewport(ViewportAdapter.BoundingRectangle) : (Viewport?)null)
@@ -476,14 +462,7 @@ namespace MonoPrimitives.Primitives3D
         /// Suggested eye height for <see cref="CameraMode.FirstPerson"/>, in world units above
         /// ground level — a reference default, not applied automatically.
         /// </summary>
-        /// <remarks>
-        /// Only the game knows ground/terrain height, so <see cref="UpdateWithInput(PrimitiveInput,float)"/>'s
-        /// head-bob only ever nudges the existing <c>Position.Y</c>/<c>Target.Y</c> by a small
-        /// delta; it's on the caller to set <c>Position.Y</c> (and <c>Target.Y</c>) to
-        /// <c>groundY + EyeHeight</c> themselves each frame the way a platformer already tracks
-        /// its own ground contact — an auto-applying version would need to track ground height
-        /// itself, which would make this a physics/collision system rather than a camera.
-        /// </remarks>
+        /// <remarks>Only the game knows ground/terrain height, so <see cref="UpdateWithInput(PrimitiveInput,float)"/>'s head-bob only ever nudges the existing <c>Position.Y</c>/<c>Target.Y</c> by a small delta — it's on the caller to set <c>Position.Y</c> (and <c>Target.Y</c>) to <c>groundY + EyeHeight</c> themselves each frame.</remarks>
         public float EyeHeight { get; set; } = FirstPersonEyeHeight;
 
         /// <summary>
@@ -510,16 +489,7 @@ namespace MonoPrimitives.Primitives3D
         /// <see cref="Reset"/> directly and skips movement for that frame, so a same-frame
         /// WASD/mouse delta doesn't immediately fight the reset.
         /// </summary>
-        /// <remarks>
-        /// This is a prototyping convenience, not something every game wants baked into its
-        /// camera; use the plain <see cref="Update(float)"/> if you're driving the camera from
-        /// your own logic, or query <paramref name="input"/> yourself and call <see cref="Yaw"/>/
-        /// <see cref="Pitch"/>/<see cref="MoveForward"/>/etc. directly for custom bindings.
-        /// Doesn't call <see cref="PrimitiveInput.Update(GameTime)"/> itself — <paramref name="input"/>
-        /// is expected to already be current for this frame (the caller's own <c>Update</c>
-        /// updates it once, then hands the same instance to everything that reads it, this
-        /// camera included).
-        /// </remarks>
+        /// <remarks>This is a prototyping convenience — use the plain <see cref="Update(float)"/> if you're driving the camera from your own logic, or query <paramref name="input"/> yourself and call <see cref="Yaw"/>/<see cref="Pitch"/>/<see cref="MoveForward"/>/etc. directly for custom bindings. Doesn't call <see cref="PrimitiveInput.Update(GameTime)"/> itself — <paramref name="input"/> is expected to already be current for this frame.</remarks>
         public void UpdateWithInput(PrimitiveInput input, float deltaSeconds)
         {
             UpdateShake(deltaSeconds); // before the Mode switch below, since Custom/Orbital return early
@@ -888,7 +858,7 @@ namespace MonoPrimitives.Primitives3D
         // =====================================================================
 
         /// <summary>Critically-damped spring smoothing — eases <paramref name="current"/> toward <paramref name="target"/> over roughly <paramref name="smoothTime"/> seconds.</summary>
-        /// <remarks>No overshoot/oscillation under varying frame rates, unlike a naive exponential lerp. <paramref name="velocity"/> is state you own and pass back in every call (start it at 0).</remarks>
+        /// <remarks>No overshoot/oscillation under varying frame rates. <paramref name="velocity"/> is state you own and pass back in every call (start it at 0).</remarks>
         public static float SmoothDamp(float current, float target, ref float velocity, float smoothTime, float deltaTime)
         {
             smoothTime = MathF.Max(0.0001f, smoothTime);

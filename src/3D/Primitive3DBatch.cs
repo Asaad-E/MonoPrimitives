@@ -7,14 +7,7 @@ using MonoPrimitives.Primitives2D;
 namespace MonoPrimitives.Primitives3D
 {
     /// <summary>Immediate-mode 3D primitive batcher for lines, points, and filled shapes.</summary>
-    /// <remarks>
-    /// Every primitive (including lines and points) is converted to triangles so that a single
-    /// vertex buffer / draw path is used. The batch is fully non-invasive: all graphics device
-    /// state it modifies is captured on
-    /// <see cref="Begin(Camera3D,BlendState?,DepthStencilState?,RasterizerState?,Matrix?)"/> and
-    /// restored on <see cref="End"/>, so it can be interleaved with <see cref="SpriteBatch"/> or
-    /// custom 3D rendering.
-    /// </remarks>
+    /// <remarks>Fully non-invasive: all graphics device state it modifies is captured on <see cref="Begin(Camera3D,BlendState?,DepthStencilState?,RasterizerState?,Matrix?)"/> and restored on <see cref="End"/>, so it can be interleaved with <see cref="SpriteBatch"/> or custom 3D rendering.</remarks>
     public sealed partial class Primitive3DBatch : IDisposable
     {
         // ---------------------------------------------------------------------
@@ -110,16 +103,7 @@ namespace MonoPrimitives.Primitives3D
         // ---------------------------------------------------------------------
 
         /// <summary>The <see cref="BasicEffect"/> this batch draws with — constructed internally, so this is the only way to reach it.</summary>
-        /// <remarks>
-        /// The same "escape hatch to the thing this class wraps" shape as
-        /// <see cref="RandomUtil.UnderlyingRandom"/>. Tweak parameters this batch's own API has no
-        /// dedicated call for — <see cref="BasicEffect.Alpha"/> for a global fade, a custom
-        /// <see cref="BasicEffect.FogEnabled"/> setup, etc. Don't change
-        /// <see cref="BasicEffect.VertexColorEnabled"/>, <see cref="BasicEffect.TextureEnabled"/>,
-        /// or <see cref="BasicEffect.World"/> — this batch depends on those staying exactly as
-        /// constructed. <see cref="LightingEnabled"/> is this batch's own opt-in flat-shading
-        /// switch, not the same thing as this effect's own (always-off) built-in lighting.
-        /// </remarks>
+        /// <remarks>Tweak parameters this batch's own API has no dedicated call for — <see cref="BasicEffect.Alpha"/> for a global fade, a custom <see cref="BasicEffect.FogEnabled"/> setup, etc. Don't change <see cref="BasicEffect.VertexColorEnabled"/>, <see cref="BasicEffect.TextureEnabled"/>, or <see cref="BasicEffect.World"/> — this batch depends on those staying exactly as constructed. <see cref="LightingEnabled"/> is this batch's own opt-in flat-shading switch, not the same thing as this effect's own (always-off) built-in lighting.</remarks>
         public BasicEffect Effect => _effect;
 
         /// <summary>Vertices currently buffered and not yet flushed.</summary>
@@ -147,25 +131,18 @@ namespace MonoPrimitives.Primitives3D
         /// </summary>
         public float DefaultLineThickness { get; set; } = 0.5f;
 
-        /// <summary>Camera position used to orient line quads. Set by <see cref="Begin(Camera3D,BlendState?,DepthStencilState?,RasterizerState?,Matrix?)"/>.</summary>
+        // Camera position used to orient line quads. Set by Begin().
         private Vector3 _cameraPosition;
 
-        /// <summary>Approximate world-units-per-pixel scale factor at unit distance.</summary>
+        // Approximate world-units-per-pixel scale factor at unit distance.
         private float _pixelScale = 0.002f;
 
         // ---------------------------------------------------------------------
         // Basic lighting (flat shading, no vertex format change)
         // ---------------------------------------------------------------------
 
-        /// <summary>When enabled, filled surfaces (Cube/Sphere/Cylinder/Capsule/Torus/Plane/FillTriangle3D/FillCircle3D) are flat-shaded based on <see cref="LightDirection"/> and <see cref="AmbientLight"/>. Off by default.</summary>
-        /// <remarks>
-        /// Each triangle/quad's own face normal (from its own points, via cross product — no
-        /// stored per-vertex normals, so the vertex format stays untouched) is dotted against
-        /// <see cref="LightDirection"/> and used to darken the face's color toward
-        /// <see cref="AmbientLight"/>. Off by default means zero behavior change for existing
-        /// callers. Lines, points and the grid are never shaded (a camera-facing line quad has no
-        /// meaningful surface normal to light).
-        /// </remarks>
+        /// <summary>When enabled, filled surfaces are flat-shaded based on <see cref="LightDirection"/> and <see cref="AmbientLight"/>. Off by default.</summary>
+        /// <remarks>Lines, points and the grid are never shaded — a camera-facing line quad has no meaningful surface normal to light.</remarks>
         public bool LightingEnabled { get; set; } = false;
 
         /// <summary>Direction the light travels (not the direction *to* the light). Normalized on set.</summary>
@@ -182,6 +159,9 @@ namespace MonoPrimitives.Primitives3D
         /// </summary>
         public float AmbientLight { get; set; } = 0.35f;
 
+        // Face normal (from a triangle/quad's own points, via cross product -- no stored
+        // per-vertex normals, so the vertex format stays untouched) is dotted against
+        // LightDirection and used to darken the face's color toward AmbientLight.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Color Shade(in Vector3 normal, in Color color)
         {
@@ -230,16 +210,7 @@ namespace MonoPrimitives.Primitives3D
         // ---------------------------------------------------------------------
 
         /// <summary>Starts a batch using a <see cref="Camera3D"/>.</summary>
-        /// <remarks>
-        /// If <paramref name="camera"/> was constructed with a <see cref="ViewportAdapter2D"/>
-        /// (<see cref="Camera3D.ViewportAdapter"/>), it's applied first — letterboxing/pillarboxing
-        /// the 3D projection into <see cref="ViewportAdapter2D.BoundingRectangle"/> instead of the
-        /// full backbuffer, the same way <see cref="Primitives2D.Camera2D"/> uses its own stored
-        /// adapter. Without one, this always projects using the full window's aspect ratio — if
-        /// the window is letterboxed (e.g. a fixed-aspect game inside a resizable window, sharing
-        /// an adapter with 2D content), an adapter-less 3D scene would stretch into the bars
-        /// instead of matching them.
-        /// </remarks>
+        /// <remarks>If <paramref name="camera"/> was constructed with a <see cref="ViewportAdapter2D"/> (<see cref="Camera3D.ViewportAdapter"/>), it's applied first — letterboxing/pillarboxing the 3D projection into <see cref="ViewportAdapter2D.BoundingRectangle"/> instead of the full backbuffer. Without one, this always projects using the full window's aspect ratio — if the window is letterboxed (e.g. a fixed-aspect game inside a resizable window, sharing an adapter with 2D content), an adapter-less 3D scene would stretch into the bars instead of matching them.</remarks>
         /// <param name="camera">Camera providing view and projection matrices.</param>
         /// <param name="blendState">Blend state, defaults to <see cref="BlendState.NonPremultiplied"/> — every color here is straight (non-premultiplied) RGBA, so this is the blend state that actually matches them.</param>
         /// <param name="depthStencilState">Depth state, defaults to <see cref="DepthStencilState.Default"/>.</param>
@@ -490,10 +461,7 @@ namespace MonoPrimitives.Primitives3D
         public int ResolveSegments(int requested, float radius, int fallback)
             => ResolveSegments(requested, radius, Vector3.Zero, fallback);
 
-        /// <summary>
-        /// Builds an orthonormal basis around <paramref name="normal"/>.
-        /// Branch-free variant of Duff et al. to avoid degenerate cross products.
-        /// </summary>
+        /// <summary>Builds an orthonormal basis around <paramref name="normal"/>. Branch-free, to avoid degenerate cross products.</summary>
         internal static void BuildBasis(in Vector3 normal, out Vector3 tangent, out Vector3 bitangent)
         {
             float sign = normal.Z >= 0f ? 1f : -1f;

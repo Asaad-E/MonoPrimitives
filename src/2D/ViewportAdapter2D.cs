@@ -6,18 +6,8 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace MonoPrimitives.Primitives2D
 {
-    /// <summary>
-    /// Maps a fixed "virtual" resolution onto the actual window. Game logic and drawing work in
-    /// <see cref="VirtualWidth"/>×<see cref="VirtualHeight"/> coordinates regardless of the
-    /// actual window size; <see cref="GetScaleMatrix"/> maps that virtual space onto the window.
-    /// </summary>
-    /// <remarks>
-    /// A family of adapters (<see cref="DefaultViewportAdapter2D"/>/<see cref="BoxingViewportAdapter2D"/>/
-    /// <see cref="ScalingViewportAdapter2D"/>/<see cref="WindowViewportAdapter2D"/>) so a
-    /// prototype gets resolution independence with no extra package.
-    /// <see cref="Camera2D"/> folds this in automatically when constructed with an adapter —
-    /// <c>camera.GetTransformMatrix()</c> alone is enough to pass into <c>Primitive2DBatch.Begin</c>.
-    /// </remarks>
+    /// <summary>Maps a fixed "virtual" resolution onto the actual window; <see cref="GetScaleMatrix"/> maps virtual coordinates onto it.</summary>
+    /// <remarks><see cref="Camera2D"/> folds this in automatically when constructed with an adapter — <c>camera.GetTransformMatrix()</c> alone is enough to pass into <c>Primitive2DBatch.Begin</c>.</remarks>
     public abstract class ViewportAdapter2D
     {
         /// <summary>Device this adapter reads the actual window/viewport size from.</summary>
@@ -58,27 +48,8 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Converts a virtual/game position into actual-window coordinates.</summary>
         public Vector2 VirtualToPoint(Vector2 virtualPosition) => Vector2.Transform(virtualPosition, GetScaleMatrix());
 
-        /// <summary>
-        /// Sets the <see cref="GraphicsDevice"/>'s active viewport to <see cref="BoundingRectangle"/>,
-        /// so hardware clears/clips stop at the virtual viewport's edge instead of covering the
-        /// full window. Call once after resizing (or once per frame before drawing, if simplest).
-        /// </summary>
-        /// <remarks>
-        /// Don't combine this with <see cref="GetScaleMatrix"/> for 2D drawing — the matrix already
-        /// bakes in <see cref="Offset"/>, so narrowing the device viewport too double-applies it
-        /// (only visible for adapters with a nonzero Offset, e.g. <see cref="BoxingViewportAdapter2D"/>).
-        /// Use one or the other: either skip Apply() and draw with the full <see cref="GetScaleMatrix"/>
-        /// against the whole window, or call Apply() and drop Offset from the draw transform
-        /// (<c>Matrix.CreateScale(Scale.X, Scale.Y, 1f)</c> only). <see cref="MonoPrimitives.Primitives3D.Primitive3DBatch"/>'s
-        /// camera-driven 3D path uses Apply() this second way internally and is unaffected.
-        ///
-        /// <see cref="GraphicsDevice.Clear(Color)"/> ignores a narrowed viewport and always clears
-        /// the whole render target — calling it again after Apply() to give the boxed "inside" a
-        /// different color from the bars wipes the bars too, not just the inside. To fill just the
-        /// current viewport, draw a rectangle sized to it instead (its bounds are already respected
-        /// by an actual draw, unlike Clear) — e.g. after narrowing, a <c>Primitive2DBatch.Begin()</c>/
-        /// <c>FillRectangle(0, 0, Device.Viewport.Width, Device.Viewport.Height, color)</c>/<c>End()</c>.
-        /// </remarks>
+        /// <summary>Sets the <see cref="GraphicsDevice"/>'s active viewport to <see cref="BoundingRectangle"/>, so hardware clears/clips stop at its edge instead of covering the full window.</summary>
+        /// <remarks>Don't also bake <see cref="Offset"/> into a draw's transform matrix after calling this — the narrowed viewport already applies it, so using both double-applies it. And <see cref="GraphicsDevice.Clear(Color)"/> ignores a narrowed viewport and clears the whole render target regardless, so a Clear() after Apply() wipes the bars too, not just the inside.</remarks>
         public virtual void Apply() => Device.Viewport = new Viewport(BoundingRectangle);
 
         /// <summary>Restores the <see cref="GraphicsDevice"/>'s viewport to the full window.</summary>

@@ -8,12 +8,6 @@ namespace MonoPrimitives
     /// anything that needs sub-pixel positions/sizes (a zoomed camera's visible bounds, a smoothly
     /// scaling UI panel, a hitbox that shouldn't snap to whole pixels) without truncating them.
     /// </summary>
-    /// <remarks>
-    /// Mirrors <see cref="Rectangle"/>'s own member shape (<see cref="Left"/>/<see cref="Right"/>/
-    /// <see cref="Top"/>/<see cref="Bottom"/>/<see cref="Contains(Vector2)"/>/<see cref="Intersects"/>/
-    /// <see cref="Inflate"/>/<see cref="Union"/>/<see cref="Intersect"/>) so it behaves exactly like
-    /// the type you already know, just without the integer rounding.
-    /// </remarks>
     public struct RectangleF : IEquatable<RectangleF>
     {
         /// <summary>X position of the rectangle's left edge.</summary>
@@ -22,7 +16,7 @@ namespace MonoPrimitives
         /// <summary>Y position of the rectangle's top edge.</summary>
         public float Y;
 
-        /// <summary>Width. Can be negative (an "inverted" rectangle) — nothing here guards against it, same as <see cref="Rectangle"/>.</summary>
+        /// <summary>Width. Can be negative (an "inverted" rectangle) — nothing here guards against it.</summary>
         public float Width;
 
         /// <summary>Height. Can be negative, same caveat as <see cref="Width"/>.</summary>
@@ -88,7 +82,7 @@ namespace MonoPrimitives
         /// <summary>True if this rectangle and <paramref name="other"/> overlap — edges merely touching does not count.</summary>
         public readonly bool Intersects(RectangleF other) => X < other.Right && Right > other.X && Y < other.Bottom && Bottom > other.Y;
 
-        /// <summary>Grows (or shrinks, for a negative amount) the rectangle by <paramref name="horizontalAmount"/>/<paramref name="verticalAmount"/> on each side, keeping the same center — matches <see cref="Rectangle.Inflate(int,int)"/>'s own convention (doubles the total size change), returned rather than mutated in place.</summary>
+        /// <summary>Grows (or shrinks, for a negative amount) the rectangle by <paramref name="horizontalAmount"/>/<paramref name="verticalAmount"/> on each side, keeping the same center — doubles the total size change on each axis. Returned rather than mutated in place.</summary>
         public readonly RectangleF Inflate(float horizontalAmount, float verticalAmount)
             => new(X - horizontalAmount, Y - verticalAmount, Width + horizontalAmount * 2f, Height + verticalAmount * 2f);
 
@@ -113,7 +107,7 @@ namespace MonoPrimitives
         }
 
         /// <summary>Linearly interpolates each of <see cref="X"/>/<see cref="Y"/>/<see cref="Width"/>/<see cref="Height"/> independently between <paramref name="a"/> and <paramref name="b"/>.</summary>
-        /// <remarks>Useful for easing a rect-based transition — e.g. animating toward the rect <see cref="Primitives2D.Camera2D.FitBounds"/>/<see cref="Primitives3D.Camera3D.FitBounds"/> would set instantly, or a UI panel resizing into place. <paramref name="t"/> isn't clamped — values outside <c>[0,1]</c> extrapolate.</remarks>
+        /// <remarks><paramref name="t"/> isn't clamped — values outside <c>[0,1]</c> extrapolate.</remarks>
         public static RectangleF Lerp(RectangleF a, RectangleF b, float t)
             => new(MathHelper.Lerp(a.X, b.X, t), MathHelper.Lerp(a.Y, b.Y, t), MathHelper.Lerp(a.Width, b.Width, t), MathHelper.Lerp(a.Height, b.Height, t));
 

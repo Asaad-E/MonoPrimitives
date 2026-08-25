@@ -25,17 +25,8 @@ namespace MonoPrimitives
         XButton2
     }
 
-    /// <summary>
-    /// Polls keyboard, mouse, and gamepad state once per frame and exposes down/pressed/released
-    /// queries plus a couple of composite helpers (<see cref="GetAxis"/>/<see cref="GetVector2"/>)
-    /// that turn a handful of individual key bindings into one float or <see cref="Vector2"/>. Call
-    /// <see cref="Update(GameTime)"/> once per frame (before reading anything else this frame) —
-    /// typically the first line of your own <c>Game.Update</c>.
-    /// </summary>
-    /// <remarks>
-    /// <see cref="GetAxis"/>/<see cref="GetVector2"/> are the same shape as a game engine's "get
-    /// movement direction" call — one line instead of six <c>IsKeyDown(...)</c> checks.
-    /// </remarks>
+    /// <summary>Polls keyboard, mouse, and gamepad state once per frame and exposes down/pressed/released queries.</summary>
+    /// <remarks>Call <see cref="Update(GameTime)"/> once per frame, before reading anything else this frame — typically the first line of your own <c>Game.Update</c>.</remarks>
     public sealed class PrimitiveInput : IDisposable
     {
         private KeyboardState _keyboard;
@@ -72,13 +63,7 @@ namespace MonoPrimitives
         public PrimitiveInput() { }
 
         /// <summary>Creates an input poller that also subscribes to <paramref name="window"/>'s <c>TextInput</c> event, enabling <see cref="GetCharPressed"/>. Call <see cref="Dispose"/> when done to unsubscribe.</summary>
-        /// <remarks>
-        /// The only correct way to get typed characters — keyboard-state polling (everything else
-        /// in this class) can't produce them: <see cref="Keys"/> is physical key identity, not the
-        /// character a layout/shift/dead-key combination actually produces (e.g. Spanish 'á' is
-        /// typically composed from a dead-key sequence only the OS can resolve), and OS key-repeat
-        /// timing can't be reconstructed by guessing at settings the OS already knows.
-        /// </remarks>
+        /// <remarks>The only way to get real typed characters — keyboard-state polling can't produce them, since <see cref="Keys"/> is physical key identity, not the character a layout/shift/dead-key combination actually types.</remarks>
         public PrimitiveInput(GameWindow window)
         {
             _window = window ?? throw new ArgumentNullException(nameof(window));
@@ -254,12 +239,7 @@ namespace MonoPrimitives
         }
 
         /// <summary>Total movement since <paramref name="button"/> was last pressed. <see cref="Vector2.Zero"/> if never pressed.</summary>
-        /// <remarks>
-        /// Live-tracks <see cref="MousePosition"/> while still held, or reports the drag's final
-        /// distance for the rest of the frame it's released on (and after, until the next press
-        /// starts a new drag) — so checking this from inside <c>if (IsMouseButtonReleased(button))</c>
-        /// (a swipe/flick gesture) sees the real distance instead of a stale zero.
-        /// </remarks>
+        /// <remarks>Live-tracks <see cref="MousePosition"/> while held; after release, reports the drag's final distance until the next press — so checking this inside <c>if (IsMouseButtonReleased(button))</c> sees the real distance, not a stale zero.</remarks>
         public Vector2 DragDelta(MouseButton button)
         {
             int i = (int)button;
@@ -345,15 +325,7 @@ namespace MonoPrimitives
         public float RightTriggerDeadzoned(int player = 0, float deadzone = 0.05f) => ApplyDeadzone(RightTrigger(player), deadzone);
 
         /// <summary>Applies a scaled radial deadzone to an analog stick reading: zero within <paramref name="deadzone"/> of center, and the surviving <c>[deadzone, 1]</c> range rescaled back onto a full <c>[0, 1]</c> output. Direction/sign is untouched; only magnitude is remapped.</summary>
-        /// <remarks>
-        /// Rescaled, not just clamped — clamping alone leaves a discontinuity right at the cutoff
-        /// (output jumps straight from 0 to ~<paramref name="deadzone"/> instead of a continuous
-        /// ramp). A degenerate <paramref name="deadzone"/> &gt;= 1 returns zero rather than dividing
-        /// by a zero-or-negative range. Public static because the same curve is useful for any other
-        /// analog 2D input this class doesn't itself read (a custom joystick, a mouse-driven virtual
-        /// stick) — <see cref="LeftStickDeadzoned"/>/<see cref="RightStickDeadzoned"/> are thin
-        /// wrappers over this.
-        /// </remarks>
+        /// <remarks>Rescaled, not clamped — clamping alone would leave a discontinuity right at the cutoff. A degenerate <paramref name="deadzone"/> &gt;= 1 returns zero.</remarks>
         public static Vector2 ApplyDeadzone(Vector2 v, float deadzone)
         {
             float magnitude = v.Length();

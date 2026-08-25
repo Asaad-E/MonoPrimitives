@@ -7,11 +7,7 @@ using Microsoft.Xna.Framework;
 namespace MonoPrimitives.Primitives2D
 {
     /// <summary>Precomputed unit-circle lookup table — fast, allocation-free sin/cos for your own curved geometry (a custom particle ring, a procedural shape) without redoing this table yourself.</summary>
-    /// <remarks>
-    /// The 2D counterpart to the 3D library's own <c>TrigLut</c>, exposed publicly for the same
-    /// reason. <see cref="Primitive2DBatch"/> uses <see cref="Sample"/> internally for every
-    /// curved shape it draws.
-    /// </remarks>
+    /// <remarks><see cref="Primitive2DBatch"/> uses <see cref="Sample"/> internally for every curved shape it draws.</remarks>
     public static class UnitCircleLut
     {
         /// <summary>Number of samples covering a full turn.</summary>

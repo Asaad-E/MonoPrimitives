@@ -65,7 +65,7 @@ namespace MonoPrimitives
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        /// <summary>Allocation-free enumerator for <see cref="RingBuffer{T}"/> — a struct, like <see cref="List{T}"/>'s own, so a plain <c>foreach</c> against this concrete type never boxes it.</summary>
+        /// <summary>Allocation-free enumerator for <see cref="RingBuffer{T}"/> — a struct, so a plain <c>foreach</c> against this concrete type never boxes it.</summary>
         public struct Enumerator : IEnumerator<T>
         {
             private readonly RingBuffer<T> _buffer;

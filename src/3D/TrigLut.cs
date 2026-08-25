@@ -58,7 +58,7 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Sine/cosine at a normalized angle <paramref name="t01"/> in [0, 1) (1 = a full turn), via linear interpolation between the two nearest table entries.</summary>
-        /// <remarks>The continuous counterpart to <see cref="SinCosStep"/> for an angle that isn't naturally a division of a circle (e.g. an animated phase held as its own float), and the 3D equivalent of <c>UnitCircleLut.Sample(t01)</c> on the 2D side.</remarks>
+        /// <remarks>The continuous counterpart to <see cref="SinCosStep"/>, for an angle that isn't naturally a division of a circle (e.g. an animated phase held as its own float).</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sample(float t01, out float sin, out float cos) => SampleInterpolated(t01 * Resolution, out sin, out cos);
 

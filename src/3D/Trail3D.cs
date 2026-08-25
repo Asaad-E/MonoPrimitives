@@ -5,8 +5,8 @@ using Microsoft.Xna.Framework;
 
 namespace MonoPrimitives.Primitives3D
 {
-    /// <summary>A fixed-capacity history of recent positions, drawn as a line that fades out toward the oldest point — a moving particle/agent's own trail (the Pezzza's-Work-style look).</summary>
-    /// <remarks>Call <see cref="Add"/> once per frame with the thing's current position, then <see cref="Draw"/> it. A ring buffer under the hood: <see cref="Add"/> never allocates once warmed up, and old points are simply overwritten rather than shifted.</remarks>
+    /// <summary>A fixed-capacity history of recent positions, drawn as a line that fades out toward the oldest point — a moving particle/agent's own trail.</summary>
+    /// <remarks>Call <see cref="Add"/> once per frame with the thing's current position, then <see cref="Draw"/> it. <see cref="Add"/> never allocates once warmed up.</remarks>
     public sealed class Trail3D
     {
         private readonly Vector3[] _points;

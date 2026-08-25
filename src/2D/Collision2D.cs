@@ -6,17 +6,10 @@ using Microsoft.Xna.Framework;
 namespace MonoPrimitives.Primitives2D
 {
     /// <summary>Pure geometry overlap/intersection tests (circle, rectangle, triangle, polygon, line).</summary>
-    /// <remarks>
-    /// Static utilities rather than <see cref="Primitive2DBatch"/> methods, since they
-    /// don't touch a <see cref="Microsoft.Xna.Framework.Graphics.GraphicsDevice"/> at all —
-    /// plain math you can call any time, not just mid-draw. MonoGame's own
-    /// <see cref="Rectangle"/> only covers rect-rect/point-in-rect; everything else here
-    /// fills a real gap. Useful for hit detection, platformer collision, or neighbor/
-    /// separation checks in a simulation.
-    /// </remarks>
+    /// <remarks>Static utilities, not <see cref="Primitive2DBatch"/> methods — plain math you can call any time, not just mid-draw. Useful for hit detection, platformer collision, or neighbor/separation checks in a simulation.</remarks>
     public static class Collision2D
     {
-        /// <summary>Rectangle vs rectangle overlap. Thin wrapper over <see cref="Rectangle.Intersects(Rectangle)"/>, included here for naming consistency with the rest of this class.</summary>
+        /// <summary>Rectangle vs rectangle overlap. Thin wrapper over <see cref="Rectangle.Intersects(Rectangle)"/>.</summary>
         public static bool CheckCollisionRecs(Rectangle rec1, Rectangle rec2) => rec1.Intersects(rec2);
 
         /// <summary>Circle vs circle overlap.</summary>
@@ -47,7 +40,7 @@ namespace MonoPrimitives.Primitives2D
         public static bool CheckCollisionCircleCapsule(Vector2 circleCenter, float circleRadius, Vector2 capsuleStart, Vector2 capsuleEnd, float capsuleRadius)
             => CheckCollisionPointLine(circleCenter, capsuleStart, capsuleEnd, circleRadius + capsuleRadius);
 
-        /// <summary>Point inside (or on the edge of) a rectangle. Thin wrapper over <see cref="Rectangle.Contains(Point)"/>, included here for naming consistency with the rest of this class.</summary>
+        /// <summary>Point inside (or on the edge of) a rectangle. Thin wrapper over <see cref="Rectangle.Contains(Point)"/>.</summary>
         public static bool CheckCollisionPointRec(Vector2 point, Rectangle rec)
             => point.X >= rec.Left && point.X <= rec.Right && point.Y >= rec.Top && point.Y <= rec.Bottom;
 
@@ -87,11 +80,7 @@ namespace MonoPrimitives.Primitives2D
             return distSq <= threshold * threshold;
         }
 
-        /// <summary>
-        /// Point inside an arbitrary (possibly non-convex) polygon, via the standard
-        /// even-odd ray-casting rule. Correct for any simple polygon, not just the
-        /// convex/star-shaped input this library's own <c>FillPolygon</c> assumes.
-        /// </summary>
+        /// <summary>Point inside an arbitrary (possibly non-convex) polygon. Correct for any simple polygon, not just the convex/star-shaped input this library's own <c>FillPolygon</c> assumes.</summary>
         public static bool CheckCollisionPointPoly(Vector2 point, ReadOnlySpan<Vector2> points)
         {
             bool inside = false;
@@ -126,7 +115,7 @@ namespace MonoPrimitives.Primitives2D
             return true;
         }
 
-        /// <summary>The overlapping rectangle of two rectangles (empty — <c>Width</c>/<c>Height</c> 0 — if they don't overlap). Thin wrapper over <see cref="Rectangle.Intersect(Rectangle,Rectangle)"/>, included here for naming consistency with the rest of this class.</summary>
+        /// <summary>The overlapping rectangle of two rectangles (empty — <c>Width</c>/<c>Height</c> 0 — if they don't overlap). Thin wrapper over <see cref="Rectangle.Intersect(Rectangle,Rectangle)"/>.</summary>
         public static Rectangle GetCollisionRec(Rectangle rec1, Rectangle rec2) => Rectangle.Intersect(rec1, rec2);
 
         // =====================================================================
@@ -142,11 +131,6 @@ namespace MonoPrimitives.Primitives2D
         // =====================================================================
 
         /// <summary>Convex polygon vs convex polygon overlap. Requires both polygons to be convex.</summary>
-        /// <remarks>
-        /// Uses the Separating Axis Theorem: tries each polygon's own edge normals in turn as a
-        /// candidate separating axis, projecting both polygons onto it and looking for a gap. No
-        /// separating axis on either polygon's edges means the polygons overlap.
-        /// </remarks>
         public static bool CheckCollisionPolyPoly(ReadOnlySpan<Vector2> poly1, ReadOnlySpan<Vector2> poly2)
         {
             if (poly1.Length < 3 || poly2.Length < 3) return false;
@@ -171,6 +155,9 @@ namespace MonoPrimitives.Primitives2D
             return CheckCollisionPolyPoly(rectPts, [p1, p2, p3]);
         }
 
+        // Separating Axis Theorem: tries each polygon's own edge normals in turn as a candidate
+        // separating axis, projecting both polygons onto it and looking for a gap. No separating
+        // axis on either polygon's edges means the polygons overlap.
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private static bool HasSeparatingAxis(ReadOnlySpan<Vector2> a, ReadOnlySpan<Vector2> b)
         {
@@ -199,12 +186,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Circle vs arbitrary (possibly non-convex) polygon overlap.</summary>
-        /// <remarks>
-        /// Correct for any simple polygon, unlike the SAT-based checks above. True if the circle's
-        /// center is inside the polygon (reusing <see cref="CheckCollisionPointPoly"/>) or within
-        /// <paramref name="radius"/> of any edge (reusing the same closest-point-on-segment
-        /// distance as <see cref="CheckCollisionPointLine"/>).
-        /// </remarks>
+        /// <remarks>Correct for any simple polygon, unlike the SAT-based checks above. True if the circle's center is inside the polygon, or within <paramref name="radius"/> of any edge.</remarks>
         public static bool CheckCollisionCirclePoly(Vector2 center, float radius, ReadOnlySpan<Vector2> points)
         {
             if (points.Length < 2) return false;
@@ -222,15 +204,7 @@ namespace MonoPrimitives.Primitives2D
             => CheckCollisionCirclePoly(center, radius, [p1, p2, p3]);
 
         /// <summary>Capsule vs arbitrary (possibly non-convex) polygon overlap.</summary>
-        /// <remarks>
-        /// Correct for any simple polygon, same generality as <see cref="CheckCollisionCirclePoly"/>
-        /// (not SAT-based, so convexity isn't required). True if either capsule endpoint is inside
-        /// the polygon (reusing <see cref="CheckCollisionPointPoly"/>), or the capsule's own axis
-        /// SEGMENT comes within <paramref name="capsuleRadius"/> of any polygon edge (via the same
-        /// closest-point-between-segments distance <see cref="CheckCollisionCapsuleCapsule"/> uses)
-        /// — the second check alone also covers a capsule passing all the way through the polygon,
-        /// since entering a closed shape always crosses one of its edges.
-        /// </remarks>
+        /// <remarks>Correct for any simple polygon (not SAT-based, so convexity isn't required). True if either capsule endpoint is inside the polygon, or the capsule's axis segment comes within <paramref name="capsuleRadius"/> of any polygon edge.</remarks>
         public static bool CheckCollisionCapsulePoly(Vector2 capsuleStart, Vector2 capsuleEnd, float capsuleRadius, ReadOnlySpan<Vector2> points)
         {
             if (points.Length < 2) return false;
@@ -255,25 +229,17 @@ namespace MonoPrimitives.Primitives2D
         public static bool CheckCollisionCapsuleTriangle(Vector2 capsuleStart, Vector2 capsuleEnd, float capsuleRadius, Vector2 p1, Vector2 p2, Vector2 p3)
             => CheckCollisionCapsulePoly(capsuleStart, capsuleEnd, capsuleRadius, [p1, p2, p3]);
 
-        /// <summary>
-        /// Capsule vs capsule overlap — the standard "cheap, robust hitbox" check both shapes
-        /// exist for: distance between their two axis SEGMENTS (not points), compared against the
-        /// sum of both radii, via <see cref="SegmentSegmentDistanceSquared"/>.
-        /// </summary>
+        /// <summary>Capsule vs capsule overlap: distance between their two axis segments (not points), compared against the sum of both radii.</summary>
         public static bool CheckCollisionCapsuleCapsule(Vector2 aStart, Vector2 aEnd, float aRadius, Vector2 bStart, Vector2 bEnd, float bRadius)
         {
             float radiusSum = aRadius + bRadius;
             return SegmentSegmentDistanceSquared(aStart, aEnd, bStart, bEnd) <= radiusSum * radiusSum;
         }
 
-        /// <summary>Squared distance between the closest points of two line segments.</summary>
-        /// <remarks>
-        /// The standard closest-point-between-segments algorithm (Ericson, "Real-Time Collision
-        /// Detection"), handling every degenerate case (either or both segments collapsed to a
-        /// point, parallel segments) without branching on them explicitly. <c>s</c>/<c>t</c> are
-        /// each segment's own parametric position of its closest point, clamped to [0,1] (i.e.
-        /// always actually ON the segment, never the infinite line through it).
-        /// </remarks>
+        // Standard closest-point-between-segments algorithm (Ericson, "Real-Time Collision Detection"),
+        // handling every degenerate case (either/both segments collapsed to a point, parallel
+        // segments) without branching on them explicitly. s/t are each segment's parametric
+        // closest-point position, clamped to [0,1] -- always on the segment, never the infinite line.
         private static float SegmentSegmentDistanceSquared(Vector2 p1, Vector2 q1, Vector2 p2, Vector2 q2)
         {
             Vector2 d1 = q1 - p1, d2 = q2 - p2, r = p1 - p2;
@@ -346,7 +312,7 @@ namespace MonoPrimitives.Primitives2D
             return true;
         }
 
-        /// <summary>Ray vs axis-aligned rectangle (slab method). <paramref name="distance"/> is 0 if <paramref name="origin"/> starts inside <paramref name="rec"/>.</summary>
+        /// <summary>Ray vs axis-aligned rectangle. <paramref name="distance"/> is 0 if <paramref name="origin"/> starts inside <paramref name="rec"/>.</summary>
         public static bool CheckCollisionRayRec(Vector2 origin, Vector2 direction, Rectangle rec, out Vector2 hitPoint, out float distance)
         {
             hitPoint = default; distance = 0f;

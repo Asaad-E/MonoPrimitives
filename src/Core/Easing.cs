@@ -69,19 +69,11 @@ namespace MonoPrimitives
         ElasticInOut,
     }
 
-    /// <summary>
-    /// Classic 0→1 tweening curves for one-shot animations with a known duration — a menu
-    /// sliding in, an object scaling up, a color fading out.
-    /// </summary>
-    /// <remarks>
-    /// Complements <c>Camera2D</c>/<c>Camera3D</c>'s own <c>SmoothDamp</c> (a physical spring,
-    /// good for open-ended following/zoom instead). Typical use:
-    /// <c>float eased = Easing.CubicOut(Math.Clamp(elapsed / duration, 0f, 1f));</c>
-    /// </remarks>
+    /// <summary>Classic 0→1 tweening curves for one-shot animations with a known duration — a menu sliding in, an object scaling up, a color fading out.</summary>
     public static class Easing
     {
         /// <summary>Evaluates the curve named by <paramref name="type"/> at <paramref name="t"/> — dispatches to the matching method below.</summary>
-        /// <remarks>For picking a curve as data (see <see cref="EasingType"/>) rather than calling it directly. Prefer calling the named method (<see cref="CubicOut"/>, etc.) instead when the curve is already known at compile time — this adds a switch dispatch on top.</remarks>
+        /// <remarks>Prefer calling the named method (<see cref="CubicOut"/>, etc.) directly when the curve is known at compile time — this adds a switch dispatch on top.</remarks>
         public static float Evaluate(EasingType type, float t) => type switch
         {
             EasingType.Linear => Linear(t),

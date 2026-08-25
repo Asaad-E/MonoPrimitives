@@ -217,7 +217,7 @@ Takes a `ReadOnlySpan<Vector2>` of points instead of center/sides/radius — dra
 | Method | What it does |
 |---|---|
 | `FillPolygon(points, color)` | Solid fill, fan-triangulated from `points[0]`. |
-| `BorderPolygon(points, color, thickness, join, jointRadius)` | Outline only, inward (correct for convex input; a reflex corner on a non-convex input isn't guaranteed to resolve exactly right). |
+| `BorderPolygon(points, color, thickness, join, jointRadius)` | Outline only, inward — correct for concave (reflex-vertex) input too, not just convex (see `Design/DECISIONS.md`). |
 | `DrawPolygon(points, fillColor, borderColor = null, thickness, join, jointRadius)` | Fill + border — omit `borderColor` for the same color on both. |
 | `FillPolygonRounded(points, cornerRadius, color)` | Solid fill with every corner rounded. |
 | `BorderPolygonRounded(points, cornerRadius, color, thickness)` | Rounded-corner outline only. |

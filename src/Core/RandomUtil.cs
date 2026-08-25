@@ -18,13 +18,7 @@ namespace MonoPrimitives
         private float? _spareGaussian;
 
         /// <summary>The underlying seeded <see cref="Random"/> stream every method above advances — drop down to it directly for anything not wrapped here.</summary>
-        /// <remarks>
-        /// E.g. <see cref="Random.NextBytes(byte[])"/>, <see cref="Random.NextInt64()"/>,
-        /// <see cref="Random.NextDouble()"/>, <see cref="Random.Shuffle{T}(T[])"/>. Reading this
-        /// stays on the exact same deterministic sequence as every <see cref="RandomUtil"/> call
-        /// around it; constructing a separate <c>new Random(seed)</c> yourself would desync into
-        /// its own independent stream instead.
-        /// </remarks>
+        /// <remarks>Reading this stays on the exact same deterministic sequence as every <see cref="RandomUtil"/> call around it; constructing a separate <c>new Random(seed)</c> yourself would desync into its own independent stream instead.</remarks>
         public Random UnderlyingRandom => _rng;
 
         /// <summary>Creates a generator whose stream is fully determined by <paramref name="seed"/> — same seed always gives the same sequence of samples.</summary>
@@ -45,10 +39,7 @@ namespace MonoPrimitives
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool NextBool(float probability = 0.5f) => SampleBool(_rng, probability);
 
-        /// <summary>
-        /// Normally-distributed ("Gaussian") sample with the given <paramref name="mean"/>/<paramref name="stdDev"/>.
-        /// See <see cref="SampleGaussian"/> for the algorithm (Marsaglia polar method).
-        /// </summary>
+        /// <summary>Normally-distributed ("Gaussian") sample with the given <paramref name="mean"/>/<paramref name="stdDev"/>.</summary>
         public float NextGaussian(float mean = 0f, float stdDev = 1f) => SampleGaussian(_rng, ref _spareGaussian, mean, stdDev);
 
         /// <summary>Log-normal sample: <c>Exp(NextGaussian(mean, stdDev))</c> — <paramref name="mean"/>/<paramref name="stdDev"/> describe the underlying normal, not the output's own mean/stdDev (standard log-normal convention).</summary>
@@ -183,16 +174,10 @@ namespace MonoPrimitives
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float SampleExponential(Random rng, float rate) => -MathF.Log(1f - rng.NextSingle()) / rate;
 
-        /// <summary>Normally-distributed sample with the given <paramref name="mean"/>/<paramref name="stdDev"/>.</summary>
-        /// <remarks>
-        /// Uses the Marsaglia polar method (two uniforms rejection-sampled inside the unit disc,
-        /// then <c>sqrt</c>/<c>log</c>) rather than Box-Muller specifically to avoid any
-        /// <c>Sin</c>/<c>Cos</c> call — consistent with this library's existing "no trig on a hot
-        /// path" convention elsewhere (<c>UnitCircleLut</c>/<c>TrigLut</c>). Acceptance rate is
-        /// ~78.5% (unit disc area over the 2×2 square it's sampled from), and every acceptance
-        /// yields two independent samples — the second is cached in <paramref name="spare"/> and
-        /// returned on the next call.
-        /// </remarks>
+        // Marsaglia polar method (two uniforms rejection-sampled inside the unit disc, then sqrt/log)
+        // rather than Box-Muller, to avoid a Sin/Cos call. Acceptance rate ~78.5%, and every
+        // acceptance yields two independent samples -- the second is cached in `spare` and
+        // returned on the next call.
         private static float SampleGaussian(Random rng, ref float? spare, float mean, float stdDev)
         {
             if (spare.HasValue)
@@ -215,26 +200,17 @@ namespace MonoPrimitives
             return mean + (u * scale) * stdDev;
         }
 
-        /// <summary>Threshold above which <see cref="SamplePoisson"/>/<see cref="SampleBinomial"/> switch to a Gaussian approximation instead of direct simulation.</summary>
-        /// <remarks>
-        /// Both are otherwise O(lambda) / O(trials) per sample, an unbounded cost this library
-        /// avoids elsewhere too (see <c>Primitive2DBatch.SegmentsForArc</c>'s capped segment
-        /// count for the same reasoning). 30 is the standard textbook rule of thumb for
-        /// Poisson→Normal.
-        /// </remarks>
+        // Threshold above which SamplePoisson/SampleBinomial switch to a Gaussian approximation
+        // instead of direct simulation (both are otherwise O(lambda)/O(trials) per sample). 30 is
+        // the standard textbook rule of thumb for Poisson->Normal.
         private const float GaussianApproxThreshold = 30f;
 
-        /// <summary>np(1-p) threshold above which <see cref="SampleBinomial"/> uses the Gaussian approximation.</summary>
-        /// <remarks>The standard textbook rule of thumb for when Normal(np, sqrt(np(1-p))) stays a reasonable fit.</remarks>
+        // np(1-p) threshold above which SampleBinomial uses the Gaussian approximation -- the
+        // standard textbook rule of thumb for when Normal(np, sqrt(np(1-p))) stays a reasonable fit.
         private const float BinomialGaussianVarianceThreshold = 9f;
 
         /// <summary>Poisson-distributed non-negative integer count with rate <paramref name="lambda"/> (must be &gt;= 0).</summary>
-        /// <remarks>
-        /// Uses Knuth's algorithm (repeated uniform multiplication) for <paramref name="lambda"/>
-        /// up to <see cref="GaussianApproxThreshold"/> — exact, but O(lambda) per sample — then a
-        /// rounded/clamped Normal(lambda, sqrt(lambda)) approximation above that, so a
-        /// pandemic/population sim asking for a huge lambda never pays an unbounded cost.
-        /// </remarks>
+        /// <remarks>For very large <paramref name="lambda"/>, this switches to a Normal approximation instead of exact simulation, to keep cost bounded.</remarks>
         private static int SamplePoisson(Random rng, ref float? spare, float lambda)
         {
             if (lambda <= 0f) return 0;
@@ -253,15 +229,7 @@ namespace MonoPrimitives
         }
 
         /// <summary>Binomial-distributed successes out of <paramref name="trials"/> at per-trial <paramref name="probability"/>.</summary>
-        /// <remarks>
-        /// Three regimes, each picked to keep worst-case cost bounded regardless of how large
-        /// <paramref name="trials"/> is: a Gaussian(np, sqrt(np(1-p))) approximation when
-        /// variance is large enough for it to hold (standard np(1-p) &gt;= 9 rule); a Poisson(np)
-        /// approximation when <paramref name="trials"/> is large but <paramref name="probability"/>
-        /// is small enough that variance stays low (the rare-event-over-many-trials case an
-        /// epidemic/population sim would actually hit — e.g. a small per-contact infection chance
-        /// across a huge population); direct Bernoulli-trial simulation only when both are small.
-        /// </remarks>
+        /// <remarks>For large <paramref name="trials"/>, this switches to a Gaussian or Poisson approximation instead of exact simulation, to keep cost bounded.</remarks>
         private static int SampleBinomial(Random rng, ref float? spare, int trials, float probability)
         {
             if (trials <= 0 || probability <= 0f) return 0;
@@ -296,7 +264,8 @@ namespace MonoPrimitives
         }
 
         /// <summary>Uniformly-distributed point inside the unit disc (by area, not just by angle).</summary>
-        /// <remarks>Radius is <c>sqrt(uniform)</c>, not a plain uniform radius, since a plain uniform radius would bunch samples too densely near the center relative to the edge.</remarks>
+        // Radius is sqrt(uniform), not a plain uniform radius -- a plain uniform radius would bunch
+        // samples too densely near the center relative to the edge.
         private static Vector2 SampleInsideUnitCircle(Random rng) => SampleOnUnitCircle(rng) * MathF.Sqrt(rng.NextSingle());
 
         // z uniform in [-1,1], angle uniform, radius-at-that-z from the sphere equation -- NOT
@@ -313,20 +282,12 @@ namespace MonoPrimitives
         }
 
         /// <summary>Uniformly-distributed point inside the unit ball (by volume).</summary>
-        /// <remarks>
-        /// Radius is <c>cbrt(uniform)</c> (the 3D counterpart to <see cref="SampleInsideUnitCircle"/>'s
-        /// <c>sqrt</c>), a closed-form radius rather than a rejection loop against a unit cube, so
-        /// cost stays a fixed handful of ops per sample instead of a ~52%-acceptance retry loop.
-        /// </remarks>
+        // Radius is cbrt(uniform) (3D counterpart to SampleInsideUnitCircle's sqrt) -- a closed-form
+        // radius rather than a rejection loop against a unit cube, so cost stays fixed per sample.
         private static Vector3 SampleInsideUnitSphere(Random rng) => SampleOnUnitSphere(rng) * MathF.Cbrt(rng.NextSingle());
 
         /// <summary>Picks a random index into <paramref name="weights"/>, with probability proportional to each entry's own weight — a loot table, a weighted spawn/decision table.</summary>
-        /// <remarks>
-        /// Weights must all be non-negative with at least one positive, or this throws. A single
-        /// linear scan, O(n) per call with no state carried between calls — the right tool for a
-        /// table that changes between picks, not a large static one sampled every frame (build
-        /// your own cumulative-sum array once and binary-search it for that case instead).
-        /// </remarks>
+        /// <remarks>Weights must be non-negative with at least one positive, or this throws. O(n) per call — for a large static table sampled every frame, build a cumulative-sum array once and binary-search it instead.</remarks>
         private static int SampleWeightedIndex(Random rng, ReadOnlySpan<float> weights)
         {
             if (weights.IsEmpty)

@@ -37,18 +37,8 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Scale factor: 1 = no zoom, &gt;1 = zoomed in, &lt;1 = zoomed out.</summary>
         public float Zoom = 1f;
 
-        /// <summary>
-        /// Viewport adapter this camera was constructed with, if any — set once at construction,
-        /// then every viewport-dependent method (<see cref="GetTransformMatrix"/>,
-        /// <see cref="ScreenToWorld"/>, <see cref="WorldToScreen"/>, <see cref="GetVisibleWorldBounds(GraphicsDevice?)"/>,
-        /// <see cref="UpdateWithInput(PrimitiveInput, float)"/>'s mouse-drag pan) uses it
-        /// automatically instead of requiring it passed in again at every call site.
-        /// </summary>
-        /// <remarks>
-        /// <c>null</c> for the raw-screen-space constructors — those
-        /// methods then fall back to assuming <see cref="Offset"/> is already in the same pixel
-        /// space as raw device/mouse coordinates.
-        /// </remarks>
+        /// <summary>Viewport adapter this camera was constructed with, if any — set once at construction, then used automatically by every viewport-dependent method instead of requiring it passed in again at every call site.</summary>
+        /// <remarks><c>null</c> for the raw-screen-space constructors — those methods then fall back to assuming <see cref="Offset"/> is already in the same pixel space as raw device/mouse coordinates.</remarks>
         public ViewportAdapter2D? ViewportAdapter { get; }
 
         private readonly Vector2 _initialTarget;
@@ -100,7 +90,6 @@ namespace MonoPrimitives.Primitives2D
             => new(target, new Vector2(device.Viewport.Width * 0.5f, device.Viewport.Height * 0.5f));
 
         /// <summary>Creates a camera with every field at its identity default (no pan, no zoom, world origin at the screen's top-left corner) — a placeholder to construct with before a real target/viewport is known.</summary>
-        /// <remarks>Matches <see cref="Primitives3D.Camera3D.CreateDefault"/>'s role; deliberately no bare parameterless constructor so every <see cref="Camera2D"/> is either explicit about its setup or explicit that it's a placeholder.</remarks>
         public static Camera2D CreateDefault() => new(Vector2.Zero, Vector2.Zero);
 
         /// <summary>
@@ -110,11 +99,7 @@ namespace MonoPrimitives.Primitives2D
         /// <c>R</c> by default in <see cref="UpdateWithInput(PrimitiveInput, float)"/> — call
         /// directly if you're not using that.
         /// </summary>
-        /// <remarks>
-        /// Matches <see cref="Primitives3D.Camera3D.Reset"/>. Also un-pins <see cref="Offset"/> if
-        /// it had been assigned directly since construction, restoring construction-time behavior
-        /// exactly — live tracking again, when constructed with a <see cref="ViewportAdapter"/>.
-        /// </remarks>
+        /// <remarks>Also un-pins <see cref="Offset"/> if it had been assigned directly since construction, restoring construction-time behavior exactly — live tracking again, when constructed with a <see cref="ViewportAdapter"/>.</remarks>
         public void Reset()
         {
             Target = _initialTarget;
@@ -129,13 +114,7 @@ namespace MonoPrimitives.Primitives2D
             ResetTrauma();
         }
 
-        /// <summary>
-        /// Builds the matrix to pass into <c>Primitive2DBatch.Begin</c>'s <c>transformMatrix</c>:
-        /// translate by <c>-Target</c>, rotate (<see cref="Rotation"/> plus any screen-shake
-        /// rotation — see <see cref="AddTrauma"/>), scale by <see cref="Zoom"/>, then translate
-        /// to <see cref="Offset"/> plus any screen-shake offset — the standard 2D camera
-        /// composition.
-        /// </summary>
+        /// <summary>Builds the matrix to pass into <c>Primitive2DBatch.Begin</c>'s <c>transformMatrix</c>.</summary>
         /// <remarks>
         /// When <see cref="ViewportAdapter"/> is set, its own <c>GetScaleMatrix()</c> (virtual →
         /// window pixels) is folded in automatically — don't multiply by it again at the call site.
@@ -146,7 +125,9 @@ namespace MonoPrimitives.Primitives2D
             return ViewportAdapter is not null ? cameraMatrix * ViewportAdapter.GetScaleMatrix() : cameraMatrix;
         }
 
-        /// <summary>The camera's own world↔virtual transform, without <see cref="ViewportAdapter"/>'s virtual↔window mapping — used internally by conversions that need to compose with the adapter differently than <see cref="GetTransformMatrix"/> does.</summary>
+        // The camera's own world<->virtual transform, without ViewportAdapter's virtual<->window
+        // mapping -- used internally by conversions that need to compose with the adapter
+        // differently than GetTransformMatrix does.
         private Matrix GetCameraMatrix()
         {
             (Vector2 shakeOffset, float shakeRotation) = GetShakeOffset();
@@ -430,26 +411,7 @@ namespace MonoPrimitives.Primitives2D
         /// input code of your own. <c>R</c> calls <see cref="Reset"/> directly and skips movement
         /// for that frame, so a same-frame WASD/mouse delta doesn't immediately fight the reset.
         /// </summary>
-        /// <remarks>
-        /// This is a prototyping convenience, not something every game wants baked into its
-        /// camera; use the plain <see cref="Update(float)"/> if you're driving the camera from
-        /// your own logic, or query <paramref name="input"/> yourself and set
-        /// <see cref="Target"/>/<see cref="Zoom"/> directly for custom bindings. Doesn't call
-        /// <see cref="PrimitiveInput.Update(GameTime)"/> itself — <paramref name="input"/> is
-        /// expected to already be current for this frame (the caller's own <c>Update</c> updates
-        /// it once, then hands the same instance to everything that reads it, this camera
-        /// included).
-        ///
-        /// Pan speed is divided by <see cref="Zoom"/> so keyboard panning covers the same amount
-        /// of *screen* space per second regardless of zoom level, matching how the mouse-drag pan
-        /// already behaves (a drag always tracks the cursor 1:1 on screen). When
-        /// <see cref="ViewportAdapter"/> is set, mouse-drag pan is also divided by its
-        /// <see cref="ViewportAdapter2D.Scale"/> — <see cref="PrimitiveInput.MouseDelta"/> is
-        /// always real window pixels, so without this a drag would pan the wrong amount whenever
-        /// the adapter's scale isn't 1:1 (letterbox scaling, a virtual resolution that doesn't
-        /// match the window). Keyboard pan doesn't need this — its speed is defined directly in
-        /// world units, not screen pixels.
-        /// </remarks>
+        /// <remarks>This is a prototyping convenience — use the plain <see cref="Update(float)"/> if you're driving the camera from your own logic, or query <paramref name="input"/> yourself for custom bindings. Doesn't call <see cref="PrimitiveInput.Update(GameTime)"/> itself — <paramref name="input"/> is expected to already be current for this frame.</remarks>
         public void UpdateWithInput(PrimitiveInput input, float deltaSeconds)
         {
             if (input.IsKeyPressed(Keys.R))

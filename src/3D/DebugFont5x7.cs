@@ -9,19 +9,7 @@ namespace MonoPrimitives.Primitives3D
     {
         /// <summary>Draws billboarded (always facing the camera) 3D debug text at <paramref name="position"/> — labeling an agent, a debug readout floating over a point in the scene.</summary>
         /// <remarks>
-        /// Same 5x7 bitmap glyph data as the 2D library's own <c>DebugFont5x7</c>
-        /// (<see cref="FontGlyphs5x7"/>), rendered as small camera-facing quads instead of flat
-        /// screen-space rectangles. <paramref name="pixelSize"/> is a WORLD-space size (a glyph is
-        /// <c>5*pixelSize</c> wide, <c>7*pixelSize</c> tall in world units), not screen pixels —
-        /// scale it to the scene, or re-scale per frame based on camera distance if you want
-        /// constant screen size. Text is never affected by <see cref="LightingEnabled"/> — it
-        /// should read the same regardless of scene lighting. Billboarding is "cylindrical" (stays
-        /// upright relative to world +Y, rotating only to face the camera around that axis), the
-        /// usual choice for labels — falls back to a full camera-facing basis only when looking
-        /// almost straight up or down, where that axis is undefined. <paramref name="maxWidth"/>
-        /// greater than 0 (in the same world-space unit as <paramref name="pixelSize"/>) word-wraps
-        /// <paramref name="text"/> first (see <see cref="FontGlyphs5x7.WrapText"/>) — 0 (the
-        /// default) draws exactly as given, no wrapping.
+        /// <paramref name="pixelSize"/> is a WORLD-space size (a glyph is <c>5*pixelSize</c> wide, <c>7*pixelSize</c> tall in world units), not screen pixels — scale it to the scene, or re-scale per frame based on camera distance if you want constant screen size. Text is never affected by <see cref="LightingEnabled"/> — it should read the same regardless of scene lighting. Billboarding is "cylindrical" (stays upright relative to world +Y, rotating only to face the camera around that axis) — falls back to a full camera-facing basis only when looking almost straight up or down, where that axis is undefined. <paramref name="maxWidth"/> greater than 0 (in the same world-space unit as <paramref name="pixelSize"/>) word-wraps <paramref name="text"/> first — 0 (the default) draws exactly as given, no wrapping.
         /// </remarks>
         public void DrawString3D(string text, Vector3 position, float pixelSize, Color color, float glyphSpacing = 1f, float lineSpacing = 2f, float maxWidth = 0f)
         {

@@ -5,31 +5,14 @@ using Microsoft.Xna.Framework;
 
 namespace MonoPrimitives
 {
-    /// <summary>
-    /// Paces the game loop to a target framerate more precisely than <see cref="Game.IsFixedTimeStep"/>'s
-    /// own timer, by sleeping out most of the remaining frame time and busy-spinning the last couple
-    /// of milliseconds for precision. Call <see cref="BeginFrame"/> once at the top of a frame
-    /// (typically the first line of <c>Update</c>) and <see cref="EndFrame"/> once at the very end
-    /// of it (typically the last line of <c>Draw</c>).
-    /// </summary>
-    /// <remarks>
-    /// Disables <see cref="Game.IsFixedTimeStep"/> and vsync at construction — both would otherwise
-    /// pace the loop independently and fight this class. Construct this AFTER your
-    /// <see cref="GraphicsDeviceManager"/> — it disables vsync by reading the manager already
-    /// registered as a service, and does nothing if none is found yet.
-    ///
-    /// A rare (~1-5% of frames) OS-level scheduling jitter can make any single call to
-    /// <see cref="Thread.Sleep(int)"/> run nearly a full extra frame long on Windows, regardless of
-    /// how the remaining time is split between sleeping and spinning — measured directly, not fixed
-    /// by a larger spin margin or an alternative tail strategy (<see cref="Thread.Yield"/>,
-    /// <see cref="Thread.SpinWait"/>). If consistently smooth frame times matter more than idle CPU
-    /// usage, that's an inherent tradeoff of any Sleep-based limiter, not a bug here.
-    /// </remarks>
+    /// <summary>Paces the game loop to a target framerate more precisely than <see cref="Game.IsFixedTimeStep"/>. Call <see cref="BeginFrame"/> at the top of a frame and <see cref="EndFrame"/> at the end.</summary>
+    /// <remarks>Disables <see cref="Game.IsFixedTimeStep"/> and vsync at construction — construct this after your <see cref="GraphicsDeviceManager"/>, or there's no manager yet to disable vsync on.</remarks>
     public sealed class FrameLimiter
     {
-        // How much of the wait is left to a precise busy-spin instead of Thread.Sleep. Empirically,
-        // widening this reduces the worst-case overshoot when a Sleep call runs long, at the cost of
-        // spinning (100% of one core) for longer every frame -- 2ms is a reasonable middle ground.
+        // Reserved for a precise busy-spin instead of Thread.Sleep, since a single Sleep call can run
+        // nearly a full extra frame long on Windows due to OS scheduling jitter (~1-5% of frames,
+        // measured directly) regardless of how the wait is split. 2ms is a reasonable middle ground
+        // between that overshoot risk and spinning a full core for longer every frame.
         private const double SpinMarginMs = 2.0;
 
         private readonly Stopwatch _stopwatch = new Stopwatch();

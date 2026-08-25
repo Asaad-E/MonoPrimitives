@@ -3,11 +3,7 @@ using Microsoft.Xna.Framework;
 
 namespace MonoPrimitives.Primitives3D
 {
-    /// <summary>
-    /// Result of a ray-vs-shape test (<c>Hit</c>/<c>Distance</c>/<c>Point</c>/<c>Normal</c>),
-    /// used as a consistent return type across every <see cref="Collision3D"/> raycast
-    /// instead of MonoGame's own mix of <c>bool</c> and <c>float?</c> returns with no normal.
-    /// </summary>
+    /// <summary>Result of a ray-vs-shape test (<c>Hit</c>/<c>Distance</c>/<c>Point</c>/<c>Normal</c>), the consistent return type for every <see cref="Collision3D"/> raycast.</summary>
     public readonly struct RayCollision3D
     {
         /// <summary>Whether the ray actually hit anything. When <c>false</c>, the other three fields are meaningless (typically <c>default</c>) — always check this first.</summary>
@@ -33,14 +29,7 @@ namespace MonoPrimitives.Primitives3D
     }
 
     /// <summary>3D collision/raycast utilities.</summary>
-    /// <remarks>
-    /// Sphere/box/ray tests already exist natively on MonoGame's own
-    /// <see cref="BoundingSphere"/>/<see cref="BoundingBox"/>/<see cref="Ray"/>
-    /// (<c>.Intersects(...)</c>) — those are wrapped here only for a consistent name and the
-    /// unified <see cref="RayCollision3D"/> result (point + normal, not just a distance). The
-    /// genuinely new part: <b>capsule</b> collision — a shape this library draws
-    /// (<c>FillCapsule</c>) that MonoGame has no bounding type for at all.
-    /// </remarks>
+    /// <remarks>Wraps MonoGame's own <see cref="BoundingSphere"/>/<see cref="BoundingBox"/>/<see cref="Ray"/> tests for a consistent name and the unified <see cref="RayCollision3D"/> result. Capsule collision is the genuinely new part — MonoGame has no bounding type for it.</remarks>
     public static class Collision3D
     {
         // ---------------------------------------------------------------------
@@ -58,11 +47,7 @@ namespace MonoPrimitives.Primitives3D
         public static bool CheckCollisionBoxSphere(BoundingBox box, Vector3 center, float radius)
             => box.Intersects(new BoundingSphere(center, radius));
 
-        /// <summary>
-        /// Capsule vs capsule overlap (new — no MonoGame equivalent). Reduces to the distance
-        /// between the two capsules' central segments via the standard closest-point-between-
-        /// two-segments algorithm (Ericson, <i>Real-Time Collision Detection</i> §5.1.9).
-        /// </summary>
+        /// <summary>Capsule vs capsule overlap (new — no MonoGame equivalent): the distance between the two capsules' central segments, compared against the sum of both radii.</summary>
         public static bool CheckCollisionCapsules(Vector3 start1, Vector3 end1, float radius1, Vector3 start2, Vector3 end2, float radius2)
         {
             (Vector3 c1, Vector3 c2) = ClosestPointsBetweenSegments(start1, end1, start2, end2);
@@ -79,14 +64,10 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Capsule vs axis-aligned box overlap (new — no MonoGame equivalent). True if the shortest distance between the capsule's own central segment and <paramref name="box"/> is within <paramref name="radius"/>.</summary>
-        /// <remarks>
-        /// No comparable capsule collision math found elsewhere beyond drawing. The
-        /// segment-to-box distance itself has no simple closed form (unlike point-to-box, which is
-        /// a single per-axis clamp) — minimized here via ternary search over the segment's
-        /// parameter <c>t</c>, valid because distance from a fixed point on the segment to the box
-        /// is convex in <c>t</c> (a sum of per-axis clamped-linear terms, each convex), so the
-        /// whole function has one minimum, no local traps to fall into.
-        /// </remarks>
+        // Segment-to-box distance has no simple closed form (unlike point-to-box, a single per-axis
+        // clamp) -- minimized via ternary search over the segment's parameter t, valid because
+        // distance from a fixed point on the segment to the box is convex in t (a sum of per-axis
+        // clamped-linear terms, each convex), so the whole function has one minimum, no local traps.
         public static bool CheckCollisionCapsuleBox(Vector3 start, Vector3 end, float radius, BoundingBox box)
         {
             float radiusSq = radius * radius;
@@ -146,12 +127,10 @@ namespace MonoPrimitives.Primitives3D
             return new RayCollision3D(true, t, point, denom < 0f ? n : -n); // normal faces back toward the ray origin
         }
 
-        /// <summary>
-        /// Ray vs triangle, via the standard Möller–Trumbore algorithm. Useful for mesh/terrain
-        /// picking against triangles you already have on hand (e.g. one cell of a heightmap).
-        /// </summary>
+        /// <summary>Ray vs triangle. Useful for mesh/terrain picking against triangles you already have on hand (e.g. one cell of a heightmap).</summary>
         public static RayCollision3D GetRayCollisionTriangle(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3)
         {
+            // Möller-Trumbore algorithm.
             const float epsilon = 1e-8f;
             Vector3 edge1 = p2 - p1;
             Vector3 edge2 = p3 - p1;
@@ -283,7 +262,7 @@ namespace MonoPrimitives.Primitives3D
             return a + ab * t;
         }
 
-        /// <summary>Closest points between two line segments (Ericson, <i>Real-Time Collision Detection</i> §5.1.9).</summary>
+        // Closest points between two line segments (Ericson, Real-Time Collision Detection Sec 5.1.9).
         private static (Vector3, Vector3) ClosestPointsBetweenSegments(in Vector3 p1, in Vector3 q1, in Vector3 p2, in Vector3 q2)
         {
             const float epsilon = 1e-9f;

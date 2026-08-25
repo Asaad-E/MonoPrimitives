@@ -73,17 +73,8 @@ namespace MonoPrimitives
         /// <summary>Near-black charcoal-navy — a whole-screen backdrop for a dark dashboard/HUD, not a content color. <see cref="MidnightBlue"/>/<see cref="WetAsphalt"/> work well as panels on top of it.</summary>
         public static readonly Color Background = new(20, 22, 31);
 
-        /// <summary>
-        /// All 21 colors above, <see cref="Background"/> included — for code that genuinely
-        /// wants every curated color (a palette swatch viewer, a "cycle through all of them"
-        /// debug tool).
-        /// </summary>
-        /// <remarks>
-        /// For picking a random FOREGROUND color (a boid/cell/agent), use
-        /// <see cref="Primary"/> or <see cref="Cycle"/> instead: <see cref="Background"/> is a
-        /// near-black backdrop color, and a random pick from this array can silently return it,
-        /// rendering as invisible/near-invisible against the very background it's meant for.
-        /// </remarks>
+        /// <summary>All 21 colors above, including <see cref="Background"/>.</summary>
+        /// <remarks>For a random foreground pick, use <see cref="Primary"/> or <see cref="Cycle"/> instead — a random pick from this array can return <see cref="Background"/>, which renders near-invisible against itself.</remarks>
         public static readonly Color[] All =
         {
             Turquoise, GreenSea, Emerald, Nephritis, PeterRiver, BelizeHole, Amethyst, Wisteria,

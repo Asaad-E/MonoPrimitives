@@ -77,7 +77,7 @@ namespace MonoPrimitives
                     Lerp(u, Grad(_perm[ab + 1], xf, yf - 1f, zf - 1f), Grad(_perm[bb + 1], xf - 1f, yf - 1f, zf - 1f))));
         }
 
-        /// <summary>2D Perlin noise at (x, y) — a z=0 slice of <see cref="Sample3D"/>, the standard way to specialize Perlin noise down a dimension.</summary>
+        /// <summary>2D Perlin noise at (x, y) — a z=0 slice of <see cref="Sample3D"/>.</summary>
         public float Sample2D(float x, float y) => Sample3D(x, y, 0f);
 
         /// <summary>1D Perlin noise at x — a smooth, deterministic "wander" over one variable (a steering angle, wind gust strength, camera shake) instead of a jittery random walk.</summary>

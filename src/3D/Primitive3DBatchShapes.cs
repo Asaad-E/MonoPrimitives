@@ -110,21 +110,16 @@ namespace MonoPrimitives.Primitives3D
                 PushQuad(points[i] - offsets[i], points[i + 1] - offsets[i + 1], points[i + 1] + offsets[i + 1], points[i] + offsets[i], segmentColors[i]);
         }
 
-        /// <summary>
-        /// Cap on stack-allocating the per-vertex offset scratch buffer in <see cref="ComputeLineStripOffsets"/>
-        /// before falling back to the heap — same "no unbounded stackalloc" spirit as 2D's own
-        /// <c>MaxStackAllocElements</c>, sized for <see cref="Vector3"/> instead of <see cref="Vector2"/>.
-        /// </summary>
+        // Cap on stack-allocating the per-vertex offset scratch buffer in ComputeLineStripOffsets
+        // before falling back to the heap.
         private const int MaxStackAllocVertices3D = 2048;
 
-        /// <summary>Fills <paramref name="offsets"/> (same length as <paramref name="points"/>) with the per-vertex camera-facing perpendicular offset for a joined line strip: <c>points[i] ± offsets[i]</c> are the strip's two edges at that vertex, shared by both segments that touch it.</summary>
-        /// <remarks>
-        /// An endpoint uses its one adjacent segment's own direction; an interior vertex averages
-        /// (miters) its incoming and outgoing segments' directions, scaled up to keep the strip's
-        /// visual width constant through the bend (clamped so a near-180° reversal doesn't spike
-        /// toward infinity) — the same shape as 2D's <c>ComputeMiterOffset</c>, one dimension
-        /// higher and re-projected onto whichever plane currently faces the camera at each vertex.
-        /// </remarks>
+        // Fills `offsets` (same length as `points`) with the per-vertex camera-facing perpendicular
+        // offset for a joined line strip: points[i] +- offsets[i] are the strip's two edges at that
+        // vertex, shared by both segments that touch it. An endpoint uses its one adjacent
+        // segment's own direction; an interior vertex averages (miters) its incoming and outgoing
+        // segments' directions, scaled up to keep the strip's visual width constant through the
+        // bend (clamped so a near-180 reversal doesn't spike toward infinity).
         private void ComputeLineStripOffsets(ReadOnlySpan<Vector3> points, float thickness, Span<Vector3> offsets)
         {
             int n = points.Length;
@@ -238,9 +233,7 @@ namespace MonoPrimitives.Primitives3D
             Vector3 dir = delta / len;
 
             // Min, not Max: the head should scale with the shaft's own thickness, only shrinking
-            // further (never growing) when the arrow is too short for that to fit — same fix as
-            // the 2D DrawArrow, found by actually rendering a long thin arrow and seeing an
-            // oversized head (see the 2D changelog entry for the visual before/after).
+            // further (never growing) when the arrow is too short for that to fit.
             float hl = MathF.Min(headLength ?? MathF.Min(thickness * 6f, len * 0.25f), len);
             float hr = MathF.Min(headRadius ?? MathF.Max(thickness * 2.5f, hl * 0.4f), len * 0.5f);
 

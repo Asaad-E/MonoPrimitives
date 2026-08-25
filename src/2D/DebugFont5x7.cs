@@ -7,12 +7,7 @@ using MonoPrimitives;
 namespace MonoPrimitives.Primitives2D
 {
     /// <summary>Standalone 5x7 dot-matrix "pixel art" debug font, drawn entirely with <see cref="Primitive2DBatch.FillRectangle(float,float,float,float,Color,float,Vector2?)"/> — no textures, no SpriteFont.</summary>
-    /// <remarks>
-    /// Glyph data (<see cref="FontGlyphs5x7"/>) is shared with the 3D library's own billboard
-    /// text renderer; only the actual drawing differs. Intended for test/debug text (HUD
-    /// counters, labels), not production typography. External to Primitives2D.cs by design — a
-    /// separate file, doesn't modify it.
-    /// </remarks>
+    /// <remarks>Intended for test/debug text (HUD counters, labels), not production typography.</remarks>
     public static class DebugFont5x7
     {
         /// <summary>Glyph width in pixels before <c>pixelSize</c> scaling — see <see cref="FontGlyphs5x7.GlyphWidth"/>.</summary>
@@ -28,11 +23,7 @@ namespace MonoPrimitives.Primitives2D
             set => FontGlyphs5x7.SpaceWidthScale = value;
         }
 
-        /// <summary>
-        /// Draws <paramref name="text"/> starting at <paramref name="position"/> (top-left of
-        /// the first character), one <c>FillRectangle</c> per "on" pixel — named to match
-        /// <c>SpriteBatch.DrawString</c>, the API this stands in for.
-        /// </summary>
+        /// <summary>Draws <paramref name="text"/> starting at <paramref name="position"/> (top-left of the first character), one <c>FillRectangle</c> per "on" pixel.</summary>
         /// <remarks>
         /// <paramref name="pixelSize"/> is the screen size of one font pixel (a glyph is
         /// therefore <c>5*pixelSize</c> wide, <c>7*pixelSize</c> tall). <c>'\n'</c> starts a new

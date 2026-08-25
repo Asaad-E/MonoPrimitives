@@ -33,12 +33,7 @@ namespace MonoPrimitives.Primitives2D
     /// bottom-left going clockwise) — used for both rounded-rectangle corner radius and
     /// chamfered-rectangle corner cut size.
     /// </summary>
-    /// <remarks>
-    /// Same shape of value in both cases; meaning depends on which method it's passed to.
-    /// Implicitly convertible from a single <see cref="float"/> to apply the same value to
-    /// all four corners, so the common case stays simple:
-    /// <c>FillRectangleRounded(rect, 12f, color)</c> rounds every corner by 12px.
-    /// </remarks>
+    /// <remarks>Same shape of value in both cases; meaning depends on which method it's passed to. Implicitly convertible from a single <see cref="float"/> to apply the same value to all four corners.</remarks>
     public struct RectCorners
     {
         /// <summary>Value for the top-left corner.</summary>
@@ -77,12 +72,7 @@ namespace MonoPrimitives.Primitives2D
     /// triangulated and accumulated into a single vertex/index buffer, then submitted in as
     /// few draw calls as possible on <see cref="End"/>.
     /// </summary>
-    /// <remarks>
-    /// Design notes:
-    ///  - Zero per-frame heap allocations. Buffers are allocated once in the constructor.
-    ///  - No trigonometry at draw time: a unit-circle lookup table is built once.
-    ///  - Device state is fully saved on Begin and restored on End.
-    /// </remarks>
+    /// <remarks>Device state is fully saved on <c>Begin</c> and restored on <c>End</c>, so it can be interleaved with other rendering.</remarks>
     public sealed class Primitive2DBatch : IDisposable
     {
         // ------------------------------------------------------------------
@@ -95,61 +85,34 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Maximum segments used for a full circle.</summary>
         public const int MaxCircleSegments = 128 * 4;
 
-        /// <summary>
-        /// Largest element count any single call stack-allocates a point/joint buffer for.
-        /// </summary>
-        /// <remarks>
-        /// Point-list methods (Poly/Polygon borders and Round-joined fills, line-strip round
-        /// joins, splines) size their buffer off a caller-controlled count (sides, points.Length,
-        /// segmentsPerPiece) with no upper bound of their own — above this threshold they
-        /// allocate on the heap instead so a pathological input degrades to a GC allocation
-        /// rather than an uncatchable <see cref="StackOverflowException"/>. 4096 elements is
-        /// ~32KB per <see cref="Vector2"/> buffer, comfortably inside a default 1MB thread stack
-        /// even with several such calls nested.
-        /// </remarks>
+        // Largest element count any single call stack-allocates a point/joint buffer for.
+        // Point-list methods (Poly/Polygon borders and Round-joined fills, line-strip round joins,
+        // splines) size their buffer off a caller-controlled count with no upper bound of their own
+        // -- above this threshold they allocate on the heap instead so a pathological input degrades
+        // to a GC allocation rather than an uncatchable StackOverflowException. 4096 elements is
+        // ~32KB per Vector2 buffer, comfortably inside a default 1MB thread stack even nested.
         private const int MaxStackAllocElements = 4096;
 
-        /// <summary>
-        /// Passed as <see cref="BuildRoundedCornerBoundary"/>'s <c>innerOffsetForClamp</c> by the
-        /// standalone <c>Fill*Rounded</c> methods (no accompanying border, so there's no border
-        /// thickness to pass instead).
-        /// </summary>
-        /// <remarks>
-        /// Deliberately large rather than 0: <see cref="ComputeJoint"/>
-        /// derives its radius clamp from <c>innerOffset * cosHalfAngle</c>, so passing the true
-        /// "no border" value (0) would clamp every rounded corner down to a hard 0 regardless of
-        /// how much room the triangle/polygon actually has — the opposite of what's wanted. A
-        /// large value instead makes that term always non-binding, leaving <see cref="ComputeJoint"/>'s
-        /// *other* clamp (radius can't trim more than 90% of either adjacent edge) as the only
-        /// real constraint, which is exactly the right one for a fill with no border at all.
-        /// </remarks>
+        // Passed as BuildRoundedCornerBoundary's innerOffsetForClamp by the standalone Fill*Rounded
+        // methods (no accompanying border, so there's no border thickness to pass instead).
+        // Deliberately large rather than 0: ComputeJoint derives its radius clamp from
+        // innerOffset * cosHalfAngle, so passing the true "no border" value (0) would clamp every
+        // rounded corner down to a hard 0 regardless of how much room the shape actually has. A
+        // large value makes that term always non-binding, leaving ComputeJoint's other clamp
+        // (radius can't trim more than 90% of either adjacent edge) as the only real constraint.
         private const float NoBorderClampBudget = 1e6f;
 
-        /// <summary>
-        /// Shrinks <paramref name="requestedRadius"/> so no two ADJACENT corners' fillets can
-        /// ever claim more than their shared edge actually has.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="ComputeJoint"/>
-        /// already clamps each corner's own trim distance to ≤90% of its own view of an edge —
-        /// correct in isolation, but that's a per-corner budget, not a per-edge one: two
-        /// neighboring corners each independently claiming up to 90% of the SAME shared edge can
-        /// together claim up to 180% of it, so their tangent points cross past each other and the
-        /// fillet self-intersects. Verified by rendering exactly this: a triangle with ~60°
-        /// angles and ~70px edges, given a 25px corner radius, produced visible self-intersecting
-        /// spikes at every corner — each corner's own 90%-of-edge clamp was satisfied, but the
-        /// two corners on each edge together wanted ~137% of it. This never showed up on the
-        /// existing <c>Border*</c>/<c>Draw*</c>'s Round-joined corners because those couple the
-        /// radius to a border <c>thickness</c> that's typically small next to the shape itself,
-        /// so <see cref="ComputeJoint"/>'s OTHER clamp (against that thickness) was already the
-        /// binding one before this per-edge conflict could ever occur — the standalone
-        /// <c>Fill*Rounded</c>/<c>*Rounded</c> methods (no border thickness to lean on, and often
-        /// a deliberately generous radius) are the first case this codebase has where it can. Uses
-        /// the plain isoceles fillet formula (tangent distance = radius / tan(halfAngle)) per
-        /// vertex rather than duplicating <see cref="ComputeJoint"/>'s own exact bisector-based
-        /// trim slope — a close, slightly conservative match for a regular convex vertex, which
-        /// errs toward a smaller-than-strictly-necessary safe radius rather than an unsafe one.
-        /// </remarks>
+        // Shrinks `requestedRadius` so no two ADJACENT corners' fillets can ever claim more than
+        // their shared edge actually has. ComputeJoint already clamps each corner's own trim
+        // distance to <=90% of its own view of an edge -- correct in isolation, but that's a
+        // per-corner budget, not a per-edge one: two neighboring corners each independently
+        // claiming up to 90% of the SAME shared edge can together claim up to 180% of it, so their
+        // tangent points cross past each other and the fillet self-intersects (verified by
+        // rendering: a triangle with ~60 degree angles and ~70px edges, given a 25px corner radius,
+        // produced visible self-intersecting spikes at every corner). Uses the plain isoceles
+        // fillet formula (tangent distance = radius / tan(halfAngle)) per vertex rather than
+        // duplicating ComputeJoint's own exact bisector-based trim slope -- a close, slightly
+        // conservative match that errs toward a smaller-than-strictly-necessary safe radius.
         private static float ClampCornerRadiusToFit(ReadOnlySpan<Vector2> points, float requestedRadius)
         {
             int n = points.Length;
@@ -195,18 +158,12 @@ namespace MonoPrimitives.Primitives2D
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Vector2 SampleUnitCircle(float t01) => UnitCircleLut.Sample(t01);
 
-        /// <summary>
-        /// Chooses a segment count appropriate for the given radius and sweep.
-        /// </summary>
-        /// <remarks>
-        /// Small shapes get fewer segments; the chord error stays below ~0.25 px only
-        /// up to the radius where the formula would need more than <see cref="MaxCircleSegments"/>
-        /// (≈60px for a full circle). Beyond that radius the segment count stays capped at
-        /// <see cref="MaxCircleSegments"/> and the error grows roughly linearly with radius
-        /// instead (≈1px at r=200, ≈5px at r=1000) — very large circles/arcs will look
-        /// visibly faceted. Raise <see cref="MaxCircleSegments"/> if smoother large circles
-        /// are needed; this trades off against per-shape triangle count.
-        /// </remarks>
+        // Chooses a segment count appropriate for the given radius and sweep. Small shapes get
+        // fewer segments; the chord error stays below ~0.25px only up to the radius where the
+        // formula would need more than MaxCircleSegments (~60px for a full circle). Beyond that
+        // the segment count stays capped and the error grows roughly linearly with radius instead
+        // (~1px at r=200, ~5px at r=1000) -- very large circles/arcs will look visibly faceted.
+        // Raise MaxCircleSegments if smoother large circles are needed; trades off triangle count.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int SegmentsForArc(float radius, float sweepRadians)
         {
@@ -297,20 +254,8 @@ namespace MonoPrimitives.Primitives2D
             };
         }
 
-        /// <summary>
-        /// The <see cref="BasicEffect"/> this batch draws with — constructed internally, so this
-        /// is the only way to reach it.
-        /// </summary>
-        /// <remarks>
-        /// Same "escape hatch to the thing this class wraps" shape as
-        /// <see cref="RandomUtil.UnderlyingRandom"/>. Tweak parameters this batch's own
-        /// API has no dedicated call for — <see cref="BasicEffect.Alpha"/> for a global fade,
-        /// <see cref="BasicEffect.FogEnabled"/>, etc. Don't change <see cref="BasicEffect.VertexColorEnabled"/>,
-        /// <see cref="BasicEffect.TextureEnabled"/>, or <see cref="BasicEffect.World"/> — this batch
-        /// depends on those staying exactly as constructed. For swapping the effect entirely
-        /// (not just tweaking a parameter), pass your own via <see cref="Begin(Matrix?,BlendState?,DepthStencilState?,RasterizerState?,Effect?)"/>'s
-        /// <c>effect</c> parameter instead.
-        /// </remarks>
+        /// <summary>The <see cref="BasicEffect"/> this batch draws with — constructed internally, so this is the only way to reach it.</summary>
+        /// <remarks>Tweak parameters this batch's own API has no dedicated call for — <see cref="BasicEffect.Alpha"/> for a global fade, <see cref="BasicEffect.FogEnabled"/>, etc. Don't change <see cref="BasicEffect.VertexColorEnabled"/>, <see cref="BasicEffect.TextureEnabled"/>, or <see cref="BasicEffect.World"/> — this batch depends on those staying exactly as constructed. For swapping the effect entirely, pass your own via <see cref="Begin(Matrix?,BlendState?,DepthStencilState?,RasterizerState?,Effect?)"/>'s <c>effect</c> parameter instead.</remarks>
         public BasicEffect Effect => _effect;
 
         // ------------------------------------------------------------------
@@ -516,17 +461,11 @@ namespace MonoPrimitives.Primitives2D
         // Low-level geometry submission
         // ------------------------------------------------------------------
 
-        /// <summary>
-        /// Reserves room for the given vertex/index counts, flushing the batch first if
-        /// either buffer would overflow. Returns the base vertex index that reserved
-        /// vertices start at.
-        /// </summary>
-        /// <remarks>
-        /// Buffer capacity is fixed (set at construction) and is never grown; a single
-        /// reservation larger than that capacity will still overflow after the flush. Also
-        /// flushes any pending <see cref="DrawPixelFast"/> points first, so interleaved calls
-        /// keep their draw order (see <see cref="PushVertexPoint"/>).
-        /// </remarks>
+        // Reserves room for the given vertex/index counts, flushing the batch first if either
+        // buffer would overflow, and returns the base vertex index reserved vertices start at.
+        // Buffer capacity is fixed (set at construction) and never grows; a single reservation
+        // larger than that capacity will still overflow after the flush. Also flushes any pending
+        // DrawPixelFast points first, so interleaved calls keep their draw order.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int Reserve(int vertexCount, int indexCount)
         {
@@ -551,11 +490,9 @@ namespace MonoPrimitives.Primitives2D
             _vertexCount++;
         }
 
-        /// <summary>
-        /// Pushes a point into the separate point batch. To preserve draw order relative
-        /// to triangle-based shapes, any pending triangle geometry queued before this
-        /// point is flushed first (mirrors the symmetric check in <see cref="Reserve"/>).
-        /// </summary>
+        // Pushes a point into the separate point batch. To preserve draw order relative to
+        // triangle-based shapes, any pending triangle geometry queued before this point is
+        // flushed first (mirrors the symmetric check in Reserve).
         private void PushVertexPoint(Vector2 position, Color color)
         {
             // Preserve call order: any triangles queued before this point must render first.
@@ -701,14 +638,9 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
-        /// <summary>
-        /// Emits a single straight, flat-capped (butt) thick-line quad between two points.
-        /// </summary>
-        /// <remarks>
-        /// Shared by <see cref="DrawLine(Vector2,Vector2,float,Color,LineCap)"/> and the
-        /// per-segment bodies of <see cref="BuildRoundedOutlineGeometry"/>. Caller must have
-        /// already validated <paramref name="start"/>/<paramref name="end"/> aren't coincident.
-        /// </remarks>
+        // Emits a single straight, flat-capped (butt) thick-line quad between two points. Shared by
+        // DrawLine and the per-segment bodies of BuildRoundedOutlineGeometry. Caller must have
+        // already validated start/end aren't coincident.
         private void EmitLineSegment(Vector2 start, Vector2 end, float half, Color color)
         {
             float dx = end.X - start.X;
@@ -831,16 +763,10 @@ namespace MonoPrimitives.Primitives2D
             return pivot + new Vector2(d.X * cos - d.Y * sin, d.X * sin + d.Y * cos);
         }
 
-        /// <summary>
-        /// Rotates the three vertices in place about <paramref name="origin"/> (the triangle's
-        /// own centroid if null) by <paramref name="rotation"/> radians — a no-op when 0.
-        /// </summary>
-        /// <remarks>
-        /// Called once at the top of every public Triangle method that takes explicit vertices, so
-        /// <paramref name="rotation"/> is a trailing optional parameter instead of a second
-        /// overload; internal calls between Triangle methods always pass the result forward
-        /// already rotated, never re-rotating.
-        /// </remarks>
+        // Rotates the three vertices in place about `origin` (the triangle's own centroid if null)
+        // by `rotation` radians -- a no-op when 0. Called once at the top of every public Triangle
+        // method that takes explicit vertices; internal calls between Triangle methods always pass
+        // the result forward already rotated, never re-rotating.
         private static void RotateTriangle(ref Vector2 v1, ref Vector2 v2, ref Vector2 v3, float rotation, Vector2? origin)
         {
             if (rotation == 0f) return;
@@ -875,19 +801,7 @@ namespace MonoPrimitives.Primitives2D
             PushTriangleIndices(b, b + 1, b + 2);
         }
 
-        /// <summary>
-        /// Draws a triangle's border only, growing inward from its own edges — the border never
-        /// extends outside the triangle.
-        /// </summary>
-        /// <remarks>
-        /// For <see cref="LineJoin.Miter"/> (default), pre-insets
-        /// via <see cref="InsetConvexPolygon"/> then strokes symmetrically (cheap, exact, since
-        /// Miter's offset is linear and self-cancels). For Round/Bevel, strokes the true vertices
-        /// directly with an inward-only stroke instead — see <see cref="BuildRoundedOutlineGeometry"/>'s
-        /// <c>inwardOnly</c> doc for why pre-insetting first would be wrong there, and see
-        /// <see cref="DrawTriangle(Vector2,Vector2,Vector2,Color,Color?,float,float,Vector2?,LineJoin,float?)"/>
-        /// for how the fill is kept from overflowing this border's rounded corners.
-        /// </remarks>
+        /// <summary>Draws a triangle's border only, growing inward from its own edges — the border never extends outside the triangle.</summary>
         public void BorderTriangle(Vector2 v1, Vector2 v2, Vector2 v3, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
             if (thickness <= 0f) return;
@@ -897,27 +811,20 @@ namespace MonoPrimitives.Primitives2D
 
             if (join == LineJoin.Miter)
             {
+                // Miter's offset is linear and self-cancels, so pre-insetting then stroking
+                // symmetrically is cheap and exact.
                 Span<Vector2> inset = stackalloc Vector2[3];
                 InsetConvexPolygon(pts, thickness * 0.5f, inset, closed: true);
                 BuildOutlineGeometry(inset, thickness, color, closed: true, join);
                 return;
             }
 
+            // Round/Bevel: strokes the true vertices directly with an inward-only stroke instead
+            // (see BuildRoundedOutlineGeometry's inwardOnly doc for why pre-insetting would be wrong here).
             BuildOutlineGeometry(pts, thickness, color, closed: true, join, LineCap.Butt, jointRadius, inwardOnly: true);
         }
 
-        /// <summary>
-        /// Draws a triangle with fill and border, border growing inward. Omit
-        /// <paramref name="borderColor"/> for the same color on both.
-        /// </summary>
-        /// <remarks>
-        /// For Round/Bevel <paramref name="join"/> with <paramref name="thickness"/> &gt; 0, the
-        /// fill is rounded off the same way <see cref="BorderTriangle(Vector2,Vector2,Vector2,Color,float,float,Vector2?,LineJoin,float?)"/>'s inward-only stroke
-        /// rounds its own outer edge (same <see cref="ComputeJoint"/> call, same clamp against
-        /// <paramref name="thickness"/> via <see cref="BuildRoundedCornerBoundary"/>) so the two
-        /// always agree exactly — no sliver of sharp-cornered fill left showing past a rounded
-        /// border corner, and no mismatch even when the requested radius has to be clamped down.
-        /// </remarks>
+        /// <summary>Draws a triangle with fill and border, border growing inward. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         public void DrawTriangle(Vector2 v1, Vector2 v2, Vector2 v3, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
             Color border = borderColor ?? fillColor;
@@ -949,20 +856,8 @@ namespace MonoPrimitives.Primitives2D
         public void DrawTriangle(Vector2 center, float radius, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
             => DrawPoly(center, 3, radius, fillColor, borderColor, thickness, rotation, join, jointRadius);
 
-        /// <summary>
-        /// Draws a filled triangle with each corner rounded by <paramref name="cornerRadius"/>
-        /// world units, no border pass at all.
-        /// </summary>
-        /// <remarks>
-        /// The standalone counterpart to calling
-        /// <see cref="DrawTriangle(Vector2,Vector2,Vector2,Color,Color?,float,float,Vector2?,LineJoin,float?)"/>
-        /// with a matching fill/border color just to get a rounded fill: same rounded geometry,
-        /// without the redundant border stroke. Each corner's radius is independently clamped so
-        /// it can't reach past the midpoint of either adjacent edge (no self-intersection on a
-        /// small or sharp triangle) — same clamp <see cref="BuildRoundedCornerBoundary"/> already
-        /// uses for a Draw* call's rounded fill, just without a border thickness also competing
-        /// for that same clamp budget.
-        /// </remarks>
+        /// <summary>Draws a filled triangle with each corner rounded by <paramref name="cornerRadius"/> world units, no border pass at all.</summary>
+        /// <remarks>Each corner's radius is independently clamped so it can't reach past the midpoint of either adjacent edge — the actual radius used may be smaller than <paramref name="cornerRadius"/> on a small or sharp triangle.</remarks>
         public void FillTriangleRounded(Vector2 v1, Vector2 v2, Vector2 v3, float cornerRadius, Color color, float rotation = 0f, Vector2? origin = null)
         {
             if (cornerRadius <= 0.01f) { FillTriangle(v1, v2, v3, color, rotation, origin); return; }
@@ -975,7 +870,7 @@ namespace MonoPrimitives.Primitives2D
             FillPolygon(boundary[..count], color);
         }
 
-        /// <summary>Equivalent to <see cref="BorderTriangle(Vector2,Vector2,Vector2,Color,float,float,Vector2?,LineJoin,float?)"/> with <c>join: LineJoin.Round, jointRadius: cornerRadius</c> (pre-clamped so neighboring corners can't overlap, see <see cref="ClampCornerRadiusToFit"/>) — named to match <see cref="FillTriangleRounded"/> for discoverability.</summary>
+        /// <summary>Equivalent to <see cref="BorderTriangle(Vector2,Vector2,Vector2,Color,float,float,Vector2?,LineJoin,float?)"/> with <c>join: LineJoin.Round, jointRadius: cornerRadius</c> (pre-clamped so neighboring corners can't overlap).</summary>
         public void BorderTriangleRounded(Vector2 v1, Vector2 v2, Vector2 v3, float cornerRadius, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
         {
             RotateTriangle(ref v1, ref v2, ref v3, rotation, origin);
@@ -1005,13 +900,6 @@ namespace MonoPrimitives.Primitives2D
         /// at both <paramref name="v2"/> and <paramref name="v3"/> — the standalone (no border)
         /// rounded-corner counterpart to <see cref="FillTriangleGradient(Vector2,Vector2,Vector2,Color,Color,float,Vector2?)"/>.
         /// </summary>
-        /// <remarks>
-        /// Every boundary point (not just the 3 original corners) is colored by its exact
-        /// barycentric weight against the ORIGINAL sharp triangle, so the gradient inside the
-        /// rounded outline is pixel-for-pixel the same continuous blend the sharp-corner version
-        /// has — unlike a flat per-corner fan color (which would fan out as visible radial
-        /// creases converging on whichever point the fan happens to start from).
-        /// </remarks>
         public void FillTriangleGradientRounded(Vector2 v1, Vector2 v2, Vector2 v3, float cornerRadius, Color from, Color to, float rotation = 0f, Vector2? origin = null)
         {
             if (cornerRadius <= 0.01f) { FillTriangleGradient(v1, v2, v3, from, to, rotation, origin); return; }
@@ -1024,19 +912,11 @@ namespace MonoPrimitives.Primitives2D
             FillTriangleGradientBoundary(boundary[..count], v1, v2, v3, from, to, to);
         }
 
-        /// <summary>
-        /// Fan-fills a rounded triangle's boundary (many points), coloring each point by its
-        /// exact barycentric weight against the true (un-rounded) <paramref name="v1"/>/
-        /// <paramref name="v2"/>/<paramref name="v3"/> triangle.
-        /// </summary>
-        /// <remarks>
-        /// This reproduces a smooth,
-        /// continuous gradient — the same one <see cref="FillTriangle(Vector2,Color,Vector2,Color,Vector2,Color,float,Vector2?)"/>
-        /// draws via pure GPU interpolation over one triangle — even though the actual geometry
-        /// here is many thin fan triangles: since every point's color already IS its correct
-        /// final blend, each thin triangle's own GPU interpolation between three
-        /// already-correct colors stays consistent with its neighbors, so no facet/seam shows.
-        /// </remarks>
+        // Fan-fills a rounded triangle's boundary (many points), coloring each point by its exact
+        // barycentric weight against the true (un-rounded) v1/v2/v3 triangle -- since every point's
+        // color already IS its correct final blend, each thin fan triangle's own GPU interpolation
+        // stays consistent with its neighbors, reproducing the same continuous gradient FillTriangle
+        // draws via pure GPU interpolation over one triangle, with no facet/seam.
         private void FillTriangleGradientBoundary(ReadOnlySpan<Vector2> boundary, Vector2 v1, Vector2 v2, Vector2 v3, Color c1, Color c2, Color c3)
         {
             int n = boundary.Length;
@@ -1049,16 +929,9 @@ namespace MonoPrimitives.Primitives2D
                 PushTriangleIndices(b, b + i, b + i + 1);
         }
 
-        /// <summary>
-        /// Blends <paramref name="c1"/>/<paramref name="c2"/>/<paramref name="c3"/> at
-        /// <paramref name="p"/>'s barycentric weight against triangle <paramref name="v1"/>/
-        /// <paramref name="v2"/>/<paramref name="v3"/>.
-        /// </summary>
-        /// <remarks>
-        /// The same interpolation the GPU performs
-        /// natively across one triangle's own 3 vertex colors, computed explicitly here so it can
-        /// be baked into extra points (e.g. a rounded boundary) instead.
-        /// </remarks>
+        // Blends c1/c2/c3 at p's barycentric weight against triangle v1/v2/v3 -- the same
+        // interpolation the GPU performs natively across one triangle's 3 vertex colors, computed
+        // explicitly here so it can be baked into extra points (e.g. a rounded boundary) instead.
         private static Color BarycentricColor(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3, Color c1, Color c2, Color c3)
         {
             Vector2 e1 = v2 - v1, e2 = v3 - v1, e3 = p - v1;
@@ -1082,19 +955,11 @@ namespace MonoPrimitives.Primitives2D
                 (byte)Math.Clamp(a + 0.5f, 0f, 255f));
         }
 
-        /// <summary>
-        /// Fan-fills a rounded polygon boundary (many points) using a color per ORIGINAL vertex
-        /// (few points) — each boundary point takes the color of whichever original vertex it's
-        /// nearest to.
-        /// </summary>
-        /// <remarks>
-        /// Correct by construction: <see cref="ClampCornerRadiusToFit"/> already
-        /// guarantees no corner's fillet reaches past the midpoint of an adjacent edge, so every
-        /// boundary point is provably at least as close to the vertex it replaced as to either
-        /// neighboring one. Used instead of trying to track "which vertex produced this point"
-        /// through <see cref="BuildRoundedCornerBoundary"/>'s own loop, which would mean either
-        /// changing that widely-shared method's signature or duplicating its logic.
-        /// </remarks>
+        // Fan-fills a rounded polygon boundary (many points) using a color per ORIGINAL vertex (few
+        // points) -- each boundary point takes the color of whichever original vertex it's nearest
+        // to. Correct by construction: ClampCornerRadiusToFit already guarantees no corner's fillet
+        // reaches past the midpoint of an adjacent edge, so every boundary point is provably at
+        // least as close to the vertex it replaced as to either neighboring one.
         private void FillPolygonGradientByNearestVertex(ReadOnlySpan<Vector2> boundary, ReadOnlySpan<Vector2> originalVertices, ReadOnlySpan<Color> vertexColors)
         {
             ThrowIfNotBegun();
@@ -1141,7 +1006,7 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
-        /// <summary>Equivalent to <see cref="DrawTriangleGradient(Vector2,Vector2,Vector2,Color,Color,Color,float,float,Vector2?,LineJoin,float?)"/> with <c>join: LineJoin.Round, jointRadius: cornerRadius</c> (pre-clamped so neighboring corners can't overlap) — named to match <see cref="FillTriangleGradientRounded"/> for discoverability.</summary>
+        /// <summary>Equivalent to <see cref="DrawTriangleGradient(Vector2,Vector2,Vector2,Color,Color,Color,float,float,Vector2?,LineJoin,float?)"/> with <c>join: LineJoin.Round, jointRadius: cornerRadius</c> (pre-clamped so neighboring corners can't overlap).</summary>
         public void DrawTriangleGradientRounded(Vector2 v1, Vector2 v2, Vector2 v3, float cornerRadius, Color from, Color to, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
         {
             RotateTriangle(ref v1, ref v2, ref v3, rotation, origin);
@@ -1153,11 +1018,7 @@ namespace MonoPrimitives.Primitives2D
         /// Draws a triangle with a <paramref name="from"/>→<paramref name="to"/> gradient fill
         /// (v1→from, v2/v3→to) and a solid border.
         /// </summary>
-        /// <remarks>
-        /// The gradient's own triangle is inset by
-        /// <paramref name="thickness"/> via <see cref="InsetConvexPolygon"/> — it stops
-        /// exactly where the border begins, same rule as the other shapes' gradients.
-        /// </remarks>
+        /// <remarks>The gradient's own triangle is inset by <paramref name="thickness"/> via <see cref="InsetConvexPolygon"/> — it stops exactly where the border begins.</remarks>
         public void DrawTriangleGradient(Vector2 v1, Vector2 v2, Vector2 v3, Color from, Color to, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
             RotateTriangle(ref v1, ref v2, ref v3, rotation, origin);
@@ -1349,14 +1210,7 @@ namespace MonoPrimitives.Primitives2D
         /// <param name="thickness">Border thickness, growing inward from the rectangle's own edge.</param>
         /// <param name="rotation">Rotation in radians, about the rectangle's own center unless <paramref name="origin"/> is given.</param>
         /// <param name="origin">Pivot point for <paramref name="rotation"/>, relative to the rectangle's top-left corner; the rectangle's own center if null.</param>
-        /// <param name="join">
-        /// <see cref="LineJoin.Miter"/> (default), with no rotation, keeps the original fast
-        /// path — four overlapping filled rectangles, sharp corners. Any rotation, or
-        /// Round/Bevel, routes through the shared outline builder on the rectangle's corners
-        /// pre-shrunk by <see cref="InsetConvexPolygon"/> (this is what guarantees "inward,
-        /// never exceeds the shape" for those cases too — the old Round/Bevel path here
-        /// didn't shrink first and could bulge outward; fixed as part of this redesign).
-        /// </param>
+        /// <param name="join">How the corners are joined — see <see cref="LineJoin"/>.</param>
         /// <param name="jointRadius">Radius of <see cref="LineJoin.Round"/>/<see cref="LineJoin.Bevel"/> joins; null matches <paramref name="thickness"/>/2. Ignored for <see cref="LineJoin.Miter"/>.</param>
         public void BorderRectangle(float x, float y, float width, float height, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
@@ -1416,15 +1270,7 @@ namespace MonoPrimitives.Primitives2D
         public void BorderRectangle(Vector2 position, Vector2 size, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
             => BorderRectangle(position.X, position.Y, size.X, size.Y, color, thickness, rotation, origin, join, jointRadius);
 
-        /// <summary>
-        /// Draws a rectangle with fill and border, border growing inward. Omit
-        /// <paramref name="borderColor"/> for the same color on both.
-        /// </summary>
-        /// <remarks>
-        /// For Round/Bevel <paramref name="join"/>, the fill is rounded off the same way the
-        /// border is (see <see cref="BuildRoundedCornerBoundary"/>) so the two share one boundary
-        /// instead of a sharp-cornered fill showing past a rounded border corner.
-        /// </remarks>
+        /// <summary>Draws a rectangle with fill and border, border growing inward. Omit <paramref name="borderColor"/> for the same color on both.</summary>
         public void DrawRectangle(float x, float y, float width, float height, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, Vector2? origin = null, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
             Color border = borderColor ?? fillColor;
@@ -1477,16 +1323,7 @@ namespace MonoPrimitives.Primitives2D
         /// <paramref name="to"/>, no border. <paramref name="horizontal"/> picks the fade
         /// axis (true = left→right, false = top→bottom).
         /// </summary>
-        /// <remarks>
-        /// <paramref name="rotation"/> (radians)
-        /// turns that axis about <paramref name="origin"/> (rect center if null) — same
-        /// convention as <see cref="FillRectangleGradientRounded(Rectangle,RectCorners,Color,Color,bool,float,Vector2?,float,float)"/>. <paramref name="innerOffset"/>
-        /// holds solid <paramref name="from"/> color for that many pixels along the fade axis
-        /// before the gradient starts; <paramref name="outerOffset"/> holds solid
-        /// <paramref name="to"/> color for that many pixels at the far end. If they'd
-        /// overlap, both are scaled down proportionally to fit (same "clamp gracefully"
-        /// precedent as elsewhere).
-        /// </remarks>
+        /// <remarks><paramref name="rotation"/> (radians) turns that axis about <paramref name="origin"/> (rect center if null). <paramref name="innerOffset"/> holds solid <paramref name="from"/> color for that many pixels along the fade axis before the gradient starts; <paramref name="outerOffset"/> holds solid <paramref name="to"/> color for that many pixels at the far end. If they'd overlap, both are scaled down proportionally to fit.</remarks>
         public void FillRectangleGradient(float x, float y, float width, float height, Color from, Color to, bool horizontal, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
         {
             ThrowIfNotBegun();
@@ -1557,14 +1394,7 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>
         /// Draws a rectangle with a linear gradient fill and a solid border.
         /// </summary>
-        /// <remarks>
-        /// The gradient's
-        /// own area is the rect inset by <paramref name="thickness"/> on every side — it
-        /// stops exactly where the border begins — and <paramref name="innerOffset"/>/
-        /// <paramref name="outerOffset"/> are then measured from that inset area's own edges,
-        /// same "stops at the border" rule as <see cref="DrawCircleGradient"/>. <paramref name="rotation"/>
-        /// turns both the fill and the border together, same convention as <see cref="DrawRectangleGradientRounded(Rectangle,RectCorners,Color,Color,bool,Color,float,float,Vector2?,float,float)"/>.
-        /// </remarks>
+        /// <remarks>The gradient's own area is the rect inset by <paramref name="thickness"/> on every side — it stops exactly where the border begins — and <paramref name="innerOffset"/>/<paramref name="outerOffset"/> are then measured from that inset area's own edges. <paramref name="rotation"/> turns both the fill and the border together.</remarks>
         public void DrawRectangleGradient(float x, float y, float width, float height, Color from, Color to, bool horizontal, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
         {
             float t = MathF.Max(0f, thickness);
@@ -1588,20 +1418,13 @@ namespace MonoPrimitives.Primitives2D
         // ROUNDED RECTANGLES
         // ==================================================================
 
-        /// <summary>
-        /// Fills a convex boundary (a rounded/chamfered rectangle's or a circle's boundary
-        /// points) with a linear gradient along the shape's own local H/V axis.
-        /// </summary>
-        /// <remarks>
-        /// Shared by
-        /// every boundary-based gradient, since "compute a gradient color per boundary vertex
-        /// and fan-fill" is identical regardless of which boundary generator produced the
-        /// points. Each point is un-rotated back to the shape's local frame first (inverse of
-        /// <paramref name="rotation"/> about <paramref name="origin"/>) before computing its
-        /// axis position, so the gradient rotates *with* the shape rather than staying
-        /// screen-aligned. <paramref name="innerOffset"/>/<paramref name="outerOffset"/> work
-        /// exactly as in <see cref="FillRectangleGradient(float,float,float,float,Color,Color,bool,float,Vector2?,float,float)"/>.
-        /// </remarks>
+        // Fills a convex boundary (a rounded/chamfered rectangle's or a circle's boundary points)
+        // with a linear gradient along the shape's own local H/V axis. Shared by every
+        // boundary-based gradient, since "compute a gradient color per boundary vertex and
+        // fan-fill" is identical regardless of which boundary generator produced the points. Each
+        // point is un-rotated back to the shape's local frame first (inverse of `rotation` about
+        // `origin`) before computing its axis position, so the gradient rotates WITH the shape
+        // rather than staying screen-aligned. innerOffset/outerOffset work as in FillRectangleGradient.
         private void FillAxisGradientBoundary(ReadOnlySpan<Vector2> boundary, float boxX, float boxY, float boxWidth, float boxHeight, float rotation, Vector2? origin, Color from, Color to, bool horizontal, float innerOffset, float outerOffset)
         {
             int count = boundary.Length;
@@ -1655,22 +1478,14 @@ namespace MonoPrimitives.Primitives2D
                 PushTriangleIndices(b, b + i, b + i + 1);
         }
 
-        /// <summary>
-        /// Samples a rounded rectangle's boundary (per-corner arcs plus the straight edges
-        /// between them) into <paramref name="buffer"/>, returning how many points were written.
-        /// </summary>
-        /// <remarks>
-        /// Order: TR arc → right edge → BR arc → bottom edge → BL arc → left edge → TL arc →
-        /// top edge, closing back to TR. Each corner's radius is independently clamped to half
-        /// the shorter side — same simple per-corner clamp as the original single-radius rounded
-        /// rectangle; doesn't check pairwise sums, so two large adjacent radii can still
-        /// touch/overlap slightly (matches this project's existing "clamp per-dimension, don't
-        /// solve joint constraints" precedent elsewhere). A zero-radius corner degenerates to its
-        /// single sharp point, no arc sampling. Rotation (radians) is applied about
-        /// <paramref name="origin"/> (rect center if null) after the unrotated boundary is built.
-        /// <paramref name="buffer"/> must be at least <c>4 * (MaxCircleSegments + 1)</c> long to
-        /// fit the worst case (every corner fully rounded at the segment cap).
-        /// </remarks>
+        // Samples a rounded rectangle's boundary (per-corner arcs plus the straight edges between
+        // them) into `buffer`, returning how many points were written. Order: TR arc -> right edge
+        // -> BR arc -> bottom edge -> BL arc -> left edge -> TL arc -> top edge, closing back to TR.
+        // Each corner's radius is independently clamped to half the shorter side; doesn't check
+        // pairwise sums, so two large adjacent radii can still touch/overlap slightly. A
+        // zero-radius corner degenerates to its single sharp point, no arc sampling. Rotation is
+        // applied about `origin` (rect center if null) after the unrotated boundary is built.
+        // `buffer` must be at least 4 * (MaxCircleSegments + 1) long for the worst case.
         private static int GenerateRoundedRectBoundary(Rectangle rect, RectCorners radius, float rotation, Vector2? origin, Span<Vector2> buffer)
         {
             float x0 = rect.X, y0 = rect.Y, x1 = rect.X + rect.Width, y1 = rect.Y + rect.Height;
@@ -1795,12 +1610,7 @@ namespace MonoPrimitives.Primitives2D
             => FillRectangleGradientRounded(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), radius, from, to, horizontal, rotation, origin, innerOffset, outerOffset);
 
         /// <summary>Draws a rounded rectangle with a linear gradient fill and a solid border.</summary>
-        /// <remarks>
-        /// The gradient's own boundary is the rounded rectangle's boundary inset by
-        /// <paramref name="thickness"/> via <see cref="InsetConvexPolygon"/> (shrinks the
-        /// straight edges and the corner arcs together, concentrically) — stops exactly
-        /// where the border begins, same rule as the other shapes' gradients.
-        /// </remarks>
+        /// <remarks>The gradient's own boundary is the rounded rectangle's boundary inset by <paramref name="thickness"/> via <see cref="InsetConvexPolygon"/> — stops exactly where the border begins.</remarks>
         public void DrawRectangleGradientRounded(Rectangle rect, RectCorners radius, Color from, Color to, bool horizontal, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
         {
             ThrowIfNotBegun();
@@ -1830,19 +1640,13 @@ namespace MonoPrimitives.Primitives2D
         // CHAMFERED RECTANGLES
         // ==================================================================
 
-        /// <summary>
-        /// Samples a chamfered rectangle's boundary (2 points per corner — where the cut
-        /// starts and ends — plus the straight edges between them) into <paramref name="buffer"/>,
-        /// returning how many points were written (at most 8).
-        /// </summary>
-        /// <remarks>
-        /// Same corner order as <see cref="GenerateRoundedRectBoundary"/>: TR → BR → BL → TL.
-        /// Each corner's chamfer size is independently clamped to half the shorter side, same
-        /// simple per-corner clamp as the rounded rectangle (doesn't check pairwise sums). A
-        /// zero-chamfer corner degenerates to its single sharp point. Rotation (radians) is
-        /// applied about <paramref name="origin"/> (rect center if null) after the unrotated
-        /// boundary is built.
-        /// </remarks>
+        // Samples a chamfered rectangle's boundary (2 points per corner -- where the cut starts and
+        // ends -- plus the straight edges between them) into `buffer`, returning how many points
+        // were written (at most 8). Same corner order as GenerateRoundedRectBoundary: TR -> BR ->
+        // BL -> TL. Each corner's chamfer size is independently clamped to half the shorter side
+        // (doesn't check pairwise sums). A zero-chamfer corner degenerates to its single sharp
+        // point. Rotation is applied about `origin` (rect center if null) after the unrotated
+        // boundary is built.
         private static int GenerateChamferRectBoundary(Rectangle rect, RectCorners chamfer, float rotation, Vector2? origin, Span<Vector2> buffer)
         {
             float x0 = rect.X, y0 = rect.Y, x1 = rect.X + rect.Width, y1 = rect.Y + rect.Height;
@@ -1903,12 +1707,6 @@ namespace MonoPrimitives.Primitives2D
             => FillRectangleChamfer(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), chamfer, color, rotation, origin);
 
         /// <summary>Draws a chamfered rectangle's border only, growing inward from its own edges (both the straight sides and the corner cuts).</summary>
-        /// <remarks>
-        /// Grows inward via <see cref="InsetConvexPolygon"/> — the border never extends past the
-        /// rectangle. Stroked with a plain <see cref="LineJoin.Miter"/> pass, which is exactly
-        /// correct here since chamfer corners are flat cuts to begin with — a miter join between
-        /// two already-straight cut edges reproduces the cut exactly, no approximation needed.
-        /// </remarks>
         public void BorderRectangleChamfer(Rectangle rect, RectCorners chamfer, Color color, float thickness = 1f, float rotation = 0f, Vector2? origin = null)
         {
             if (thickness <= 0f) return;
@@ -1919,6 +1717,8 @@ namespace MonoPrimitives.Primitives2D
 
             Span<Vector2> inset = stackalloc Vector2[count];
             InsetConvexPolygon(boundary, thickness * 0.5f, inset, closed: true);
+            // A miter join between two already-straight chamfer-cut edges reproduces the cut
+            // exactly, no rounding approximation needed.
             BuildOutlineGeometry(inset, thickness, color, closed: true, LineJoin.Miter);
         }
 
@@ -1958,11 +1758,7 @@ namespace MonoPrimitives.Primitives2D
             => FillRectangleGradientChamfer(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), chamfer, from, to, horizontal, rotation, origin, innerOffset, outerOffset);
 
         /// <summary>Draws a chamfered rectangle with a linear gradient fill and a solid border.</summary>
-        /// <remarks>
-        /// The gradient's own boundary is the chamfered rectangle's boundary inset by
-        /// <paramref name="thickness"/> via <see cref="InsetConvexPolygon"/> — stops exactly
-        /// where the border begins, same rule as the other shapes' gradients.
-        /// </remarks>
+        /// <remarks>The gradient's own boundary is the chamfered rectangle's boundary inset by <paramref name="thickness"/> via <see cref="InsetConvexPolygon"/> — stops exactly where the border begins.</remarks>
         public void DrawRectangleGradientChamfer(Rectangle rect, RectCorners chamfer, Color from, Color to, bool horizontal, Color borderColor, float thickness = 1f, float rotation = 0f, Vector2? origin = null, float innerOffset = 0f, float outerOffset = 0f)
         {
             ThrowIfNotBegun();
@@ -2192,13 +1988,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Arbitrary-polygon drop shadow, fading to fully transparent over <paramref name="spread"/> world units beyond its boundary.</summary>
-        /// <remarks>
-        /// Solid <paramref name="color"/> filling the exact shape
-        /// <see cref="FillPolygon(ReadOnlySpan{Vector2},Color)"/> would draw. Uses
-        /// <see cref="OutsetConvexPolygon"/> (via <see cref="FillOutsetGradientRing"/>) to build
-        /// the fading outer edge — correct for concave (reflex-vertex) <paramref name="points"/>
-        /// too, same winding-based fix as <see cref="InsetConvexPolygon"/> (see DECISIONS.md).
-        /// </remarks>
+        /// <remarks>Solid <paramref name="color"/> filling the exact shape <see cref="FillPolygon(ReadOnlySpan{Vector2},Color)"/> would draw. Correct for concave (reflex-vertex) <paramref name="points"/> too (see DECISIONS.md).</remarks>
         public void FillPolygonShadow(ReadOnlySpan<Vector2> points, Color color, float spread = 20f)
         {
             ThrowIfNotBegun();
@@ -2305,30 +2095,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Ring (or partial arc band) drop shadow, fading to fully transparent over <paramref name="spread"/> world units beyond its OUTER edge.</summary>
-        /// <remarks>
-        /// Solid <paramref name="color"/> filling the exact shape
-        /// <see cref="FillRing(Vector2,float,float,Color)"/> would draw. A full ring's inner hole
-        /// does not get its own separate inward-glowing edge, same "just the outer silhouette"
-        /// convention <see cref="FillCircleShadow"/> uses. A partial ring's shadow traces its full
-        /// wedge outline, including the two straight radial cut edges, computed directly in closed
-        /// form (grow the outer radius, shrink the inner radius, same angle range) rather than
-        /// through the shared <see cref="OutsetConvexPolygon"/>-based halo helper every other
-        /// <c>Fill*Shadow</c> uses: a wedge's inner-arc corners are genuinely concave (reflex) from
-        /// the outward-growth perspective, which is exactly the case that helper's
-        /// centroid-heuristic offsetter gets wrong (same root cause as
-        /// <see cref="InsetConvexPolygon"/>'s documented reflex-vertex limitation — see
-        /// ROADMAP.md). An earlier version of this also widened the angle range slightly at each
-        /// tip (to flare the two straight edges outward) — that made the true and fade loops sweep
-        /// different total angles across the same segment count, so their per-index correspondence
-        /// drifted across the sweep, producing a subtly sheared/spiky strip; keeping both loops at
-        /// the exact same angles (only radius differs) removes that shear at the cost of the two
-        /// tip corners not getting their own rounded glow (the shadow there just stops at the
-        /// wedge's own angular edge, rather than bleeding a little further sideways) — a
-        /// deliberately simpler, artifact-free trade. Confirmed by rendering both: the original
-        /// (before either fix) produced a lopsided, blobby halo from routing through the shared
-        /// convex-only helper; the angle-widened version fixed that but introduced its own spike at
-        /// the tips; this version has neither.
-        /// </remarks>
+        /// <remarks>Solid <paramref name="color"/> filling the exact shape <see cref="FillRing(Vector2,float,float,Color)"/> would draw. A full ring's inner hole does not get its own separate inward-glowing edge — just the outer silhouette. A partial ring's shadow traces its full wedge outline, including the two straight radial cut edges.</remarks>
         public void FillRingShadow(Vector2 center, float innerRadius, float outerRadius, float startAngle, float endAngle, Color color, float spread = 20f)
         {
             ThrowIfNotBegun();
@@ -2352,6 +2119,11 @@ namespace MonoPrimitives.Primitives2D
                 return;
             }
 
+            // Computed directly in closed form (grow the outer radius, shrink the inner radius,
+            // same angle range) rather than through the shared OutsetConvexPolygon-based halo
+            // helper every other Fill*Shadow uses: a wedge's inner-arc corners are genuinely
+            // concave (reflex) from the outward-growth perspective, which is exactly the case that
+            // helper's centroid-heuristic offsetter gets wrong (see ROADMAP.md).
             float expandedOuterRadius = outerRadius + spread;
             float expandedInnerRadius = MathF.Max(0f, innerRadius - spread);
 
@@ -2531,17 +2303,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Draws an ellipse filled with a radial gradient from <paramref name="inner"/> (center) to <paramref name="outer"/> (rim), no border.</summary>
-        /// <remarks>
-        /// <paramref name="innerOffset"/> holds solid <paramref name="inner"/> color from the
-        /// center out to that distance before the gradient starts; <paramref name="outerOffset"/>
-        /// holds solid <paramref name="outer"/> color from the rim inward by that distance. Both
-        /// together: the gradient only runs in the band between them. If they'd overlap, both are
-        /// scaled down proportionally to fit (same "clamp gracefully" precedent as elsewhere, e.g.
-        /// the ellipse-thickness clamp, rather than throwing). With both left at 0 this is the same
-        /// single continuous fan gradient <see cref="FillEllipse(Vector2,float,float,int,Color,Color,float)"/>
-        /// already draws. <paramref name="rotation"/> turns the ellipse's own H/V axes, same as
-        /// <see cref="FillEllipse(Vector2,float,float,int,Color,Color,float)"/>'s.
-        /// </remarks>
+        /// <remarks><paramref name="innerOffset"/> holds solid <paramref name="inner"/> color from the center out to that distance before the gradient starts; <paramref name="outerOffset"/> holds solid <paramref name="outer"/> color from the rim inward by that distance. If they'd overlap, both are scaled down proportionally to fit. With both left at 0 this is the same single continuous fan gradient <see cref="FillEllipse(Vector2,float,float,int,Color,Color,float)"/> already draws. <paramref name="rotation"/> turns the ellipse's own H/V axes, same as <see cref="FillEllipse(Vector2,float,float,int,Color,Color,float)"/>'s.</remarks>
         public void FillEllipseGradient(Vector2 center, float radiusH, float radiusV, Color inner, Color outer, float rotation = 0f, float innerOffset = 0f, float outerOffset = 0f)
         {
             ThrowIfNotBegun();
@@ -2630,16 +2392,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Draws a circle filled with a straight (non-radial) linear gradient from <paramref name="from"/> to <paramref name="to"/> along an axis through the center, no border.</summary>
-        /// <remarks>
-        /// Unlike <see cref="FillCircleGradient"/>'s rings, the color varies across the shape in
-        /// one direction, like <see cref="FillRectangleGradient(float,float,float,float,Color,Color,bool,float,Vector2?,float,float)"/>.
-        /// <paramref name="horizontal"/> picks the default axis (true = left→right, false =
-        /// top→bottom); <paramref name="rotation"/> (radians) turns that axis, so top-to-bottom is
-        /// just <c>horizontal: false</c> and any other direction is one rotation away — no separate
-        /// method per direction. <paramref name="innerOffset"/>/<paramref name="outerOffset"/> hold
-        /// solid color at each end of the axis before the fade starts, same rule as
-        /// <see cref="FillRectangleGradient(float,float,float,float,Color,Color,bool,float,Vector2?,float,float)"/>.
-        /// </remarks>
+        /// <remarks>Unlike <see cref="FillCircleGradient"/>'s rings, the color varies across the shape in one direction. <paramref name="horizontal"/> picks the default axis (true = left→right, false = top→bottom); <paramref name="rotation"/> (radians) turns that axis, so top-to-bottom is just <c>horizontal: false</c> and any other direction is one rotation away. <paramref name="innerOffset"/>/<paramref name="outerOffset"/> hold solid color at each end of the axis before the fade starts.</remarks>
         public void FillCircleGradientLinear(Vector2 center, float radius, Color from, Color to, bool horizontal = true, float rotation = 0f, float innerOffset = 0f, float outerOffset = 0f)
         {
             ThrowIfNotBegun();
@@ -2654,11 +2407,7 @@ namespace MonoPrimitives.Primitives2D
             FillAxisGradientBoundary(boundary, center.X - radius, center.Y - radius, radius * 2f, radius * 2f, rotation, null, from, to, horizontal, innerOffset, outerOffset);
         }
 
-        /// <summary>
-        /// Draws a circle with a straight linear gradient fill (see <see cref="FillCircleGradientLinear"/>)
-        /// and a solid border. The gradient's own radius is <c>radius - thickness</c> — stops
-        /// exactly where the border begins, same rule as <see cref="DrawCircleGradient"/>.
-        /// </summary>
+        /// <summary>Draws a circle with a straight linear gradient fill (see <see cref="FillCircleGradientLinear"/>) and a solid border. The gradient's own radius is <c>radius - thickness</c> — stops exactly where the border begins.</summary>
         public void DrawCircleGradientLinear(Vector2 center, float radius, Color from, Color to, Color borderColor, bool horizontal = true, float thickness = 1f, float rotation = 0f, float innerOffset = 0f, float outerOffset = 0f)
         {
             float fillRadius = MathF.Max(0f, radius - MathF.Max(0f, thickness));
@@ -2675,15 +2424,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Draws an ellipse filled with a straight (non-radial) linear gradient from <paramref name="from"/> to <paramref name="to"/> along an axis through the center, no border — the ellipse counterpart to <see cref="FillCircleGradientLinear"/>.</summary>
-        /// <remarks>
-        /// Unlike the circle version, <paramref name="rotation"/> here does double duty: it both
-        /// tilts the ellipse's own H/V axes (same meaning as
-        /// <see cref="FillEllipseGradient(Vector2,float,float,Color,Color,float,float,float)"/>'s)
-        /// AND is the axis the gradient reads along, so <paramref name="horizontal"/> always means
-        /// "along the ellipse's own (possibly tilted) H axis" rather than a separately-rotatable
-        /// screen-space direction — a circle has no shape orientation of its own to lock the
-        /// gradient to, but an ellipse does, so tying the two together is the more useful default.
-        /// </remarks>
+        /// <remarks>Unlike the circle version, <paramref name="rotation"/> here does double duty: it both tilts the ellipse's own H/V axes AND is the axis the gradient reads along, so <paramref name="horizontal"/> always means "along the ellipse's own (possibly tilted) H axis" rather than a separately-rotatable screen-space direction.</remarks>
         public void FillEllipseGradientLinear(Vector2 center, float radiusH, float radiusV, Color from, Color to, bool horizontal = true, float rotation = 0f, float innerOffset = 0f, float outerOffset = 0f)
         {
             ThrowIfNotBegun();
@@ -2703,11 +2444,7 @@ namespace MonoPrimitives.Primitives2D
             FillAxisGradientBoundary(boundary, center.X - radiusH, center.Y - radiusV, radiusH * 2f, radiusV * 2f, rotation, null, from, to, horizontal, innerOffset, outerOffset);
         }
 
-        /// <summary>
-        /// Draws an ellipse with a straight linear gradient fill (see <see cref="FillEllipseGradientLinear"/>)
-        /// and a solid border. The gradient's own radii are <c>radiusH/V - thickness</c> — stop
-        /// exactly where the border begins, same rule as <see cref="DrawEllipseGradient(Vector2,float,float,Color,Color,Color,float,float,float,float)"/>.
-        /// </summary>
+        /// <summary>Draws an ellipse with a straight linear gradient fill (see <see cref="FillEllipseGradientLinear"/>) and a solid border. The gradient's own radii are <c>radiusH/V - thickness</c> — stop exactly where the border begins.</summary>
         public void DrawEllipseGradientLinear(Vector2 center, float radiusH, float radiusV, Color from, Color to, Color borderColor, bool horizontal = true, float thickness = 1f, float rotation = 0f, float innerOffset = 0f, float outerOffset = 0f)
         {
             float t = MathF.Max(0f, thickness);
@@ -2729,14 +2466,11 @@ namespace MonoPrimitives.Primitives2D
         // No rotation parameter anywhere here -- unlike an ellipse's H/V radii, a capsule's
         // orientation is already fully expressed by start/end, same as DrawLine.
 
-        /// <summary>Fills <paramref name="boundary"/> (exactly <c>2*(capSegments+1)</c> points) with the capsule's true outline.</summary>
-        /// <remarks>
-        /// Order: a semicircle around <paramref name="start"/> bulging away from
-        /// <paramref name="end"/>, then a straight side, a semicircle around <paramref name="end"/>
-        /// bulging away from <paramref name="start"/>, and the other straight side. Caller
-        /// guarantees <paramref name="start"/> != <paramref name="end"/> (degenerate callers fall
-        /// back to the circle equivalents instead of reaching this).
-        /// </remarks>
+        // Fills `boundary` (exactly 2*(capSegments+1) points) with the capsule's true outline.
+        // Order: a semicircle around `start` bulging away from `end`, then a straight side, a
+        // semicircle around `end` bulging away from `start`, and the other straight side. Caller
+        // guarantees start != end (degenerate callers fall back to the circle equivalents instead
+        // of reaching this).
         private static void BuildCapsuleBoundary(Vector2 start, Vector2 end, float radius, int capSegments, Span<Vector2> boundary)
         {
             Vector2 dir = SafeNormalize(end - start);
@@ -2750,11 +2484,9 @@ namespace MonoPrimitives.Primitives2D
                 boundary[n + i] = end + SampleUnitCircle((dirAngle - MathHelper.PiOver2 + step * i) / MathHelper.TwoPi) * radius;
         }
 
-        /// <summary>
-        /// Turns a center/length/rotation description into the two endpoints every capsule method
-        /// is actually built on — shared by every <c>center, length, radius, ..., rotation</c>
-        /// overload below, so each just forwards to its own endpoint-pair sibling.
-        /// </summary>
+        // Turns a center/length/rotation description into the two endpoints every capsule method
+        // is actually built on -- shared by every `center, length, radius, ..., rotation` overload
+        // below, so each just forwards to its own endpoint-pair sibling.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void CapsuleEndpointsFromCenter(Vector2 center, float length, float rotation, out Vector2 start, out Vector2 end)
         {
@@ -2781,13 +2513,6 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Draws a filled capsule of the given <paramref name="length"/> and <paramref name="radius"/>, centered at <paramref name="center"/> and rotated <paramref name="rotation"/> radians from horizontal.</summary>
-        /// <remarks>
-        /// The same "center + size + rotation" shape every other filled shape here uses
-        /// (<see cref="FillEllipse(Vector2,float,float,Color,float)"/>,
-        /// <see cref="FillRectangle(float,float,float,float,Color,float,Vector2?)"/>), unlike the
-        /// endpoint-pair overload above — which stays, since it's still the more convenient shape
-        /// for chain links/ropes/limbs where the two actual endpoints are already what you have.
-        /// </remarks>
         public void FillCapsule(Vector2 center, float length, float radius, Color color, float rotation = 0f)
         {
             CapsuleEndpointsFromCenter(center, length, rotation, out Vector2 start, out Vector2 end);
@@ -2795,7 +2520,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Draws a capsule's border only, growing inward from <paramref name="radius"/> — the border never extends past it.</summary>
-        /// <remarks>Clamped so a thick border on a thin capsule degenerates gracefully to a full fill, same precedent as <see cref="BorderEllipse"/>. Degenerates to <see cref="BorderCircle"/> if <paramref name="start"/> equals <paramref name="end"/>.</remarks>
+        /// <remarks>Clamped so a thick border on a thin capsule degenerates gracefully to a full fill. Degenerates to <see cref="BorderCircle"/> if <paramref name="start"/> equals <paramref name="end"/>.</remarks>
         public void BorderCapsule(Vector2 start, Vector2 end, float radius, Color color, float thickness = 1f)
         {
             ThrowIfNotBegun();
@@ -2849,17 +2574,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Draws a filled capsule with a gradient from <paramref name="inner"/> on the central axis (the segment from <paramref name="start"/> to <paramref name="end"/>) to <paramref name="outer"/> at the boundary, no border.</summary>
-        /// <remarks>
-        /// The capsule's counterpart to <see cref="FillEllipseGradient"/>'s radial gradient, except
-        /// "distance from center" means distance from the axis SEGMENT rather than a single point.
-        /// Built as a ring between the true outer boundary and the axis collapsed onto it (each
-        /// outer boundary point pairs with whichever pole — <paramref name="start"/> or
-        /// <paramref name="end"/> — its own cap arc surrounds); GPU interpolation across the
-        /// straight-side quads then linearly blends the paired axis point from
-        /// <paramref name="start"/> to <paramref name="end"/>, which is exactly the true
-        /// closest-point-on-segment there, not just an approximation. Degenerates to
-        /// <see cref="FillCircleGradient"/> if <paramref name="start"/> equals <paramref name="end"/>.
-        /// </remarks>
+        /// <remarks>The capsule's counterpart to <see cref="FillEllipseGradient"/>'s radial gradient, except "distance from center" means distance from the axis segment rather than a single point. Degenerates to <see cref="FillCircleGradient"/> if <paramref name="start"/> equals <paramref name="end"/>.</remarks>
         public void FillCapsuleGradient(Vector2 start, Vector2 end, float radius, Color inner, Color outer)
         {
             ThrowIfNotBegun();
@@ -2867,6 +2582,10 @@ namespace MonoPrimitives.Primitives2D
             Vector2 delta = end - start;
             if (delta.LengthSquared() < 1e-12f) { FillCircleGradient(start, radius, inner, outer); return; }
 
+            // Built as a ring between the true outer boundary and the axis collapsed onto it (each
+            // outer boundary point pairs with whichever pole -- start or end -- its own cap arc
+            // surrounds); GPU interpolation across the straight-side quads then linearly blends the
+            // paired axis point from start to end, which is exactly the true closest-point-on-segment.
             int capSegments = Math.Max(1, SegmentsForArc(radius, MathF.PI));
             int n = 2 * (capSegments + 1);
 
@@ -2897,11 +2616,7 @@ namespace MonoPrimitives.Primitives2D
             FillCapsuleGradient(start, end, radius, inner, outer);
         }
 
-        /// <summary>
-        /// Draws a capsule filled with an axis-to-boundary gradient (see <see cref="FillCapsuleGradient(Vector2,Vector2,float,Color,Color)"/>)
-        /// and a solid border. The gradient's own radius is <c>radius - thickness</c> — stops
-        /// exactly where the border begins, same rule as <see cref="DrawCircleGradient"/>/<see cref="DrawEllipseGradient"/>.
-        /// </summary>
+        /// <summary>Draws a capsule filled with an axis-to-boundary gradient (see <see cref="FillCapsuleGradient(Vector2,Vector2,float,Color,Color)"/>) and a solid border. The gradient's own radius is <c>radius - thickness</c> — stops exactly where the border begins.</summary>
         public void DrawCapsuleGradient(Vector2 start, Vector2 end, float radius, Color innerFill, Color outerFill, Color borderColor, float thickness = 1f)
         {
             float t = MathF.Max(0f, thickness);
@@ -3205,15 +2920,6 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Draws a regular polygon's border only, growing inward from <paramref name="radius"/> — the border never extends past it.</summary>
-        /// <remarks>
-        /// Unlike the old per-edge <c>DrawLine</c> fast path this replaces (which left small gaps
-        /// at each corner, since independent line segments don't join), every join style here
-        /// shares the same proper-corner outline builder. For <see cref="LineJoin.Miter"/>
-        /// (default), pre-insets via <see cref="InsetConvexPolygon"/> then strokes symmetrically.
-        /// For Round/Bevel, strokes the true vertices directly with an inward-only stroke instead —
-        /// see <see cref="BuildRoundedOutlineGeometry"/>'s <c>inwardOnly</c> doc for why
-        /// pre-insetting first would be wrong there.
-        /// </remarks>
         public void BorderPoly(Vector2 center, int sides, float radius, Color color, float thickness = 1f, float rotation = 0f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
             if (thickness <= 0f || sides < 3) return;
@@ -3227,22 +2933,20 @@ namespace MonoPrimitives.Primitives2D
 
             if (join == LineJoin.Miter)
             {
+                // Miter's offset is linear and self-cancels, so pre-insetting then stroking
+                // symmetrically is cheap and exact.
                 Span<Vector2> inset = sides <= MaxStackAllocElements ? stackalloc Vector2[sides] : new Vector2[sides];
                 InsetConvexPolygon(pts, thickness * 0.5f, inset, closed: true);
                 BuildOutlineGeometry(inset, thickness, color, closed: true, join);
                 return;
             }
 
+            // Round/Bevel: strokes the true vertices directly with an inward-only stroke instead
+            // (see BuildRoundedOutlineGeometry's inwardOnly doc for why pre-insetting would be wrong here).
             BuildOutlineGeometry(pts, thickness, color, closed: true, join, LineCap.Butt, jointRadius, inwardOnly: true);
         }
 
         /// <summary>Draws a regular polygon with fill and border, border growing inward. Omit <paramref name="borderColor"/> for the same color on both.</summary>
-        /// <remarks>
-        /// For Round/Bevel <paramref name="join"/>, the fill is rounded off the same way
-        /// <see cref="BorderPoly"/>'s inward-only stroke rounds its own outer edge (same clamp
-        /// against <paramref name="thickness"/>, see <see cref="BuildRoundedCornerBoundary"/>) so
-        /// the two always agree, even once the requested radius has to be clamped down.
-        /// </remarks>
         public void DrawPoly(Vector2 center, int sides, float radius, Color fillColor, Color? borderColor = null, float thickness = 1f, float rotation = 0f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
             Color border = borderColor ?? fillColor;
@@ -3271,15 +2975,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Draws a filled regular polygon with each corner rounded by <paramref name="cornerRadius"/> world units, no border pass at all.</summary>
-        /// <remarks>
-        /// The standalone counterpart to calling
-        /// <see cref="DrawPoly(Vector2,int,float,Color,Color?,float,float,LineJoin,float?)"/> with
-        /// a matching fill/border color just to get a rounded fill (which already works today via
-        /// <c>join: LineJoin.Round, jointRadius: cornerRadius</c>, but forces a border pass to
-        /// exist just to reach it). Mirrors <see cref="FillTriangleRounded"/>/<see cref="FillPolygonRounded"/>'s
-        /// naming and clamp behavior (each corner independently clamped so it can't reach past
-        /// the midpoint of either adjacent edge).
-        /// </remarks>
+        /// <remarks>Each corner is independently clamped so it can't reach past the midpoint of either adjacent edge — the actual radius used may be smaller than <paramref name="cornerRadius"/>.</remarks>
         public void FillPolyRounded(Vector2 center, int sides, float radius, float cornerRadius, Color color, float rotation = 0f)
         {
             if (cornerRadius <= 0.01f) { FillPoly(center, sides, radius, color, rotation); return; }
@@ -3300,7 +2996,7 @@ namespace MonoPrimitives.Primitives2D
             FillPolygon(boundary[..count], color);
         }
 
-        /// <summary>Equivalent to <see cref="BorderPoly"/> with <c>join: LineJoin.Round, jointRadius: cornerRadius</c> (pre-clamped so neighboring corners can't overlap) — named to match <see cref="FillPolyRounded"/> for discoverability.</summary>
+        /// <summary>Equivalent to <see cref="BorderPoly"/> with <c>join: LineJoin.Round, jointRadius: cornerRadius</c> (pre-clamped so neighboring corners can't overlap).</summary>
         public void BorderPolyRounded(Vector2 center, int sides, float radius, float cornerRadius, Color color, float thickness = 1f, float rotation = 0f)
         {
             if (sides < 3) { BorderPoly(center, sides, radius, color, thickness, rotation); return; }
@@ -3391,12 +3087,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Draws a filled regular polygon with each corner rounded by <paramref name="cornerRadius"/>, with the same center-to-rim radial gradient <see cref="FillPolyGradient"/> draws.</summary>
-        /// <remarks>
-        /// The standalone rounded-corner counterpart, matching <see cref="FillTriangleGradientRounded"/>'s
-        /// naming and clamp behavior. Unlike <see cref="FillPolyGradient"/>, no <c>innerOffset</c>/
-        /// <c>outerOffset</c> bands — kept simple, matching <see cref="FillTriangleGradientRounded"/>'s
-        /// own rounded-corner variant, which drops them too.
-        /// </remarks>
+        /// <remarks>Unlike <see cref="FillPolyGradient"/>, no <c>innerOffset</c>/<c>outerOffset</c> bands — kept simple.</remarks>
         public void FillPolyGradientRounded(Vector2 center, int sides, float radius, float cornerRadius, Color inner, Color outer, float rotation = 0f)
         {
             if (cornerRadius <= 0.01f) { FillPolyGradient(center, sides, radius, inner, outer, rotation); return; }
@@ -3423,11 +3114,7 @@ namespace MonoPrimitives.Primitives2D
                 PushTriangleIndices(b, b + 1 + i, b + 1 + (i + 1) % count);
         }
 
-        /// <summary>
-        /// Draws a regular polygon with a radial gradient fill and a solid border. The
-        /// gradient's own radius is <c>radius - thickness</c> (stops exactly where the
-        /// border begins), same rule as <see cref="DrawCircleGradient"/>.
-        /// </summary>
+        /// <summary>Draws a regular polygon with a radial gradient fill and a solid border. The gradient's own radius is <c>radius - thickness</c> (stops exactly where the border begins).</summary>
         public void DrawPolyGradient(Vector2 center, int sides, float radius, Color innerFill, Color outerFill, Color borderColor, float thickness = 1f, float rotation = 0f, float innerOffset = 0f, float outerOffset = 0f)
         {
             float fillRadius = MathF.Max(0f, radius - MathF.Max(0f, thickness));
@@ -3436,17 +3123,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Draws a regular polygon with a rounded-corner radial gradient fill (see <see cref="FillPolyGradientRounded"/>) and a solid rounded-corner border.</summary>
-        /// <remarks>
-        /// The gradient's own boundary is the true rounded outline inset by
-        /// <paramref name="thickness"/> (via <see cref="BuildRoundedCornerBoundary"/> +
-        /// <see cref="InsetConvexPolygon"/>, same as <see cref="DrawPolygonGradient"/>'s Round-join
-        /// branch) — stops exactly where the border begins. Deliberately NOT built as two
-        /// independently-clamped regular polygons (full-size for the border, radius-minus-thickness
-        /// for the fill): the same absolute corner radius that's safe on the larger polygon isn't
-        /// guaranteed safe on a uniformly smaller one (its edges are shorter too), so insetting the
-        /// ALREADY-rounded boundary avoids re-deriving — and re-clamping — a second polygon from
-        /// scratch. Radius pre-clamped so neighboring corners can't overlap.
-        /// </remarks>
+        /// <remarks>The gradient's own boundary is the true rounded outline inset by <paramref name="thickness"/> — stops exactly where the border begins. Radius pre-clamped so neighboring corners can't overlap.</remarks>
         public void DrawPolyGradientRounded(Vector2 center, int sides, float radius, float cornerRadius, Color innerFill, Color outerFill, Color borderColor, float thickness = 1f, float rotation = 0f)
         {
             ThrowIfNotBegun();
@@ -3465,6 +3142,11 @@ namespace MonoPrimitives.Primitives2D
                     ? stackalloc Vector2[sides * (MaxCircleSegments + 1)]
                     : new Vector2[sides * (MaxCircleSegments + 1)];
                 int count = BuildRoundedCornerBoundary(pts, safeRadius, LineJoin.Round, thickness, boundary);
+                // Insets the ALREADY-rounded boundary rather than building two independently-clamped
+                // regular polygons (full-size border, radius-minus-thickness fill): the same
+                // absolute corner radius that's safe on the larger polygon isn't guaranteed safe on
+                // a uniformly smaller one (shorter edges), so this avoids re-deriving/re-clamping
+                // a second polygon from scratch.
                 Span<Vector2> inset = count <= MaxStackAllocElements ? stackalloc Vector2[count] : new Vector2[count];
                 InsetConvexPolygon(boundary[..count], MathF.Min(thickness, safeRadius), inset, closed: true);
 
@@ -3653,16 +3335,7 @@ namespace MonoPrimitives.Primitives2D
         private static float EdgeCross(in Vector2 p, in Vector2 a, in Vector2 b) => (a.X - p.X) * (b.Y - p.Y) - (a.Y - p.Y) * (b.X - p.X);
 
         /// <summary>Draws an arbitrary closed polygon's border only, growing inward from its own edges via <see cref="InsetConvexPolygon"/>.</summary>
-        /// <remarks>
-        /// Despite the name, correct for concave (reflex-vertex) input too, since the winding-based
-        /// fix (see DECISIONS.md) resolves every vertex from the polygon's overall winding rather
-        /// than per-vertex, with no convex/reflex distinction to get wrong. Regression-covered on an
-        /// L-shape in <c>tests/MonoPrimitives.Tests/PolygonInsetRegressionTests.cs</c>. For
-        /// <see cref="LineJoin.Round"/>/<see cref="LineJoin.Bevel"/>, strokes the true vertices
-        /// directly with an inward-only stroke instead — see
-        /// <see cref="BuildRoundedOutlineGeometry"/>'s <c>inwardOnly</c> doc for why pre-insetting
-        /// first would be wrong there.
-        /// </remarks>
+        /// <remarks>Despite the name, correct for concave (reflex-vertex) input too (see DECISIONS.md).</remarks>
         public void BorderPolygon(ReadOnlySpan<Vector2> points, Color color, float thickness = 1f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
             if (thickness <= 0f || points.Length < 2) return;
@@ -3670,22 +3343,20 @@ namespace MonoPrimitives.Primitives2D
 
             if (join == LineJoin.Miter)
             {
+                // Miter's offset is linear and self-cancels, so pre-insetting then stroking
+                // symmetrically is cheap and exact.
                 Span<Vector2> inset = points.Length <= MaxStackAllocElements ? stackalloc Vector2[points.Length] : new Vector2[points.Length];
                 InsetConvexPolygon(points, thickness * 0.5f, inset, closed: true);
                 BuildOutlineGeometry(inset, thickness, color, closed: true, join);
                 return;
             }
 
+            // Round/Bevel: strokes the true vertices directly with an inward-only stroke instead
+            // (see BuildRoundedOutlineGeometry's inwardOnly doc for why pre-insetting would be wrong here).
             BuildOutlineGeometry(points, thickness, color, closed: true, join, LineCap.Butt, jointRadius, inwardOnly: true);
         }
 
         /// <summary>Draws an arbitrary polygon with fill and border, border growing inward. Omit <paramref name="borderColor"/> for the same color on both.</summary>
-        /// <remarks>
-        /// For Round/Bevel <paramref name="join"/>, the fill is rounded off the same way
-        /// <see cref="BorderPolygon"/>'s inward-only stroke rounds its own outer edge (same clamp
-        /// against <paramref name="thickness"/>, see <see cref="BuildRoundedCornerBoundary"/>) so
-        /// the two always agree.
-        /// </remarks>
         public void DrawPolygon(ReadOnlySpan<Vector2> points, Color fillColor, Color? borderColor = null, float thickness = 1f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
             Color border = borderColor ?? fillColor;
@@ -3706,14 +3377,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Draws a filled arbitrary polygon with each corner rounded by <paramref name="cornerRadius"/> world units, no border pass.</summary>
-        /// <remarks>
-        /// The standalone counterpart to
-        /// <see cref="DrawPolygon(ReadOnlySpan{Vector2},Color,Color?,float,LineJoin,float?)"/> with
-        /// <c>join: LineJoin.Round</c> and a matching fill/border color, without the redundant
-        /// border stroke. Same convex/star-shaped-from-first-vertex assumption as
-        /// <see cref="FillPolygon"/>; each corner's radius is independently clamped so it can't
-        /// reach past the midpoint of either adjacent edge.
-        /// </remarks>
+        /// <remarks>Same convex/star-shaped-from-first-vertex assumption as <see cref="FillPolygon"/>. Each corner's radius is independently clamped so it can't reach past the midpoint of either adjacent edge.</remarks>
         public void FillPolygonRounded(ReadOnlySpan<Vector2> points, float cornerRadius, Color color)
         {
             if (cornerRadius <= 0.01f) { FillPolygon(points, color); return; }
@@ -3726,7 +3390,7 @@ namespace MonoPrimitives.Primitives2D
             FillPolygon(boundary[..count], color);
         }
 
-        /// <summary>Equivalent to <see cref="BorderPolygon"/> with <c>join: LineJoin.Round, jointRadius: cornerRadius</c> (pre-clamped so neighboring corners can't overlap, see <see cref="ClampCornerRadiusToFit"/>) — named to match <see cref="FillPolygonRounded"/> for discoverability.</summary>
+        /// <summary>Equivalent to <see cref="BorderPolygon"/> with <c>join: LineJoin.Round, jointRadius: cornerRadius</c> (pre-clamped so neighboring corners can't overlap, see <see cref="ClampCornerRadiusToFit"/>).</summary>
         public void BorderPolygonRounded(ReadOnlySpan<Vector2> points, float cornerRadius, Color color, float thickness = 1f)
             => BorderPolygon(points, color, thickness, LineJoin.Round, ClampCornerRadiusToFit(points, cornerRadius));
 
@@ -3775,16 +3439,11 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
-        /// <summary>Fills <paramref name="outColors"/> with a continuous blend from <paramref name="from"/> (at <paramref name="points"/>[0]) to <paramref name="to"/> (at whichever point is farthest from it), each vertex weighted by its own distance from points[0] relative to that farthest one.</summary>
-        /// <remarks>
-        /// Continuous rather than the old binary "points[0] gets <paramref name="from"/>, everything
-        /// else gets <paramref name="to"/>" scheme: on a many-sided fan (a star, a rounded polygon's
-        /// boundary) the binary version made every wedge except the ones touching points[0]
-        /// flat-<paramref name="to"/>-colored, which shows as visible facet seams where adjacent
-        /// wedges' independent GPU interpolation disagrees — confirmed by rendering a 5-point star
-        /// gradient (visible creases) and fixed by giving every vertex its own, smoothly-varying
-        /// color instead.
-        /// </remarks>
+        // Fills `outColors` with a continuous blend from `from` (at points[0]) to `to` (at
+        // whichever point is farthest from it), each vertex weighted by its own distance from
+        // points[0] relative to that farthest one. Continuous rather than a binary "points[0] gets
+        // from, everything else gets to" scheme, which on a many-sided fan shows as visible facet
+        // seams where adjacent wedges' independent GPU interpolation disagrees.
         private static void ComputeDistanceGradientColors(ReadOnlySpan<Vector2> points, Color from, Color to, Span<Color> outColors)
         {
             Vector2 origin = points[0];
@@ -3805,12 +3464,6 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Draws a filled arbitrary polygon with each corner rounded by <paramref name="cornerRadius"/>, same <paramref name="from"/>/<paramref name="to"/> distance-based blend as <see cref="FillPolygonGradient"/> — the rounded-corner counterpart.</summary>
-        /// <remarks>
-        /// Each rounded corner's own arc is colored by whichever original vertex it replaced (see
-        /// <see cref="FillPolygonGradientByNearestVertex"/>) — that vertex's smoothly-blended color
-        /// now, not a flat binary one, so the seams a flat color caused there are fixed the same way
-        /// as the sharp-corner version.
-        /// </remarks>
         public void FillPolygonGradientRounded(ReadOnlySpan<Vector2> points, float cornerRadius, Color from, Color to)
         {
             if (cornerRadius <= 0.01f) { FillPolygonGradient(points, from, to); return; }
@@ -3858,12 +3511,10 @@ namespace MonoPrimitives.Primitives2D
         /// Draws an arbitrary polygon with a <paramref name="from"/>→<paramref name="to"/>
         /// gradient fill (first point→from, rest→to) and a solid border. The gradient's own
         /// polygon is inset by <paramref name="thickness"/> via <see cref="InsetConvexPolygon"/> —
-        /// stops exactly where the border begins, same rule as the other shapes' gradients.
-        /// Gradient colors are always computed from the ORIGINAL <paramref name="points"/>
-        /// (via <see cref="ComputeDistanceGradientColors"/>) and then mapped onto the inset
-        /// geometry by nearest original vertex (<see cref="FillPolygonGradientByNearestVertex"/>),
-        /// never recomputed from the inset points directly — keeps color consistent with the
-        /// un-bordered fill regardless of how the border inset shifted each vertex.
+        /// stops exactly where the border begins. Gradient colors are always computed from the
+        /// original <paramref name="points"/>, never recomputed from the inset geometry — keeps
+        /// color consistent with the un-bordered fill regardless of how the border inset shifted
+        /// each vertex.
         /// </summary>
         public void DrawPolygonGradient(ReadOnlySpan<Vector2> points, Color from, Color to, Color borderColor, float thickness = 1f, LineJoin join = LineJoin.Miter, float? jointRadius = null)
         {
@@ -3901,44 +3552,23 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
-        /// <summary>Equivalent to <see cref="DrawPolygonGradient"/> with <c>join: LineJoin.Round, jointRadius: cornerRadius</c> (pre-clamped so neighboring corners can't overlap) — named to match <see cref="FillPolygonGradientRounded"/> for discoverability.</summary>
+        /// <summary>Equivalent to <see cref="DrawPolygonGradient"/> with <c>join: LineJoin.Round, jointRadius: cornerRadius</c> (pre-clamped so neighboring corners can't overlap).</summary>
         public void DrawPolygonGradientRounded(ReadOnlySpan<Vector2> points, float cornerRadius, Color from, Color to, Color borderColor, float thickness = 1f)
         {
             float safeRadius = ClampCornerRadiusToFit(points, cornerRadius);
             DrawPolygonGradient(points, from, to, borderColor, thickness, LineJoin.Round, safeRadius);
         }
 
-        /// <summary>
-        /// Builds a shared-vertex thick outline for either a closed polygon loop
-        /// (<paramref name="closed"/> = true, used directly by <see cref="BorderPolygon"/>/
-        /// <see cref="BorderPoly"/>, and via <see cref="InsetConvexPolygon"/> by
-        /// <see cref="BorderTriangle(Vector2,Vector2,Vector2,Color,float,float,Vector2?,LineJoin,float?)"/>/<see cref="BorderRectangle(float,float,float,float,Color,float,float,Vector2?,LineJoin,float?)"/>) or an open
-        /// polyline (<paramref name="closed"/> = false, used by
-        /// <see cref="DrawLineStrip(ReadOnlySpan{Vector2},float,Color,LineJoin,LineCap,float?)"/>
-        /// and the splines). Dispatches to the cheap shared-vertex miter path (default,
-        /// unchanged from before <see cref="LineJoin"/> existed) or to
-        /// <see cref="BuildRoundedOutlineGeometry"/> for <see cref="LineJoin.Round"/>/
-        /// <see cref="LineJoin.Bevel"/>, which also honors <paramref name="cap"/>.
-        /// </summary>
-        /// <param name="points">Vertices of the loop (<paramref name="closed"/> = true) or polyline (<paramref name="closed"/> = false), in order.</param>
-        /// <param name="thickness">Line thickness.</param>
-        /// <param name="color">Line color.</param>
-        /// <param name="closed">True for a closed polygon loop, false for an open polyline.</param>
-        /// <param name="join">How interior vertices are joined.</param>
-        /// <param name="cap">How the two free ends are finished. Ignored when <paramref name="closed"/> is true.</param>
-        /// <param name="jointRadius">Radius of <see cref="LineJoin.Round"/>/<see cref="LineJoin.Bevel"/> joins; null matches <paramref name="thickness"/>/2. Ignored for <see cref="LineJoin.Miter"/>.</param>
-        /// <param name="inwardOnly">
-        /// When true (only meaningful for <see cref="LineJoin.Round"/>/<see cref="LineJoin.Bevel"/>
-        /// — ignored for Miter), <paramref name="points"/> is the TRUE boundary and the stroke
-        /// sits entirely inward from it (outer edge flush with the points, inner edge a full
-        /// <paramref name="thickness"/> in) instead of the normal symmetric ±thickness/2 straddle.
-        /// This is what <c>Border*</c> uses for Round/Bevel: pre-insetting via
-        /// <see cref="InsetConvexPolygon"/> first (which IS correct for Miter, since Miter's
-        /// offset is linear and self-cancels) is wrong here, because a fillet's tangent-circle
-        /// construction is a nonlinear function of the radius and doesn't self-cancel the same
-        /// way — see <see cref="BuildRoundedOutlineGeometry"/> for the full story, including why
-        /// this alone isn't enough to keep an accompanying <c>Fill*</c> from overflowing it.
-        /// </param>
+        // Builds a shared-vertex thick outline for either a closed polygon loop or an open
+        // polyline. Dispatches to the cheap shared-vertex miter path (default) or to
+        // BuildRoundedOutlineGeometry for Round/Bevel, which also honors `cap`.
+        // `inwardOnly` (only meaningful for Round/Bevel -- ignored for Miter): when true, `points`
+        // is the TRUE boundary and the stroke sits entirely inward from it (outer edge flush with
+        // the points, inner edge a full `thickness` in) instead of the normal symmetric
+        // +-thickness/2 straddle. This is what Border* uses for Round/Bevel: pre-insetting via
+        // InsetConvexPolygon first (correct for Miter, since its offset is linear and
+        // self-cancels) is wrong here, because a fillet's tangent-circle construction is a
+        // nonlinear function of the radius and doesn't self-cancel the same way.
         private void BuildOutlineGeometry(ReadOnlySpan<Vector2> points, float thickness, Color color, bool closed,
             LineJoin join = LineJoin.Miter, LineCap cap = LineCap.Butt, float? jointRadius = null, bool inwardOnly = false)
         {
@@ -3951,17 +3581,12 @@ namespace MonoPrimitives.Primitives2D
             BuildRoundedOutlineGeometry(points, thickness, color, closed, join, cap, jointRadius, inwardOnly);
         }
 
-        /// <summary>
-        /// Computes the miter offset for a vertex where two segments meet, given their
-        /// incoming/outgoing unit directions: the direction/length that keeps a stroke of
-        /// the given half-thickness at constant width through the joint, clamped to avoid
-        /// spikes on very sharp turns. <c>curr + offset</c> and <c>curr - offset</c> are the
-        /// two candidate corner points; which one is "outer" vs "inner" depends on the
-        /// polygon's winding and isn't resolved here — see <see cref="InsetConvexPolygon"/>
-        /// for the caller that picks between them. Shared by <see cref="BuildMiterOutlineGeometry"/>
-        /// (the plain stroke path) and <see cref="InsetConvexPolygon"/> (shrinking a polygon
-        /// inward, the basis for every v2 <c>Border*</c>'s "inward-only" guarantee).
-        /// </summary>
+        // Computes the miter offset for a vertex where two segments meet, given their
+        // incoming/outgoing unit directions: the direction/length that keeps a stroke of the
+        // given half-thickness at constant width through the joint, clamped to avoid spikes on
+        // very sharp turns. `curr + offset` and `curr - offset` are the two candidate corner
+        // points; which one is "outer" vs "inner" depends on the polygon's winding and isn't
+        // resolved here -- see InsetConvexPolygon for the caller that picks between them.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Vector2 ComputeMiterOffset(Vector2 dirIn, Vector2 dirOut, float half)
         {
@@ -3980,25 +3605,10 @@ namespace MonoPrimitives.Primitives2D
             return miter * miterLength;
         }
 
-        /// <summary>
-        /// Shrinks a convex (or star-shaped-around-its-own-centroid) polygon inward by
-        /// <paramref name="distance"/>, writing one inset point per input point into
-        /// <paramref name="result"/> (same length as <paramref name="points"/>). At each
-        /// vertex, <see cref="ComputeMiterOffset"/> gives two candidate points
-        /// (<c>curr ± offset</c>); this picks whichever one is closer to the polygon's
-        /// centroid — robust regardless of winding direction (CW/CCW), so callers don't
-        /// need to reason about or guarantee a particular point order.
-        /// </summary>
-        /// <remarks>
-        /// This is the building block behind every v2 <c>Border*</c>'s "grows inward, never
-        /// exceeds the shape" contract: stroke the result of <c>InsetConvexPolygon(points,
-        /// thickness/2, ...)</c> with that same <c>thickness</c> via the existing symmetric
-        /// outline builder, and the stroke's outer edge lands exactly on the original
-        /// boundary. Does not clamp <paramref name="distance"/> against the shape's own
-        /// size — callers are responsible for clamping <c>thickness</c> first (matching the
-        /// existing precedent in e.g. <c>DrawRectangleLines</c>/<c>DrawRectangleRounded</c>),
-        /// same as this project's established "clamp gracefully" pattern elsewhere.
-        /// </remarks>
+        // Shrinks a convex (or star-shaped-around-its-own-centroid) polygon inward by `distance`,
+        // writing one inset point per input point into `result` (same length as `points`). Does
+        // not clamp `distance` against the shape's own size -- callers are responsible for
+        // clamping `thickness` first.
         private static void InsetConvexPolygon(ReadOnlySpan<Vector2> points, float distance, Span<Vector2> result, bool closed)
         {
             int n = points.Length;
@@ -4067,14 +3677,9 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
-        /// <summary>
-        /// <see cref="InsetConvexPolygon"/>'s mirror image: grows a polygon outward by
-        /// <paramref name="distance"/> instead of shrinking it — same miter-offset math and same
-        /// winding-based fix for reflex vertices, just the opposite candidate at every vertex
-        /// (whichever one <see cref="InsetConvexPolygon"/> would call "inward," this is the
-        /// other). Used to build a drop shadow's outer (fully transparent) edge from a shape's
-        /// own boundary — see the <c>Fill*Shadow</c> methods.
-        /// </summary>
+        // InsetConvexPolygon's mirror image: grows a polygon outward by `distance` instead of
+        // shrinking it -- same miter-offset math and winding-based fix, just the opposite
+        // candidate at every vertex. Used to build a drop shadow's outer (fully transparent) edge.
         private static void OutsetConvexPolygon(ReadOnlySpan<Vector2> points, float distance, Span<Vector2> result, bool closed)
         {
             int n = points.Length;
@@ -4186,12 +3791,9 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
-        /// <summary>
-        /// Per-vertex result of <see cref="ComputeJoint"/>: either a proper tangent-trimmed
-        /// fillet (<see cref="HasArc"/> true) or nothing (degenerate/near-straight/near-180,
-        /// in which case the adjoining segments just meet at the plain vertex, matching the
-        /// old flush-corner behavior).
-        /// </summary>
+        // Per-vertex result of ComputeJoint: either a proper tangent-trimmed fillet (HasArc true)
+        // or nothing (degenerate/near-straight/near-180, in which case the adjoining segments just
+        // meet at the plain vertex).
         private struct JointInfo
         {
             public bool HasArc;
@@ -4201,45 +3803,25 @@ namespace MonoPrimitives.Primitives2D
             public int Segments;
             public float Side;
             public float ClampedRadius;
-            /// <summary>
-            /// The properly mitered inner corner at this vertex (only valid when <see cref="HasArc"/>)
-            /// — see the assignment site in <see cref="ComputeJoint"/> for why the adjoining
-            /// segment quads use this instead of each independently offsetting along their own
-            /// normal.
-            /// </summary>
+            // The properly mitered inner corner at this vertex (only valid when HasArc) -- the
+            // adjoining segment quads use this instead of each independently offsetting along
+            // their own normal.
             public Vector2 InnerCorner;
         }
 
-        /// <summary>
-        /// Computes a proper tangent-based rounded/beveled corner fillet at <paramref name="curr"/>:
-        /// a circle of (clamped) <paramref name="radius"/> tangent to the outer edges of both
-        /// adjoining segments, on the outer/convex side of the turn only. Unlike a naive "fan
-        /// planted at the vertex", this keeps the join seamless with the straight segments for
-        /// any radius, at the cost of also needing to trim the segments back to the tangent
-        /// points (done by the caller, using <see cref="JointInfo.TangentIn"/>/<see cref="JointInfo.TangentOut"/>
-        /// as the new outer corners instead of the plain vertex).
-        /// </summary>
-        /// <param name="curr">The joint's own vertex, shared by the incoming and outgoing segments.</param>
-        /// <param name="dirIn">Unit direction of the incoming segment (prev→curr).</param>
-        /// <param name="dirOut">Unit direction of the outgoing segment (curr→next).</param>
-        /// <param name="outerOffset">
-        /// How far the segments' own OUTER edge sits from <paramref name="curr"/> — <c>half</c>
-        /// the stroke thickness for a normal symmetric stroke, or <c>0</c> when this is rounding
-        /// the true shape boundary itself (see <see cref="BuildRoundedCornerBoundary"/>), since
-        /// <paramref name="curr"/> then IS the true, un-inset vertex. This is the value the
-        /// fillet is built relative to (see <c>k</c> below) — NOT necessarily half the stroke
-        /// width, despite the name used at most call sites.
-        /// </param>
-        /// <param name="innerOffset">
-        /// How far the segments' own INNER edge sits from <paramref name="curr"/> (the "opposite
-        /// wall" the self-intersection guard below protects against) — equal to
-        /// <paramref name="outerOffset"/> for a symmetric stroke, or the full stroke thickness
-        /// for an inward-only <c>Border*</c> stroke.
-        /// </param>
-        /// <param name="radius">Requested fillet radius for <see cref="LineJoin.Round"/>/<see cref="LineJoin.Bevel"/>, clamped against the segment lengths and offsets.</param>
-        /// <param name="join">Which join style to build.</param>
-        /// <param name="lenIn">Length of the incoming segment (prev→curr), for the trim clamp.</param>
-        /// <param name="lenOut">Length of the outgoing segment (curr→next), for the trim clamp.</param>
+        // Computes a proper tangent-based rounded/beveled corner fillet at `curr`: a circle of
+        // (clamped) `radius` tangent to the outer edges of both adjoining segments, on the
+        // outer/convex side of the turn only. Unlike a naive "fan planted at the vertex", this
+        // keeps the join seamless with the straight segments for any radius, at the cost of also
+        // needing to trim the segments back to the tangent points (done by the caller, using
+        // JointInfo.TangentIn/TangentOut as the new outer corners instead of the plain vertex).
+        //
+        // outerOffset: how far the segments' own OUTER edge sits from `curr` -- half the stroke
+        // thickness for a normal symmetric stroke, or 0 when rounding the true shape boundary
+        // itself, since `curr` then IS the true, un-inset vertex.
+        // innerOffset: how far the segments' own INNER edge sits from `curr` (the "opposite wall"
+        // the self-intersection guard below protects against) -- equal to outerOffset for a
+        // symmetric stroke, or the full stroke thickness for an inward-only Border* stroke.
         private JointInfo ComputeJoint(Vector2 curr, Vector2 dirIn, Vector2 dirOut, float outerOffset, float innerOffset, float radius, LineJoin join, float lenIn, float lenOut)
         {
             var info = new JointInfo();
@@ -4383,57 +3965,26 @@ namespace MonoPrimitives.Primitives2D
             return count;
         }
 
-        /// <summary>
-        /// Builds a thick outline for <see cref="LineJoin.Round"/>/<see cref="LineJoin.Bevel"/>.
-        /// Each joint is precomputed via <see cref="ComputeJoint"/>; segments are then emitted as
-        /// quads whose outer corners use the joint's tangent points (<see cref="EmitTrimmedSegmentQuadRaw"/>)
-        /// instead of the plain vertex wherever a joint has a fillet, so the straight run and the
-        /// arc always meet exactly — no gap, no floating "bead" (see the audit report's join-radius
-        /// follow-up for why a naive vertex-planted fan doesn't work once the radius differs from
-        /// half-thickness). The inner/concave corner uses <see cref="JointInfo.InnerCorner"/> — a
-        /// proper mitered point shared by both adjoining quads — rather than each quad
-        /// independently offsetting along its own edge normal: on an acute corner with a large
-        /// <paramref name="thickness"/> (exactly <c>Border*</c>'s inward-only case), that naive
-        /// per-edge offset could land past the shape's OTHER edge entirely, which is a real
-        /// overflow, not the harmless same-color overlap this once assumed (see the audit
-        /// report's Border-inset follow-up). Open-polyline endpoints
-        /// get <see cref="EmitRoundCap"/> when <paramref name="cap"/> is <see cref="LineCap.Round"/>,
-        /// nothing extra otherwise (the segment's own flat cut already gives a butt cap).
-        /// </summary>
-        /// <param name="points">Vertices of the loop (<paramref name="closed"/> = true) or polyline (<paramref name="closed"/> = false), in order.</param>
-        /// <param name="thickness">Line thickness.</param>
-        /// <param name="color">Line color.</param>
-        /// <param name="closed">True for a closed polygon loop, false for an open polyline.</param>
-        /// <param name="join">Which join style to build (<see cref="LineJoin.Round"/> or <see cref="LineJoin.Bevel"/> — <see cref="LineJoin.Miter"/> is handled by the cheaper shared-vertex path instead).</param>
-        /// <param name="cap">How the two free ends are finished. Ignored when <paramref name="closed"/> is true.</param>
-        /// <param name="jointRadius">
-        /// Radius of the join fillet at each vertex. Null (default) matches the outer offset
-        /// (half the stroke thickness for a normal symmetric stroke; 0 — i.e. a sharp corner —
-        /// for <paramref name="inwardOnly"/>, since there's no "natural" flush radius when the
-        /// outer edge doesn't move by default) — flush with the segments, seamless. Any other
-        /// value reshapes the corner like a rounded-rectangle corner radius: bigger rounds off
-        /// more of the corner (trimming the straight segments back further), smaller keeps more
-        /// of the corner sharp before the fillet kicks in. Silently clamped per corner (see
-        /// <see cref="ComputeJoint"/>) so an excessive radius on a short or sharp corner degrades
-        /// gracefully instead of self-intersecting. Only affects joins, not
-        /// <see cref="LineCap.Round"/> end caps (those always use half-thickness).
-        /// </param>
-        /// <param name="inwardOnly">
-        /// When true, <paramref name="points"/> are treated as the TRUE (un-inset) boundary —
-        /// the stroke's outer edge sits exactly on them (outer offset 0) and the inner edge sits
-        /// a full <paramref name="thickness"/> inward, instead of the normal symmetric
-        /// ±<c>thickness/2</c> straddle. Critically, <see cref="ComputeJoint"/> still receives
-        /// the real <paramref name="thickness"/> as its innerOffset here, so the fillet radius
-        /// is clamped exactly the same way a symmetric stroke's would be —
-        /// gracefully shrinking the arc, never inverting it, when <paramref name="jointRadius"/>
-        /// is smaller than the border needs (a fillet's own inward reach can't exceed its own
-        /// radius: insetting an arc by more than its radius crosses through the arc's center and
-        /// produces a self-intersecting mess if not caught, which is exactly what this clamp
-        /// prevents). <c>Draw*</c> keeps its accompanying <c>Fill*</c> in agreement with this by
-        /// rounding the true vertices with the SAME clamp (passing <paramref name="thickness"/>,
-        /// not a sentinel, into <see cref="BuildRoundedCornerBoundary"/>) — see that method's
-        /// doc for why the fill needs rounding here at all.
-        /// </param>
+        // Builds a thick outline for Round/Bevel joins. Each joint is precomputed via
+        // ComputeJoint; segments are then emitted as quads whose outer corners use the joint's
+        // tangent points instead of the plain vertex wherever a joint has a fillet, so the
+        // straight run and the arc always meet exactly. The inner/concave corner uses
+        // JointInfo.InnerCorner -- a proper mitered point shared by both adjoining quads -- rather
+        // than each quad independently offsetting along its own edge normal: on an acute corner
+        // with a large `thickness` (Border*'s inward-only case), that naive per-edge offset could
+        // land past the shape's OTHER edge entirely. Open-polyline endpoints get a round cap when
+        // `cap` is LineCap.Round, nothing extra otherwise.
+        //
+        // `jointRadius`: null (default) matches the outer offset -- flush with the segments,
+        // seamless. Any other value reshapes the corner like a rounded-rectangle radius. Silently
+        // clamped per corner (see ComputeJoint) so an excessive radius degrades gracefully instead
+        // of self-intersecting.
+        // `inwardOnly`: when true, `points` are treated as the TRUE (un-inset) boundary -- the
+        // stroke's outer edge sits exactly on them (outer offset 0) and the inner edge sits a full
+        // `thickness` inward, instead of the normal symmetric +-thickness/2 straddle. ComputeJoint
+        // still receives the real `thickness` as its innerOffset here, so the fillet radius clamps
+        // exactly the same way a symmetric stroke's would. Draw* keeps its accompanying Fill* in
+        // agreement by rounding the true vertices with the SAME clamp (see BuildRoundedCornerBoundary).
         private void BuildRoundedOutlineGeometry(ReadOnlySpan<Vector2> points, float thickness, Color color, bool closed,
             LineJoin join, LineCap cap, float? jointRadius, bool inwardOnly = false)
         {
@@ -4561,7 +4112,7 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
-        /// <summary>Exact vertex/index count a fan of <paramref name="segments"/> slices needs — see <see cref="EmitJoinFanRaw"/>.</summary>
+        // Exact vertex/index count a fan of `segments` slices needs -- see EmitJoinFanRaw.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void JoinFanCounts(int segments, out int vertCount, out int indexCount)
         {
@@ -4569,19 +4120,12 @@ namespace MonoPrimitives.Primitives2D
             indexCount = segments * 3;
         }
 
-        /// <summary>
-        /// Closes the "kite" gap between a joint's fan (which only covers <c>Ctr</c>-to-arc) and
-        /// its two adjoining segment quads (whose near edge runs Tangent-to-<see cref="JointInfo.InnerCorner"/>):
-        /// since <c>Ctr</c> and <c>InnerCorner</c> are two different points on the same bisector
-        /// (not the same point, and not on either quad's own edge), the triangles
-        /// (<paramref name="tangentIn"/>, <paramref name="innerCorner"/>, <paramref name="ctr"/>) and
-        /// (<paramref name="tangentOut"/>, <paramref name="innerCorner"/>, <paramref name="ctr"/>)
-        /// are covered by neither the fan nor the quads on their own — confirmed by rendering the
-        /// quads and fan in different colors with nothing else drawn: a real background-colored
-        /// wedge was visible at every rounded corner, which is what let the fill underneath show
-        /// through even after the fill/border boundary-rounding fix above.
-        /// "Raw" — caller must have reserved 4 vertices / 6 indices via one upfront Reserve.
-        /// </summary>
+        // Closes the "kite" gap between a joint's fan (which only covers Ctr-to-arc) and its two
+        // adjoining segment quads (whose near edge runs Tangent-to-InnerCorner): since Ctr and
+        // InnerCorner are two different points on the same bisector, the two triangles
+        // (tangentIn, innerCorner, ctr) and (tangentOut, innerCorner, ctr) are covered by neither
+        // the fan nor the quads on their own.
+        // "Raw" -- caller must have reserved 4 vertices / 6 indices via one upfront Reserve.
         private void EmitJointGapRaw(Vector2 tangentIn, Vector2 tangentOut, Vector2 innerCorner, Vector2 ctr, Color color)
         {
             int b = _vertexCount;
@@ -4593,13 +4137,9 @@ namespace MonoPrimitives.Primitives2D
             PushTriangleIndices(b + 3, b + 1, b + 2);
         }
 
-        /// <summary>
-        /// Emits one segment's quad, with independently-positioned outer corners (which may be
-        /// the plain offset vertex, or a joint's tangent point when that end has a fillet — see
-        /// <see cref="BuildRoundedOutlineGeometry"/>). "Raw" — assumes the caller already
-        /// reserved exactly 4 vertices and 6 indices via one upfront <see cref="Reserve"/> call;
-        /// writes directly at the batch's current position instead of calling Reserve itself.
-        /// </summary>
+        // Emits one segment's quad, with independently-positioned outer corners (which may be the
+        // plain offset vertex, or a joint's tangent point when that end has a fillet).
+        // "Raw" -- assumes the caller already reserved exactly 4 vertices and 6 indices.
         private void EmitTrimmedSegmentQuadRaw(Vector2 outerA, Vector2 outerB, Vector2 innerB, Vector2 innerA, Color color)
         {
             int b = _vertexCount;
@@ -4610,15 +4150,9 @@ namespace MonoPrimitives.Primitives2D
             PushQuadIndices(b);
         }
 
-        /// <summary>
-        /// Emits a half-circle bulging outward from <paramref name="point"/> in
-        /// <paramref name="outwardDir"/> (a unit vector), for a <see cref="LineCap.Round"/>
-        /// end cap. <paramref name="outwardDir"/> is the direction the bulge should point:
-        /// away from the line at the start of an open polyline, or continuing past the end.
-        /// Standalone entry point (used directly by <see cref="DrawLine(Vector2,Vector2,float,Color,LineCap)"/>) —
-        /// reserves its own space, unlike <see cref="BuildRoundedOutlineGeometry"/>'s caps
-        /// which share one upfront Reserve for the whole shape.
-        /// </summary>
+        // Emits a half-circle bulging outward from `point` in `outwardDir` (a unit vector), for a
+        // LineCap.Round end cap. Standalone entry point -- reserves its own space, unlike
+        // BuildRoundedOutlineGeometry's caps which share one upfront Reserve for the whole shape.
         private void EmitRoundCap(Vector2 point, Vector2 outwardDir, float half, Color color)
         {
             (float fromAngle, float toAngle, int segments) = ComputeCapSweep(outwardDir, half);
@@ -4627,13 +4161,10 @@ namespace MonoPrimitives.Primitives2D
             EmitJoinFanRaw(point, half, fromAngle, toAngle, segments, color);
         }
 
-        /// <summary>
-        /// Pure angle computation for <see cref="EmitRoundCap"/>: which of the two candidate
-        /// ±π semicircles (starting from the normal of <paramref name="outwardDir"/>) actually
-        /// bulges towards <paramref name="outwardDir"/>, picked via a dot-product test against
-        /// the sweep's midpoint direction. Split out from emission so <see cref="BuildRoundedOutlineGeometry"/>
-        /// can compute cap segment counts without touching the vertex buffer.
-        /// </summary>
+        // Pure angle computation for EmitRoundCap: which of the two candidate +-pi semicircles
+        // actually bulges towards `outwardDir`, picked via a dot-product test. Split out from
+        // emission so BuildRoundedOutlineGeometry can compute cap segment counts without touching
+        // the vertex buffer.
         private static (float fromAngle, float toAngle, int segments) ComputeCapSweep(Vector2 outwardDir, float half)
         {
             Vector2 normal = new Vector2(-outwardDir.Y, outwardDir.X);
@@ -4648,18 +4179,10 @@ namespace MonoPrimitives.Primitives2D
             return (fromAngle, fromAngle + sweep, segments);
         }
 
-        /// <summary>
-        /// Emits a triangle fan of <paramref name="segments"/> slices around
-        /// <paramref name="center"/>, sweeping from <paramref name="fromAngle"/> to
-        /// <paramref name="toAngle"/> (radians) at radius <paramref name="radius"/>.
-        /// <paramref name="segments"/> = 1 degenerates to a single flat-cut triangle (Bevel).
-        /// Samples angles via <see cref="SampleUnitCircle"/> (turns = angle / 2π) rather than
-        /// raw <c>MathF.Cos</c>/<c>MathF.Sin</c>, matching the class's "no trigonometry at draw
-        /// time" design tenet used by every other curved shape. "Raw" — assumes the caller
-        /// already reserved exactly the counts <see cref="JoinFanCounts"/> reports for
-        /// <paramref name="segments"/> via one upfront <see cref="Reserve"/> call; writes
-        /// directly at the batch's current position.
-        /// </summary>
+        // Emits a triangle fan of `segments` slices around `center`, sweeping from `fromAngle` to
+        // `toAngle` (radians) at radius `radius`. segments = 1 degenerates to a single flat-cut
+        // triangle (Bevel).
+        // "Raw" -- assumes the caller already reserved exactly the counts JoinFanCounts reports.
         private void EmitJoinFanRaw(Vector2 center, float radius, float fromAngle, float toAngle, int segments, Color color)
         {
             float step = (toAngle - fromAngle) / segments;
@@ -4679,14 +4202,7 @@ namespace MonoPrimitives.Primitives2D
         // SPLINES
         // ==================================================================
 
-        /// <summary>
-        /// Draws a linear spline (i.e. a connected polyline) through the given points, using
-        /// <see cref="LineJoin.Miter"/> joints — a thin alias for <see cref="DrawLineStrip(ReadOnlySpan{Vector2},float,Color,LineJoin,LineCap,float?)"/>
-        /// so every spline method in this section shares one name family. Draws one shared-vertex
-        /// strip, not independent per-segment lines: independent lines leave a gap/notch at
-        /// every bend once <paramref name="thickness"/> is non-trivial, since neither segment's
-        /// flat-cut end covers the wedge the OTHER segment's flat cut leaves open.
-        /// </summary>
+        /// <summary>Draws a linear spline (i.e. a connected polyline) through the given points, using <see cref="LineJoin.Miter"/> joints — a thin alias for <see cref="DrawLineStrip(ReadOnlySpan{Vector2},float,Color,LineJoin,LineCap,float?)"/>.</summary>
         public void DrawSplineLinear(ReadOnlySpan<Vector2> points, float thickness, Color color)
             => DrawSplineLinear(points, thickness, color, LineJoin.Miter);
 
@@ -4745,13 +4261,7 @@ namespace MonoPrimitives.Primitives2D
             return b1 * p1 + b2 * p2 + b3 * p3 + b4 * p4;
         }
 
-        /// <summary>
-        /// Draws a Catmull-Rom spline through the given control points. Requires at
-        /// least 4 points; the curve passes through points[1..length-2]. Samples the
-        /// curve once into a single shared-vertex strip (proper miter joins, no seams
-        /// between sub-segments), instead of drawing each sampled sub-segment as an
-        /// independent line.
-        /// </summary>
+        /// <summary>Draws a Catmull-Rom spline through the given control points. Requires at least 4 points; the curve passes through points[1..length-2].</summary>
         public void DrawSplineCatmullRom(ReadOnlySpan<Vector2> points, float thickness, Color color, int segmentsPerPiece = 16)
         {
             ThrowIfNotBegun();
@@ -4781,12 +4291,8 @@ namespace MonoPrimitives.Primitives2D
         /// sliding-window shape as <see cref="DrawSplineCatmullRom"/> (requires at least 4
         /// points), but the curve does NOT pass through them; see
         /// <see cref="GetSplinePointBasis"/> for why. Exposes <paramref name="join"/>/
-        /// <paramref name="cap"/>/<paramref name="jointRadius"/> the same way
-        /// <see cref="DrawSplineLinear(ReadOnlySpan{Vector2},float,Color,LineJoin,LineCap,float?)"/>
-        /// does, unlike <see cref="DrawSplineCatmullRom"/>/<see cref="DrawSplineBezierCubic"/>
-        /// (which only ever use the Miter default) -- with a smooth sampled curve, Round/Bevel
-        /// joins matter far less than on a sharp-angled polyline, but there's no reason not to
-        /// allow it since <see cref="BuildOutlineGeometry"/> already supports it either way.
+        /// <paramref name="cap"/>/<paramref name="jointRadius"/>, unlike
+        /// <see cref="DrawSplineCatmullRom"/>/<see cref="DrawSplineBezierCubic"/> (Miter only).
         /// </summary>
         public void DrawSplineBasis(ReadOnlySpan<Vector2> points, float thickness, Color color, int segmentsPerPiece = 16,
             LineJoin join = LineJoin.Miter, LineCap cap = LineCap.Butt, float? jointRadius = null)
@@ -4816,13 +4322,7 @@ namespace MonoPrimitives.Primitives2D
             BuildOutlineGeometry(samples, thickness, color, closed: false, join, cap, jointRadius);
         }
 
-        /// <summary>
-        /// Draws a cubic Bezier spline: [p1, c2, c3, p4, c5, c6, p7...].
-        /// Requires 3n+1 points for n cubic segments. Samples the curve once into a
-        /// single shared-vertex strip (proper miter joins, no seams between
-        /// sub-segments), instead of drawing each sampled sub-segment as an
-        /// independent line.
-        /// </summary>
+        /// <summary>Draws a cubic Bezier spline: [p1, c2, c3, p4, c5, c6, p7...]. Requires 3n+1 points for n cubic segments.</summary>
         public void DrawSplineBezierCubic(ReadOnlySpan<Vector2> points, float thickness, Color color, int segmentsPerPiece = 16)
         {
             ThrowIfNotBegun();

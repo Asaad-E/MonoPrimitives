@@ -19,19 +19,8 @@ namespace MonoPrimitives.Primitives2D
         /// <inheritdoc/>
         public override int VirtualHeight { get; }
 
-        /// <summary>
-        /// When true, <see cref="Scale"/> floors to the nearest whole number (minimum 1) instead of
-        /// a continuous fit. <see cref="Offset"/> centers it either way — nothing else to configure.
-        /// </summary>
-        /// <remarks>
-        /// A non-integer scale (e.g. 2.37x) draws some source pixels 2 screen pixels wide and
-        /// others 3 — fine for smooth art, but pixel art shimmers/distorts under it, since every
-        /// source pixel needs to become the exact same whole number of screen pixels. Flooring to
-        /// a whole number almost always leaves leftover space on BOTH axes now (not just the one
-        /// axis a continuous fit leaves bars on), so expect a border on all 4 sides rather than 2
-        /// opposite bars, except when the window size happens to be an exact multiple of the
-        /// virtual resolution.
-        /// </remarks>
+        /// <summary>When true, <see cref="Scale"/> floors to the nearest whole number (minimum 1) instead of a continuous fit, for crisp, non-shimmering pixel art.</summary>
+        /// <remarks>Expect a border on all 4 sides rather than 2 opposite bars — flooring the scale almost always leaves leftover space on both axes, not just the one a continuous fit bars.</remarks>
         public bool PixelPerfect { get; }
 
         /// <summary>Wraps <paramref name="device"/>, letterboxing a <paramref name="virtualWidth"/>×<paramref name="virtualHeight"/> virtual resolution into it.</summary>

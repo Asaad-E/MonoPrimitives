@@ -7,11 +7,7 @@ namespace MonoPrimitives
     /// Extension methods on MonoGame's own <see cref="Vector2"/> — everyday 2D vector math XNA's
     /// <see cref="Vector2"/>/<see cref="MathHelper"/> don't provide themselves.
     /// </summary>
-    /// <remarks>
-    /// Confirmed missing by comparison against <see cref="System.Numerics"/> and several other 2D
-    /// vector-math APIs. Part of <c>MonoPrimitives</c> — these show up on any
-    /// <see cref="Vector2"/> once this namespace is in scope, but they aren't native MonoGame members.
-    /// </remarks>
+    /// <remarks>Part of <c>MonoPrimitives</c> — these show up on any <see cref="Vector2"/> once this namespace is in scope, but they aren't native MonoGame members.</remarks>
     public static class Vector2Extensions
     {
         /// <summary>
@@ -56,13 +52,7 @@ namespace MonoPrimitives
         /// a positive angle, matching <see cref="AngleToSigned"/>'s sign convention) as a new vector,
         /// without modifying <paramref name="v"/> itself.
         /// </summary>
-        /// <remarks>
-        /// <see cref="Vector2"/>'s own <see cref="Vector2.Rotate(float)"/>/<see cref="Vector2.RotateAround(Vector2,float)"/>
-        /// instead mutate the vector in place (they return <c>void</c>), which only works on a
-        /// variable, not an expression or a value you want to keep the original of — named
-        /// <c>Rotated</c> rather than <c>Rotate</c> to avoid colliding with those and signal a
-        /// value-returning "give me a rotated copy" instead.
-        /// </remarks>
+        /// <remarks><see cref="Vector2.Rotate(float)"/>/<see cref="Vector2.RotateAround(Vector2,float)"/> mutate in place instead (return <c>void</c>) — named <c>Rotated</c> to avoid colliding with those.</remarks>
         public static Vector2 Rotated(this Vector2 v, float radians)
         {
             float cos = MathF.Cos(radians), sin = MathF.Sin(radians);

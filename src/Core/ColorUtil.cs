@@ -8,12 +8,7 @@ namespace MonoPrimitives
     /// Color conversions and adjustments that are awkward directly in RGB — hex strings, HSV,
     /// lightening/darkening/saturating, and a hue-aware lerp for vivid color-wheel transitions.
     /// </summary>
-    /// <remarks>
-    /// Hue is a normalized turn in [0,1) (0 = red, 1/3 = green, 2/3 = blue), matching this
-    /// project's own convention elsewhere for angle-like values (see <c>FillCircleSector</c>),
-    /// not degrees or radians. A hue-aware lerp exists because a straight RGB lerp between two
-    /// saturated hues muddies through gray on the way — see <see cref="LerpHSV"/>.
-    /// </remarks>
+    /// <remarks>Hue is a normalized turn in <c>[0,1)</c> (0 = red, 1/3 = green, 2/3 = blue), not degrees or radians.</remarks>
     public static class ColorUtil
     {
         // ---------------------------------------------------------------------
@@ -112,14 +107,7 @@ namespace MonoPrimitives
         // ---------------------------------------------------------------------
 
         /// <summary>Approximates the RGB color a blackbody radiator glows at <paramref name="kelvin"/> degrees — a candle flame around 1900K, daylight around 6500K, an overcast sky or a blue-white star well above 10000K.</summary>
-        /// <remarks>
-        /// Tanner Helland's widely-used polynomial fit to the CIE blackbody locus, not a physically
-        /// exact spectral calculation — accurate enough for fire/plasma/heatmap-style coloring, the
-        /// use case this exists for. <paramref name="kelvin"/> is clamped to <c>[1000, 40000]</c>, the
-        /// range the fit was derived over; outside it the approximation breaks down. Verified at the
-        /// reference points a blackbody curve is expected to hit: ~1000K comes out deep orange-red,
-        /// ~6600K comes out white, ~10000K/40000K come out progressively more blue.
-        /// </remarks>
+        /// <remarks>A polynomial fit to the blackbody curve, not a physically exact spectral calculation. <paramref name="kelvin"/> is clamped to <c>[1000, 40000]</c>, the range the fit was derived over.</remarks>
         public static Color FromTemperature(float kelvin, byte alpha = 255)
         {
             float temp = Math.Clamp(kelvin, 1000f, 40000f) / 100f;
@@ -178,7 +166,7 @@ namespace MonoPrimitives
             return FromHSV(h + 0.5f, s, v, color.A);
         }
 
-        /// <summary>Inverts each RGB channel (255 minus the value) — a photographic-negative effect, e.g. a hit-flash. Alpha is unchanged.</summary>
+        /// <summary>Inverts each RGB channel (255 minus the value) — a photographic-negative effect. Alpha is unchanged.</summary>
         public static Color Invert(Color color) => new((byte)(255 - color.R), (byte)(255 - color.G), (byte)(255 - color.B), color.A);
 
         /// <summary>
@@ -186,10 +174,7 @@ namespace MonoPrimitives
         /// in [-1,1]: 0 leaves the color unchanged, 1 doubles every channel's distance from the
         /// midpoint (clamped), -1 flattens every channel to exactly mid-gray.
         /// </summary>
-        /// <remarks>
-        /// Unlike <see cref="Saturate"/>/<see cref="Desaturate"/>, this operates directly on RGB,
-        /// not hue/value — a contrast pull can shift a color's apparent hue slightly, which is expected.
-        /// </remarks>
+        /// <remarks>Operates directly on RGB, not hue/value — a contrast pull can shift a color's apparent hue slightly, which is expected.</remarks>
         public static Color Contrast(Color color, float amount)
         {
             float factor = 1f + Math.Clamp(amount, -1f, 1f);
@@ -199,7 +184,7 @@ namespace MonoPrimitives
         private static byte ContrastChannel(byte channel, float factor)
             => (byte)Math.Clamp((channel / 255f - 0.5f) * factor * 255f + 127.5f, 0f, 255f);
 
-        /// <summary>Straight per-channel RGB lerp — a thin, discoverable pass-through to <see cref="Color.Lerp(Color,Color,float)"/>. For vivid hue-to-hue transitions instead of muddying through gray, use <see cref="LerpHSV"/>.</summary>
+        /// <summary>Straight per-channel RGB lerp — a thin pass-through to <see cref="Color.Lerp(Color,Color,float)"/>. Use <see cref="LerpHSV"/> instead for a vivid hue-to-hue transition.</summary>
         public static Color Lerp(Color a, Color b, float t) => Color.Lerp(a, b, t);
 
         /// <summary>
@@ -207,10 +192,6 @@ namespace MonoPrimitives
         /// the SHORT way around the wheel (e.g. red→violet goes backward through magenta, not
         /// forward through the whole spectrum) unless <paramref name="longWay"/> is set.
         /// </summary>
-        /// <remarks>
-        /// A straight RGB lerp from a saturated red to a saturated blue passes through a muddy
-        /// gray/purple at t=0.5; this sweeps the hue wheel instead to avoid that.
-        /// </remarks>
         public static Color LerpHSV(Color a, Color b, float t, bool longWay = false)
         {
             ToHSV(a, out float h1, out float s1, out float v1);
@@ -247,7 +228,7 @@ namespace MonoPrimitives
         // term on every /255 division rather than truncating, same rounding this library already
         // does when going float->byte elsewhere (see Primitives2D.cs's BarycentricColor).
 
-        /// <summary>Multiply blend: darkens -- the result is never lighter than either input. Like stacking two semi-transparent color filters.</summary>
+        /// <summary>Multiply blend: darkens -- the result is never lighter than either input.</summary>
         public static Color Multiply(Color a, Color b)
             => new(
                 (byte)((a.R * b.R + 127) / 255),
