@@ -49,6 +49,10 @@ The most important rule — this codebase is built mostly by an AI with no live 
 - Reasoning alone has missed real bugs here (tangent gaps, self-intersections, inverted normals invisible under flat shading, corner-overlap bugs). Don't skip verification for rotation, winding, per-corner radii, gradient offsets, or new trig.
 - `dotnet build` the real project (not just the scratch one) before calling anything done.
 
+## Commits
+
+Every commit message is exactly one line: `prefix: content` (e.g. `feat: add RandomUtil.NextWeightedIndex`). No body, no bullet list, no rationale appended below the subject — that goes in the relevant `Design/*.md` file instead.
+
 ## Scope discipline
 
 - No physics resolution, ever — see PROJECT.md.
