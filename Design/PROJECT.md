@@ -29,6 +29,7 @@ Shared (`Core/`, namespace `MonoPrimitives`):
 | Object pooling | `ObjectPool<T>` |
 | Fixed-capacity history | `RingBuffer<T>` |
 | Countdown timer | `Cooldown` (struct) |
+| Debug timing | `DebugTimer` (struct) |
 
 Per-namespace (not shared — genuinely different code):
 

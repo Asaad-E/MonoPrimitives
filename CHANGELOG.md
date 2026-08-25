@@ -6,6 +6,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versio
 
 ## [Unreleased]
 
+### Added
+- `DebugTimer` (struct, `IDisposable`) — times a `using` block and prints `[label] X.XX ms` to `Console` on dispose, with an optional divider line (`separator: true`) for marking a new group.
+
 ## [0.8.0] - 2026-08-25
 
 ### Added

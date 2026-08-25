@@ -48,6 +48,7 @@ namespace MonoPrimitives.Tests
             ObjectPoolTests.Run(results);
             RingBufferTests.Run(results);
             CooldownTests.Run(results);
+            DebugTimerTests.Run(results);
             ScreenshotUtilTests.Run(GraphicsDevice, results);
             ShapeTests2D.Run(GraphicsDevice, results);
             Primitive2DBatchLifecycleTests.Run(GraphicsDevice, results);
