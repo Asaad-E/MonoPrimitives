@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning follows [SemVer](https://semver.org/), with the pre-1.0 caveat that the API can still change between minor versions — see [ROADMAP.md](Design/ROADMAP.md).
 
-## [Unreleased]
+## [0.8.1] - 2026-08-25
 
 ### Added
 - `FrameLimiter.MaxFrameTime` (constructor param + live property, `0` = disabled) and `FrameTime` — `BeginFrame()` now returns real seconds since the previous call, clamped to `MaxFrameTime`.
@@ -173,4 +173,4 @@ Initial functional release. Core 2D/3D primitive drawing, camera, input, and mat
 - Viewport adapter offset bugs (stale read, `Apply()`+`GetScaleMatrix()` double-offset).
 - `Collision3D`'s ray-vs-box normal at large scale; `Noise.Sample1D`'s gradient degeneracy; `PrimitiveInput`'s drag-delta-on-release and double-click distance check.
 
-[Unreleased]: https://github.com/Asaad-E/MonoPrimitives/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/Asaad-E/MonoPrimitives/compare/v0.8.1...HEAD
