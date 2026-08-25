@@ -40,12 +40,18 @@ namespace MonoPrimitives
         /// <paramref name="to"/> — positive is counter-clockwise, matching <see cref="Rotated(Vector2,float)"/>'s own
         /// sign convention. Unlike <see cref="AngleTo"/>, this tells you which way to turn.
         /// </summary>
-        public static float AngleToSigned(this Vector2 from, Vector2 to)
-        {
-            float cross = from.X * to.Y - from.Y * to.X;
-            float dot = Vector2.Dot(from, to);
-            return MathF.Atan2(cross, dot);
-        }
+        public static float AngleToSigned(this Vector2 from, Vector2 to) => MathF.Atan2(from.Cross(to), from.Dot(to));
+
+        /// <summary>Fluent shorthand for <see cref="Vector2.Dot(Vector2,Vector2)"/> — MonoGame only exposes it as a static call.</summary>
+        public static float Dot(this Vector2 a, Vector2 b) => Vector2.Dot(a, b);
+
+        /// <summary>
+        /// The 2D cross product — the scalar Z component a 3D cross product of these two vectors
+        /// (extended into the XY plane) would have. Positive when <paramref name="b"/> is
+        /// counter-clockwise from <paramref name="a"/>, negative when clockwise, <c>0</c> when
+        /// parallel — a cheap "which side" / turn-direction / signed-area test.
+        /// </summary>
+        public static float Cross(this Vector2 a, Vector2 b) => a.X * b.Y - a.Y * b.X;
 
         /// <summary>
         /// Returns <paramref name="v"/> rotated by <paramref name="radians"/> (counter-clockwise for
@@ -110,6 +116,46 @@ namespace MonoPrimitives
         /// <summary>Removes the component of <paramref name="v"/> along <paramref name="normal"/>, keeping only the tangential part — the direction to keep moving along a wall/floor instead of stopping dead against it.</summary>
         /// <remarks><paramref name="normal"/> must already be unit length (not renormalized here, same convention as <see cref="Vector2.Reflect(Vector2,Vector2)"/>). Different from <see cref="Vector2.Reflect(Vector2,Vector2)"/>: <c>Reflect</c> flips the normal component (a bounce), <c>Slide</c> drops it entirely (a slide).</remarks>
         public static Vector2 Slide(this Vector2 v, Vector2 normal) => v - normal * Vector2.Dot(v, normal);
+
+        /// <summary>The component of <paramref name="v"/> parallel to <paramref name="onto"/> — <paramref name="v"/>'s "shadow" cast along that direction. <see cref="Vector2.Zero"/> if <paramref name="onto"/> is at or near the zero vector.</summary>
+        /// <remarks>Unlike <see cref="Slide"/>, <paramref name="onto"/> need not be unit length — this divides by its length internally, at the cost of that extra work every call.</remarks>
+        public static Vector2 Project(this Vector2 v, Vector2 onto)
+        {
+            float lenSq = onto.LengthSquared();
+            return lenSq < 1e-12f ? Vector2.Zero : onto * (v.Dot(onto) / lenSq);
+        }
+
+        // ---------------------------------------------------------------------
+        // Easing
+        // ---------------------------------------------------------------------
+
+        /// <summary>
+        /// Critically-damped spring smoothing — eases <paramref name="current"/> toward <paramref name="target"/> over roughly
+        /// <paramref name="smoothTime"/> seconds without overshoot across varying frame rates.
+        /// <paramref name="velocity"/> is state you own and pass back in every call (start at 0).
+        /// </summary>
+        public static float SmoothDamp(this float current, float target, ref float velocity, float smoothTime, float deltaTime)
+        {
+            smoothTime = MathF.Max(0.0001f, smoothTime);
+            float omega = 2f / smoothTime;
+            float x = omega * deltaTime;
+            float exp = 1f / (1f + x + 0.48f * x * x + 0.235f * x * x * x);
+            float change = current - target;
+            float temp = (velocity + omega * change) * deltaTime;
+            velocity = (velocity - omega * temp) * exp;
+            return target + (change + temp) * exp;
+        }
+
+        /// <summary>Component-wise <see cref="SmoothDamp(float,float,ref float,float,float)"/> for a <see cref="Vector2"/>.</summary>
+        public static Vector2 SmoothDamp(this Vector2 current, Vector2 target, ref Vector2 velocity, float smoothTime, float deltaTime)
+        {
+            float vx = velocity.X, vy = velocity.Y;
+            Vector2 result = new(
+                current.X.SmoothDamp(target.X, ref vx, smoothTime, deltaTime),
+                current.Y.SmoothDamp(target.Y, ref vy, smoothTime, deltaTime));
+            velocity = new Vector2(vx, vy);
+            return result;
+        }
     }
 
     /// <summary>Extension methods on MonoGame's own <see cref="GameTime"/>. Part of <c>MonoPrimitives</c>, not a native MonoGame member.</summary>

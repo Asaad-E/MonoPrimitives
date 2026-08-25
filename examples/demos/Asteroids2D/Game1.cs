@@ -15,7 +15,7 @@ namespace Asteroids2D;
 /// Small Asteroids demo: no menus, no pause, no music -- a thrusting/rotating ship, splitting
 /// asteroids, screen wrap. Movement reads <see cref="PrimitiveInput"/> directly, never the
 /// camera's own controller. The camera itself is hand-driven from ship state -- <see cref="Camera2D.FollowTarget"/>
-/// gives the "camera lags a little behind" feel, and <see cref="Camera2D.SmoothDamp(float,float,ref float,float,float)"/>
+/// gives the "camera lags a little behind" feel, and <see cref="Vector2Extensions.SmoothDamp(float,float,ref float,float,float)"/>
 /// eases <c>Zoom</c> out while thrusting -- both are just building blocks a game calls itself,
 /// not the "give me a whole controller" convenience this project deliberately keeps separate.
 /// Colorful on purpose (bright palette per asteroid/ship/bullet) rather than the original
@@ -247,7 +247,7 @@ public class Game1 : Game
         // Zoom out the faster the ship goes -- reads as "the world rushing past" while thrusting.
         float speedFraction = Math.Clamp(_shipVelocity.Length() / ShipMaxSpeed, 0f, 1f);
         float desiredZoom = MathHelper.Lerp(1f, 0.75f, speedFraction);
-        _camera2d.Zoom = Camera2D.SmoothDamp(_camera2d.Zoom, desiredZoom, ref _zoomVelocity, 0.35f, dt);
+        _camera2d.Zoom = _camera2d.Zoom.SmoothDamp(desiredZoom, ref _zoomVelocity, 0.35f, dt);
 
         // A little lag behind the ship instead of locking on exactly -- reinforces the sense of speed.
         _camera2d.FollowTarget(_shipPos, dt);

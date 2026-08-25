@@ -129,6 +129,40 @@ namespace MonoPrimitives.Tests
                 return null;
             });
 
+            results.Check("Vector3Extensions.Dot: fluent wrapper matches Vector3.Dot exactly", () =>
+            {
+                if (!CloseF(Vector3.UnitX.Dot(Vector3.UnitY), 0f)) return "Dot(+X,+Y) != 0";
+                if (!CloseF(Vector3.UnitX.Dot(Vector3.UnitX), 1f)) return "Dot(+X,+X) != 1";
+                Vector3 a = new(3, 4, -1), b = new(-2, 5, 2);
+                if (!CloseF(a.Dot(b), Vector3.Dot(a, b))) return "Dot(a,b) disagrees with Vector3.Dot(a,b)";
+                return null;
+            });
+
+            results.Check("Vector3Extensions.Project: parallel component only, complements Slide, safe at a zero 'onto'", () =>
+            {
+                if (!CloseV(new Vector3(3, 4, 5).Project(Vector3.UnitX), new Vector3(3, 0, 0))) return "Project onto +X should keep only the X component";
+                if (!CloseV(new Vector3(3, 4, 5).Project(Vector3.Zero), Vector3.Zero)) return "Project onto a zero vector should safely be Zero, not NaN";
+
+                Vector3 v = new(5, -2, 3);
+                Vector3 onto = new(3, 1, 0);
+                if (!CloseV(v.Project(onto), v.Project(onto * 10f))) return "Project should be invariant to the length of 'onto'";
+
+                Vector3 dir = Vector3.Normalize(new Vector3(1, 2, 2));
+                if (!CloseV(v.Project(dir) + v.Slide(dir), v)) return "Project(dir) + Slide(dir) didn't reconstruct the original vector";
+                return null;
+            });
+
+            results.Check("Vector3Extensions.SmoothDamp: converges to target over repeated steps, velocity ref is updated", () =>
+            {
+                Vector3 current = Vector3.Zero;
+                Vector3 velocity = Vector3.Zero;
+                Vector3 target = new(10, -5, 3);
+                for (int i = 0; i < 300; i++) current = current.SmoothDamp(target, ref velocity, 0.2f, 1f / 60f);
+                if (!CloseV(current, target, 0.01f)) return $"Vector3 SmoothDamp didn't converge, got {current}";
+                if (velocity.Length() > 0.5f) return $"velocity should have settled near 0 once converged, got {velocity}";
+                return null;
+            });
+
             results.Check("Vector3Extensions.Approach/ClampMagnitude/SafeNormalize don't collide with MonoGame's own native Vector3 members", () =>
             {
                 // MonoGame already ships Vector3.Reflect/Clamp/Lerp natively -- confirmed by reflection

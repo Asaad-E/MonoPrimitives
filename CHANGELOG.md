@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning follows [SemVer](https://semver.org/), with the pre-1.0 caveat that the API can still change between minor versions — see [ROADMAP.md](Design/ROADMAP.md).
 
+## [Unreleased]
+
+### Added
+- `Vector2Extensions`/`Vector3Extensions`: `Dot` (fluent wrapper — MonoGame only exposes it as a static call), `Project` (parallel-component projection, complementing the existing `Slide`), and 2D-only `Cross` (scalar cross product).
+
+### Changed
+- `SmoothDamp` moved from being duplicated on `Camera2D`/`Camera3D` to a single `Vector2Extensions.SmoothDamp` (`float`/`Vector2`) plus `Vector3Extensions.SmoothDamp` (`Vector3`) — `Camera2D`/`Camera3D` now call it as an extension instead of owning their own copy.
+
 ## [0.8.1] - 2026-08-25
 
 ### Added

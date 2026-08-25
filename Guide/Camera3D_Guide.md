@@ -100,7 +100,7 @@ Identical shape and API to `Camera2D`'s (see its guide for the full rationale) �
 - `FollowTarget` also has a box-deadzone overload — `FollowTarget(desiredPosition, deltaSeconds, deadZoneHalfSize, desiredTarget?)` — independent per-axis tolerance instead of `FollowPadding`'s radial one. Shares the same smoothing state as the plain overload; don't alternate between the two per frame.
 - `FitBounds(BoundingBox worldBounds, float padding = 0, Viewport? viewport = null)` sets state directly, no easing: in `Perspective`, moves `Position` along the current view direction to the distance a sphere of `worldBounds`' size needs to fully fit within `Fovy` on both axes; in `Orthographic`, grows `Fovy` (the world-height) to fit instead, keeping the existing distance. Good for "frame this whole scene/selection."
 
-`Camera3D.SmoothDamp(float current, float target, ref float velocity, float smoothTime, float deltaTime)` and its `Vector3` overload are the public static critically-damped-spring functions `FollowTarget`/`SmoothZoom` are built on — reach for them directly to ease any other float/`Vector3` value the same way.
+`FollowTarget`/`SmoothZoom` are built on `Vector2Extensions.SmoothDamp(this float, ...)`/`Vector3Extensions.SmoothDamp(this Vector3, ...)` — reach for those extensions directly (`value.SmoothDamp(target, ref velocity, smoothTime, deltaTime)`) to ease any other float/`Vector3` value the same way.
 
 ## Reset()
 

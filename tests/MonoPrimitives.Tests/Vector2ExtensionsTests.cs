@@ -126,6 +126,55 @@ namespace MonoPrimitives.Tests
                 return null;
             });
 
+            results.Check("Dot: fluent wrapper matches Vector2.Dot exactly", () =>
+            {
+                if (!CloseF(Vector2.UnitX.Dot(Vector2.UnitY), 0f)) return "Dot(+X,+Y) != 0";
+                if (!CloseF(Vector2.UnitX.Dot(Vector2.UnitX), 1f)) return "Dot(+X,+X) != 1";
+                Vector2 a = new(3, 4), b = new(-2, 5);
+                if (!CloseF(a.Dot(b), Vector2.Dot(a, b))) return "Dot(a,b) disagrees with Vector2.Dot(a,b)";
+                return null;
+            });
+
+            results.Check("Cross: 2D scalar cross product -- sign gives turn direction, 0 when parallel", () =>
+            {
+                if (!CloseF(Vector2.UnitX.Cross(Vector2.UnitY), 1f)) return "Cross(+X,+Y) should be +1 (CCW)";
+                if (!CloseF(Vector2.UnitY.Cross(Vector2.UnitX), -1f)) return "Cross(+Y,+X) should be -1 (CW)";
+                if (!CloseF(Vector2.UnitX.Cross(Vector2.UnitX), 0f)) return "Cross(v,v) should be 0";
+                if (!CloseF(new Vector2(2, 4).Cross(new Vector2(1, 2)), 0f)) return "Cross of parallel vectors should be 0";
+                return null;
+            });
+
+            results.Check("Project: parallel component only, complements Slide, safe at a zero 'onto'", () =>
+            {
+                if (!CloseV(new Vector2(3, 4).Project(Vector2.UnitX), new Vector2(3, 0))) return "Project onto +X should keep only the X component";
+                if (!CloseV(new Vector2(3, 4).Project(Vector2.Zero), Vector2.Zero)) return "Project onto a zero vector should safely be Zero, not NaN";
+
+                // onto needn't be unit length -- a scaled-up onto should give the identical projection.
+                Vector2 v = new(5, -2);
+                Vector2 onto = new(3, 1);
+                if (!CloseV(v.Project(onto), v.Project(onto * 10f))) return "Project should be invariant to the length of 'onto'";
+
+                // Project + Slide against the same unit-length direction reconstructs the original vector.
+                Vector2 dir = Vector2.Normalize(new Vector2(1, 2));
+                if (!CloseV(v.Project(dir) + v.Slide(dir), v)) return "Project(dir) + Slide(dir) didn't reconstruct the original vector";
+                return null;
+            });
+
+            results.Check("SmoothDamp (float and Vector2): converges to target over repeated steps, velocity ref is updated", () =>
+            {
+                float velocity = 0f;
+                float current = 0f;
+                for (int i = 0; i < 300; i++) current = current.SmoothDamp(10f, ref velocity, 0.2f, 1f / 60f);
+                if (!CloseF(current, 10f, 0.01f)) return $"float SmoothDamp didn't converge, got {current}";
+                if (MathF.Abs(velocity) > 0.5f) return $"velocity should have settled near 0 once converged, got {velocity}";
+
+                Vector2 vCurrent = Vector2.Zero;
+                Vector2 vVelocity = Vector2.Zero;
+                for (int i = 0; i < 300; i++) vCurrent = vCurrent.SmoothDamp(new Vector2(10, -5), ref vVelocity, 0.2f, 1f / 60f);
+                if (!CloseV(vCurrent, new Vector2(10, -5), 0.01f)) return $"Vector2 SmoothDamp didn't converge, got {vCurrent}";
+                return null;
+            });
+
             results.Check("GameTimeExtensions.GetElapsedTimeSeconds matches ElapsedGameTime.TotalSeconds", () =>
             {
                 var gt = new GameTime(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(0.016));

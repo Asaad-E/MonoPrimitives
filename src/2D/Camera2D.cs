@@ -275,7 +275,7 @@ namespace MonoPrimitives.Primitives2D
                 return;
             }
 
-            Target = SmoothDamp(Target, desiredTarget, ref _followVelocity, FollowSmoothTime, deltaSeconds);
+            Target = Target.SmoothDamp(desiredTarget, ref _followVelocity, FollowSmoothTime, deltaSeconds);
             ClampToBounds();
         }
 
@@ -291,7 +291,7 @@ namespace MonoPrimitives.Primitives2D
             if (MathF.Abs(delta.X) > deadZoneHalfSize.X) boxDesired.X = desiredTarget.X - MathF.Sign(delta.X) * deadZoneHalfSize.X;
             if (MathF.Abs(delta.Y) > deadZoneHalfSize.Y) boxDesired.Y = desiredTarget.Y - MathF.Sign(delta.Y) * deadZoneHalfSize.Y;
 
-            Target = SmoothDamp(Target, boxDesired, ref _followVelocity, FollowSmoothTime, deltaSeconds);
+            Target = Target.SmoothDamp(boxDesired, ref _followVelocity, FollowSmoothTime, deltaSeconds);
             ClampToBounds();
         }
 
@@ -355,7 +355,7 @@ namespace MonoPrimitives.Primitives2D
             target = Math.Clamp(target + delta, MinZoom, MaxZoom);
             _pendingZoomTarget = target;
 
-            Zoom = ZoomSmoothTime <= 0f ? target : SmoothDamp(Zoom, target, ref _zoomVelocity, ZoomSmoothTime, deltaSeconds);
+            Zoom = ZoomSmoothTime <= 0f ? target : Zoom.SmoothDamp(target, ref _zoomVelocity, ZoomSmoothTime, deltaSeconds);
 
             // Relative to target, capped at the plain 0.0005f used for a normal (~0.1-10) zoom
             // range -- a fixed absolute epsilon alone declares "settled" while still meaningfully
@@ -519,36 +519,5 @@ namespace MonoPrimitives.Primitives2D
             return (new Vector2(ox, oy), rot);
         }
 
-        // ---------------------------------------------------------------------
-        // Easing
-        // ---------------------------------------------------------------------
-
-        /// <summary>
-        /// Critically-damped spring smoothing — eases <paramref name="current"/> toward <paramref name="target"/> over roughly
-        /// <paramref name="smoothTime"/> seconds without overshoot across varying frame rates.
-        /// <paramref name="velocity"/> is state you own and pass back in every call (start at 0).
-        /// </summary>
-        public static float SmoothDamp(float current, float target, ref float velocity, float smoothTime, float deltaTime)
-        {
-            smoothTime = MathF.Max(0.0001f, smoothTime);
-            float omega = 2f / smoothTime;
-            float x = omega * deltaTime;
-            float exp = 1f / (1f + x + 0.48f * x * x + 0.235f * x * x * x);
-            float change = current - target;
-            float temp = (velocity + omega * change) * deltaTime;
-            velocity = (velocity - omega * temp) * exp;
-            return target + (change + temp) * exp;
-        }
-
-        /// <summary>Component-wise <see cref="SmoothDamp(float,float,ref float,float,float)"/> for a <see cref="Vector2"/>.</summary>
-        public static Vector2 SmoothDamp(Vector2 current, Vector2 target, ref Vector2 velocity, float smoothTime, float deltaTime)
-        {
-            float vx = velocity.X, vy = velocity.Y;
-            Vector2 result = new(
-                SmoothDamp(current.X, target.X, ref vx, smoothTime, deltaTime),
-                SmoothDamp(current.Y, target.Y, ref vy, smoothTime, deltaTime));
-            velocity = new Vector2(vx, vy);
-            return result;
-        }
     }
 }

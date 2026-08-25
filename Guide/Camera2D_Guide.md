@@ -113,7 +113,7 @@ camera.FollowTarget(player.Position, deltaSeconds, deadZoneHalfSize: new Vector2
 
 Shares the same smoothing-velocity state as the plain overload — don't alternate between the two per frame on the same camera.
 
-`Camera2D.SmoothDamp(float current, float target, ref float velocity, float smoothTime, float deltaTime)` and its `Vector2` overload are public static methods — reach for them directly on any float/`Vector2` value you want to ease the same way (a health bar filling in, a UI panel sliding into place), not just for the camera's own `Target`/`Zoom`.
+`Target`/`Zoom` are eased via `Vector2Extensions.SmoothDamp(this Vector2/float current, ...)` — reach for that extension directly (`value.SmoothDamp(target, ref velocity, smoothTime, deltaTime)`) on any float/`Vector2` value you want to ease the same way (a health bar filling in, a UI panel sliding into place), not just for the camera's own `Target`/`Zoom`.
 
 ## Smooth zoom
 

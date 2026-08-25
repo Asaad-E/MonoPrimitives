@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Xna.Framework;
+using MonoPrimitives;
 
 namespace MonoPrimitives.Primitives3D
 {
@@ -13,9 +14,12 @@ namespace MonoPrimitives.Primitives3D
         {
             float lenProduct = MathF.Sqrt(from.LengthSquared() * to.LengthSquared());
             if (lenProduct < 1e-12f) return 0f;
-            float cos = Math.Clamp(Vector3.Dot(from, to) / lenProduct, -1f, 1f);
+            float cos = Math.Clamp(from.Dot(to) / lenProduct, -1f, 1f);
             return MathF.Acos(cos);
         }
+
+        /// <summary>Fluent shorthand for <see cref="Vector3.Dot(Vector3,Vector3)"/> — MonoGame only exposes it as a static call.</summary>
+        public static float Dot(this Vector3 a, Vector3 b) => Vector3.Dot(a, b);
 
         /// <summary>Signed angle (radians, in <c>[-PI, PI]</c>) to rotate <paramref name="from"/> by around <paramref name="axis"/> to face <paramref name="to"/> — positive is counter-clockwise looking down <paramref name="axis"/> toward the origin (the right-hand rule, matching <see cref="Rotated"/>'s own sign convention).</summary>
         /// <remarks>
@@ -30,11 +34,11 @@ namespace MonoPrimitives.Primitives3D
         {
             Vector3 n = axis.SafeNormalize();
             if (n == Vector3.Zero) return 0f;
-            Vector3 fromFlat = (from - Vector3.Dot(from, n) * n).SafeNormalize();
-            Vector3 toFlat = (to - Vector3.Dot(to, n) * n).SafeNormalize();
+            Vector3 fromFlat = (from - from.Dot(n) * n).SafeNormalize();
+            Vector3 toFlat = (to - to.Dot(n) * n).SafeNormalize();
             if (fromFlat == Vector3.Zero || toFlat == Vector3.Zero) return 0f;
-            float cos = Math.Clamp(Vector3.Dot(fromFlat, toFlat), -1f, 1f);
-            float sin = Vector3.Dot(Vector3.Cross(fromFlat, toFlat), n);
+            float cos = Math.Clamp(fromFlat.Dot(toFlat), -1f, 1f);
+            float sin = Vector3.Cross(fromFlat, toFlat).Dot(n);
             return MathF.Atan2(sin, cos);
         }
 
@@ -84,6 +88,27 @@ namespace MonoPrimitives.Primitives3D
 
         /// <summary>Removes the component of <paramref name="v"/> along <paramref name="normal"/>, keeping only the tangential part — the direction to keep moving along a wall/floor/slope instead of stopping dead against it.</summary>
         /// <remarks><paramref name="normal"/> must already be unit length (not renormalized here, same convention as <see cref="Vector3.Reflect(Vector3,Vector3)"/>). Different from <see cref="Vector3.Reflect(Vector3,Vector3)"/>: <c>Reflect</c> flips the normal component (a bounce), <c>Slide</c> drops it entirely (a slide).</remarks>
-        public static Vector3 Slide(this Vector3 v, Vector3 normal) => v - normal * Vector3.Dot(v, normal);
+        public static Vector3 Slide(this Vector3 v, Vector3 normal) => v - normal * v.Dot(normal);
+
+        /// <summary>The component of <paramref name="v"/> parallel to <paramref name="onto"/> — <paramref name="v"/>'s "shadow" cast along that direction. <see cref="Vector3.Zero"/> if <paramref name="onto"/> is at or near the zero vector.</summary>
+        /// <remarks>Unlike <see cref="Slide"/>, <paramref name="onto"/> need not be unit length — this divides by its length internally, at the cost of that extra work every call.</remarks>
+        public static Vector3 Project(this Vector3 v, Vector3 onto)
+        {
+            float lenSq = onto.LengthSquared();
+            return lenSq < 1e-12f ? Vector3.Zero : onto * (v.Dot(onto) / lenSq);
+        }
+
+        /// <summary>Component-wise <see cref="MonoPrimitives.Vector2Extensions.SmoothDamp(float,float,ref float,float,float)"/> for a <see cref="Vector3"/>.</summary>
+        /// <remarks>For a single <c>float</c> (not a <see cref="Vector3"/>), use <see cref="MonoPrimitives.Vector2Extensions.SmoothDamp(float,float,ref float,float,float)"/> directly — it's already dimension-agnostic, so it isn't duplicated here.</remarks>
+        public static Vector3 SmoothDamp(this Vector3 current, Vector3 target, ref Vector3 velocity, float smoothTime, float deltaTime)
+        {
+            float vx = velocity.X, vy = velocity.Y, vz = velocity.Z;
+            Vector3 result = new(
+                current.X.SmoothDamp(target.X, ref vx, smoothTime, deltaTime),
+                current.Y.SmoothDamp(target.Y, ref vy, smoothTime, deltaTime),
+                current.Z.SmoothDamp(target.Z, ref vz, smoothTime, deltaTime));
+            velocity = new Vector3(vx, vy, vz);
+            return result;
+        }
     }
 }

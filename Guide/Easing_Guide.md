@@ -14,7 +14,7 @@ Vector2 position = Vector2.Lerp(start, end, eased);
 
 Every function takes `t` in `[0,1]` and returns a (usually, see below) `[0,1]`-ish value — clamp your own progress fraction before passing it in, then feed the result into a plain `Lerp` (`Vector2.Lerp`, `ColorUtil.Lerp`, `MathHelper.Lerp`, whatever you're tweening).
 
-`Easing` complements `Camera2D`/`Camera3D`'s own `SmoothDamp` rather than replacing it: `SmoothDamp` is a physical spring for open-ended following/zoom (no fixed end time, reacts continuously to a moving target); `Easing` is for a one-shot animation with a known start and duration.
+`Easing` complements `Vector2Extensions`/`Vector3Extensions`' `SmoothDamp` (what `Camera2D`/`Camera3D` use for following/zoom) rather than replacing it: `SmoothDamp` is a physical spring for open-ended following/zoom (no fixed end time, reacts continuously to a moving target); `Easing` is for a one-shot animation with a known start and duration.
 
 ## The families
 

@@ -27,6 +27,10 @@ position = position.Approach(target, speed * dt); // move toward target, landing
 | `Approach(target, maxDistance)` (`Vector2` and `float` overloads) | Moves toward `target` by at most `maxDistance`, landing exactly on it instead of overshooting — Godot's `move_toward`/Unity's `MoveTowards`. Negative `maxDistance` moves away from `target` instead. |
 | `ClampMagnitude(maxLength)` | Shrinks a vector to at most `maxLength`, preserving direction — a no-op if it's already shorter. |
 | `Slide(normal)` | Drops the component of `this` along `normal` (which must already be unit length), keeping only the tangential part — the classic "keep moving along the wall/floor you just hit" instead of stopping dead. Different from `Vector2.Reflect`: `Reflect` bounces (flips the normal component), `Slide` slides (drops it entirely). |
+| `Project(onto)` | The component of `this` parallel to `onto` — `Slide`'s complement (`v.Project(onto) + v.Slide(onto)` reconstructs `v` when `onto` is unit length). Unlike `Slide`, `onto` needn't be unit length. `Vector2.Zero` if `onto` is at or near zero. |
+| `Dot(other)` | Fluent shorthand for `Vector2.Dot(this, other)` — MonoGame only exposes `Dot` as a static call, not an instance method. |
+| `Cross(other)` | The 2D cross product (the scalar Z a 3D cross product would have) — positive when `other` is counter-clockwise from `this`, negative when clockwise, `0` when parallel. A cheap "which side"/turn-direction/signed-area test; Godot's `Vector2.cross`. |
+| `SmoothDamp(target, ref velocity, smoothTime, deltaTime)` (`Vector2` and `float` overloads) | Critically-damped spring smoothing — eases `this` toward `target` over roughly `smoothTime` seconds with no overshoot, independent of frame rate (same algorithm as Unity's `Mathf.SmoothDamp`). `velocity` is state you own and pass back in every call (start it at `0`). What `Camera2D`/`Camera3D`'s `FollowTarget`/`SmoothZoom` are built on — see `Guide/Camera2D_Guide.md`. |
 | `GameTimeExtensions.GetElapsedTimeSeconds()` | Shorthand for `(float)gameTime.ElapsedGameTime.TotalSeconds`. |
 
 ## Rotated, not Rotate
@@ -59,8 +63,13 @@ Vector3 clamped = velocity.ClampMagnitude(maxSpeed);      // cap length, keep di
 | `Approach(target, maxDistance)` | Moves toward `target` by at most `maxDistance`, landing exactly on it instead of overshooting — Godot's `move_toward`/Unity's `Vector3.MoveTowards`. Negative `maxDistance` moves away from `target` instead. |
 | `ClampMagnitude(maxLength)` | Shrinks a vector to at most `maxLength`, preserving direction — a no-op if it's already shorter. |
 | `Slide(normal)` | Drops the component of `this` along `normal` (unit length), keeping only the tangential part — sliding along a wall/floor/slope instead of stopping dead against it. Same `Reflect` vs. `Slide` distinction as the 2D version. |
+| `Project(onto)` | The component of `this` parallel to `onto` — `Slide`'s complement. Unlike `Slide`, `onto` needn't be unit length. `Vector3.Zero` if `onto` is at or near zero. |
+| `Dot(other)` | Fluent shorthand for `Vector3.Dot(this, other)` — MonoGame only exposes `Dot` as a static call, not an instance method. |
+| `SmoothDamp(target, ref velocity, smoothTime, deltaTime)` | Critically-damped spring smoothing — eases `this` toward `target` over roughly `smoothTime` seconds with no overshoot, independent of frame rate (same algorithm as Unity's `Mathf.SmoothDamp`). `velocity` is state you own and pass back in every call (start it at `0`). What `Camera3D`'s `FollowTarget`/`SmoothZoom` are built on — see `Guide/Camera3D_Guide.md`. |
 
-**No `float` overload of `Approach` here** — reuse `MonoPrimitives.Vector2Extensions`'s own `Approach(float, float, float)` directly (`using MonoPrimitives;`); it's already dimension-agnostic (plain 1D scalar math, nothing 2D-specific about it), and duplicating it in this namespace too would make any call site with both namespaces in scope ambiguous (`CS0121`) instead of picking one.
+**No `float` overload of `Approach`/`SmoothDamp` here** — reuse `MonoPrimitives.Vector2Extensions`'s own `Approach(float, float, float)`/`SmoothDamp(float, float, ref float, float, float)` directly (`using MonoPrimitives;`); both are already dimension-agnostic (plain 1D scalar math, nothing 2D-specific about it), and duplicating them in this namespace too would make any call site with both namespaces in scope ambiguous (`CS0121`) instead of picking one.
+
+**No `Cross` here** — a 3D cross product is already a full `Vector3` (`Vector3.Cross`, native to MonoGame), unlike 2D's cross product, which collapses to a single scalar and so has no native MonoGame equivalent to call.
 
 **No `Reflect`** — MonoGame's own `Vector3.Reflect(vector, normal)` already exists natively (confirmed by inspecting the referenced assembly, not assumed), so it isn't repeated here. Same for `Clamp`/`Lerp`/`SmoothStep` and friends.
 

@@ -712,7 +712,7 @@ namespace MonoPrimitives.Primitives3D
 
             float newDistance = ZoomSmoothTime <= 0f
                 ? target
-                : SmoothDamp(current, target, ref _zoomVelocity, ZoomSmoothTime, deltaSeconds);
+                : current.SmoothDamp(target, ref _zoomVelocity, ZoomSmoothTime, deltaSeconds);
 
             Position = Target - Forward * MathF.Max(newDistance, 0.001f);
 
@@ -746,11 +746,11 @@ namespace MonoPrimitives.Primitives3D
                 return; // inside the deadzone: hold still
             }
 
-            Vector3 newPosition = SmoothDamp(Position, desiredPosition, ref _followVelocity, FollowSmoothTime, deltaSeconds);
+            Vector3 newPosition = Position.SmoothDamp(desiredPosition, ref _followVelocity, FollowSmoothTime, deltaSeconds);
             Vector3 delta = newPosition - Position;
             Position = newPosition;
             Target = desiredTarget.HasValue
-                ? SmoothDamp(Target, desiredTarget.Value, ref _followTargetVelocity, FollowSmoothTime, deltaSeconds)
+                ? Target.SmoothDamp(desiredTarget.Value, ref _followTargetVelocity, FollowSmoothTime, deltaSeconds)
                 : Target + delta;
 
             ClampToBounds();
@@ -770,11 +770,11 @@ namespace MonoPrimitives.Primitives3D
             if (MathF.Abs(delta.Y) > deadZoneHalfSize.Y) boxDesired.Y = desiredPosition.Y - MathF.Sign(delta.Y) * deadZoneHalfSize.Y;
             if (MathF.Abs(delta.Z) > deadZoneHalfSize.Z) boxDesired.Z = desiredPosition.Z - MathF.Sign(delta.Z) * deadZoneHalfSize.Z;
 
-            Vector3 newPosition = SmoothDamp(Position, boxDesired, ref _followVelocity, FollowSmoothTime, deltaSeconds);
+            Vector3 newPosition = Position.SmoothDamp(boxDesired, ref _followVelocity, FollowSmoothTime, deltaSeconds);
             Vector3 moveDelta = newPosition - Position;
             Position = newPosition;
             Target = desiredTarget.HasValue
-                ? SmoothDamp(Target, desiredTarget.Value, ref _followTargetVelocity, FollowSmoothTime, deltaSeconds)
+                ? Target.SmoothDamp(desiredTarget.Value, ref _followTargetVelocity, FollowSmoothTime, deltaSeconds)
                 : Target + moveDelta;
 
             ClampToBounds();
@@ -850,37 +850,6 @@ namespace MonoPrimitives.Primitives3D
             Vector3 offset = clamped - Position;
             Position = clamped;
             Target += offset; // keep looking the same relative direction, don't reorient on clamp
-        }
-
-        // =====================================================================
-        // Easing (generic — usable for the camera's own smoothing above, or for
-        // any other value you want to ease, e.g. a FOV transition)
-        // =====================================================================
-
-        /// <summary>Critically-damped spring smoothing — eases <paramref name="current"/> toward <paramref name="target"/> over roughly <paramref name="smoothTime"/> seconds.</summary>
-        /// <remarks>No overshoot/oscillation under varying frame rates. <paramref name="velocity"/> is state you own and pass back in every call (start it at 0).</remarks>
-        public static float SmoothDamp(float current, float target, ref float velocity, float smoothTime, float deltaTime)
-        {
-            smoothTime = MathF.Max(0.0001f, smoothTime);
-            float omega = 2f / smoothTime;
-            float x = omega * deltaTime;
-            float exp = 1f / (1f + x + 0.48f * x * x + 0.235f * x * x * x);
-            float change = current - target;
-            float temp = (velocity + omega * change) * deltaTime;
-            velocity = (velocity - omega * temp) * exp;
-            return target + (change + temp) * exp;
-        }
-
-        /// <summary>Component-wise <see cref="SmoothDamp(float,float,ref float,float,float)"/> for a <see cref="Vector3"/>.</summary>
-        public static Vector3 SmoothDamp(Vector3 current, Vector3 target, ref Vector3 velocity, float smoothTime, float deltaTime)
-        {
-            float vx = velocity.X, vy = velocity.Y, vz = velocity.Z;
-            Vector3 result = new(
-                SmoothDamp(current.X, target.X, ref vx, smoothTime, deltaTime),
-                SmoothDamp(current.Y, target.Y, ref vy, smoothTime, deltaTime),
-                SmoothDamp(current.Z, target.Z, ref vz, smoothTime, deltaTime));
-            velocity = new Vector3(vx, vy, vz);
-            return result;
         }
 
         // ---------------------------------------------------------------------
