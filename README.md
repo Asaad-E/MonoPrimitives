@@ -146,7 +146,7 @@ None of the above are dependencies — MonoPrimitives only depends on MonoGame i
 
 ## Status
 
-Published on NuGet, pre-1.0 — the API can still change between minor versions as gaps get closed. See [`Design/ROADMAP.md`](Design/ROADMAP.md) for known gaps and deliberate deferrals.
+Published on NuGet, pre-1.0 — the API can still change between minor versions as gaps get closed. See [`Design/ROADMAP.md`](Design/ROADMAP.md) for known gaps and deliberate deferrals, and [`CHANGELOG.md`](CHANGELOG.md) for what changed in each version.
 
 ## License
 

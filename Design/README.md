@@ -52,6 +52,7 @@ MonogameLibs/
 ├── templates/PrimitiveBase/   — dotnet new template; deliberately outside MonoPrimitives.slnx (see below)
 ├── Design/          — you are here
 ├── Guide/           — actively-maintained per-topic user guides (see "Deeper reference" above)
+├── CHANGELOG.md     — curated, per-version release notes (Keep a Changelog format)
 └── MonoPrimitives.slnx
 ```
 
