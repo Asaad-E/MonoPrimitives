@@ -32,14 +32,15 @@ namespace MonoPrimitives.Primitives3D
         }
     }
 
-    /// <summary>
-    /// 3D collision/raycast utilities. Sphere/box/ray tests already exist natively on
-    /// MonoGame's own <see cref="BoundingSphere"/>/<see cref="BoundingBox"/>/<see cref="Ray"/>
-    /// (<c>.Intersects(...)</c>) — those are wrapped here only for a consistent name and
-    /// the unified <see cref="RayCollision3D"/> result (point + normal, not just a distance).
-    /// The genuinely new part: <b>capsule</b> collision — a shape this library draws
+    /// <summary>3D collision/raycast utilities.</summary>
+    /// <remarks>
+    /// Sphere/box/ray tests already exist natively on MonoGame's own
+    /// <see cref="BoundingSphere"/>/<see cref="BoundingBox"/>/<see cref="Ray"/>
+    /// (<c>.Intersects(...)</c>) — those are wrapped here only for a consistent name and the
+    /// unified <see cref="RayCollision3D"/> result (point + normal, not just a distance). The
+    /// genuinely new part: <b>capsule</b> collision — a shape this library draws
     /// (<c>FillCapsule</c>) that MonoGame has no bounding type for at all.
-    /// </summary>
+    /// </remarks>
     public static class Collision3D
     {
         // ---------------------------------------------------------------------
@@ -77,17 +78,15 @@ namespace MonoPrimitives.Primitives3D
             return Vector3.DistanceSquared(closest, sphereCenter) <= radiusSum * radiusSum;
         }
 
-        /// <summary>
-        /// Capsule vs axis-aligned box overlap (new — no MonoGame equivalent, and not in raylib
-        /// either, which has no capsule collision math at all beyond drawing). True if the
-        /// shortest distance between the capsule's own central segment and <paramref name="box"/>
-        /// is within <paramref name="radius"/>. The segment-to-box distance itself has no simple
-        /// closed form (unlike point-to-box, which is a single per-axis clamp) — minimized here
-        /// via ternary search over the segment's parameter <c>t</c>, valid because distance from
-        /// a fixed point on the segment to the box is convex in <c>t</c> (a sum of per-axis
-        /// clamped-linear terms, each convex), so the whole function has one minimum, no local
-        /// traps to fall into.
-        /// </summary>
+        /// <summary>Capsule vs axis-aligned box overlap (new — no MonoGame equivalent). True if the shortest distance between the capsule's own central segment and <paramref name="box"/> is within <paramref name="radius"/>.</summary>
+        /// <remarks>
+        /// No comparable capsule collision math found elsewhere beyond drawing. The
+        /// segment-to-box distance itself has no simple closed form (unlike point-to-box, which is
+        /// a single per-axis clamp) — minimized here via ternary search over the segment's
+        /// parameter <c>t</c>, valid because distance from a fixed point on the segment to the box
+        /// is convex in <c>t</c> (a sum of per-axis clamped-linear terms, each convex), so the
+        /// whole function has one minimum, no local traps to fall into.
+        /// </remarks>
         public static bool CheckCollisionCapsuleBox(Vector3 start, Vector3 end, float radius, BoundingBox box)
         {
             float radiusSq = radius * radius;
@@ -178,12 +177,8 @@ namespace MonoPrimitives.Primitives3D
             return new RayCollision3D(true, t, point, normal);
         }
 
-        /// <summary>
-        /// Ray vs a planar quad, given its 4 corners in order (<c>p1 -&gt; p2 -&gt; p3 -&gt; p4</c>,
-        /// same winding <see cref="Primitive3DBatch.FillPlane(Vector3,Vector2,Color)"/> uses). Tested
-        /// as two triangles (<c>p1,p2,p3</c> and <c>p1,p3,p4</c>); returns whichever one the ray
-        /// actually hits.
-        /// </summary>
+        /// <summary>Ray vs a planar quad, given its 4 corners in order (<c>p1 -&gt; p2 -&gt; p3 -&gt; p4</c>, same winding <see cref="Primitive3DBatch.FillPlane(Vector3,Vector2,Color)"/> uses).</summary>
+        /// <remarks>Tested as two triangles (<c>p1,p2,p3</c> and <c>p1,p3,p4</c>); returns whichever one the ray actually hits.</remarks>
         public static RayCollision3D GetRayCollisionQuad(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4)
         {
             RayCollision3D hit = GetRayCollisionTriangle(ray, p1, p2, p3);

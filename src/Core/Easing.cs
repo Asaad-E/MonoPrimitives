@@ -2,6 +2,73 @@ using System;
 
 namespace MonoPrimitives
 {
+    /// <summary>Names every curve <see cref="Easing"/> exposes, for picking one as data (a level/config file, a debug UI dropdown) instead of a function reference.</summary>
+    public enum EasingType
+    {
+        /// <summary>See <see cref="Easing.Linear"/>.</summary>
+        Linear,
+        /// <summary>See <see cref="Easing.QuadIn"/>.</summary>
+        QuadIn,
+        /// <summary>See <see cref="Easing.QuadOut"/>.</summary>
+        QuadOut,
+        /// <summary>See <see cref="Easing.QuadInOut"/>.</summary>
+        QuadInOut,
+        /// <summary>See <see cref="Easing.CubicIn"/>.</summary>
+        CubicIn,
+        /// <summary>See <see cref="Easing.CubicOut"/>.</summary>
+        CubicOut,
+        /// <summary>See <see cref="Easing.CubicInOut"/>.</summary>
+        CubicInOut,
+        /// <summary>See <see cref="Easing.QuartIn"/>.</summary>
+        QuartIn,
+        /// <summary>See <see cref="Easing.QuartOut"/>.</summary>
+        QuartOut,
+        /// <summary>See <see cref="Easing.QuartInOut"/>.</summary>
+        QuartInOut,
+        /// <summary>See <see cref="Easing.QuintIn"/>.</summary>
+        QuintIn,
+        /// <summary>See <see cref="Easing.QuintOut"/>.</summary>
+        QuintOut,
+        /// <summary>See <see cref="Easing.QuintInOut"/>.</summary>
+        QuintInOut,
+        /// <summary>See <see cref="Easing.CircIn"/>.</summary>
+        CircIn,
+        /// <summary>See <see cref="Easing.CircOut"/>.</summary>
+        CircOut,
+        /// <summary>See <see cref="Easing.CircInOut"/>.</summary>
+        CircInOut,
+        /// <summary>See <see cref="Easing.ExpoIn"/>.</summary>
+        ExpoIn,
+        /// <summary>See <see cref="Easing.ExpoOut"/>.</summary>
+        ExpoOut,
+        /// <summary>See <see cref="Easing.ExpoInOut"/>.</summary>
+        ExpoInOut,
+        /// <summary>See <see cref="Easing.SineIn"/>.</summary>
+        SineIn,
+        /// <summary>See <see cref="Easing.SineOut"/>.</summary>
+        SineOut,
+        /// <summary>See <see cref="Easing.SineInOut"/>.</summary>
+        SineInOut,
+        /// <summary>See <see cref="Easing.BackIn"/>.</summary>
+        BackIn,
+        /// <summary>See <see cref="Easing.BackOut"/>.</summary>
+        BackOut,
+        /// <summary>See <see cref="Easing.BackInOut"/>.</summary>
+        BackInOut,
+        /// <summary>See <see cref="Easing.BounceIn"/>.</summary>
+        BounceIn,
+        /// <summary>See <see cref="Easing.BounceOut"/>.</summary>
+        BounceOut,
+        /// <summary>See <see cref="Easing.BounceInOut"/>.</summary>
+        BounceInOut,
+        /// <summary>See <see cref="Easing.ElasticIn"/>.</summary>
+        ElasticIn,
+        /// <summary>See <see cref="Easing.ElasticOut"/>.</summary>
+        ElasticOut,
+        /// <summary>See <see cref="Easing.ElasticInOut"/>.</summary>
+        ElasticInOut,
+    }
+
     /// <summary>
     /// Classic 0→1 tweening curves for one-shot animations with a known duration — a menu
     /// sliding in, an object scaling up, a color fading out.
@@ -13,6 +80,44 @@ namespace MonoPrimitives
     /// </remarks>
     public static class Easing
     {
+        /// <summary>Evaluates the curve named by <paramref name="type"/> at <paramref name="t"/> — dispatches to the matching method below.</summary>
+        /// <remarks>For picking a curve as data (see <see cref="EasingType"/>) rather than calling it directly. Prefer calling the named method (<see cref="CubicOut"/>, etc.) instead when the curve is already known at compile time — this adds a switch dispatch on top.</remarks>
+        public static float Evaluate(EasingType type, float t) => type switch
+        {
+            EasingType.Linear => Linear(t),
+            EasingType.QuadIn => QuadIn(t),
+            EasingType.QuadOut => QuadOut(t),
+            EasingType.QuadInOut => QuadInOut(t),
+            EasingType.CubicIn => CubicIn(t),
+            EasingType.CubicOut => CubicOut(t),
+            EasingType.CubicInOut => CubicInOut(t),
+            EasingType.QuartIn => QuartIn(t),
+            EasingType.QuartOut => QuartOut(t),
+            EasingType.QuartInOut => QuartInOut(t),
+            EasingType.QuintIn => QuintIn(t),
+            EasingType.QuintOut => QuintOut(t),
+            EasingType.QuintInOut => QuintInOut(t),
+            EasingType.CircIn => CircIn(t),
+            EasingType.CircOut => CircOut(t),
+            EasingType.CircInOut => CircInOut(t),
+            EasingType.ExpoIn => ExpoIn(t),
+            EasingType.ExpoOut => ExpoOut(t),
+            EasingType.ExpoInOut => ExpoInOut(t),
+            EasingType.SineIn => SineIn(t),
+            EasingType.SineOut => SineOut(t),
+            EasingType.SineInOut => SineInOut(t),
+            EasingType.BackIn => BackIn(t),
+            EasingType.BackOut => BackOut(t),
+            EasingType.BackInOut => BackInOut(t),
+            EasingType.BounceIn => BounceIn(t),
+            EasingType.BounceOut => BounceOut(t),
+            EasingType.BounceInOut => BounceInOut(t),
+            EasingType.ElasticIn => ElasticIn(t),
+            EasingType.ElasticOut => ElasticOut(t),
+            EasingType.ElasticInOut => ElasticInOut(t),
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
+        };
+
         /// <summary>No easing — passes <paramref name="t"/> through unchanged. The baseline every other curve bends away from.</summary>
         public static float Linear(float t) => t;
 

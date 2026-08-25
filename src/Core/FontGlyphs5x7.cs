@@ -169,12 +169,12 @@ namespace MonoPrimitives
         public static float AdvanceFor(char c, float pixelSize, float glyphSpacing)
             => c == ' ' ? (GlyphWidth * SpaceWidthScale + glyphSpacing) * pixelSize : (GlyphWidth + glyphSpacing) * pixelSize;
 
-        /// <summary>
-        /// Total (width, height) a renderer using this font would occupy for <paramref name="text"/>,
-        /// already scaled by <paramref name="pixelSize"/> — pure layout math shared by both
-        /// libraries' <c>MeasureText</c>. Width is in the same unit as height (screen pixels for
-        /// the 2D renderer, world units along a billboard's own axes for the 3D one).
-        /// </summary>
+        /// <summary>Total (width, height) a renderer using this font would occupy for <paramref name="text"/>, already scaled by <paramref name="pixelSize"/>.</summary>
+        /// <remarks>
+        /// Pure layout math shared by both libraries' <c>MeasureText</c>. Width is in the same
+        /// unit as height (screen pixels for the 2D renderer, world units along a billboard's
+        /// own axes for the 3D one).
+        /// </remarks>
         public static (float Width, float Height) MeasureText(string text, float pixelSize, float glyphSpacing, float lineSpacing)
         {
             if (string.IsNullOrEmpty(text) || pixelSize <= 0f) return (0f, 0f);

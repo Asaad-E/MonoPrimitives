@@ -12,9 +12,9 @@ namespace MonoPrimitives.Primitives2D
     /// actual window size; <see cref="GetScaleMatrix"/> maps that virtual space onto the window.
     /// </summary>
     /// <remarks>
-    /// The same family MonoGame.Extended offers (<c>DefaultViewportAdapter</c>/<c>BoxingViewportAdapter</c>/
-    /// <c>ScalingViewportAdapter</c>/<c>WindowViewportAdapter</c>), folded into this library so a
-    /// prototype doesn't need the Extended package just for resolution independence.
+    /// A family of adapters (<see cref="DefaultViewportAdapter2D"/>/<see cref="BoxingViewportAdapter2D"/>/
+    /// <see cref="ScalingViewportAdapter2D"/>/<see cref="WindowViewportAdapter2D"/>) so a
+    /// prototype gets resolution independence with no extra package.
     /// <see cref="Camera2D"/> folds this in automatically when constructed with an adapter —
     /// <c>camera.GetTransformMatrix()</c> alone is enough to pass into <c>Primitive2DBatch.Begin</c>.
     /// </remarks>

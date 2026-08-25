@@ -6,15 +6,15 @@ using MonoPrimitives.Primitives2D;
 
 namespace MonoPrimitives.Primitives3D
 {
-    /// <summary>
-    /// Immediate-mode 3D primitive batcher. Every primitive (including lines and points) is
-    /// converted to triangles so that a single vertex buffer / draw path is used.
-    /// <para>
-    /// The batch is fully non-invasive: all graphics device state it modifies is
-    /// captured on <see cref="Begin(Camera3D,BlendState?,DepthStencilState?,RasterizerState?,Matrix?)"/> and restored on <see cref="End"/>, so it can
-    /// be interleaved with <see cref="SpriteBatch"/> or custom 3D rendering.
-    /// </para>
-    /// </summary>
+    /// <summary>Immediate-mode 3D primitive batcher for lines, points, and filled shapes.</summary>
+    /// <remarks>
+    /// Every primitive (including lines and points) is converted to triangles so that a single
+    /// vertex buffer / draw path is used. The batch is fully non-invasive: all graphics device
+    /// state it modifies is captured on
+    /// <see cref="Begin(Camera3D,BlendState?,DepthStencilState?,RasterizerState?,Matrix?)"/> and
+    /// restored on <see cref="End"/>, so it can be interleaved with <see cref="SpriteBatch"/> or
+    /// custom 3D rendering.
+    /// </remarks>
     public sealed partial class Primitive3DBatch : IDisposable
     {
         // ---------------------------------------------------------------------
@@ -109,17 +109,17 @@ namespace MonoPrimitives.Primitives3D
         // Properties
         // ---------------------------------------------------------------------
 
-        /// <summary>
-        /// The <see cref="BasicEffect"/> this batch draws with — constructed internally, so this
-        /// is the only way to reach it (the same "escape hatch to the thing this class wraps"
-        /// shape as <see cref="RandomUtil.UnderlyingRandom"/>). Tweak parameters this batch's own
-        /// API has no dedicated call for — <see cref="BasicEffect.Alpha"/> for a global fade, a
-        /// custom <see cref="BasicEffect.FogEnabled"/> setup, etc. Don't change
+        /// <summary>The <see cref="BasicEffect"/> this batch draws with — constructed internally, so this is the only way to reach it.</summary>
+        /// <remarks>
+        /// The same "escape hatch to the thing this class wraps" shape as
+        /// <see cref="RandomUtil.UnderlyingRandom"/>. Tweak parameters this batch's own API has no
+        /// dedicated call for — <see cref="BasicEffect.Alpha"/> for a global fade, a custom
+        /// <see cref="BasicEffect.FogEnabled"/> setup, etc. Don't change
         /// <see cref="BasicEffect.VertexColorEnabled"/>, <see cref="BasicEffect.TextureEnabled"/>,
         /// or <see cref="BasicEffect.World"/> — this batch depends on those staying exactly as
         /// constructed. <see cref="LightingEnabled"/> is this batch's own opt-in flat-shading
         /// switch, not the same thing as this effect's own (always-off) built-in lighting.
-        /// </summary>
+        /// </remarks>
         public BasicEffect Effect => _effect;
 
         /// <summary>Vertices currently buffered and not yet flushed.</summary>
@@ -137,12 +137,8 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>Total Lines submitted since the last <see cref="Begin(Camera3D,BlendState?,DepthStencilState?,RasterizerState?,Matrix?)"/>.</summary>
         public int LinesSubmitted { get; private set; }
 
-        /// <summary>
-        /// When <c>true</c>, line primitives are expanded into screen-facing quads
-        /// (billboarded ribbons) which are noticeably smoother than 1px hardware
-        /// lines and honour <see cref="DefaultLineThickness"/>. When <c>false</c>,
-        /// lines are drawn as thin camera-facing quads of a fixed world width.
-        /// </summary>
+        /// <summary>When <c>true</c>, line primitives are expanded into screen-facing quads (billboarded ribbons) honouring <see cref="DefaultLineThickness"/>; when <c>false</c>, lines are thin camera-facing quads of a fixed world width.</summary>
+        /// <remarks>Billboarded ribbons are noticeably smoother than 1px hardware lines.</remarks>
         public bool SmoothLines { get; set; } = true;
 
         /// <summary>
@@ -161,16 +157,15 @@ namespace MonoPrimitives.Primitives3D
         // Basic lighting (flat shading, no vertex format change)
         // ---------------------------------------------------------------------
 
-        /// <summary>
-        /// When enabled, filled surfaces (Cube/Sphere/Cylinder/Capsule/Torus/Plane/
-        /// FillTriangle3D/FillCircle3D) are flat-shaded: each triangle/quad's own
-        /// face normal (from its own points, via cross product — no stored per-vertex
-        /// normals, so the vertex format stays untouched) is dotted against
-        /// <see cref="LightDirection"/> and used to darken the face's color
-        /// toward <see cref="AmbientLight"/>. Off by default — zero behavior change
-        /// for existing callers. Lines, points and the grid are never shaded (a
-        /// camera-facing line quad has no meaningful surface normal to light).
-        /// </summary>
+        /// <summary>When enabled, filled surfaces (Cube/Sphere/Cylinder/Capsule/Torus/Plane/FillTriangle3D/FillCircle3D) are flat-shaded based on <see cref="LightDirection"/> and <see cref="AmbientLight"/>. Off by default.</summary>
+        /// <remarks>
+        /// Each triangle/quad's own face normal (from its own points, via cross product — no
+        /// stored per-vertex normals, so the vertex format stays untouched) is dotted against
+        /// <see cref="LightDirection"/> and used to darken the face's color toward
+        /// <see cref="AmbientLight"/>. Off by default means zero behavior change for existing
+        /// callers. Lines, points and the grid are never shaded (a camera-facing line quad has no
+        /// meaningful surface normal to light).
+        /// </remarks>
         public bool LightingEnabled { get; set; } = false;
 
         /// <summary>Direction the light travels (not the direction *to* the light). Normalized on set.</summary>
@@ -216,13 +211,13 @@ namespace MonoPrimitives.Primitives3D
             PushTriangle(a, b, c, Shade(normal, color));
         }
 
-        /// <summary>
-        /// Appends a lit quad using an explicit, caller-supplied normal instead of deriving
-        /// one from the quad's own edges. Needed wherever two of the four corners can
-        /// coincide (a sphere/hemisphere pole ring) — the edge-cross-product normal goes
-        /// zero-length there and <see cref="Vector3.Normalize(Vector3)"/> turns that into NaN, which
-        /// then blackens the whole quad once it reaches <see cref="Shade"/>.
-        /// </summary>
+        /// <summary>Appends a lit quad using an explicit, caller-supplied normal instead of deriving one from the quad's own edges.</summary>
+        /// <remarks>
+        /// Needed wherever two of the four corners can coincide (a sphere/hemisphere pole ring) —
+        /// the edge-cross-product normal goes zero-length there and
+        /// <see cref="Vector3.Normalize(Vector3)"/> turns that into NaN, which then blackens the
+        /// whole quad once it reaches <see cref="Shade"/>.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void PushQuadLit(in Vector3 a, in Vector3 b, in Vector3 c, in Vector3 d, in Vector3 normal, in Color color)
         {
@@ -234,17 +229,17 @@ namespace MonoPrimitives.Primitives3D
         // Begin / End
         // ---------------------------------------------------------------------
 
-        /// <summary>
-        /// Starts a batch using a <see cref="Camera3D"/>. If <paramref name="camera"/> was
-        /// constructed with a <see cref="ViewportAdapter2D"/> (<see cref="Camera3D.ViewportAdapter"/>),
-        /// it's applied first — letterboxing/pillarboxing the 3D projection into
-        /// <see cref="ViewportAdapter2D.BoundingRectangle"/> instead of the full backbuffer, the
-        /// same way <see cref="Primitives2D.Camera2D"/> uses its own stored adapter. Without one,
-        /// this always projects using the full window's aspect ratio — if the window is
-        /// letterboxed (e.g. a fixed-aspect game inside a resizable window, sharing an adapter
-        /// with 2D content), an adapter-less 3D scene would stretch into the bars instead of
-        /// matching them.
-        /// </summary>
+        /// <summary>Starts a batch using a <see cref="Camera3D"/>.</summary>
+        /// <remarks>
+        /// If <paramref name="camera"/> was constructed with a <see cref="ViewportAdapter2D"/>
+        /// (<see cref="Camera3D.ViewportAdapter"/>), it's applied first — letterboxing/pillarboxing
+        /// the 3D projection into <see cref="ViewportAdapter2D.BoundingRectangle"/> instead of the
+        /// full backbuffer, the same way <see cref="Primitives2D.Camera2D"/> uses its own stored
+        /// adapter. Without one, this always projects using the full window's aspect ratio — if
+        /// the window is letterboxed (e.g. a fixed-aspect game inside a resizable window, sharing
+        /// an adapter with 2D content), an adapter-less 3D scene would stretch into the bars
+        /// instead of matching them.
+        /// </remarks>
         /// <param name="camera">Camera providing view and projection matrices.</param>
         /// <param name="blendState">Blend state, defaults to <see cref="BlendState.NonPremultiplied"/> — every color here is straight (non-premultiplied) RGBA, so this is the blend state that actually matches them.</param>
         /// <param name="depthStencilState">Depth state, defaults to <see cref="DepthStencilState.Default"/>.</param>
@@ -465,12 +460,8 @@ namespace MonoPrimitives.Primitives3D
         // Helpers
         // ---------------------------------------------------------------------
 
-        /// <summary>
-        /// Resolves a user-supplied segment count. A value of <c>-1</c> triggers
-        /// automatic level of detail based on <paramref name="radius"/> and the
-        /// distance from the camera; the result is clamped to
-        /// [<see cref="AutoSegmentsMin"/>, <see cref="AutoSegmentsMax"/>].
-        /// </summary>
+        /// <summary>Resolves a user-supplied segment count, honoring <c>-1</c> as a request for automatic level of detail.</summary>
+        /// <remarks>Automatic LOD is based on <paramref name="radius"/> and the distance from the camera; the result is clamped to [<see cref="AutoSegmentsMin"/>, <see cref="AutoSegmentsMax"/>].</remarks>
         /// <param name="requested">Requested segments, or -1 for automatic.</param>
         /// <param name="radius">Primitive radius in world units.</param>
         /// <param name="center">Primitive center, used for distance-based LOD.</param>

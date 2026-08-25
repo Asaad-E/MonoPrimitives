@@ -108,6 +108,38 @@ namespace MonoPrimitives
         }
 
         // ---------------------------------------------------------------------
+        // Temperature
+        // ---------------------------------------------------------------------
+
+        /// <summary>Approximates the RGB color a blackbody radiator glows at <paramref name="kelvin"/> degrees — a candle flame around 1900K, daylight around 6500K, an overcast sky or a blue-white star well above 10000K.</summary>
+        /// <remarks>
+        /// Tanner Helland's widely-used polynomial fit to the CIE blackbody locus, not a physically
+        /// exact spectral calculation — accurate enough for fire/plasma/heatmap-style coloring, the
+        /// use case this exists for. <paramref name="kelvin"/> is clamped to <c>[1000, 40000]</c>, the
+        /// range the fit was derived over; outside it the approximation breaks down. Verified at the
+        /// reference points a blackbody curve is expected to hit: ~1000K comes out deep orange-red,
+        /// ~6600K comes out white, ~10000K/40000K come out progressively more blue.
+        /// </remarks>
+        public static Color FromTemperature(float kelvin, byte alpha = 255)
+        {
+            float temp = Math.Clamp(kelvin, 1000f, 40000f) / 100f;
+
+            float r = temp <= 66f ? 255f : 329.698727446f * MathF.Pow(temp - 60f, -0.1332047592f);
+
+            float g = temp <= 66f
+                ? 99.4708025861f * MathF.Log(temp) - 161.1195681661f
+                : 288.1221695283f * MathF.Pow(temp - 60f, -0.0755148492f);
+
+            float b = temp >= 66f ? 255f : temp <= 19f ? 0f : 138.5177312231f * MathF.Log(temp - 10f) - 305.0447927307f;
+
+            return new Color(
+                (byte)Math.Clamp(r, 0f, 255f),
+                (byte)Math.Clamp(g, 0f, 255f),
+                (byte)Math.Clamp(b, 0f, 255f),
+                alpha);
+        }
+
+        // ---------------------------------------------------------------------
         // Adjustments
         // ---------------------------------------------------------------------
 

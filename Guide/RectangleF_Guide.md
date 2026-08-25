@@ -31,6 +31,7 @@ Mirrors `Rectangle`'s own member shape, just with `float` fields — anything yo
 | `Inflate(horizontalAmount, verticalAmount)` | Returns a grown (or shrunk, for a negative amount) copy, same center — matches `Rectangle.Inflate`'s convention (each side moves by the given amount, so total size changes by double), but returns a new value instead of mutating in place. |
 | `RectangleF.Intersect(a, b)` | The overlapping region, or `Empty` if they don't intersect. |
 | `RectangleF.Union(a, b)` | The smallest rectangle containing both. |
+| `RectangleF.Lerp(a, b, t)` | Linearly interpolates `X`/`Y`/`Width`/`Height` independently. `t` isn't clamped — values outside `[0,1]` extrapolate. Pairs with `Camera2D.FitBounds`/`Camera3D.FitBounds` for an eased "zoom to fit" instead of their instant cut. |
 | `ToRectangle()` | Rounds to the nearest integer `Rectangle` (`MathF.Round`, banker's rounding at exact `.5` values). |
 | `(RectangleF)rectangle` / implicit from `Rectangle` | A `Rectangle`'s integer values widen to `RectangleF` for free — exact, no rounding. |
 | `Empty` | A static zero-sized rectangle at the origin. |

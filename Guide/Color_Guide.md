@@ -58,6 +58,12 @@ All of these preserve alpha and take an existing `Color` in, returning a new one
 | `Invert(color)` | Photographic negative: `255 - channel` per RGB channel. Its own inverse (`Invert(Invert(x)) == x`) — a hit-flash or negative-filter effect. |
 | `Contrast(color, amount)` | Pulls every RGB channel toward (`amount > 0`) or away from (`amount < 0`) the 127.5 midpoint, `amount` in `[-1,1]`; `-1` flattens to mid-gray. Unlike the HSV-based adjustments above, this works directly on RGB, so it can shift apparent hue slightly — expected, not a bug. |
 
+### Temperature
+
+| Method | What it does |
+|---|---|
+| `FromTemperature(kelvin, alpha = 255)` | Approximates the RGB color a blackbody radiator glows at `kelvin` degrees — a candle flame around 1900K, daylight white around 6500K, blue-white well above 10000K. For fire/plasma/heatmap-style coloring. Clamped to `[1000, 40000]`, the range the underlying fit (Tanner Helland's) was derived over. |
+
 ### Lerp
 
 | Method | What it does |
@@ -84,7 +90,7 @@ Pure `Color x Color -> Color` functions computing a blended color *value* to dra
 
 ## Testing
 
-Every method above has a permanent regression check in [`tests/MonoPrimitives.Tests/ColorUtilTests.cs`](../tests/MonoPrimitives.Tests/ColorUtilTests.cs) — round-trips (`Color`↔HSV, hex↔`Color`), each blend mode's defining identity, direction checks for the HSV adjustments, and `Palette`'s wraparound/opacity invariants. Run with:
+Every method above has a permanent regression check in [`tests/MonoPrimitives.Tests/ColorUtilTests.cs`](../tests/MonoPrimitives.Tests/ColorUtilTests.cs) — round-trips (`Color`↔HSV, hex↔`Color`), each blend mode's defining identity, direction checks for the HSV adjustments, `FromTemperature`'s red→white→blue progression and range clamping, and `Palette`'s wraparound/opacity invariants. Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj

@@ -60,14 +60,14 @@ namespace MonoPrimitives.Primitives3D
             PushLine(startPos, endPos, color);
         }
 
-        /// <summary>
-        /// Draws a polyline through the supplied points as a single joined camera-facing strip.
+        /// <summary>Draws a polyline through the supplied points as a single joined camera-facing strip.</summary>
+        /// <remarks>
         /// Each interior vertex shares one offset direction (miter-joined, clamped against
         /// spiking on a very sharp bend) between its two adjacent segments, instead of each
         /// segment computing an independent one from its own midpoint — a bend no longer shows a
         /// visible gap/overlap the way calling <see cref="DrawLine3D(Vector3,Vector3,float,Color)"/>
         /// once per segment would.
-        /// </summary>
+        /// </remarks>
         public void DrawLineStrip3D(ReadOnlySpan<Vector3> points, Color color)
             => DrawLineStrip3D(points, color, DefaultLineThickness);
 
@@ -89,13 +89,8 @@ namespace MonoPrimitives.Primitives3D
                 PushQuad(points[i] - offsets[i], points[i + 1] - offsets[i + 1], points[i + 1] + offsets[i + 1], points[i] + offsets[i], color);
         }
 
-        /// <summary>
-        /// Same as <see cref="DrawLineStrip3D(ReadOnlySpan{Vector3},Color,float)"/>, but each
-        /// segment gets its own flat color from <paramref name="segmentColors"/> (length
-        /// <c>points.Length - 1</c>) — e.g. <see cref="Trail3D"/>'s own fade-along-length. Corner
-        /// positions at a shared interior vertex are still the one joined offset either of its
-        /// two segments uses, so two differently-colored segments still meet without a gap.
-        /// </summary>
+        /// <summary>Same as <see cref="DrawLineStrip3D(ReadOnlySpan{Vector3},Color,float)"/>, but each segment gets its own flat color from <paramref name="segmentColors"/> (length <c>points.Length - 1</c>) — e.g. <see cref="Trail3D"/>'s own fade-along-length.</summary>
+        /// <remarks>Corner positions at a shared interior vertex are still the one joined offset either of its two segments uses, so two differently-colored segments still meet without a gap.</remarks>
         /// <param name="points">Vertices of the polyline, in order.</param>
         /// <param name="segmentColors">Per-segment flat color, length <c>points.Length - 1</c>.</param>
         /// <param name="thickness"><c>&lt;= 0</c> uses <see cref="DefaultLineThickness"/>.</param>
@@ -122,16 +117,14 @@ namespace MonoPrimitives.Primitives3D
         /// </summary>
         private const int MaxStackAllocVertices3D = 2048;
 
-        /// <summary>
-        /// Fills <paramref name="offsets"/> (same length as <paramref name="points"/>) with the
-        /// per-vertex camera-facing perpendicular offset for a joined line strip: <c>points[i] ±
-        /// offsets[i]</c> are the strip's two edges at that vertex, shared by both segments that
-        /// touch it. An endpoint uses its one adjacent segment's own direction; an interior vertex
-        /// averages (miters) its incoming and outgoing segments' directions, scaled up to keep the
-        /// strip's visual width constant through the bend (clamped so a near-180° reversal doesn't
-        /// spike toward infinity) — the same shape as 2D's <c>ComputeMiterOffset</c>, one dimension
+        /// <summary>Fills <paramref name="offsets"/> (same length as <paramref name="points"/>) with the per-vertex camera-facing perpendicular offset for a joined line strip: <c>points[i] ± offsets[i]</c> are the strip's two edges at that vertex, shared by both segments that touch it.</summary>
+        /// <remarks>
+        /// An endpoint uses its one adjacent segment's own direction; an interior vertex averages
+        /// (miters) its incoming and outgoing segments' directions, scaled up to keep the strip's
+        /// visual width constant through the bend (clamped so a near-180° reversal doesn't spike
+        /// toward infinity) — the same shape as 2D's <c>ComputeMiterOffset</c>, one dimension
         /// higher and re-projected onto whichever plane currently faces the camera at each vertex.
-        /// </summary>
+        /// </remarks>
         private void ComputeLineStripOffsets(ReadOnlySpan<Vector3> points, float thickness, Span<Vector3> offsets)
         {
             int n = points.Length;
@@ -233,12 +226,8 @@ namespace MonoPrimitives.Primitives3D
         public void DrawArrow(Vector3 start, Vector3 end, Color color)
             => DrawArrow(start, end, DefaultLineThickness, color);
 
-        /// <summary>
-        /// Draws an arrow with an explicit shaft thickness. The cone head's length and radius
-        /// scale with both the arrow's own length and <paramref name="thickness"/>, capped so a
-        /// short arrow doesn't grow a head bigger than the arrow itself; pass
-        /// <paramref name="headLength"/>/<paramref name="headRadius"/> to size it exactly instead.
-        /// </summary>
+        /// <summary>Draws an arrow with an explicit shaft thickness.</summary>
+        /// <remarks>The cone head's length and radius scale with both the arrow's own length and <paramref name="thickness"/>, capped so a short arrow doesn't grow a head bigger than the arrow itself; pass <paramref name="headLength"/>/<paramref name="headRadius"/> to size it exactly instead.</remarks>
         public void DrawArrow(Vector3 start, Vector3 end, float thickness, Color color, float? headLength = null, float? headRadius = null, int sides = 12)
         {
             ThrowIfNotBegun();
@@ -261,13 +250,8 @@ namespace MonoPrimitives.Primitives3D
             FillCylinder(headBase, end, hr, 0f, sides, color);
         }
 
-        /// <summary>
-        /// Draws an arrow with a fixed shaft width (<see cref="DefaultLineThickness"/>) and a head
-        /// sized purely from <paramref name="headRadius"/> (length <c>headRadius * 3</c>, capped
-        /// so a short arrow doesn't grow a head bigger than the arrow itself) — a simpler,
-        /// fewer-argument overload for when you don't need control over the shaft width or head
-        /// length independently.
-        /// </summary>
+        /// <summary>Draws an arrow with a fixed shaft width (<see cref="DefaultLineThickness"/>) and a head sized purely from <paramref name="headRadius"/> (length <c>headRadius * 3</c>, capped so a short arrow doesn't grow a head bigger than the arrow itself).</summary>
+        /// <remarks>A simpler, fewer-argument overload for when you don't need control over the shaft width or head length independently.</remarks>
         public void DrawArrow(Vector3 start, Vector3 end, float headRadius, int sides, Color color)
         {
             ThrowIfNotBegun();
@@ -1418,12 +1402,8 @@ namespace MonoPrimitives.Primitives3D
         // two read as one family when drawn together.
         private static readonly Color DefaultAxisColor = new(0.15f, 0.15f, 0.15f, 0.65f);
 
-        /// <summary>
-        /// Draws an X/Y/Z axis triad of length <paramref name="size"/> (in each direction), all one
-        /// color — for the classic red/green/blue gizmo instead, use <see cref="DrawAxes"/>. Every
-        /// parameter past <paramref name="size"/> is optional — omit any of them for a triad through
-        /// the origin, using a dark, grid-like default color.
-        /// </summary>
+        /// <summary>Draws an X/Y/Z axis triad of length <paramref name="size"/> (in each direction), all one color — for the classic red/green/blue gizmo instead, use <see cref="DrawAxes"/>.</summary>
+        /// <remarks>Every parameter past <paramref name="size"/> is optional — omit any of them for a triad through the origin, using a dark, grid-like default color.</remarks>
         /// <param name="size">Length of each of the three arms, from <paramref name="origin"/>.</param>
         /// <param name="origin">Center of the triad; the world origin if null.</param>
         /// <param name="color">Line color for all three arms; a dark, grid-like default if null.</param>
@@ -1602,14 +1582,8 @@ namespace MonoPrimitives.Primitives3D
             return u * u * p1 + 2f * u * t * c2 + t * t * p3;
         }
 
-        /// <summary>
-        /// Evaluates a point on a uniform cubic B-spline segment, using the same 4-point sliding
-        /// window as <see cref="GetSplinePointCatmullRom3D"/> (<paramref name="p1"/>/<paramref name="p4"/>
-        /// are the window's outer points, <paramref name="p2"/>/<paramref name="p3"/> the inner ones
-        /// this segment runs between). Unlike Catmull-Rom, this does NOT pass through any of the
-        /// four points — an approximating curve that stays inside their shape, trading exact
-        /// interpolation for extra (C2) smoothness.
-        /// </summary>
+        /// <summary>Evaluates a point on a uniform cubic B-spline segment, using the same 4-point sliding window as <see cref="GetSplinePointCatmullRom3D"/> (<paramref name="p1"/>/<paramref name="p4"/> are the window's outer points, <paramref name="p2"/>/<paramref name="p3"/> the inner ones this segment runs between).</summary>
+        /// <remarks>Unlike Catmull-Rom, this does NOT pass through any of the four points — an approximating curve that stays inside their shape, trading exact interpolation for extra (C2) smoothness.</remarks>
         public static Vector3 GetSplinePointBasis3D(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4, float t)
         {
             float t2 = t * t, t3 = t2 * t;
@@ -1655,14 +1629,8 @@ namespace MonoPrimitives.Primitives3D
             }
         }
 
-        /// <summary>
-        /// Draws a filled terrain mesh with an independent color per grid vertex — e.g. a
-        /// biome/temperature/elevation-band map from a simulation. Not a gradient (no
-        /// interpolation is added beyond the GPU's own vertex-color blending inside each
-        /// triangle, same as <see cref="FillTriangle3D(Vector3,Vector3,Vector3,Color,Quaternion,Vector3?)"/>'s
-        /// implicit per-vertex color blending) — <paramref name="colors"/> must be the same
-        /// size as <paramref name="heights"/>.
-        /// </summary>
+        /// <summary>Draws a filled terrain mesh with an independent color per grid vertex — e.g. a biome/temperature/elevation-band map from a simulation. <paramref name="colors"/> must be the same size as <paramref name="heights"/>.</summary>
+        /// <remarks>Not a gradient (no interpolation is added beyond the GPU's own vertex-color blending inside each triangle, same as <see cref="FillTriangle3D(Vector3,Vector3,Vector3,Color,Quaternion,Vector3?)"/>'s implicit per-vertex color blending).</remarks>
         public void FillHeightmap(float[,] heights, Color[,] colors, Vector3 origin, Vector2 cellSize)
         {
             ThrowIfNotBegun();

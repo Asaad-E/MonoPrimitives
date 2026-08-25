@@ -3,25 +3,20 @@ using Microsoft.Xna.Framework;
 
 namespace MonoPrimitives.Primitives3D
 {
-    /// <summary>
-    /// Extension methods on MonoGame's own <see cref="Vector3"/> — the 3D counterpart to
-    /// <see cref="MonoPrimitives.Vector2Extensions"/>, for the everyday vector math XNA's
-    /// <see cref="Vector3"/> doesn't provide itself. Confirmed missing by direct inspection of the
-    /// referenced MonoGame.Framework assembly rather than assumed — <see cref="Vector3.Reflect(Vector3,Vector3)"/>,
-    /// <see cref="Vector3.Clamp(Vector3,Vector3,Vector3)"/>, and <see cref="Vector3.Lerp(Vector3,Vector3,float)"/>
-    /// already exist natively and are deliberately not repeated here. Lives in this namespace rather
-    /// than <c>Core/</c> since, unlike <see cref="Vector2"/> (used by both halves of this library for
-    /// screen-space positions), nothing in this library's 2D half ever touches a <see cref="Vector3"/>.
-    /// </summary>
+    /// <summary>Extension methods on MonoGame's own <see cref="Vector3"/> — the 3D counterpart to <see cref="MonoPrimitives.Vector2Extensions"/>, for the everyday vector math XNA's <see cref="Vector3"/> doesn't provide itself.</summary>
+    /// <remarks>
+    /// Confirmed missing by direct inspection of the referenced MonoGame.Framework assembly rather
+    /// than assumed — <see cref="Vector3.Reflect(Vector3,Vector3)"/>,
+    /// <see cref="Vector3.Clamp(Vector3,Vector3,Vector3)"/>, and
+    /// <see cref="Vector3.Lerp(Vector3,Vector3,float)"/> already exist natively and are deliberately
+    /// not repeated here. Lives in this namespace rather than <c>Core/</c> since, unlike
+    /// <see cref="Vector2"/> (used by both halves of this library for screen-space positions),
+    /// nothing in this library's 2D half ever touches a <see cref="Vector3"/>.
+    /// </remarks>
     public static class Vector3Extensions
     {
-        /// <summary>
-        /// Unsigned angle (radians, always in <c>[0, PI]</c>) between <paramref name="from"/> and
-        /// <paramref name="to"/> — how far apart the two directions are, with no sense of which way
-        /// to turn. A 3D vector has no single canonical "which way is positive" the way a 2D one
-        /// does, so there's no signed counterpart without also naming a reference axis — see
-        /// <see cref="AngleToSigned"/> for that.
-        /// </summary>
+        /// <summary>Unsigned angle (radians, always in <c>[0, PI]</c>) between <paramref name="from"/> and <paramref name="to"/> — how far apart the two directions are, with no sense of which way to turn.</summary>
+        /// <remarks>A 3D vector has no single canonical "which way is positive" the way a 2D one does, so there's no signed counterpart without also naming a reference axis — see <see cref="AngleToSigned"/> for that.</remarks>
         public static float AngleTo(this Vector3 from, Vector3 to)
         {
             float lenProduct = MathF.Sqrt(from.LengthSquared() * to.LengthSquared());
@@ -30,18 +25,15 @@ namespace MonoPrimitives.Primitives3D
             return MathF.Acos(cos);
         }
 
-        /// <summary>
-        /// Signed angle (radians, in <c>[-PI, PI]</c>) to rotate <paramref name="from"/> by around
-        /// <paramref name="axis"/> to face <paramref name="to"/> — positive is counter-clockwise
-        /// looking down <paramref name="axis"/> toward the origin (the right-hand rule, matching
-        /// <see cref="Rotated"/>'s own sign convention), Unity's <c>Vector3.SignedAngle</c>.
+        /// <summary>Signed angle (radians, in <c>[-PI, PI]</c>) to rotate <paramref name="from"/> by around <paramref name="axis"/> to face <paramref name="to"/> — positive is counter-clockwise looking down <paramref name="axis"/> toward the origin (the right-hand rule, matching <see cref="Rotated"/>'s own sign convention).</summary>
+        /// <remarks>
         /// <paramref name="axis"/> need not be pre-normalized. Both <paramref name="from"/> and
         /// <paramref name="to"/> are measured as their projection onto the plane perpendicular to
         /// <paramref name="axis"/> first, so a component of either vector that runs along
         /// <paramref name="axis"/> itself doesn't skew the result — e.g. "how much yaw to face that
         /// point" with <paramref name="axis"/> straight up stays correct even if the point is above
         /// or below eye level.
-        /// </summary>
+        /// </remarks>
         public static float AngleToSigned(this Vector3 from, Vector3 to, Vector3 axis)
         {
             Vector3 n = axis.SafeNormalize();
@@ -54,16 +46,14 @@ namespace MonoPrimitives.Primitives3D
             return MathF.Atan2(sin, cos);
         }
 
-        /// <summary>
-        /// Returns <paramref name="v"/> rotated by <paramref name="radians"/> around
-        /// <paramref name="axis"/> (right-hand rule — positive rotates counter-clockwise looking
-        /// down <paramref name="axis"/> toward the origin, matching <see cref="AngleToSigned"/>'s
-        /// sign convention) as a new vector. A thin wrapper over
-        /// <see cref="Quaternion.CreateFromAxisAngle(Vector3,float)"/> + <see cref="Vector3.Transform(Vector3,Quaternion)"/>,
-        /// sparing you from building the quaternion by hand for a one-off rotation.
-        /// <paramref name="axis"/> need not be pre-normalized; a zero-length <paramref name="axis"/>
-        /// leaves <paramref name="v"/> unchanged rather than producing <c>NaN</c>.
-        /// </summary>
+        /// <summary>Returns <paramref name="v"/> rotated by <paramref name="radians"/> around <paramref name="axis"/> (right-hand rule — positive rotates counter-clockwise looking down <paramref name="axis"/> toward the origin, matching <see cref="AngleToSigned"/>'s sign convention) as a new vector.</summary>
+        /// <remarks>
+        /// A thin wrapper over <see cref="Quaternion.CreateFromAxisAngle(Vector3,float)"/> +
+        /// <see cref="Vector3.Transform(Vector3,Quaternion)"/>, sparing you from building the
+        /// quaternion by hand for a one-off rotation. <paramref name="axis"/> need not be
+        /// pre-normalized; a zero-length <paramref name="axis"/> leaves <paramref name="v"/>
+        /// unchanged rather than producing <c>NaN</c>.
+        /// </remarks>
         public static Vector3 Rotated(this Vector3 v, Vector3 axis, float radians)
         {
             Vector3 n = axis.SafeNormalize();
@@ -84,17 +74,15 @@ namespace MonoPrimitives.Primitives3D
             return lenSq < 1e-12f ? fallback : v * (1f / MathF.Sqrt(lenSq));
         }
 
-        /// <summary>
-        /// Moves <paramref name="current"/> toward <paramref name="target"/> by at most
-        /// <paramref name="maxDistance"/>, landing exactly on <paramref name="target"/> instead of
-        /// overshooting past it — Godot's <c>move_toward</c>/Unity's <c>Vector3.MoveTowards</c>.
-        /// <paramref name="maxDistance"/> can be negative to move away from <paramref name="target"/>
-        /// instead. For a single <c>float</c> value (not a <see cref="Vector3"/>), reuse
-        /// <see cref="MonoPrimitives.Vector2Extensions.Approach(float,float,float)"/> directly — that
-        /// overload is already dimension-agnostic (plain 1D scalar math, nothing 2D-specific about
-        /// it), so it isn't duplicated here; a second identical <c>float</c> overload in this class
-        /// would make any call site with both namespaces in scope ambiguous (<c>CS0121</c>) instead.
-        /// </summary>
+        /// <summary>Moves <paramref name="current"/> toward <paramref name="target"/> by at most <paramref name="maxDistance"/>, landing exactly on <paramref name="target"/> instead of overshooting past it. <paramref name="maxDistance"/> can be negative to move away from <paramref name="target"/> instead.</summary>
+        /// <remarks>
+        /// For a single <c>float</c> value (not a <see cref="Vector3"/>), reuse
+        /// <see cref="MonoPrimitives.Vector2Extensions.Approach(float,float,float)"/> directly —
+        /// that overload is already dimension-agnostic (plain 1D scalar math, nothing 2D-specific
+        /// about it), so it isn't duplicated here; a second identical <c>float</c> overload in this
+        /// class would make any call site with both namespaces in scope ambiguous (<c>CS0121</c>)
+        /// instead.
+        /// </remarks>
         public static Vector3 Approach(this Vector3 current, Vector3 target, float maxDistance)
         {
             Vector3 toTarget = target - current;
@@ -105,7 +93,7 @@ namespace MonoPrimitives.Primitives3D
 
         /// <summary>
         /// Clamps <paramref name="v"/>'s own length to at most <paramref name="maxLength"/>,
-        /// preserving its direction — Unity's <c>Vector3.ClampMagnitude</c>. A no-op if
+        /// preserving its direction. A no-op if
         /// <paramref name="v"/> is already shorter.
         /// </summary>
         public static Vector3 ClampMagnitude(this Vector3 v, float maxLength)
@@ -114,5 +102,9 @@ namespace MonoPrimitives.Primitives3D
             if (lenSq <= maxLength * maxLength) return v;
             return v * (maxLength / MathF.Sqrt(lenSq));
         }
+
+        /// <summary>Removes the component of <paramref name="v"/> along <paramref name="normal"/>, keeping only the tangential part — the direction to keep moving along a wall/floor/slope instead of stopping dead against it.</summary>
+        /// <remarks><paramref name="normal"/> must already be unit length (not renormalized here, same convention as <see cref="Vector3.Reflect(Vector3,Vector3)"/>). Different from <see cref="Vector3.Reflect(Vector3,Vector3)"/>: <c>Reflect</c> flips the normal component (a bounce), <c>Slide</c> drops it entirely (a slide) — the standard "keep walking along the ground/wall you just hit" move for a character controller.</remarks>
+        public static Vector3 Slide(this Vector3 v, Vector3 normal) => v - normal * Vector3.Dot(v, normal);
     }
 }

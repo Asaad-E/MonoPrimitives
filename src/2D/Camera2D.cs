@@ -8,18 +8,7 @@ using MonoPrimitives;
 
 namespace MonoPrimitives.Primitives2D
 {
-    /// <summary>
-    /// A 2D camera: <see cref="Target"/>/<see cref="Offset"/>/<see cref="Rotation"/>/
-    /// <see cref="Zoom"/>, plus the same bounds/padding/smooth-follow/smooth-zoom/easing/
-    /// input-driven-update <c>Camera3D</c> has in the companion 3D library. Pass
-    /// <see cref="GetTransformMatrix"/> into
-    /// <see cref="Primitive2DBatch.Begin(Matrix?,BlendState?,DepthStencilState?,RasterizerState?,Effect?)"/>'s
-    /// <c>transformMatrix</c> each frame.
-    /// </summary>
-    /// <remarks>
-    /// A 2D prototype (a platformer, an asteroids clone, a pan-and-zoom plot) starts from a
-    /// camera that already does the common things.
-    /// </remarks>
+    /// <summary>A 2D camera — pan/rotate/zoom, bounds, smooth-follow, smooth-zoom, screen shake, and an optional input-driven update. Pass <see cref="GetTransformMatrix"/> into <see cref="Primitive2DBatch.Begin(Matrix?,BlendState?,DepthStencilState?,RasterizerState?,Effect?)"/>'s <c>transformMatrix</c> each frame.</summary>
     public sealed class Camera2D
     {
         /// <summary>World point the camera centers on.</summary>
@@ -28,26 +17,8 @@ namespace MonoPrimitives.Primitives2D
         private Vector2 _offset;
         private bool _offsetOverridden;
 
-        /// <summary>
-        /// Screen-space point <see cref="Target"/> is drawn at — typically the viewport center.
-        /// When this camera was constructed with a <see cref="ViewportAdapter"/> and <see cref="Offset"/>
-        /// has never been assigned directly, it tracks that adapter's virtual center **live**
-        /// (<c>VirtualWidth/2, VirtualHeight/2</c>, re-read on every access) rather than freezing the
-        /// value seen at construction. Assigning <see cref="Offset"/> at all — even to the same
-        /// value — pins it from then on, matching plain-field behavior exactly; <see cref="Reset"/>
-        /// un-pins it again.
-        /// </summary>
-        /// <remarks>
-        /// This matters specifically for <see cref="DefaultViewportAdapter2D"/>/
-        /// <see cref="WindowViewportAdapter2D"/>, whose virtual size tracks the live device/window size and
-        /// changes across a resize (for <see cref="BoxingViewportAdapter2D"/>/<see cref="ScalingViewportAdapter2D"/>,
-        /// whose virtual size is fixed for their lifetime, this is indistinguishable from the old
-        /// snapshot-once behavior). MonoGame.Extended's own <c>OrthographicCamera.Origin</c> never
-        /// re-tracks like this (it's a snapshot for the camera's whole lifetime, confirmed directly
-        /// against its source) — this goes one step further, in the same "recompute live, no cache
-        /// to invalidate" spirit this library's own <see cref="ViewportAdapter2D"/> family already
-        /// uses for <c>Scale</c>/<c>Offset</c>.
-        /// </remarks>
+        /// <summary>Screen-space point <see cref="Target"/> is drawn at — typically the viewport center.</summary>
+        /// <remarks>With a <see cref="ViewportAdapter"/> and no direct assignment yet, tracks its virtual center live; assigning <see cref="Offset"/> (even to the same value) pins it, until <see cref="Reset"/> un-pins it again. See DECISIONS.md for why.</remarks>
         public Vector2 Offset
         {
             get => !_offsetOverridden && ViewportAdapter is not null
@@ -74,7 +45,7 @@ namespace MonoPrimitives.Primitives2D
         /// automatically instead of requiring it passed in again at every call site.
         /// </summary>
         /// <remarks>
-        /// MonoGame.Extended-style. <c>null</c> for the raw-screen-space constructors — those
+        /// <c>null</c> for the raw-screen-space constructors — those
         /// methods then fall back to assuming <see cref="Offset"/> is already in the same pixel
         /// space as raw device/mouse coordinates.
         /// </remarks>
@@ -100,12 +71,15 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>
-        /// <see cref="Offset"/> defaults to the adapter's virtual center, and <see cref="ViewportAdapter"/>
-        /// is stored so screen↔world conversions and mouse-drag panning account for letterbox
-        /// bars/scaling automatically. Prefer this over the raw <see cref="Camera2D(Vector2,Vector2,float,float)"/>
-        /// constructor whenever a <see cref="ViewportAdapter2D"/> is in play.
+        /// Creates a camera bound to <paramref name="viewportAdapter"/> — <see cref="Offset"/>
+        /// defaults to the adapter's virtual center, and <see cref="ViewportAdapter"/> is stored
+        /// so screen↔world conversions and mouse-drag panning account for letterbox bars/scaling
+        /// automatically.
         /// </summary>
-        /// <remarks>Matches MonoGame.Extended's own <c>OrthographicCamera(ViewportAdapter)</c> constructor shape.</remarks>
+        /// <remarks>
+        /// Prefer this over the raw <see cref="Camera2D(Vector2,Vector2,float,float)"/>
+        /// constructor whenever a <see cref="ViewportAdapter2D"/> is in play.
+        /// </remarks>
         public Camera2D(ViewportAdapter2D viewportAdapter, Vector2 target = default, float rotation = 0f, float zoom = 1f)
         {
             ViewportAdapter = viewportAdapter ?? throw new ArgumentNullException(nameof(viewportAdapter));
@@ -164,8 +138,7 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         /// <remarks>
         /// When <see cref="ViewportAdapter"/> is set, its own <c>GetScaleMatrix()</c> (virtual →
-        /// window pixels) is folded in automatically, matching MonoGame.Extended's
-        /// <c>OrthographicCamera.GetViewMatrix()</c> — don't multiply by it again at the call site.
+        /// window pixels) is folded in automatically — don't multiply by it again at the call site.
         /// </remarks>
         public Matrix GetTransformMatrix()
         {
@@ -183,12 +156,12 @@ namespace MonoPrimitives.Primitives2D
                  * Matrix.CreateTranslation(Offset.X + shakeOffset.X, Offset.Y + shakeOffset.Y, 0f);
         }
 
-        /// <summary>
-        /// Converts a screen-space position (e.g. mouse coordinates) to world space. When
-        /// <see cref="ViewportAdapter"/> is set, <paramref name="screenPosition"/> is real window
-        /// pixels — mapped through the adapter into its virtual space first. Without one, it's
-        /// assumed to already be in the same pixel space as <see cref="Offset"/>.
-        /// </summary>
+        /// <summary>Converts a screen-space position (e.g. mouse coordinates) to world space.</summary>
+        /// <remarks>
+        /// When <see cref="ViewportAdapter"/> is set, <paramref name="screenPosition"/> is real
+        /// window pixels — mapped through the adapter into its virtual space first. Without one,
+        /// it's assumed to already be in the same pixel space as <see cref="Offset"/>.
+        /// </remarks>
         public Vector2 ScreenToWorld(Vector2 screenPosition)
         {
             Vector2 pos = ViewportAdapter?.PointToVirtual(screenPosition) ?? screenPosition;
@@ -307,12 +280,12 @@ namespace MonoPrimitives.Primitives2D
 
         private Vector2 _followVelocity;
 
-        /// <summary>
-        /// Smoothly moves <see cref="Target"/> toward <paramref name="desiredTarget"/> instead
-        /// of snapping — e.g. follow a player character with a bit of lag instead of the
-        /// camera being rigidly locked to it. Within <see cref="FollowPadding"/> world units of
-        /// the goal, the camera holds still (a deadzone) rather than chasing tiny jitter.
-        /// </summary>
+        /// <summary>Smoothly moves <see cref="Target"/> toward <paramref name="desiredTarget"/> instead of snapping.</summary>
+        /// <remarks>
+        /// E.g. follow a player character with a bit of lag instead of the camera being rigidly
+        /// locked to it. Within <see cref="FollowPadding"/> world units of the goal, the camera
+        /// holds still (a deadzone) rather than chasing tiny jitter.
+        /// </remarks>
         public void FollowTarget(Vector2 desiredTarget, float deltaSeconds)
         {
             if (Vector2.Distance(Target, desiredTarget) <= FollowPadding)
@@ -589,8 +562,7 @@ namespace MonoPrimitives.Primitives2D
         // ---------------------------------------------------------------------
 
         /// <summary>
-        /// Critically-damped spring smoothing (the same algorithm as Unity's <c>Mathf.SmoothDamp</c>)
-        /// — eases <paramref name="current"/> toward <paramref name="target"/> over roughly
+        /// Critically-damped spring smoothing — eases <paramref name="current"/> toward <paramref name="target"/> over roughly
         /// <paramref name="smoothTime"/> seconds without overshoot across varying frame rates.
         /// <paramref name="velocity"/> is state you own and pass back in every call (start at 0).
         /// </summary>

@@ -88,7 +88,7 @@ namespace MonoPrimitives.Primitives3D
         /// passed in again at every call site.
         /// </summary>
         /// <remarks>
-        /// Same MonoGame.Extended-style dependency <see cref="Primitives2D.Camera2D"/> takes.
+        /// Same shape of dependency <see cref="Primitives2D.Camera2D"/> takes.
         /// <c>null</c> for the plain constructor — those methods then need an explicit
         /// <see cref="Viewport"/> argument, or fall back to the full device viewport in
         /// <c>Begin</c>'s case.
@@ -758,14 +758,8 @@ namespace MonoPrimitives.Primitives3D
         private Vector3 _followVelocity;
         private Vector3 _followTargetVelocity;
 
-        /// <summary>
-        /// Smoothly moves <see cref="Position"/> (and <see cref="Target"/> by the same delta,
-        /// preserving the current look offset) toward <paramref name="desiredPosition"/> —
-        /// "follow with delay": the camera eases toward the subject instead of snapping to it
-        /// every frame. Within <see cref="FollowPadding"/> world units of the goal, the camera
-        /// doesn't move at all (a deadzone), which reads as "the subject can wander a little
-        /// before the camera reacts" rather than a constant low-amplitude jitter.
-        /// </summary>
+        /// <summary>Smoothly moves <see cref="Position"/> (and <see cref="Target"/> by the same delta, preserving the current look offset) toward <paramref name="desiredPosition"/> — "follow with delay": the camera eases toward the subject instead of snapping to it every frame.</summary>
+        /// <remarks>Within <see cref="FollowPadding"/> world units of the goal, the camera doesn't move at all (a deadzone), which reads as "the subject can wander a little before the camera reacts" rather than a constant low-amplitude jitter.</remarks>
         /// <param name="desiredPosition">Where the camera should end up.</param>
         /// <param name="deltaSeconds">Frame time in seconds.</param>
         /// <param name="desiredTarget">
@@ -893,14 +887,8 @@ namespace MonoPrimitives.Primitives3D
         // any other value you want to ease, e.g. a FOV transition)
         // =====================================================================
 
-        /// <summary>
-        /// Critically-damped spring smoothing (the same algorithm as Unity's
-        /// <c>Mathf.SmoothDamp</c>) — eases <paramref name="current"/> toward
-        /// <paramref name="target"/> over roughly <paramref name="smoothTime"/> seconds,
-        /// without the overshoot/oscillation a naive exponential lerp can show under
-        /// varying frame rates. <paramref name="velocity"/> is state you own and pass back
-        /// in every call (start it at 0).
-        /// </summary>
+        /// <summary>Critically-damped spring smoothing — eases <paramref name="current"/> toward <paramref name="target"/> over roughly <paramref name="smoothTime"/> seconds.</summary>
+        /// <remarks>No overshoot/oscillation under varying frame rates, unlike a naive exponential lerp. <paramref name="velocity"/> is state you own and pass back in every call (start it at 0).</remarks>
         public static float SmoothDamp(float current, float target, ref float velocity, float smoothTime, float deltaTime)
         {
             smoothTime = MathF.Max(0.0001f, smoothTime);

@@ -28,11 +28,14 @@ namespace MonoPrimitives
     /// <summary>
     /// Polls keyboard, mouse, and gamepad state once per frame and exposes down/pressed/released
     /// queries plus a couple of composite helpers (<see cref="GetAxis"/>/<see cref="GetVector2"/>)
-    /// that turn a handful of individual key bindings into one float or <see cref="Vector2"/> —
-    /// the same shape as a game engine's "get movement direction" call, one line instead of six
-    /// `if (IsKeyDown(...))` checks. Call <see cref="Update(GameTime)"/> once per frame (before reading
-    /// anything else this frame) — typically the first line of your own <c>Game.Update</c>.
+    /// that turn a handful of individual key bindings into one float or <see cref="Vector2"/>. Call
+    /// <see cref="Update(GameTime)"/> once per frame (before reading anything else this frame) —
+    /// typically the first line of your own <c>Game.Update</c>.
     /// </summary>
+    /// <remarks>
+    /// <see cref="GetAxis"/>/<see cref="GetVector2"/> are the same shape as a game engine's "get
+    /// movement direction" call — one line instead of six <c>IsKeyDown(...)</c> checks.
+    /// </remarks>
     public sealed class PrimitiveInput : IDisposable
     {
         private KeyboardState _keyboard;
@@ -110,12 +113,8 @@ namespace MonoPrimitives
         /// <summary>Refreshes keyboard/mouse/gamepad state for this frame — the usual call from inside your own <c>Game.Update(GameTime gameTime)</c>, so <see cref="IsMouseButtonDoubleClicked"/>'s timing window uses the real elapsed time automatically.</summary>
         public void Update(GameTime gameTime) => Update((float)gameTime.ElapsedGameTime.TotalSeconds);
 
-        /// <summary>
-        /// Refreshes keyboard/mouse/gamepad state for this frame. Call once per frame before any
-        /// query below. <paramref name="deltaSeconds"/> is only needed for
-        /// <see cref="IsMouseButtonDoubleClicked"/>'s timing window — pass 0 (default) if you
-        /// don't use it, or prefer <see cref="Update(GameTime)"/> if you have a <see cref="GameTime"/> on hand.
-        /// </summary>
+        /// <summary>Refreshes keyboard/mouse/gamepad state for this frame. Call once per frame before any query below.</summary>
+        /// <remarks><paramref name="deltaSeconds"/> is only needed for <see cref="IsMouseButtonDoubleClicked"/>'s timing window — pass 0 (default) if you don't use it, or prefer <see cref="Update(GameTime)"/> if you have a <see cref="GameTime"/> on hand.</remarks>
         public void Update(float deltaSeconds = 0f)
         {
             _prevKeyboard = _keyboard;
@@ -270,19 +269,16 @@ namespace MonoPrimitives
             return end - start.Value;
         }
 
-        /// <summary>True while <paramref name="button"/> is currently held AND has moved more than <paramref name="threshold"/> pixels from where it was pressed — lets a click handler and a drag handler share the same button without the click firing on every tiny press-time jitter. Unlike <see cref="DragDelta"/>, always false once the button is released.</summary>
+        /// <summary>True while <paramref name="button"/> is currently held AND has moved more than <paramref name="threshold"/> pixels from where it was pressed.</summary>
+        /// <remarks>Lets a click handler and a drag handler share the same button without the click firing on every tiny press-time jitter. Unlike <see cref="DragDelta"/>, always false once the button is released.</remarks>
         public bool IsDragging(MouseButton button, float threshold = 4f)
             => IsMouseButtonDown(button) && DragDelta(button).LengthSquared() > threshold * threshold;
 
         /// <summary>Point-in-rectangle test against <see cref="MousePosition"/> — hit-testing a UI panel or button without pulling in a separate UI library.</summary>
         public bool IsMouseOver(Rectangle screenRect) => screenRect.Contains(new Point(_mouse.X, _mouse.Y));
 
-        /// <summary>
-        /// Moves the OS cursor to an exact screen position — e.g. re-centering it every frame for
-        /// an FPS-style "infinite" mouse-look that never hits the window edge. Call
-        /// <see cref="ResetMouseDelta"/> alongside this (or accept one frame of a large delta from
-        /// the jump) since the cursor didn't actually travel there by user motion.
-        /// </summary>
+        /// <summary>Moves the OS cursor to an exact screen position.</summary>
+        /// <remarks>E.g. re-centering it every frame for an FPS-style "infinite" mouse-look that never hits the window edge. Call <see cref="ResetMouseDelta"/> alongside this (or accept one frame of a large delta from the jump) since the cursor didn't actually travel there by user motion.</remarks>
         public void SetMousePosition(int x, int y) => Mouse.SetPosition(x, y);
 
         /// <summary>Sets the OS cursor's shape — one of <see cref="MouseCursor"/>'s built-in system shapes (<c>Arrow</c>, <c>IBeam</c>, <c>Hand</c>, <c>Crosshair</c>, the resize arrows, etc.) or a fully custom one via <see cref="MouseCursor.FromTexture2D(Microsoft.Xna.Framework.Graphics.Texture2D,int,int)"/>.</summary>
@@ -398,12 +394,8 @@ namespace MonoPrimitives
             Buttons.DPadUp, Buttons.DPadDown, Buttons.DPadLeft, Buttons.DPadRight,
         };
 
-        /// <summary>
-        /// True on the frame any face/shoulder/stick-click/D-pad/Start/Back button on
-        /// <paramref name="player"/>'s gamepad went from up to down — for a "press any button to
-        /// join" lobby flow, one call instead of listing every button yourself. See
-        /// <see cref="DigitalButtons"/>'s comment for why stick/trigger movement doesn't count.
-        /// </summary>
+        /// <summary>True on the frame any face/shoulder/stick-click/D-pad/Start/Back button on <paramref name="player"/>'s gamepad went from up to down — for a "press any button to join" lobby flow, one call instead of listing every button yourself.</summary>
+        /// <remarks>See <see cref="DigitalButtons"/>'s comment for why stick/trigger movement doesn't count.</remarks>
         public bool IsAnyButtonPressed(int player = 0)
         {
             foreach (Buttons button in DigitalButtons)
@@ -415,7 +407,7 @@ namespace MonoPrimitives
         // Composite helpers (Godot's Input.get_axis/get_vector shape)
         // ---------------------------------------------------------------------
 
-        /// <summary>-1/0/1 axis from two keys: -1 if only <paramref name="negative"/> is held, +1 if only <paramref name="positive"/> is held, 0 if neither or both are held — matching Godot's own <c>Input.get_axis</c>, which cancels to 0 on a tie the same way (strength(positive) - strength(negative)), not a "positive wins" rule.</summary>
+        /// <summary>-1/0/1 axis from two keys: -1 if only <paramref name="negative"/> is held, +1 if only <paramref name="positive"/> is held, 0 if neither or both are held — cancels to 0 on a tie (strength(positive) - strength(negative)), not a "positive wins" rule.</summary>
         public float GetAxis(Keys negative, Keys positive)
         {
             float v = 0f;
@@ -424,12 +416,8 @@ namespace MonoPrimitives
             return v;
         }
 
-        /// <summary>
-        /// A 2D direction from four keys in one call — WASD/arrow-style movement without writing
-        /// out four separate <c>IsKeyDown</c> checks yourself. <paramref name="normalize"/>
-        /// (default true) keeps diagonal movement the same speed as axis-aligned movement;
-        /// pass false for the raw, un-normalized per-axis [-1,1] pair instead.
-        /// </summary>
+        /// <summary>A 2D direction from four keys in one call — WASD/arrow-style movement without writing out four separate <c>IsKeyDown</c> checks yourself.</summary>
+        /// <remarks><paramref name="normalize"/> (default true) keeps diagonal movement the same speed as axis-aligned movement; pass false for the raw, un-normalized per-axis [-1,1] pair instead.</remarks>
         public Vector2 GetVector2(Keys negativeX, Keys positiveX, Keys negativeY, Keys positiveY, bool normalize = true)
         {
             Vector2 v = new(GetAxis(negativeX, positiveX), GetAxis(negativeY, positiveY));

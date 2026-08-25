@@ -4,18 +4,7 @@ using System.Collections.Generic;
 
 namespace MonoPrimitives
 {
-    /// <summary>
-    /// A fixed-capacity generic ring buffer, exposed as a reusable type for your own
-    /// history/log/sample-window need.
-    /// </summary>
-    /// <remarks>
-    /// The same "never allocate once warmed up, oldest entry silently overwritten" building block
-    /// <see cref="MonoPrimitives.Primitives2D.Trail2D"/>, <see cref="MonoPrimitives.Primitives3D.Trail3D"/>,
-    /// and <see cref="FpsCounter"/> each already build privately for their own use, instead of
-    /// hand-rolled again. <c>foreach</c>ing this type directly (not through the
-    /// <see cref="IEnumerable{T}"/> interface) allocates nothing, the same "no per-frame heap
-    /// allocation" discipline this library's own drawing code follows.
-    /// </remarks>
+    /// <summary>A fixed-capacity ring buffer — oldest entries are overwritten once full. <c>foreach</c> allocates nothing.</summary>
     /// <typeparam name="T">Element type.</typeparam>
     public sealed class RingBuffer<T> : IEnumerable<T>
     {

@@ -24,9 +24,19 @@ Follow these rather than re-deriving a convention or introducing an inconsistent
 
 ## Comments and docs
 
+**`///` XML doc comments are the API contract shown in IntelliSense/hover tooltips — nothing else belongs there.** `<summary>` is one sentence (rarely two): what it does / what it returns. Add `<remarks>` only for a genuine correctness gotcha — something that would break or surprise a caller if left unsaid (a hidden invariant, a thread-safety constraint, a non-obvious clamp). One or two sentences, not a paragraph.
+
+**Splitting a bloated `<summary>` into `<summary>` + `<remarks>` is NOT a fix — most IDEs render both concatenated in the same tooltip, so total visible content is unchanged.** The actual fix is deleting content, not relocating it. Before writing any sentence into a `///` comment, ask: would omitting this cause someone to misuse the API or misunderstand a hard constraint? If no — it doesn't belong in `///` at all, in *either* tag.
+
+Rationale, benchmarks, comparisons to other classes/libraries, "why we built it this way," implementation mechanism (e.g. *how* a fast path works internally) — none of that belongs in a `///` comment. It goes in exactly one of these, never duplicated across more than one:
+- A plain `//` comment near the relevant code, if it's genuinely useful to someone reading that specific implementation.
+- `Design/DECISIONS.md`, if it's a design rationale worth recording.
+- `Guide/*.md`, if it's usage guidance a caller would look up deliberately.
+
+This was violated pervasively across the codebase (checked directly against IDE tooltip renders, not assumed) and is a standing priority to keep fixed, not a one-time cleanup — check any `///` comment you write or touch against this bar, every time.
+
 - Never name "raylib" or other design inspirations in doc comments or `Guide/*.md` files. Internal implementation comments may reference an algorithm's origin if useful. **Exception, by explicit request:** the root `README.md`'s "Inspiration" section names Apos.Shapes/raylib/raylib-cs/MonoGame.Extended/Godot/Processing directly and explains what each influenced — that section is deliberate and should stay, don't scrub it to match this rule.
-- Be concise. Describe behavior, not lineage.
-- Comment the WHY (a non-obvious clamp, a hidden invariant, a workaround), not the WHAT.
+- Comment the WHY (a non-obvious clamp, a hidden invariant, a workaround), not the WHAT — applies to both `///` and `//` comments.
 - Don't reference "the fix" or a specific past conversation in code comments — that belongs in a changelog, not in code that outlives the context that produced it.
 
 ## Verification discipline

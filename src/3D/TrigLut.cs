@@ -3,12 +3,8 @@ using System.Runtime.CompilerServices;
 
 namespace MonoPrimitives.Primitives3D
 {
-    /// <summary>
-    /// Precomputed unit-circle lookup tables to avoid per-frame trigonometry.
-    /// The table stores <see cref="Resolution"/> samples over a full turn plus one
-    /// wrap-around entry so that consumers can index <c>[i]</c> and <c>[i + 1]</c>
-    /// without a modulo operation.
-    /// </summary>
+    /// <summary>Precomputed unit-circle lookup tables to avoid per-frame trigonometry.</summary>
+    /// <remarks>The table stores <see cref="Resolution"/> samples over a full turn plus one wrap-around entry so that consumers can index <c>[i]</c> and <c>[i + 1]</c> without a modulo operation.</remarks>
     public static class TrigLut
     {
         /// <summary>Number of samples covering a full revolution.</summary>
@@ -44,12 +40,8 @@ namespace MonoPrimitives.Primitives3D
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float CosIndex(int index) => CosTable[index & Mask];
 
-        /// <summary>
-        /// Returns sine/cosine for step <paramref name="step"/> out of
-        /// <paramref name="steps"/> equal divisions of a full circle.
-        /// Uses the LUT when the division maps exactly onto the table,
-        /// otherwise falls back to real trigonometry (still allocation free).
-        /// </summary>
+        /// <summary>Returns sine/cosine for step <paramref name="step"/> out of <paramref name="steps"/> equal divisions of a full circle.</summary>
+        /// <remarks>Uses the LUT when the division maps exactly onto the table, otherwise falls back to real trigonometry (still allocation free).</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SinCosStep(int step, int steps, out float sin, out float cos)
         {
@@ -65,13 +57,8 @@ namespace MonoPrimitives.Primitives3D
             SampleInterpolated(step * (float)Resolution / steps, out sin, out cos);
         }
 
-        /// <summary>
-        /// Sine/cosine at a normalized angle <paramref name="t01"/> in [0, 1) (1 = a full turn),
-        /// via linear interpolation between the two nearest table entries — the continuous
-        /// counterpart to <see cref="SinCosStep"/> for an angle that isn't naturally a division
-        /// of a circle (e.g. an animated phase held as its own float), and the 3D equivalent of
-        /// <c>UnitCircleLut.Sample(t01)</c> on the 2D side.
-        /// </summary>
+        /// <summary>Sine/cosine at a normalized angle <paramref name="t01"/> in [0, 1) (1 = a full turn), via linear interpolation between the two nearest table entries.</summary>
+        /// <remarks>The continuous counterpart to <see cref="SinCosStep"/> for an angle that isn't naturally a division of a circle (e.g. an animated phase held as its own float), and the 3D equivalent of <c>UnitCircleLut.Sample(t01)</c> on the 2D side.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sample(float t01, out float sin, out float cos) => SampleInterpolated(t01 * Resolution, out sin, out cos);
 

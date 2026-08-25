@@ -7,28 +7,8 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace MonoPrimitives
 {
-    /// <summary>
-    /// A thin wrapper over a MonoGame <see cref="Texture2D"/> (or <see cref="RenderTarget2D"/>) that
-    /// uploads full-texture or sub-rectangle pixel data via a direct <c>glTexSubImage2D</c> call,
-    /// bypassing <see cref="Texture2D.SetData{T}(T[])"/>'s own per-call managed overhead.
-    /// </summary>
-    /// <remarks>
-    /// Measured ~2.5-2.7x faster than <c>SetData</c> for a 2500x2500 full-texture update once per
-    /// real frame (DesktopGL, Windows) — see <c>tests/MonoPrimitives.Tests/FastTextureTests.cs</c>.
-    ///
-    /// This reaches into MonoGame's private internal GL texture handle via reflection — a
-    /// supported-until-it-isn't arrangement that can break on a future MonoGame release. It is built
-    /// to degrade safely instead: when the fast path can't be established (non-GL backend, renamed
-    /// internal field, unsupported surface format, missing GL entry points), every <see cref="Update{T}(T[])"/>
-    /// call transparently falls back to <c>SetData</c> instead of throwing. Check
-    /// <see cref="IsRawUploadAvailable"/>/<see cref="Diagnostics"/> once at startup to see which path
-    /// you actually got.
-    ///
-    /// Call <c>Update</c> only from the thread that owns the GL context (Update/Draw), never from a
-    /// background task. <see cref="RenderTarget2D"/> is supported but must not be the active render
-    /// target during <c>Update</c> — call <c>GraphicsDevice.SetRenderTarget(null)</c> first. Only mip
-    /// level 0 is written; create textures for this with <c>mipMap: false</c>.
-    /// </remarks>
+    /// <summary>Uploads pixel data to a <see cref="Texture2D"/>/<see cref="RenderTarget2D"/> faster than <see cref="Texture2D.SetData{T}(T[])"/>, falling back to it automatically when the fast path isn't available.</summary>
+    /// <remarks>Desktop GL only. Call <see cref="Update{T}(T[])"/> only from the thread owning the GL context, and never while the wrapped texture is the active render target.</remarks>
     public sealed unsafe class FastTexture : IDisposable
     {
         // ------------------------------------------------------------------

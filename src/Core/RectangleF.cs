@@ -112,6 +112,11 @@ namespace MonoPrimitives
             return new RectangleF(left, top, right - left, bottom - top);
         }
 
+        /// <summary>Linearly interpolates each of <see cref="X"/>/<see cref="Y"/>/<see cref="Width"/>/<see cref="Height"/> independently between <paramref name="a"/> and <paramref name="b"/>.</summary>
+        /// <remarks>Useful for easing a rect-based transition — e.g. animating toward the rect <see cref="Primitives2D.Camera2D.FitBounds"/>/<see cref="Primitives3D.Camera3D.FitBounds"/> would set instantly, or a UI panel resizing into place. <paramref name="t"/> isn't clamped — values outside <c>[0,1]</c> extrapolate.</remarks>
+        public static RectangleF Lerp(RectangleF a, RectangleF b, float t)
+            => new(MathHelper.Lerp(a.X, b.X, t), MathHelper.Lerp(a.Y, b.Y, t), MathHelper.Lerp(a.Width, b.Width, t), MathHelper.Lerp(a.Height, b.Height, t));
+
         /// <summary>Rounds to the nearest integer <see cref="Rectangle"/> — the inverse of the implicit <c>Rectangle</c>-to-<see cref="RectangleF"/> conversion, which is exact.</summary>
         public readonly Rectangle ToRectangle()
             => new((int)MathF.Round(X), (int)MathF.Round(Y), (int)MathF.Round(Width), (int)MathF.Round(Height));

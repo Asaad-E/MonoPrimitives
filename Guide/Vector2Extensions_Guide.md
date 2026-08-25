@@ -26,6 +26,7 @@ position = position.Approach(target, speed * dt); // move toward target, landing
 | `SafeNormalize(fallback = default)` | Like `Vector2.Normalize()`, but returns `fallback` (default `Vector2.Zero`) instead of `NaN` for a zero-length vector. |
 | `Approach(target, maxDistance)` (`Vector2` and `float` overloads) | Moves toward `target` by at most `maxDistance`, landing exactly on it instead of overshooting — Godot's `move_toward`/Unity's `MoveTowards`. Negative `maxDistance` moves away from `target` instead. |
 | `ClampMagnitude(maxLength)` | Shrinks a vector to at most `maxLength`, preserving direction — a no-op if it's already shorter. |
+| `Slide(normal)` | Drops the component of `this` along `normal` (which must already be unit length), keeping only the tangential part — the classic "keep moving along the wall/floor you just hit" instead of stopping dead. Different from `Vector2.Reflect`: `Reflect` bounces (flips the normal component), `Slide` slides (drops it entirely). |
 | `GameTimeExtensions.GetElapsedTimeSeconds()` | Shorthand for `(float)gameTime.ElapsedGameTime.TotalSeconds`. |
 
 ## Rotated, not Rotate
@@ -57,6 +58,7 @@ Vector3 clamped = velocity.ClampMagnitude(maxSpeed);      // cap length, keep di
 | `SafeNormalize(fallback = default)` | Like `Vector3.Normalize()`, but returns `fallback` (default `Vector3.Zero`) instead of `NaN` for a zero-length vector. |
 | `Approach(target, maxDistance)` | Moves toward `target` by at most `maxDistance`, landing exactly on it instead of overshooting — Godot's `move_toward`/Unity's `Vector3.MoveTowards`. Negative `maxDistance` moves away from `target` instead. |
 | `ClampMagnitude(maxLength)` | Shrinks a vector to at most `maxLength`, preserving direction — a no-op if it's already shorter. |
+| `Slide(normal)` | Drops the component of `this` along `normal` (unit length), keeping only the tangential part — sliding along a wall/floor/slope instead of stopping dead against it. Same `Reflect` vs. `Slide` distinction as the 2D version. |
 
 **No `float` overload of `Approach` here** — reuse `MonoPrimitives.Vector2Extensions`'s own `Approach(float, float, float)` directly (`using MonoPrimitives;`); it's already dimension-agnostic (plain 1D scalar math, nothing 2D-specific about it), and duplicating it in this namespace too would make any call site with both namespaces in scope ambiguous (`CS0121`) instead of picking one.
 

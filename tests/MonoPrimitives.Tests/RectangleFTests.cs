@@ -107,6 +107,24 @@ namespace MonoPrimitives.Tests
                 if (new RectangleF(0, 0, 5, 5).IsEmpty) return "a real rectangle should not be IsEmpty";
                 return null;
             });
+
+            results.Check("RectangleF.Lerp interpolates each field independently, exact at t=0/1, extrapolates outside [0,1]", () =>
+            {
+                var a = new RectangleF(0f, 0f, 10f, 20f);
+                var b = new RectangleF(100f, 200f, 50f, 60f);
+
+                if (RectangleF.Lerp(a, b, 0f) != a) return $"t=0 should equal a exactly, got {RectangleF.Lerp(a, b, 0f)}";
+                if (RectangleF.Lerp(a, b, 1f) != b) return $"t=1 should equal b exactly, got {RectangleF.Lerp(a, b, 1f)}";
+
+                var mid = RectangleF.Lerp(a, b, 0.5f);
+                var expectedMid = new RectangleF(50f, 100f, 30f, 40f);
+                if (mid != expectedMid) return $"t=0.5 expected {expectedMid}, got {mid}";
+
+                var extrapolated = RectangleF.Lerp(a, b, 2f);
+                var expectedExtrapolated = new RectangleF(200f, 400f, 90f, 100f);
+                if (extrapolated != expectedExtrapolated) return $"t=2 (extrapolation) expected {expectedExtrapolated}, got {extrapolated}";
+                return null;
+            });
         }
     }
 }

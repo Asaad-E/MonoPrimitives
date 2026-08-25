@@ -5,13 +5,12 @@ using Microsoft.Xna.Framework;
 
 namespace MonoPrimitives.Primitives2D
 {
-    /// <summary>
-    /// A fixed-capacity history of recent positions, drawn as a line that fades out toward the
-    /// oldest point — a moving particle/agent's own trail (the Pezzza's-Work-style look). Call
-    /// <see cref="Add"/> once per frame with the thing's current position, then <see cref="Draw"/>
-    /// it. A ring buffer under the hood: <see cref="Add"/> never allocates once warmed up, and old
-    /// points are simply overwritten rather than shifted.
-    /// </summary>
+    /// <summary>A fixed-capacity history of recent positions, drawn as a line that fades out toward the oldest point — a moving particle/agent's own trail.</summary>
+    /// <remarks>
+    /// Call <see cref="Add"/> once per frame with the thing's current position, then
+    /// <see cref="Draw"/> it. A ring buffer under the hood: <see cref="Add"/> never allocates
+    /// once warmed up, and old points are simply overwritten rather than shifted.
+    /// </remarks>
     public sealed class Trail2D
     {
         private readonly Vector2[] _points;
@@ -57,11 +56,14 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>
         /// Draws the trail as <see cref="Count"/>-1 segments, fading from <paramref name="color"/>
         /// at the newest point down to <paramref name="color"/> scaled by <paramref name="fadeToAlpha"/>
-        /// at the oldest — the default (0) fades all the way to invisible. Cost is proportional to
-        /// <see cref="Count"/> (one <c>DrawLine</c> call per segment, since a single-color
-        /// <c>DrawLineStrip</c> can't fade along its own length) — keep <see cref="Capacity"/> no
-        /// bigger than the trail actually needs to look right, especially with many trails on screen.
+        /// at the oldest — the default (0) fades all the way to invisible.
         /// </summary>
+        /// <remarks>
+        /// Cost is proportional to <see cref="Count"/> (one <c>DrawLine</c> call per segment,
+        /// since a single-color <c>DrawLineStrip</c> can't fade along its own length) — keep
+        /// <see cref="Capacity"/> no bigger than the trail actually needs to look right,
+        /// especially with many trails on screen.
+        /// </remarks>
         public void Draw(Primitive2DBatch batch, Color color, float thickness = 2f, float fadeToAlpha = 0f)
         {
             if (Count < 2) return;

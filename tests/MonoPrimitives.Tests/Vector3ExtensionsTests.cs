@@ -110,6 +110,25 @@ namespace MonoPrimitives.Tests
                 return null;
             });
 
+            results.Check("Vector3Extensions.Slide: drops the normal component entirely, keeps the tangential one, and result stays perpendicular to the normal", () =>
+            {
+                // Moving down into a floor whose normal points straight up: the vertical
+                // (into-floor) component should vanish, leaving the horizontal motion untouched.
+                if (!CloseV(new Vector3(1f, -1f, 2f).Slide(Vector3.UnitY), new Vector3(1f, 0f, 2f))) return "Slide against a floor normal didn't drop the vertical component";
+
+                // A vector already tangential to the normal (perpendicular) should pass through unchanged.
+                if (!CloseV(Vector3.UnitX.Slide(Vector3.UnitY), Vector3.UnitX)) return "Slide changed a vector already perpendicular to the normal";
+
+                // A vector purely along the normal should slide to zero.
+                if (!CloseV(new Vector3(0f, -5f, 0f).Slide(Vector3.UnitY), Vector3.Zero)) return "Slide of a purely-along-normal vector should be zero";
+
+                // Result must always be perpendicular to the normal (that's the whole point of "tangential").
+                Vector3 unitNormal = new Vector3(1f, 2f, 2f) / 3f; // length-3 vector normalized to unit length
+                Vector3 slid = new Vector3(4f, -3f, 7f).Slide(unitNormal);
+                if (MathF.Abs(Vector3.Dot(slid, unitNormal)) > 1e-4f) return $"Slide result {slid} isn't perpendicular to the normal";
+                return null;
+            });
+
             results.Check("Vector3Extensions.Approach/ClampMagnitude/SafeNormalize don't collide with MonoGame's own native Vector3 members", () =>
             {
                 // MonoGame already ships Vector3.Reflect/Clamp/Lerp natively -- confirmed by reflection

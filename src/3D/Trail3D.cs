@@ -5,13 +5,8 @@ using Microsoft.Xna.Framework;
 
 namespace MonoPrimitives.Primitives3D
 {
-    /// <summary>
-    /// A fixed-capacity history of recent positions, drawn as a line that fades out toward the
-    /// oldest point — a moving particle/agent's own trail (the Pezzza's-Work-style look). Call
-    /// <see cref="Add"/> once per frame with the thing's current position, then <see cref="Draw"/>
-    /// it. A ring buffer under the hood: <see cref="Add"/> never allocates once warmed up, and old
-    /// points are simply overwritten rather than shifted.
-    /// </summary>
+    /// <summary>A fixed-capacity history of recent positions, drawn as a line that fades out toward the oldest point — a moving particle/agent's own trail (the Pezzza's-Work-style look).</summary>
+    /// <remarks>Call <see cref="Add"/> once per frame with the thing's current position, then <see cref="Draw"/> it. A ring buffer under the hood: <see cref="Add"/> never allocates once warmed up, and old points are simply overwritten rather than shifted.</remarks>
     public sealed class Trail3D
     {
         private readonly Vector3[] _points;
@@ -61,14 +56,8 @@ namespace MonoPrimitives.Primitives3D
             }
         }
 
-        /// <summary>
-        /// Draws the trail as one joined camera-facing strip (<see cref="Primitive3DBatch.DrawLineStrip3D(ReadOnlySpan{Vector3},ReadOnlySpan{Color},float)"/>),
-        /// fading from <paramref name="color"/> at the newest point down to <paramref name="color"/>
-        /// scaled by <paramref name="fadeToAlpha"/> at the oldest — the default (0) fades all the
-        /// way to invisible. Shares one offset direction between adjacent segments at each interior
-        /// point, so a sharp bend in the trail no longer shows the gap/overlap a naive per-segment
-        /// draw would.
-        /// </summary>
+        /// <summary>Draws the trail as one joined camera-facing strip (<see cref="Primitive3DBatch.DrawLineStrip3D(ReadOnlySpan{Vector3},ReadOnlySpan{Color},float)"/>), fading from <paramref name="color"/> at the newest point down to <paramref name="color"/> scaled by <paramref name="fadeToAlpha"/> at the oldest — the default (0) fades all the way to invisible.</summary>
+        /// <remarks>Shares one offset direction between adjacent segments at each interior point, so a sharp bend in the trail no longer shows the gap/overlap a naive per-segment draw would.</remarks>
         /// <param name="batch">Batch to draw into; must already be between <c>Begin</c>/<c>End</c>.</param>
         /// <param name="color">Color at the newest point, before any fade is applied.</param>
         /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="Primitive3DBatch.DefaultLineThickness"/> — the same sentinel convention as the rest of this library's <c>Border*</c>/<c>Draw*</c> methods.</param>

@@ -5,15 +5,15 @@ using Microsoft.Xna.Framework;
 
 namespace MonoPrimitives.Primitives2D
 {
-    /// <summary>
-    /// Pure geometry overlap/intersection tests (circle, rectangle, triangle, polygon,
-    /// line). Static utilities rather than <see cref="Primitive2DBatch"/> methods, since they
+    /// <summary>Pure geometry overlap/intersection tests (circle, rectangle, triangle, polygon, line).</summary>
+    /// <remarks>
+    /// Static utilities rather than <see cref="Primitive2DBatch"/> methods, since they
     /// don't touch a <see cref="Microsoft.Xna.Framework.Graphics.GraphicsDevice"/> at all —
     /// plain math you can call any time, not just mid-draw. MonoGame's own
     /// <see cref="Rectangle"/> only covers rect-rect/point-in-rect; everything else here
     /// fills a real gap. Useful for hit detection, platformer collision, or neighbor/
     /// separation checks in a simulation.
-    /// </summary>
+    /// </remarks>
     public static class Collision2D
     {
         /// <summary>Rectangle vs rectangle overlap. Thin wrapper over <see cref="Rectangle.Intersects(Rectangle)"/>, included here for naming consistency with the rest of this class.</summary>
@@ -141,12 +141,12 @@ namespace MonoPrimitives.Primitives2D
         // for ANY simple polygon, convex or not — same generality as CheckCollisionPointPoly above.
         // =====================================================================
 
-        /// <summary>
-        /// Convex polygon vs convex polygon overlap, via the Separating Axis Theorem: tries each
-        /// polygon's own edge normals in turn as a candidate separating axis, projecting both
-        /// polygons onto it and looking for a gap. No separating axis on either polygon's edges
-        /// means the polygons overlap. Requires both polygons to be convex.
-        /// </summary>
+        /// <summary>Convex polygon vs convex polygon overlap. Requires both polygons to be convex.</summary>
+        /// <remarks>
+        /// Uses the Separating Axis Theorem: tries each polygon's own edge normals in turn as a
+        /// candidate separating axis, projecting both polygons onto it and looking for a gap. No
+        /// separating axis on either polygon's edges means the polygons overlap.
+        /// </remarks>
         public static bool CheckCollisionPolyPoly(ReadOnlySpan<Vector2> poly1, ReadOnlySpan<Vector2> poly2)
         {
             if (poly1.Length < 3 || poly2.Length < 3) return false;
@@ -198,12 +198,13 @@ namespace MonoPrimitives.Primitives2D
             }
         }
 
-        /// <summary>
-        /// Circle vs arbitrary (possibly non-convex) polygon overlap — correct for any simple
-        /// polygon, unlike the SAT-based checks above. True if the circle's center is inside the
-        /// polygon (reusing <see cref="CheckCollisionPointPoly"/>) or within <paramref name="radius"/>
-        /// of any edge (reusing the same closest-point-on-segment distance as <see cref="CheckCollisionPointLine"/>).
-        /// </summary>
+        /// <summary>Circle vs arbitrary (possibly non-convex) polygon overlap.</summary>
+        /// <remarks>
+        /// Correct for any simple polygon, unlike the SAT-based checks above. True if the circle's
+        /// center is inside the polygon (reusing <see cref="CheckCollisionPointPoly"/>) or within
+        /// <paramref name="radius"/> of any edge (reusing the same closest-point-on-segment
+        /// distance as <see cref="CheckCollisionPointLine"/>).
+        /// </remarks>
         public static bool CheckCollisionCirclePoly(Vector2 center, float radius, ReadOnlySpan<Vector2> points)
         {
             if (points.Length < 2) return false;
@@ -220,16 +221,16 @@ namespace MonoPrimitives.Primitives2D
         public static bool CheckCollisionCircleTriangle(Vector2 center, float radius, Vector2 p1, Vector2 p2, Vector2 p3)
             => CheckCollisionCirclePoly(center, radius, [p1, p2, p3]);
 
-        /// <summary>
-        /// Capsule vs arbitrary (possibly non-convex) polygon overlap — correct for any simple
-        /// polygon, same generality as <see cref="CheckCollisionCirclePoly"/> (not SAT-based, so
-        /// convexity isn't required). True if either capsule endpoint is inside the polygon
-        /// (reusing <see cref="CheckCollisionPointPoly"/>), or the capsule's own axis SEGMENT comes
-        /// within <paramref name="capsuleRadius"/> of any polygon edge (via the same
+        /// <summary>Capsule vs arbitrary (possibly non-convex) polygon overlap.</summary>
+        /// <remarks>
+        /// Correct for any simple polygon, same generality as <see cref="CheckCollisionCirclePoly"/>
+        /// (not SAT-based, so convexity isn't required). True if either capsule endpoint is inside
+        /// the polygon (reusing <see cref="CheckCollisionPointPoly"/>), or the capsule's own axis
+        /// SEGMENT comes within <paramref name="capsuleRadius"/> of any polygon edge (via the same
         /// closest-point-between-segments distance <see cref="CheckCollisionCapsuleCapsule"/> uses)
         /// — the second check alone also covers a capsule passing all the way through the polygon,
         /// since entering a closed shape always crosses one of its edges.
-        /// </summary>
+        /// </remarks>
         public static bool CheckCollisionCapsulePoly(Vector2 capsuleStart, Vector2 capsuleEnd, float capsuleRadius, ReadOnlySpan<Vector2> points)
         {
             if (points.Length < 2) return false;
@@ -265,14 +266,14 @@ namespace MonoPrimitives.Primitives2D
             return SegmentSegmentDistanceSquared(aStart, aEnd, bStart, bEnd) <= radiusSum * radiusSum;
         }
 
-        /// <summary>
-        /// Squared distance between the closest points of two line segments — the standard
-        /// closest-point-between-segments algorithm (Ericson, "Real-Time Collision Detection"),
-        /// handling every degenerate case (either or both segments collapsed to a point, parallel
-        /// segments) without branching on them explicitly. <c>s</c>/<c>t</c> are each segment's
-        /// own parametric position of its closest point, clamped to [0,1] (i.e. always actually
-        /// ON the segment, never the infinite line through it).
-        /// </summary>
+        /// <summary>Squared distance between the closest points of two line segments.</summary>
+        /// <remarks>
+        /// The standard closest-point-between-segments algorithm (Ericson, "Real-Time Collision
+        /// Detection"), handling every degenerate case (either or both segments collapsed to a
+        /// point, parallel segments) without branching on them explicitly. <c>s</c>/<c>t</c> are
+        /// each segment's own parametric position of its closest point, clamped to [0,1] (i.e.
+        /// always actually ON the segment, never the infinite line through it).
+        /// </remarks>
         private static float SegmentSegmentDistanceSquared(Vector2 p1, Vector2 q1, Vector2 p2, Vector2 q2)
         {
             Vector2 d1 = q1 - p1, d2 = q2 - p2, r = p1 - p2;

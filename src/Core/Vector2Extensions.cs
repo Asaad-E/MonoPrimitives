@@ -8,8 +8,8 @@ namespace MonoPrimitives
     /// <see cref="Vector2"/>/<see cref="MathHelper"/> don't provide themselves.
     /// </summary>
     /// <remarks>
-    /// Confirmed missing by comparison against raylib's <c>raymath.h</c>, <see cref="System.Numerics"/>,
-    /// Godot, Unity, and Processing/p5.js. Part of <c>MonoPrimitives</c> — these show up on any
+    /// Confirmed missing by comparison against <see cref="System.Numerics"/> and several other 2D
+    /// vector-math APIs. Part of <c>MonoPrimitives</c> — these show up on any
     /// <see cref="Vector2"/> once this namespace is in scope, but they aren't native MonoGame members.
     /// </remarks>
     public static class Vector2Extensions
@@ -60,8 +60,8 @@ namespace MonoPrimitives
         /// <see cref="Vector2"/>'s own <see cref="Vector2.Rotate(float)"/>/<see cref="Vector2.RotateAround(Vector2,float)"/>
         /// instead mutate the vector in place (they return <c>void</c>), which only works on a
         /// variable, not an expression or a value you want to keep the original of — named
-        /// <c>Rotated</c> rather than <c>Rotate</c> to avoid colliding with those, matching Godot's
-        /// own <c>Vector2.rotated()</c> — the same "give me a rotated copy" shape.
+        /// <c>Rotated</c> rather than <c>Rotate</c> to avoid colliding with those and signal a
+        /// value-returning "give me a rotated copy" instead.
         /// </remarks>
         public static Vector2 Rotated(this Vector2 v, float radians)
         {
@@ -89,12 +89,8 @@ namespace MonoPrimitives
             return lenSq < 1e-12f ? fallback : v * (1f / MathF.Sqrt(lenSq));
         }
 
-        /// <summary>
-        /// Moves <paramref name="current"/> toward <paramref name="target"/> by at most
-        /// <paramref name="maxDistance"/>, landing exactly on <paramref name="target"/> instead of
-        /// overshooting past it — Godot's <c>move_toward</c>/Unity's <c>Vector2.MoveTowards</c>.
-        /// <paramref name="maxDistance"/> can be negative to move away from <paramref name="target"/> instead.
-        /// </summary>
+        /// <summary>Moves <paramref name="current"/> toward <paramref name="target"/> by at most <paramref name="maxDistance"/>, landing exactly on <paramref name="target"/> instead of overshooting past it.</summary>
+        /// <remarks><paramref name="maxDistance"/> can be negative to move away from <paramref name="target"/> instead.</remarks>
         public static Vector2 Approach(this Vector2 current, Vector2 target, float maxDistance)
         {
             Vector2 toTarget = target - current;
@@ -112,8 +108,7 @@ namespace MonoPrimitives
 
         /// <summary>
         /// Clamps <paramref name="v"/>'s own length to at most <paramref name="maxLength"/>,
-        /// preserving its direction — raylib's <c>Vector2ClampValue</c>, Godot's <c>limit_length</c>,
-        /// Unity's <c>Vector2.ClampMagnitude</c>. A no-op if <paramref name="v"/> is already shorter.
+        /// preserving its direction. A no-op if <paramref name="v"/> is already shorter.
         /// </summary>
         public static Vector2 ClampMagnitude(this Vector2 v, float maxLength)
         {
@@ -121,6 +116,10 @@ namespace MonoPrimitives
             if (lenSq <= maxLength * maxLength) return v;
             return v * (maxLength / MathF.Sqrt(lenSq));
         }
+
+        /// <summary>Removes the component of <paramref name="v"/> along <paramref name="normal"/>, keeping only the tangential part — the direction to keep moving along a wall/floor instead of stopping dead against it.</summary>
+        /// <remarks><paramref name="normal"/> must already be unit length (not renormalized here, same convention as <see cref="Vector2.Reflect(Vector2,Vector2)"/>). Different from <see cref="Vector2.Reflect(Vector2,Vector2)"/>: <c>Reflect</c> flips the normal component (a bounce), <c>Slide</c> drops it entirely (a slide).</remarks>
+        public static Vector2 Slide(this Vector2 v, Vector2 normal) => v - normal * Vector2.Dot(v, normal);
     }
 
     /// <summary>Extension methods on MonoGame's own <see cref="GameTime"/>. Part of <c>MonoPrimitives</c>, not a native MonoGame member.</summary>

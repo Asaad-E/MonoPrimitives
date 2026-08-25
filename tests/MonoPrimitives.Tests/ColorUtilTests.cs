@@ -181,6 +181,32 @@ namespace MonoPrimitives.Tests
                     if (inner.A != 255 || outer.A != 255) return "a GradientPairs entry is not fully opaque";
                 return null;
             });
+
+            results.Check("FromTemperature follows the blackbody curve: red-hot at low K, white around 6600K, blue-shifted at high K", () =>
+            {
+                Color cool = ColorUtil.FromTemperature(1000f);   // candlelight -- expect strongly red/orange, no blue
+                Color neutral = ColorUtil.FromTemperature(6600f); // ~daylight white
+                Color hot = ColorUtil.FromTemperature(20000f);    // blue-white star
+
+                if (cool.R <= cool.B) return $"1000K should be red-dominant over blue, got {cool}";
+                if (cool.B != 0) return $"1000K should have zero blue, got {cool}";
+
+                if (Math.Abs(neutral.R - neutral.G) > 2 || Math.Abs(neutral.G - neutral.B) > 2)
+                    return $"6600K should be roughly neutral (R≈G≈B), got {neutral}";
+
+                if (hot.B <= hot.R) return $"20000K should be blue-dominant over red, got {hot}";
+
+                // Monotonic trend: red channel should not increase, blue channel should not decrease, as temperature rises.
+                if (hot.R > cool.R) return $"red channel should not increase with temperature: {cool.R} (1000K) -> {hot.R} (20000K)";
+                if (hot.B < cool.B) return $"blue channel should not decrease with temperature: {cool.B} (1000K) -> {hot.B} (20000K)";
+
+                // Clamped to the fit's valid range -- extreme inputs shouldn't throw or wrap.
+                Color veryLow = ColorUtil.FromTemperature(0f);
+                Color veryHigh = ColorUtil.FromTemperature(100000f);
+                if (veryLow != ColorUtil.FromTemperature(1000f)) return "kelvin below 1000 should clamp to the 1000K result";
+                if (veryHigh != ColorUtil.FromTemperature(40000f)) return "kelvin above 40000 should clamp to the 40000K result";
+                return null;
+            });
         }
     }
 }

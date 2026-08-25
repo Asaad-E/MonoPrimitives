@@ -108,6 +108,24 @@ namespace MonoPrimitives.Tests
                 return null;
             });
 
+            results.Check("Slide: drops the normal component entirely, keeps the tangential one, and is a no-op on a purely tangential vector", () =>
+            {
+                // Moving down-right into a floor whose normal points straight up: the vertical
+                // (into-floor) component should vanish, leaving pure horizontal motion.
+                if (!CloseV(new Vector2(1f, -1f).Slide(Vector2.UnitY), new Vector2(1f, 0f))) return "Slide against a floor normal didn't drop the vertical component";
+
+                // A vector already tangential to the normal (perpendicular) should pass through unchanged.
+                if (!CloseV(Vector2.UnitX.Slide(Vector2.UnitY), Vector2.UnitX)) return "Slide changed a vector already perpendicular to the normal";
+
+                // A vector purely along the normal should slide to zero.
+                if (!CloseV(new Vector2(0f, -5f).Slide(Vector2.UnitY), Vector2.Zero)) return "Slide of a purely-along-normal vector should be zero";
+
+                // Result must always be perpendicular to the normal (that's the whole point of "tangential").
+                Vector2 slid = new Vector2(3f, -7f).Slide(new Vector2(0.6f, 0.8f)); // (0.6,0.8) is already unit length
+                if (MathF.Abs(Vector2.Dot(slid, new Vector2(0.6f, 0.8f))) > 1e-4f) return $"Slide result {slid} isn't perpendicular to the normal";
+                return null;
+            });
+
             results.Check("GameTimeExtensions.GetElapsedTimeSeconds matches ElapsedGameTime.TotalSeconds", () =>
             {
                 var gt = new GameTime(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(0.016));

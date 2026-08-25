@@ -3,13 +3,13 @@ using Microsoft.Xna.Framework;
 
 namespace MonoPrimitives
 {
-    /// <summary>
-    /// Tracks a rolling average frames-per-second over the last <see cref="SampleCount"/> frames.
-    /// Call <see cref="Update(GameTime)"/> once per frame (typically the first line of <c>Draw</c>),
-    /// read <see cref="AverageFps"/> whenever. Purely a measurement — pair it with your own
-    /// <c>DrawString</c>/<c>DrawString3D</c> call to actually show it; this doesn't draw anything
-    /// itself, and doesn't assume a screen position, format, or color.
-    /// </summary>
+    /// <summary>Tracks a rolling average frames-per-second over the last <see cref="SampleCount"/> frames.</summary>
+    /// <remarks>
+    /// Call <see cref="Update(GameTime)"/> once per frame (typically the first line of
+    /// <c>Draw</c>), read <see cref="AverageFps"/> whenever. Purely a measurement — pair it with
+    /// your own <c>DrawString</c>/<c>DrawString3D</c> call to actually show it; this doesn't draw
+    /// anything itself, and doesn't assume a screen position, format, or color.
+    /// </remarks>
     public sealed class FpsCounter
     {
         private readonly float[] _frameTimes;
@@ -37,12 +37,12 @@ namespace MonoPrimitives
             if (_filled < _frameTimes.Length) _filled++;
         }
 
-        /// <summary>
-        /// Average FPS over the window: total frames divided by total time, not a per-frame
-        /// average of instantaneous FPS values — the latter over-weights a handful of unusually
-        /// fast frames instead of reflecting how long the window actually took. 0 before the
-        /// first <see cref="Update(GameTime)"/> call.
-        /// </summary>
+        /// <summary>Average FPS over the window: total frames divided by total time. 0 before the first <see cref="Update(GameTime)"/> call.</summary>
+        /// <remarks>
+        /// Not a per-frame average of instantaneous FPS values — the latter over-weights a
+        /// handful of unusually fast frames instead of reflecting how long the window actually
+        /// took.
+        /// </remarks>
         public float AverageFps
         {
             get
@@ -66,15 +66,14 @@ namespace MonoPrimitives
             }
         }
 
-        /// <summary>
-        /// Average frame time in milliseconds over the window: total time divided by total
-        /// frames — the same underlying average <see cref="AverageFps"/> is built on, just
-        /// read before the reciprocal instead of after. Fps compresses the low end of the
-        /// scale (60→59 fps is a 0.28 ms difference, 15→14 fps is a 4.8 ms one for the same
-        /// "1 fps") and expands the high end, so a fixed budget — "this frame must fit in
-        /// 16.6 ms" — is easier to read and compare directly against here than by eyeballing
-        /// fps deltas. 0 before the first <see cref="Update(GameTime)"/> call.
-        /// </summary>
+        /// <summary>Average frame time in milliseconds over the window: total time divided by total frames. 0 before the first <see cref="Update(GameTime)"/> call.</summary>
+        /// <remarks>
+        /// The same underlying average <see cref="AverageFps"/> is built on, just read before
+        /// the reciprocal instead of after. Fps compresses the low end of the scale (60→59 fps
+        /// is a 0.28 ms difference, 15→14 fps is a 4.8 ms one for the same "1 fps") and expands
+        /// the high end, so a fixed budget — "this frame must fit in 16.6 ms" — is easier to
+        /// read and compare directly against here than by eyeballing fps deltas.
+        /// </remarks>
         public float AverageFrameTimeMs
         {
             get

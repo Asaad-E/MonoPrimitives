@@ -187,6 +187,26 @@ namespace MonoPrimitives.Tests
                 }
                 return failures.Count == 0 ? null : string.Join(", ", failures);
             });
+
+            results.Check("Evaluate(EasingType, t) matches its named function exactly, for every curve", () =>
+            {
+                var failures = new List<string>();
+                foreach (var (name, fn) in All)
+                {
+                    var type = Enum.Parse<EasingType>(name);
+                    for (int i = 0; i <= 10; i++)
+                    {
+                        float t = i / 10f;
+                        float expected = fn(t), actual = Easing.Evaluate(type, t);
+                        if (MathF.Abs(expected - actual) > 1e-6f)
+                        {
+                            failures.Add($"Evaluate({name}, {t:F1})={actual:F6} != {name}({t:F1})={expected:F6}");
+                            break;
+                        }
+                    }
+                }
+                return failures.Count == 0 ? null : string.Join(", ", failures);
+            });
         }
     }
 }

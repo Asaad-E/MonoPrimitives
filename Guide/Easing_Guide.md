@@ -36,6 +36,17 @@ Every function takes `t` in `[0,1]` and returns a (usually, see below) `[0,1]`-i
 
 `Back`/`Bounce`/`Elastic` are the three families that deliberately leave `[0,1]` at some point along the curve (an overshoot past the target, or a dip below the start) — that's their entire defining character, not a bug. Every other family stays monotonically within `[0,1]`.
 
+## Picking a curve as data
+
+Every curve above is also a value of the `EasingType` enum, dispatched through `Easing.Evaluate(EasingType, t)`:
+
+```csharp
+EasingType curve = LoadCurveChoiceFromLevelFile(); // or a debug-UI dropdown
+float eased = Easing.Evaluate(curve, t);
+```
+
+Use this when the curve itself is data — chosen from a config/level file, exposed as a dropdown in a debug panel, stored per-object instead of hardcoded. Call the named function directly (`Easing.CubicOut(t)`) instead when the curve is already known at compile time — `Evaluate` adds a switch dispatch on top for no benefit in that case.
+
 ## Picking one
 
 - **Default choice**: `QuadOut` or `CubicOut` — reads as "settling into place," unremarkable in the best way.
@@ -52,7 +63,7 @@ Every function takes `t` in `[0,1]` and returns a (usually, see below) `[0,1]`-i
 
 ## Testing
 
-Every function has a permanent regression check in [`tests/MonoPrimitives.Tests/EasingTests.cs`](../tests/MonoPrimitives.Tests/EasingTests.cs): the two properties above, boundary conditions (`f(0)=0`/`f(1)=1`) across all 31 functions, monotonicity for the 7 smooth families, ease-in-lags/ease-out-leads-linear-pace at `t=0.25`, and the defining overshoot/oscillation behavior for `Back`/`Elastic`/`Bounce`. Run with:
+Every function has a permanent regression check in [`tests/MonoPrimitives.Tests/EasingTests.cs`](../tests/MonoPrimitives.Tests/EasingTests.cs): the two properties above, boundary conditions (`f(0)=0`/`f(1)=1`) across all 31 functions, monotonicity for the 7 smooth families, ease-in-lags/ease-out-leads-linear-pace at `t=0.25`, the defining overshoot/oscillation behavior for `Back`/`Elastic`/`Bounce`, and that `Evaluate(EasingType, t)` matches its named function exactly for every curve. Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
