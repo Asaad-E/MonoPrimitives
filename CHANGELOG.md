@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning follows [SemVer](https://semver.org/), with the pre-1.0 caveat that the API can still change between minor versions — see [ROADMAP.md](Design/ROADMAP.md).
 
+## [Unreleased]
+
+### Added
+- SourceLink + a `.snupkg` symbol package, so "Go to Definition" into the published package resolves to this repo's real source instead of decompiling the DLL.
+
+### Changed
+- `FrameLimiter.EndFrame()` no longer recomputes `1000/TargetFps` every call — `TargetFps`'s setter now caches it, since `TargetFps` only actually changes when a caller sets it.
+
 ## [0.8.2] - 2026-08-25
 
 ### Added

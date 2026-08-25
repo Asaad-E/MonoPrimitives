@@ -18,9 +18,19 @@ namespace MonoPrimitives
         private readonly Stopwatch _stopwatch = new Stopwatch();
         private readonly FpsCounter _fpsCounter;
         private bool _hasBegun;
+        private float _targetFps;
+        private double _targetFrameTimeMs;
 
         /// <summary>Target frames per second. Editable at any time — takes effect on the next <see cref="EndFrame"/>.</summary>
-        public float TargetFps { get; set; }
+        public float TargetFps
+        {
+            get => _targetFps;
+            set
+            {
+                _targetFps = value;
+                _targetFrameTimeMs = 1000.0 / value; // cached here so EndFrame doesn't redo this division every frame
+            }
+        }
 
         /// <summary>
         /// Upper bound <see cref="BeginFrame"/> clamps <see cref="FrameTime"/> to, in seconds.
@@ -102,7 +112,7 @@ namespace MonoPrimitives
         /// </summary>
         public void EndFrame()
         {
-            double targetMs = 1000.0 / TargetFps;
+            double targetMs = _targetFrameTimeMs;
             double sleepUntilMs = targetMs - SpinMarginMs;
 
             if (sleepUntilMs > 0 && _stopwatch.Elapsed.TotalMilliseconds < sleepUntilMs)

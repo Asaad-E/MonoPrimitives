@@ -29,10 +29,17 @@
     <RepositoryUrl>https://github.com/Asaad-E/MonoPrimitives</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!-- SourceLink: lets a consumer's IDE step into this package's real GitHub source (pinned to
+         the exact commit it was built from) instead of decompiling the DLL on "Go to Definition". -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.*" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.*" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
