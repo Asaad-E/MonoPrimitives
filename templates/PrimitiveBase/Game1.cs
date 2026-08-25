@@ -28,6 +28,8 @@ public class Game1 : Game
     private PrimitiveInput _input;
     private RenderContext _render;
 
+    private FrameLimiter _limiter;
+
     public Game1()
     {
         // windows init
@@ -49,8 +51,11 @@ public class Game1 : Game
         IsMouseVisible = true;
 
         // FPS
-        IsFixedTimeStep = true;
-        TargetElapsedTime = TimeSpan.FromSeconds(1.0 / TargetFps);
+        _limiter = new(
+            game: this,
+            targetFps: TargetFps,
+            maxFrameTime: 1f / 30f
+        );
     }
 
     protected override void Initialize()
@@ -78,8 +83,9 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        // Update input
-        _input.Update(gameTime);
+        // start new frame
+        float deltaTime = _limiter.BeginFrame();
+        _input.Update(deltaTime);
 
         // close
         if (_input.IsKeyDown(Keys.Escape))
@@ -92,7 +98,7 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        // Bar bars and clear backgroundColor
+        // Black bars and clear background
         _render.Batch2D.ClearLetterboxed(_viewportAdapter, backgroundColor: Palette.Background);
 
         _render.Batch2D.Begin(_camera.GetTransformMatrix());
@@ -104,6 +110,8 @@ public class Game1 : Game
 
         _render.Batch2D.End();
 
+        // End Frame
+        _limiter.EndFrame();
         base.Draw(gameTime);
     }
 }
