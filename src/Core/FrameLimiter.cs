@@ -16,7 +16,6 @@ namespace MonoPrimitives
         private const double SpinMarginMs = 2.0;
 
         private readonly Stopwatch _stopwatch = new Stopwatch();
-        private readonly Stopwatch _deltaStopwatch = new Stopwatch();
         private readonly FpsCounter _fpsCounter;
         private bool _hasBegun;
 
@@ -94,15 +93,6 @@ namespace MonoPrimitives
 
             _stopwatch.Restart();
             return frameTime;
-        }
-
-        /// <summary>Time since the previous call to this method, in seconds — <c>0</c> on the first call.</summary>
-        /// <remarks>A separate, unclamped stopwatch independent of <see cref="BeginFrame"/>/<see cref="EndFrame"/> and <see cref="MaxFrameTime"/>, for measuring the real gap between two arbitrary points in your own loop.</remarks>
-        public float MeasureDeltaTime()
-        {
-            float delta = (float)_deltaStopwatch.Elapsed.TotalSeconds;
-            _deltaStopwatch.Restart();
-            return delta;
         }
 
         /// <summary>

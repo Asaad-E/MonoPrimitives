@@ -151,19 +151,6 @@ namespace MonoPrimitives.Tests
                 return null;
             });
 
-            results.Check("FrameLimiter.MeasureDeltaTime: 0 on the first call, then the real gap since the previous call, independent of BeginFrame/EndFrame/MaxFrameTime", () =>
-            {
-                var limiter = new FrameLimiter(game, 60f, maxFrameTime: 0.001f); // tiny cap -- must not affect this method
-                float first = limiter.MeasureDeltaTime();
-                if (first != 0f) return $"expected 0 on the first MeasureDeltaTime call, got {first:F4}";
-
-                System.Threading.Thread.Sleep(30);
-                limiter.BeginFrame(); // shouldn't reset or otherwise affect the delta stopwatch
-                float second = limiter.MeasureDeltaTime();
-                if (second < 0.025) return $"expected roughly 0.03s after a real 30ms sleep, got {second:F4}s -- should be unaffected by MaxFrameTime/BeginFrame";
-                return null;
-            });
-
             results.Check("FrameLimiter: composes an internal FpsCounter -- AverageFps/CurrentFps/*FrameTimeMs are 0 before the first BeginFrame, and FpsSampleCount echoes the constructor arg", () =>
             {
                 var limiter = new FrameLimiter(game, 60f, fpsSampleCount: 30);
