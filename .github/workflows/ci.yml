@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       # No global.json: src/MonoPrimitives.csproj targets net8.0, everything else in the
-      # solution (tests, sample, all 13 examples) targets net10.0. Installing both SDKs
+      # solution (tests, sample, all 18 examples) targets net10.0. Installing both SDKs
       # side by side lets the same runner build every project at its own TargetFramework.
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -25,7 +25,7 @@ jobs:
             8.0.x
             10.0.x
 
-      # MonoPrimitives.slnx lists src, tests, the sample, and all 13 examples/ projects
+      # MonoPrimitives.slnx lists src, tests, the sample, and all 18 examples/ projects
       # (see Design/README.md) -- one build call covers all of them, so a public-API
       # change that breaks an example is caught here instead of only being found the next
       # time someone opens that example by hand. templates/PrimitiveBase is deliberately

@@ -12,6 +12,11 @@
     <Project Path="examples/demos/Asteroids2D/Asteroids2D.csproj" />
     <Project Path="examples/demos/Asteroids3D/Asteroids3D.csproj" />
     <Project Path="examples/demos/BoidsSwarm/BoidsSwarm.csproj" />
+    <Project Path="examples/demos/NBodies2D/NBodies2D.csproj" />
+    <Project Path="examples/demos/NBodies3D/NBodies3D.csproj" />
+    <Project Path="examples/demos/FluidSPH/FluidSPH.csproj" />
+    <Project Path="examples/demos/Fire/Fire.csproj" />
+    <Project Path="examples/demos/Ants/Ants.csproj" />
     <Project Path="examples/demos/Breakout/Breakout.csproj" />
     <Project Path="examples/demos/Platformer2D/Platformer2D.csproj" />
     <Project Path="examples/demos/Snake/Snake.csproj" />
