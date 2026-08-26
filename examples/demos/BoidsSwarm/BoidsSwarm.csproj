@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <TieredCompilation>false</TieredCompilation>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Per-core heaps instead of one shared heap: meaningfully better GC throughput under a
+         sustained Parallel.For workload than the default (Workstation, concurrent) GC. -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.*" />
+    <!-- ImGui panel for retuning the simulation live, example-scoped only: same precedent as
+         samples/MonoPrimitives.Sample referencing MonoGame.Extended (see DECISIONS.md); does not
+         become a dependency of src/MonoPrimitives itself. -->
+    <PackageReference Include="ImGui.NET" Version="1.91.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\MonoPrimitives.csproj" />
+  </ItemGroup>
+
+</Project>
