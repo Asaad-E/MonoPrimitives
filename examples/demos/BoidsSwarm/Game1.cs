@@ -44,10 +44,14 @@ public class Game1 : Game
 
     public Game1()
     {
+        // Starts at the virtual resolution itself (not a smaller window like most of the other
+        // demos) -- pixelPerfect below refuses to scale the world down below 1x, only up, so a
+        // starting window smaller than VirtualWidth/Height would crop content (including the
+        // stats text in the corner) instead of shrinking it to fit.
         _graphics = new GraphicsDeviceManager(this)
         {
-            PreferredBackBufferWidth = 1280,
-            PreferredBackBufferHeight = 720,
+            PreferredBackBufferWidth = VirtualWidth,
+            PreferredBackBufferHeight = VirtualHeight,
             PreferMultiSampling = true,
         };
         _graphics.PreparingDeviceSettings += (sender, e) =>
@@ -194,13 +198,13 @@ public class Game1 : Game
         ImGui.Text($"Frame time: {_limiter.AverageFrameTimeMs:F2} ms avg");
         ImGui.Separator();
 
-        // Boid count is the one expensive-to-apply parameter (SetCount reallocates 3 arrays
-        // sized by it) -- only apply it once the slider drag actually ends, not on every
-        // intermediate value while dragging, or a fast drag across a huge range would thrash
-        // the allocator every frame.
+        // SetCount reallocates 3 arrays sized by the new count, so a fast drag across a huge
+        // range does briefly stutter -- applying only "IsItemDeactivatedAfterEdit" (release) would
+        // avoid that, but didn't reliably fire in this ImGui.NET version; applying on every actual
+        // change (SliderInt returning true) is the plain, unambiguous pattern instead.
         int count = _swarm.Count;
-        ImGui.SliderInt("Boid Count", ref count, MinBoidCount, MaxBoidCount);
-        if (ImGui.IsItemDeactivatedAfterEdit()) _swarm.SetCount(count);
+        if (ImGui.SliderInt("Boid Count", ref count, MinBoidCount, MaxBoidCount))
+            _swarm.SetCount(count);
 
         float perception = _swarm.PerceptionRadius;
         if (ImGui.SliderFloat("Perception Radius", ref perception, 4f, 80f)) _swarm.PerceptionRadius = perception;
