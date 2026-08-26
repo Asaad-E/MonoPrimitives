@@ -68,7 +68,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        _viewportAdapter = new BoxingViewportAdapter2D(GraphicsDevice, VirtualWidth, VirtualHeight);
+        _viewportAdapter = new BoxingViewportAdapter2D(GraphicsDevice, VirtualWidth, VirtualHeight, pixelPerfect: true);
         _camera = new Camera2D(_viewportAdapter) { Offset = Vector2.Zero };
         _input = new PrimitiveInput(Window);
         _swarm = new BoidSwarm(VirtualWidth, VirtualHeight, InitialBoidCount);

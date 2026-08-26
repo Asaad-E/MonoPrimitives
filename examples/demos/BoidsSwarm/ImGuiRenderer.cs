@@ -120,13 +120,17 @@ internal sealed class ImGuiRenderer
         MouseState mouse = Mouse.GetState();
         KeyboardState keyboard = Keyboard.GetState();
 
-        io.MousePos = new System.Numerics.Vector2(mouse.X, mouse.Y);
-        io.MouseDown[0] = mouse.LeftButton == ButtonState.Pressed;
-        io.MouseDown[1] = mouse.RightButton == ButtonState.Pressed;
-        io.MouseDown[2] = mouse.MiddleButton == ButtonState.Pressed;
+        // Event-based API, not the old io.MousePos/io.MouseDown[] field writes -- those still
+        // compile against this ImGui.NET version but don't reliably drive click/drag-edge
+        // detection for widgets (sliders, buttons, checkboxes) the way the modern Add*Event calls
+        // do; same reason keyboard input below uses AddKeyEvent instead of the removed io.KeysDown.
+        io.AddMousePosEvent(mouse.X, mouse.Y);
+        io.AddMouseButtonEvent(0, mouse.LeftButton == ButtonState.Pressed);
+        io.AddMouseButtonEvent(1, mouse.RightButton == ButtonState.Pressed);
+        io.AddMouseButtonEvent(2, mouse.MiddleButton == ButtonState.Pressed);
 
         int scrollDelta = mouse.ScrollWheelValue - _scrollWheelValue;
-        io.MouseWheel = scrollDelta > 0 ? 1f : scrollDelta < 0 ? -1f : 0f;
+        if (scrollDelta != 0) io.AddMouseWheelEvent(0f, scrollDelta > 0 ? 1f : -1f);
         _scrollWheelValue = mouse.ScrollWheelValue;
 
         // Release every key this class itself marked down last frame, then mark this frame's
