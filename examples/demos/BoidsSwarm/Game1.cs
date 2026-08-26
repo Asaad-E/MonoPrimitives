@@ -10,12 +10,12 @@ using MonoPrimitives.Primitives2D;
 namespace BoidsSwarm;
 
 /// <summary>
-/// A flocking stress test, not a casual demo (see examples/demos/Boids for that): thousands of
-/// boids double-buffered and stepped in parallel across every CPU core, neighbor queries answered
-/// by a counting-sort spatial hash instead of a brute-force O(boids^2) scan, and a Perlin-noise
-/// flow field the whole flock drifts along. Every behavior parameter is retunable live via the
-/// ImGui panel (drag the sliders and watch the flock/FPS react), and Up/Down ramps the boid count
-/// so you can watch <see cref="FrameLimiter.AverageFps"/> and find this machine's real ceiling.
+/// A flocking simulation built for scale rather than a fixed boid count: thousands of boids
+/// double-buffered and stepped in parallel across every CPU core, neighbor queries answered by a
+/// counting-sort spatial hash instead of a brute-force O(boids^2) scan, and a Perlin-noise flow
+/// field the whole flock drifts along. Every behavior parameter is retunable live via the ImGui
+/// panel (drag the sliders and watch the flock/FPS react), and Up/Down ramps the boid count so
+/// you can watch <see cref="FrameLimiter.AverageFps"/> and find this machine's real ceiling.
 /// </summary>
 public class Game1 : Game
 {
@@ -26,7 +26,7 @@ public class Game1 : Game
 
     private const int InitialBoidCount = 5000;
     private const int MinBoidCount = 100;
-    private const int MaxBoidCount = 300_000;
+    private const int MaxBoidCount = 100_000;
     private const float CountChangeRatePerSecond = 8000f;
     private const float BoidRadius = 3.5f;
 
@@ -140,7 +140,12 @@ public class Game1 : Game
 
         if (_swarm.ProfilingEnabled)
         {
-            using (new DebugTimer("ImGui render")) { _imGui.BeforeLayout(gameTime); BuildImGuiPanel(); _imGui.AfterLayout(); }
+            using (new DebugTimer("ImGui render"))
+            {
+                _imGui.BeforeLayout(gameTime);
+                BuildImGuiPanel();
+                _imGui.AfterLayout();
+            }
         }
         else
         {

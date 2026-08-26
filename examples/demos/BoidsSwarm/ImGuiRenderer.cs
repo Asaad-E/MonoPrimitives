@@ -37,9 +37,9 @@ internal sealed class ImGuiRenderer
     private readonly RasterizerState _rasterizerState;
 
     private VertexBuffer? _vertexBuffer;
-    private int _vertexBufferSize;
+    private byte[] _vertexData = Array.Empty<byte>();
     private IndexBuffer? _indexBuffer;
-    private int _indexBufferSize;
+    private byte[] _indexData = Array.Empty<byte>();
 
     private readonly Dictionary<IntPtr, Texture2D> _loadedTextures = new();
     private int _nextTextureId;
@@ -215,38 +215,51 @@ internal sealed class ImGuiRenderer
         _device.RasterizerState = lastRasterizerState;
     }
 
+    // Copies straight from ImGui's native draw-list buffers into a reused byte[] scratch buffer
+    // (growing it, like the GPU buffers below, only when a frame's draw data genuinely needs more
+    // room) instead of a fresh managed array per command list per frame -- this runs every frame
+    // ImGui renders, so it's worth keeping allocation-free the same way BoidSwarm's own hot path is.
     private unsafe void UpdateBuffers(ImDrawDataPtr drawData)
     {
         if (drawData.TotalVtxCount == 0) return;
 
-        if (drawData.TotalVtxCount > _vertexBufferSize)
+        int vertexBytesNeeded = drawData.TotalVtxCount * ImGuiVertexDeclaration.Size;
+        if (vertexBytesNeeded > _vertexData.Length)
         {
             _vertexBuffer?.Dispose();
-            _vertexBufferSize = (int)(drawData.TotalVtxCount * 1.5f);
-            _vertexBuffer = new VertexBuffer(_device, ImGuiVertexDeclaration.Declaration, _vertexBufferSize, BufferUsage.None);
+            int vertexCapacity = (int)(drawData.TotalVtxCount * 1.5f);
+            _vertexBuffer = new VertexBuffer(_device, ImGuiVertexDeclaration.Declaration, vertexCapacity, BufferUsage.None);
+            _vertexData = new byte[vertexCapacity * ImGuiVertexDeclaration.Size];
         }
 
-        if (drawData.TotalIdxCount > _indexBufferSize)
+        int indexBytesNeeded = drawData.TotalIdxCount * sizeof(ushort);
+        if (indexBytesNeeded > _indexData.Length)
         {
             _indexBuffer?.Dispose();
-            _indexBufferSize = (int)(drawData.TotalIdxCount * 1.5f);
-            _indexBuffer = new IndexBuffer(_device, IndexElementSize.SixteenBits, _indexBufferSize, BufferUsage.None);
+            int indexCapacity = (int)(drawData.TotalIdxCount * 1.5f);
+            _indexBuffer = new IndexBuffer(_device, IndexElementSize.SixteenBits, indexCapacity, BufferUsage.None);
+            _indexData = new byte[indexCapacity * sizeof(ushort)];
         }
 
-        int vtxOffset = 0, idxOffset = 0;
+        int vtxByteOffset = 0, idxByteOffset = 0;
         for (int n = 0; n < drawData.CmdListsCount; n++)
         {
             ImDrawListPtr cmdList = drawData.CmdLists[n];
 
-            var vtxSpan = new ReadOnlySpan<ImDrawVert>((void*)cmdList.VtxBuffer.Data, cmdList.VtxBuffer.Size);
-            _vertexBuffer!.SetData(vtxOffset * ImGuiVertexDeclaration.Size, vtxSpan.ToArray(), 0, cmdList.VtxBuffer.Size, ImGuiVertexDeclaration.Size);
+            int vtxByteCount = cmdList.VtxBuffer.Size * ImGuiVertexDeclaration.Size;
+            fixed (byte* vtxDst = &_vertexData[vtxByteOffset])
+                Buffer.MemoryCopy((void*)cmdList.VtxBuffer.Data, vtxDst, _vertexData.Length - vtxByteOffset, vtxByteCount);
 
-            var idxSpan = new ReadOnlySpan<ushort>((void*)cmdList.IdxBuffer.Data, cmdList.IdxBuffer.Size);
-            _indexBuffer!.SetData(idxOffset * sizeof(ushort), idxSpan.ToArray(), 0, cmdList.IdxBuffer.Size);
+            int idxByteCount = cmdList.IdxBuffer.Size * sizeof(ushort);
+            fixed (byte* idxDst = &_indexData[idxByteOffset])
+                Buffer.MemoryCopy((void*)cmdList.IdxBuffer.Data, idxDst, _indexData.Length - idxByteOffset, idxByteCount);
 
-            vtxOffset += cmdList.VtxBuffer.Size;
-            idxOffset += cmdList.IdxBuffer.Size;
+            vtxByteOffset += vtxByteCount;
+            idxByteOffset += idxByteCount;
         }
+
+        _vertexBuffer!.SetData(0, _vertexData, 0, vtxByteOffset, vertexStride: 1);
+        _indexBuffer!.SetData(0, _indexData, 0, idxByteOffset);
     }
 
     private void RenderCommandLists(ImDrawDataPtr drawData)

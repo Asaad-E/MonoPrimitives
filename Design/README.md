@@ -48,7 +48,7 @@ MonogameLibs/
 │   └── MonoPrimitives.csproj   — one project → one MonoPrimitives.dll
 ├── samples/MonoPrimitives.Sample/
 ├── tests/MonoPrimitives.Tests/
-├── examples/        — 14 standalone demos/tests, each its own .csproj (see ARCHITECTURE.md)
+├── examples/        — 13 standalone demos/tests, each its own .csproj (see ARCHITECTURE.md)
 ├── templates/PrimitiveBase/   — dotnet new template; deliberately outside MonoPrimitives.slnx (see below)
 ├── Design/          — you are here
 ├── Guide/           — actively-maintained per-topic user guides (see "Deeper reference" above)

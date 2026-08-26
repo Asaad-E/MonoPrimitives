@@ -10,8 +10,8 @@ namespace BoidsSwarm;
 /// parallel step reads from, and a write-only array it fills in -- swapped once the step
 /// finishes, so no two threads ever touch the same element), a counting-sort spatial hash for
 /// neighbor queries instead of an O(boids^2) scan, and a small Perlin-noise flow field the whole
-/// flock drifts along. Every tunable behavior parameter is a plain mutable field so a UI (ImGui,
-/// here) can retune the flock live without restarting.
+/// flock drifts along. Every tunable behavior parameter is a plain mutable property so a UI
+/// (ImGui, here) can retune the flock live without restarting.
 /// </summary>
 internal sealed class BoidSwarm
 {
@@ -44,13 +44,13 @@ internal sealed class BoidSwarm
         }
     }
 
-    public float SeparationRadius = 10f;
-    public float MaxSpeed = 140f;
-    public float MaxForce = 260f;
-    public float SeparationWeight = 1.7f;
-    public float AlignmentWeight = 1.0f;
-    public float CohesionWeight = 0.8f;
-    public float FlowFieldWeight = 0.6f;
+    public float SeparationRadius { get; set; } = 10f;
+    public float MaxSpeed { get; set; } = 140f;
+    public float MaxForce { get; set; } = 260f;
+    public float SeparationWeight { get; set; } = 1.7f;
+    public float AlignmentWeight { get; set; } = 1.0f;
+    public float CohesionWeight { get; set; } = 0.8f;
+    public float FlowFieldWeight { get; set; } = 0.6f;
 
     /// <summary>
     /// When on, times <see cref="Update"/>'s three phases with <see cref="DebugTimer"/> and prints
@@ -58,7 +58,7 @@ internal sealed class BoidSwarm
     /// before ever touching <see cref="DebugTimer"/>/<see cref="Console"/>, so leaving it off costs
     /// nothing (no timer construction, no I/O) rather than just suppressing the printed output.
     /// </summary>
-    public bool ProfilingEnabled;
+    public bool ProfilingEnabled { get; set; }
 
     public readonly float WorldWidth;
     public readonly float WorldHeight;
@@ -95,6 +95,15 @@ internal sealed class BoidSwarm
 
     private readonly Random _rng;
 
+    // Parallel.For needs an Action<int>; a lambda capturing per-frame locals (current/next/dt)
+    // would allocate a new closure every single Update() call. Caching one delegate instead and
+    // feeding it through these fields (read-only for the whole parallel step, same as everything
+    // else StepBoid touches) keeps the hot path allocation-free.
+    private readonly Action<int> _stepBoidAction;
+    private Boid[] _stepCurrent = Array.Empty<Boid>();
+    private Boid[] _stepNext = Array.Empty<Boid>();
+    private float _stepDeltaTime;
+
     public BoidSwarm(int worldWidth, int worldHeight, int initialCount, int seed = 12345)
     {
         WorldWidth = worldWidth;
@@ -103,6 +112,7 @@ internal sealed class BoidSwarm
         _noise = new Noise(seed);
         _current = Array.Empty<Boid>();
         _next = Array.Empty<Boid>();
+        _stepBoidAction = StepBoid;
 
         RebuildGrid();
         SetCount(initialCount);
@@ -158,14 +168,16 @@ internal sealed class BoidSwarm
             BuildSpatialHash();
         }
 
-        Boid[] current = _current, next = _next;
+        _stepCurrent = _current;
+        _stepNext = _next;
+        _stepDeltaTime = dt;
         if (ProfilingEnabled)
         {
-            using (new DebugTimer($"Parallel step ({Count:N0} boids)")) Parallel.For(0, Count, i => StepBoid(i, current, next, dt));
+            using (new DebugTimer($"Parallel step ({Count:N0} boids)")) Parallel.For(0, Count, _stepBoidAction);
         }
         else
         {
-            Parallel.For(0, Count, i => StepBoid(i, current, next, dt));
+            Parallel.For(0, Count, _stepBoidAction);
         }
 
         (_current, _next) = (_next, _current);
@@ -259,11 +271,15 @@ internal sealed class BoidSwarm
     }
 
     // ---- Per-boid step: runs on the thread pool, one call per boid ---------
-    // Reads only current/next's own slot plus the read-only grid/flow-field state built above --
-    // no two calls ever touch the same array element, so this needs no locking at all.
+    // Reads _stepCurrent/_stepNext/_stepDeltaTime (set once in Update(), before Parallel.For
+    // starts, and never touched again until the next frame) plus the read-only grid/flow-field
+    // state built above -- every call only ever writes its own next[index] slot, so this needs no
+    // locking at all.
 
-    private void StepBoid(int index, Boid[] current, Boid[] next, float dt)
+    private void StepBoid(int index)
     {
+        Boid[] current = _stepCurrent, next = _stepNext;
+        float dt = _stepDeltaTime;
         Boid self = current[index];
         Vector2 separation = Vector2.Zero, alignment = Vector2.Zero, cohesion = Vector2.Zero;
         int neighbors = 0;
