@@ -36,6 +36,37 @@ namespace MonoPrimitives.Tests
                 return null;
             });
 
+            results.Check("WindowUtil.ShowWindow/HideWindow/IsWindowHidden round-trip when available (window mapping is WM-independent, unlike Minimize/Maximize)", () =>
+            {
+                if (!WindowUtil.IsAvailable) return null;
+
+                WindowUtil.HideWindow(window);
+                bool hiddenAfterHide = WindowUtil.IsWindowHidden(window);
+                WindowUtil.ShowWindow(window);
+                bool hiddenAfterShow = WindowUtil.IsWindowHidden(window);
+
+                if (!hiddenAfterHide) return "expected IsWindowHidden to be true right after HideWindow";
+                if (hiddenAfterShow) return "expected IsWindowHidden to be false right after ShowWindow";
+                return null;
+            });
+
+            results.Check("WindowUtil.SetWindowMinSize/SetWindowMaxSize never throw, available or not, and reject negative sizes", () =>
+            {
+                // Only "doesn't throw" here, not the actual clamping -- same reasoning as
+                // Minimize/Maximize: CI's bare Xvfb display has no window manager, and whether the
+                // constraint is honored without one is a real window-hint-negotiation question this
+                // suite shouldn't assume an answer to (verified for real on an actual desktop instead).
+                WindowUtil.SetWindowMinSize(window, 100, 100);
+                WindowUtil.SetWindowMaxSize(window, 2000, 2000);
+                WindowUtil.SetWindowMinSize(window, 0, 0); // 0 means "no minimum" -- must also not throw
+
+                try { WindowUtil.SetWindowMinSize(window, -1, 100); return "expected ArgumentOutOfRangeException for a negative width"; }
+                catch (ArgumentOutOfRangeException) { }
+                try { WindowUtil.SetWindowMaxSize(window, 100, -1); return "expected ArgumentOutOfRangeException for a negative height"; }
+                catch (ArgumentOutOfRangeException) { }
+                return null;
+            });
+
             results.Check("WindowUtil.SetWindowIcon rejects a non-Color surface format", () =>
             {
                 using var icon = new Texture2D(game.GraphicsDevice, 4, 4, false, SurfaceFormat.Bgra5551);
@@ -152,6 +183,12 @@ namespace MonoPrimitives.Tests
                 catch (ArgumentNullException) { }
 
                 try { WindowUtil.GetCursorDelta(null!); return "expected ArgumentNullException"; }
+                catch (ArgumentNullException) { }
+
+                try { WindowUtil.ShowWindow(null!); return "expected ArgumentNullException"; }
+                catch (ArgumentNullException) { }
+
+                try { WindowUtil.SetWindowMinSize(null!, 100, 100); return "expected ArgumentNullException"; }
                 catch (ArgumentNullException) { }
 
                 return null;

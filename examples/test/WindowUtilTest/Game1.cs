@@ -15,7 +15,9 @@ namespace WindowUtilTest;
 /// startup (logs PASS/FAIL for each check to Console), then stays open for manual poking:
 /// 1=Minimize, 2=Maximize, 3=Restore, 4=toggle 50% opacity, 5=set a solid-color icon,
 /// 6=clipboard round-trip, 7=toggle cursor capture (move mouse to see the delta readout),
-/// 8=re-print monitor info.
+/// 8=re-print monitor info, 9=hide (auto-reshows after 1.5s, so a keyboard-focused test
+/// window doesn't get permanently stuck invisible), 0=toggle a 700x400-1400x900 resize
+/// constraint (try resizing the window by hand while it's on).
 /// </summary>
 public class Game1 : Game
 {
@@ -31,6 +33,8 @@ public class Game1 : Game
     private Point _lastCursorDelta;
     private string _lastClipboardRoundTrip = "(not tested yet)";
     private string _status = "starting...";
+    private float _reshowTimer;
+    private bool _sizeConstrained;
 
     // Auto-verification sequence: one step per ~0.8s, entirely Console-driven so it can be
     // checked headlessly (no one needs to be watching the window for this part to be useful).
@@ -104,6 +108,30 @@ public class Game1 : Game
 
         if (_input.IsKeyPressed(Keys.D8))
             _status = DescribeMonitors();
+
+        if (_input.IsKeyPressed(Keys.D9))
+        {
+            WindowUtil.HideWindow(Window);
+            _reshowTimer = 1.5f;
+            _status = "HideWindow() called -- auto-reshowing in 1.5s";
+        }
+        if (_reshowTimer > 0f)
+        {
+            _reshowTimer -= dt;
+            if (_reshowTimer <= 0f)
+            {
+                WindowUtil.ShowWindow(Window);
+                _status = "ShowWindow() called (auto-reshow)";
+            }
+        }
+
+        if (_input.IsKeyPressed(Keys.D0))
+        {
+            _sizeConstrained = !_sizeConstrained;
+            if (_sizeConstrained) { WindowUtil.SetWindowMinSize(Window, 700, 400); WindowUtil.SetWindowMaxSize(Window, 1400, 900); }
+            else { WindowUtil.SetWindowMinSize(Window, 0, 0); WindowUtil.SetWindowMaxSize(Window, 0, 0); }
+            _status = "Resize constraint (700x400-1400x900): " + _sizeConstrained + " -- try dragging the window edge";
+        }
 
         base.Update(gameTime);
     }
@@ -187,7 +215,33 @@ public class Game1 : Game
                 Console.WriteLine("[auto] RestoreWindow() called -- IsWindowMinimized now " + WindowUtil.IsWindowMinimized(Window));
                 break;
             case 15:
-                Console.WriteLine("[auto] VERIFICATION SEQUENCE COMPLETE. Manual keys still active: 1=Min 2=Max 3=Restore 4=Opacity 5=Icon 6=Clipboard 7=CursorCapture 8=Monitors");
+                WindowUtil.HideWindow(Window);
+                Console.WriteLine("[auto] HideWindow() called -- IsWindowHidden=" + WindowUtil.IsWindowHidden(Window) + " (expect true; window mapping is WM-independent, unlike Minimize/Maximize)");
+                break;
+            case 16:
+                WindowUtil.ShowWindow(Window);
+                Console.WriteLine("[auto] ShowWindow() called -- IsWindowHidden=" + WindowUtil.IsWindowHidden(Window) + " (expect false)");
+                break;
+            case 17:
+            {
+                WindowUtil.SetWindowMinSize(Window, 700, 400);
+                WindowUtil.SetWindowMaxSize(Window, 1400, 900);
+                _graphics.PreferredBackBufferWidth = 300;
+                _graphics.PreferredBackBufferHeight = 300;
+                _graphics.ApplyChanges();
+                Console.WriteLine("[auto] SetWindowMinSize(700,400) then requested 300x300 -> actual ClientBounds=" + Window.ClientBounds + " (usually clamped to at least 700x400, but this is an OS hint, not a hard guarantee -- see WindowUtil.SetWindowMinSize's doc comment)");
+                break;
+            }
+            case 18:
+                WindowUtil.SetWindowMinSize(Window, 0, 0);
+                WindowUtil.SetWindowMaxSize(Window, 0, 0);
+                _graphics.PreferredBackBufferWidth = WindowWidth;
+                _graphics.PreferredBackBufferHeight = WindowHeight;
+                _graphics.ApplyChanges();
+                Console.WriteLine("[auto] resize constraints cleared, window restored to " + WindowWidth + "x" + WindowHeight);
+                break;
+            case 19:
+                Console.WriteLine("[auto] VERIFICATION SEQUENCE COMPLETE. Manual keys still active: 1=Min 2=Max 3=Restore 4=Opacity 5=Icon 6=Clipboard 7=CursorCapture 8=Monitors 9=Hide 0=SizeConstraint");
                 _autoDone = true;
                 break;
         }
@@ -221,13 +275,13 @@ public class Game1 : Game
         _batch2d.Begin();
 
         _batch2d.DrawString("WINDOWUTIL TEST", new Vector2(16, 12), 2f, Color.White);
-        _batch2d.DrawString("1=Minimize 2=Maximize 3=Restore 4=Opacity 5=Icon 6=Clipboard 7=CursorCapture 8=Monitors", new Vector2(16, 40), 1.3f, Palette.Silver);
+        _batch2d.DrawString("1=Minimize 2=Maximize 3=Restore 4=Opacity 5=Icon 6=Clipboard 7=CursorCapture 8=Monitors 9=Hide 0=SizeConstraint", new Vector2(16, 40), 1.3f, Palette.Silver);
 
         _batch2d.DrawString("IsAvailable: " + WindowUtil.IsAvailable, new Vector2(16, 70), 1.5f, WindowUtil.IsAvailable ? Palette.Nephritis : Palette.Alizarin);
         _batch2d.DrawString("Diagnostics: " + WindowUtil.Diagnostics, new Vector2(16, 92), 1.2f, Palette.Silver);
 
-        _batch2d.DrawString("Minimized: " + Safe(() => WindowUtil.IsWindowMinimized(Window).ToString()), new Vector2(16, 120), 1.3f, Palette.Silver);
-        _batch2d.DrawString("Maximized: " + Safe(() => WindowUtil.IsWindowMaximized(Window).ToString()), new Vector2(16, 140), 1.3f, Palette.Silver);
+        _batch2d.DrawString("Minimized: " + Safe(() => WindowUtil.IsWindowMinimized(Window).ToString()) + "  Hidden: " + Safe(() => WindowUtil.IsWindowHidden(Window).ToString()), new Vector2(16, 120), 1.3f, Palette.Silver);
+        _batch2d.DrawString("Maximized: " + Safe(() => WindowUtil.IsWindowMaximized(Window).ToString()) + "  ClientBounds: " + Window.ClientBounds, new Vector2(16, 140), 1.3f, Palette.Silver);
         _batch2d.DrawString("Opacity: " + Safe(() => WindowUtil.GetWindowOpacity(Window).ToString("F2")), new Vector2(16, 160), 1.3f, Palette.Silver);
         _batch2d.DrawString("ScaleDPI: " + Safe(() => WindowUtil.GetWindowScaleDPI(Window).ToString()), new Vector2(16, 220), 1.3f, Palette.Silver);
         _batch2d.DrawString("Clipboard round-trip: " + _lastClipboardRoundTrip, new Vector2(16, 180), 1.3f, Palette.Silver);

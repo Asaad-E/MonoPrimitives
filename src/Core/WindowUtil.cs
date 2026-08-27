@@ -57,6 +57,7 @@ namespace MonoPrimitives
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int SetWindowOpacityNative(IntPtr window, float opacity);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int GetWindowOpacityNative(IntPtr window, out float opacity);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate void SetWindowIconNative(IntPtr window, IntPtr surface);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate void SetWindowMinMaxSizeNative(IntPtr window, int width, int height);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr CreateRgbSurfaceFrom(IntPtr pixels, int width, int height, int depth, int pitch, uint rMask, uint gMask, uint bMask, uint aMask);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate void FreeSurface(IntPtr surface);
@@ -84,10 +85,14 @@ namespace MonoPrimitives
         private static readonly WindowAction? _minimizeWindow;
         private static readonly WindowAction? _maximizeWindow;
         private static readonly WindowAction? _restoreWindow;
+        private static readonly WindowAction? _showWindow;
+        private static readonly WindowAction? _hideWindow;
         private static readonly GetWindowFlags? _getWindowFlags;
         private static readonly SetWindowOpacityNative? _setWindowOpacity;
         private static readonly GetWindowOpacityNative? _getWindowOpacity;
         private static readonly SetWindowIconNative? _setWindowIcon;
+        private static readonly SetWindowMinMaxSizeNative? _setWindowMinimumSize;
+        private static readonly SetWindowMinMaxSizeNative? _setWindowMaximumSize;
         private static readonly CreateRgbSurfaceFrom? _createRgbSurfaceFrom;
         private static readonly FreeSurface? _freeSurface;
         private static readonly GetNumVideoDisplays? _getNumVideoDisplays;
@@ -101,6 +106,7 @@ namespace MonoPrimitives
         private static readonly FreeNative? _free;
 
         // SDL_WINDOW_* flag bits (SDL_WindowFlags), stable across the whole SDL2 ABI.
+        private const uint SDL_WINDOW_HIDDEN = 0x00000008;
         private const uint SDL_WINDOW_MINIMIZED = 0x00000040;
         private const uint SDL_WINDOW_MAXIMIZED = 0x00000080;
 
@@ -131,10 +137,14 @@ namespace MonoPrimitives
                 TryGet("SDL_MinimizeWindow", out _minimizeWindow);
                 TryGet("SDL_MaximizeWindow", out _maximizeWindow);
                 TryGet("SDL_RestoreWindow", out _restoreWindow);
+                TryGet("SDL_ShowWindow", out _showWindow);
+                TryGet("SDL_HideWindow", out _hideWindow);
                 TryGet("SDL_GetWindowFlags", out _getWindowFlags);
                 TryGet("SDL_SetWindowOpacity", out _setWindowOpacity);
                 TryGet("SDL_GetWindowOpacity", out _getWindowOpacity);
                 TryGet("SDL_SetWindowIcon", out _setWindowIcon);
+                TryGet("SDL_SetWindowMinimumSize", out _setWindowMinimumSize);
+                TryGet("SDL_SetWindowMaximumSize", out _setWindowMaximumSize);
                 TryGet("SDL_CreateRGBSurfaceFrom", out _createRgbSurfaceFrom);
                 TryGet("SDL_FreeSurface", out _freeSurface);
                 TryGet("SDL_GetNumVideoDisplays", out _getNumVideoDisplays);
@@ -188,11 +198,51 @@ namespace MonoPrimitives
             _restoreWindow?.Invoke(handle);
         }
 
+        /// <summary>Shows the window if it was hidden via <see cref="HideWindow"/>. No-op if <see cref="IsAvailable"/> is false.</summary>
+        public static void ShowWindow(GameWindow window)
+        {
+            IntPtr handle = RequireHandle(window);
+            _showWindow?.Invoke(handle);
+        }
+
+        /// <summary>Hides the window without closing it. No-op if <see cref="IsAvailable"/> is false.</summary>
+        /// <remarks>For doing real setup work (spawning a large simulation's initial state, say) before the first frame is ever shown, instead of a blank/flashing window during that time.</remarks>
+        public static void HideWindow(GameWindow window)
+        {
+            IntPtr handle = RequireHandle(window);
+            _hideWindow?.Invoke(handle);
+        }
+
+        /// <summary>True if the window is currently hidden (via <see cref="HideWindow"/>). Always false if <see cref="IsAvailable"/> is false.</summary>
+        public static bool IsWindowHidden(GameWindow window)
+        {
+            IntPtr handle = RequireHandle(window);
+            return _getWindowFlags != null && (_getWindowFlags(handle) & SDL_WINDOW_HIDDEN) != 0;
+        }
+
         /// <summary>True if the window is currently minimized. Always false if <see cref="IsAvailable"/> is false.</summary>
         public static bool IsWindowMinimized(GameWindow window)
         {
             IntPtr handle = RequireHandle(window);
             return _getWindowFlags != null && (_getWindowFlags(handle) & SDL_WINDOW_MINIMIZED) != 0;
+        }
+
+        /// <summary>Sets the smallest size the window can be resized to. <c>0</c> on an axis means no minimum on that axis. No-op if <see cref="IsAvailable"/> is false.</summary>
+        /// <remarks>A hint to the OS/window manager, not a hard guarantee -- observed reliably honored (including on a non-resizable window, unlike <see cref="MaximizeWindow"/>) across most tested sequences, but also observed once not to clamp a same-session programmatic resize after several other window-state changes, with no reliable repro found. Don't depend on this for correctness, only for "usually keeps the window from getting uncomfortably small."</remarks>
+        public static void SetWindowMinSize(GameWindow window, int width, int height)
+        {
+            IntPtr handle = RequireHandle(window);
+            if (width < 0 || height < 0) throw new ArgumentOutOfRangeException(width < 0 ? nameof(width) : nameof(height), "must be non-negative.");
+            _setWindowMinimumSize?.Invoke(handle, width, height);
+        }
+
+        /// <summary>Sets the largest size the window can be resized to. <c>0</c> on an axis means no maximum on that axis. No-op if <see cref="IsAvailable"/> is false.</summary>
+        /// <remarks>Same hint-not-guarantee nature as <see cref="SetWindowMinSize"/> -- see its remarks.</remarks>
+        public static void SetWindowMaxSize(GameWindow window, int width, int height)
+        {
+            IntPtr handle = RequireHandle(window);
+            if (width < 0 || height < 0) throw new ArgumentOutOfRangeException(width < 0 ? nameof(width) : nameof(height), "must be non-negative.");
+            _setWindowMaximumSize?.Invoke(handle, width, height);
         }
 
         /// <summary>True if the window is currently maximized. Always false if <see cref="IsAvailable"/> is false.</summary>
