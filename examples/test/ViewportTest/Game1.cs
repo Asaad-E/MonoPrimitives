@@ -17,7 +17,8 @@ namespace ViewportTest;
 /// screen&lt;-&gt;world conversion both ways — a crosshair follows the mouse via ScreenToWorld,
 /// and a fixed world marker's WorldToScreen position is drawn as a HUD dot, so any drift
 /// between the two is immediately visible. Same content for 3D via a raycast against the
-/// ground plane instead of a 2D transform. Keys 1-5 switch adapter mode, Tab switches 2D/3D,
+/// ground plane instead of a 2D transform. Keys 1-6 switch adapter mode (adds Cover to the
+/// original 5), Tab switches 2D/3D,
 /// P toggles Boxing's <c>pixelPerfect</c> option (bars are drawn in a visibly different color via
 /// <c>ClearLetterboxed</c> so you can actually see them, all 4 sides once pixelPerfect floors the
 /// scale).
@@ -34,7 +35,7 @@ public class Game1 : Game
     private Primitive3DBatch _batch3d = null!;
     private PrimitiveInput _input = null!;
 
-    private enum Mode { None, Default, Window, Boxing, Scaling }
+    private enum Mode { None, Default, Window, Boxing, Scaling, Cover }
     private Mode _mode = Mode.Boxing;
     private bool _show3D;
     private bool _tabWasDown;
@@ -70,6 +71,7 @@ public class Game1 : Game
             Mode.Window => new WindowViewportAdapter2D(GraphicsDevice, Window),
             Mode.Boxing => new BoxingViewportAdapter2D(GraphicsDevice, VirtualWidth, VirtualHeight, _pixelPerfect),
             Mode.Scaling => new ScalingViewportAdapter2D(GraphicsDevice, VirtualWidth, VirtualHeight),
+            Mode.Cover => new CoverViewportAdapter2D(GraphicsDevice, VirtualWidth, VirtualHeight),
             _ => null,
         };
 
@@ -90,6 +92,7 @@ public class Game1 : Game
         if (kb.IsKeyDown(Keys.D3) && _mode != Mode.Window) { _mode = Mode.Window; RebuildForMode(); }
         if (kb.IsKeyDown(Keys.D4) && _mode != Mode.Boxing) { _mode = Mode.Boxing; RebuildForMode(); }
         if (kb.IsKeyDown(Keys.D5) && _mode != Mode.Scaling) { _mode = Mode.Scaling; RebuildForMode(); }
+        if (kb.IsKeyDown(Keys.D6) && _mode != Mode.Cover) { _mode = Mode.Cover; RebuildForMode(); }
 
         bool tabDown = kb.IsKeyDown(Keys.Tab);
         if (tabDown && !_tabWasDown) _show3D = !_show3D;
@@ -176,6 +179,7 @@ public class Game1 : Game
         ("3: WINDOW", "1:1 with GameWindow.ClientBounds"),
         ("4: BOXING", "480x270 virtual, letterboxed"),
         ("5: SCALING", "480x270 virtual, stretched"),
+        ("6: COVER", "480x270 virtual, fills the window, crops overflow"),
     };
 
     private void DrawHud(Vector2 rawMouse)
@@ -184,7 +188,7 @@ public class Game1 : Game
 
         int modeIndex = (int)_mode;
         _batch2d.DrawString($"MODE {ModeInfo[modeIndex].Name} ({ModeInfo[modeIndex].Desc})", new Vector2(16, 16), 2f, Color.White);
-        _batch2d.DrawString("1-5: switch adapter   Tab: switch 2D/3D scene   P: toggle pixelPerfect (Boxing only)", new Vector2(16, 44), 1.5f, Palette.Silver);
+        _batch2d.DrawString("1-6: switch adapter   Tab: switch 2D/3D scene   P: toggle pixelPerfect (Boxing only)", new Vector2(16, 44), 1.5f, Palette.Silver);
         if (_mode == Mode.Boxing)
         {
             var boxing = (BoxingViewportAdapter2D)_adapter!;

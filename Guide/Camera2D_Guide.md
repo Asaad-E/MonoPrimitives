@@ -1,6 +1,6 @@
 # Camera2D & ViewportAdapter2D — Guide
 
-`Camera2D` (namespace `MonoPrimitives.Primitives2D`, file [`src/2D/Camera2D.cs`](../src/2D/Camera2D.cs)) is a 2D camera — pan/rotate/zoom, bounds clamping, smooth-follow, smooth-zoom, trauma-based screen shake, and an optional WASD/mouse-drag/wheel controller — that hands `Primitive2DBatch.Begin` a single transform matrix. `ViewportAdapter2D` (and its four concrete adapters, same file's siblings) maps a fixed "virtual" resolution onto the actual window, so game logic and drawing work in one resolution regardless of what size the window actually is. The two are covered together here because a `Camera2D` is normally constructed *with* an adapter and leans on it for every screen↔world conversion.
+`Camera2D` (namespace `MonoPrimitives.Primitives2D`, file [`src/2D/Camera2D.cs`](../src/2D/Camera2D.cs)) is a 2D camera — pan/rotate/zoom, bounds clamping, smooth-follow, smooth-zoom, trauma-based screen shake, and an optional WASD/mouse-drag/wheel controller — that hands `Primitive2DBatch.Begin` a single transform matrix. `ViewportAdapter2D` (and its five concrete adapters, same folder's siblings) maps a fixed "virtual" resolution onto the actual window, so game logic and drawing work in one resolution regardless of what size the window actually is. The two are covered together here because a `Camera2D` is normally constructed *with* an adapter and leans on it for every screen↔world conversion.
 
 ## Quick start
 
@@ -175,16 +175,17 @@ Purely a rendering effect: baked into `GetTransformMatrix()`, never touches `Tar
 
 ---
 
-## ViewportAdapter2D: the four adapters
+## ViewportAdapter2D: the five adapters
 
-All four share one surface (`VirtualWidth`/`VirtualHeight`/`Scale`/`Offset`/`BoundingRectangle`/`GetScaleMatrix()`/`PointToVirtual`/`VirtualToPoint`/`Apply()`/`Reset()`), so code written against the base `ViewportAdapter2D` type works unchanged no matter which one is plugged in.
+All five share one surface (`VirtualWidth`/`VirtualHeight`/`Scale`/`Offset`/`BoundingRectangle`/`GetScaleMatrix()`/`PointToVirtual`/`VirtualToPoint`/`Apply()`/`Reset()`), so code written against the base `ViewportAdapter2D` type works unchanged no matter which one is plugged in.
 
 | Adapter | Behavior | Bars? | Use when |
 |---|---|---|---|
 | `DefaultViewportAdapter2D` | 1:1 with `Device.Viewport`, no fixed virtual resolution — tracked live | No | You don't want resolution independence but still want to code against `ViewportAdapter2D`, so you can swap in a real one later without touching call sites. |
 | `WindowViewportAdapter2D` | 1:1 with `GameWindow.ClientBounds` | No | Same as Default, but you specifically need window-client-area size rather than device-viewport size (they can briefly disagree right after a resize on some backends). |
 | `BoxingViewportAdapter2D` | Fixed virtual resolution, uniform scale (fits inside the window), preserves aspect ratio | Yes — letterbox/pillarbox | Pixel-art or fixed-composition prototypes where black bars are less objectionable than distortion. |
-| `ScalingViewportAdapter2D` | Fixed virtual resolution, independent per-axis scale, fills the window exactly | No | Filling the window matters more than preserving the virtual resolution's aspect ratio. |
+| `ScalingViewportAdapter2D` | Fixed virtual resolution, independent per-axis scale, fills the window exactly | No | Filling the window matters more than preserving the virtual resolution's aspect ratio, and non-uniform stretch is acceptable. |
+| `CoverViewportAdapter2D` | Fixed virtual resolution, uniform scale (fills the window completely), preserves aspect ratio | No (crops instead) | The inverse tradeoff from Boxing: never show bars, and cropping some content on one axis is preferable to distorting the aspect ratio. Matches CSS's `object-fit: cover`. |
 
 ```csharp
 var adapter = new BoxingViewportAdapter2D(GraphicsDevice, virtualWidth: 480, virtualHeight: 270);

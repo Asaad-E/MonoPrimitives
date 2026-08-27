@@ -59,6 +59,7 @@ namespace MonoPrimitives.Tests
             PolygonInsetRegressionTests.Run(GraphicsDevice, results);
             ClearLetterboxedTests.Run(GraphicsDevice, results);
             BoxingViewportAdapter2DPixelPerfectTests.Run(GraphicsDevice, results);
+            CoverViewportAdapter2DTests.Run(GraphicsDevice, results);
             Camera2DTests.Run(GraphicsDevice, results);
 
             using var batch = new Primitive3DBatch(GraphicsDevice);
