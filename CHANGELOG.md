@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning follows [SemVer](https://semver.org/), with the pre-1.0 caveat that the API can still change between minor versions — see [ROADMAP.md](Design/ROADMAP.md).
 
+## [0.8.5] - 2026-08-27
+
+### Added
+- `PolygonUtil` — `IsConvex`/`Triangulate` (ear clipping), promoted from `Primitive2DBatch`'s own private `FillPolygon` machinery.
+- `CoverViewportAdapter2D` — uniformly fills the window completely, cropping overflow instead of showing bars (the inverse tradeoff from `BoxingViewportAdapter2D`).
+- `WindowUtil.GetWindowScaleDPI`, `ShowWindow`/`HideWindow`/`IsWindowHidden`, `SetWindowMinSize`/`SetWindowMaxSize`, `SetWindowFocused`.
+- `GameTimeExtensions.GetTotalTimeSeconds()` — raylib's `GetTime()` equivalent.
+- `TextureUtil.Rotate90`/`Rotate` (arbitrary angle), `Map(device, source, Func<Color,Color>)`, `Blur` (separable Gaussian, premultiplied-alpha correct).
+- `QuaternionExtensions.ToEuler()` — the missing inverse of `Quaternion.CreateFromYawPitchRoll`.
+
 ## [0.8.4] - 2026-08-26
 
 ### Added
