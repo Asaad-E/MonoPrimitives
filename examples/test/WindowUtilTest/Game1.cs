@@ -122,6 +122,7 @@ public class Game1 : Game
                 break;
             case 1:
                 Console.WriteLine("[auto] GetCurrentMonitorIndex = " + Safe(() => WindowUtil.GetCurrentMonitorIndex(Window).ToString()));
+                Console.WriteLine("[auto] GetWindowScaleDPI = " + WindowUtil.GetWindowScaleDPI(Window));
                 break;
             case 2:
             {
@@ -228,6 +229,7 @@ public class Game1 : Game
         _batch2d.DrawString("Minimized: " + Safe(() => WindowUtil.IsWindowMinimized(Window).ToString()), new Vector2(16, 120), 1.3f, Palette.Silver);
         _batch2d.DrawString("Maximized: " + Safe(() => WindowUtil.IsWindowMaximized(Window).ToString()), new Vector2(16, 140), 1.3f, Palette.Silver);
         _batch2d.DrawString("Opacity: " + Safe(() => WindowUtil.GetWindowOpacity(Window).ToString("F2")), new Vector2(16, 160), 1.3f, Palette.Silver);
+        _batch2d.DrawString("ScaleDPI: " + Safe(() => WindowUtil.GetWindowScaleDPI(Window).ToString()), new Vector2(16, 220), 1.3f, Palette.Silver);
         _batch2d.DrawString("Clipboard round-trip: " + _lastClipboardRoundTrip, new Vector2(16, 180), 1.3f, Palette.Silver);
         _batch2d.DrawString("Cursor captured: " + _cursorCaptured + "  delta: " + _lastCursorDelta, new Vector2(16, 200), 1.3f, Palette.Silver);
 

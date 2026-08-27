@@ -66,6 +66,7 @@ namespace MonoPrimitives
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int GetDesktopDisplayMode(int displayIndex, out SdlDisplayMode mode);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr GetDisplayName(int displayIndex);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int GetWindowDisplayIndex(IntPtr window);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int GetDisplayDpi(int displayIndex, out float ddpi, out float hdpi, out float vdpi);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int SetClipboardTextNative(IntPtr utf8Text);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr GetClipboardTextNative();
@@ -94,6 +95,7 @@ namespace MonoPrimitives
         private static readonly GetDesktopDisplayMode? _getDesktopDisplayMode;
         private static readonly GetDisplayName? _getDisplayName;
         private static readonly GetWindowDisplayIndex? _getWindowDisplayIndex;
+        private static readonly GetDisplayDpi? _getDisplayDpi;
         private static readonly SetClipboardTextNative? _setClipboardText;
         private static readonly GetClipboardTextNative? _getClipboardText;
         private static readonly FreeNative? _free;
@@ -140,6 +142,7 @@ namespace MonoPrimitives
                 TryGet("SDL_GetDesktopDisplayMode", out _getDesktopDisplayMode);
                 TryGet("SDL_GetDisplayName", out _getDisplayName);
                 TryGet("SDL_GetWindowDisplayIndex", out _getWindowDisplayIndex);
+                TryGet("SDL_GetDisplayDPI", out _getDisplayDpi);
                 TryGet("SDL_SetClipboardText", out _setClipboardText);
                 TryGet("SDL_GetClipboardText", out _getClipboardText);
                 TryGet("SDL_free", out _free);
@@ -273,6 +276,22 @@ namespace MonoPrimitives
             ThrowIfUnavailable();
             int index = _getWindowDisplayIndex!(handle);
             return index < 0 ? 0 : index;
+        }
+
+        /// <summary>The window's DPI scale factor (1.0 = standard 96 DPI, 2.0 = double/"retina"-style scaling) -- for sizing UI/text correctly on a high-DPI display.</summary>
+        /// <remarks>Returns <see cref="Vector2.One"/> (assume standard, unscaled DPI) if unsupported, rather than throwing -- same fallback shape as <see cref="GetWindowOpacity"/>.</remarks>
+        public static Vector2 GetWindowScaleDPI(GameWindow window)
+        {
+            IntPtr handle = RequireHandle(window);
+            if (_getDisplayDpi == null || _getWindowDisplayIndex == null) return Vector2.One;
+
+            int displayIndex = _getWindowDisplayIndex(handle);
+            if (displayIndex < 0) displayIndex = 0;
+
+            if (_getDisplayDpi(displayIndex, out _, out float hdpi, out float vdpi) != 0)
+                return Vector2.One;
+
+            return new Vector2(hdpi / 96f, vdpi / 96f);
         }
 
         /// <summary>The given monitor's name, desktop position/size, and refresh rate.</summary>

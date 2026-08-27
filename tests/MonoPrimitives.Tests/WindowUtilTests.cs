@@ -88,6 +88,25 @@ namespace MonoPrimitives.Tests
                 return null;
             });
 
+            results.Check("WindowUtil.GetWindowScaleDPI returns a sane positive scale (or exactly (1,1) if unsupported)", () =>
+            {
+                Vector2 scale = WindowUtil.GetWindowScaleDPI(window);
+                if (!WindowUtil.IsAvailable) return scale == Vector2.One ? null : $"expected exactly (1,1) when unavailable, got {scale}";
+
+                // A real DPI scale should be a small positive multiplier -- not zero/negative, and
+                // not some wildly large number that would indicate a bad DPI reading (e.g. dividing
+                // by the wrong baseline).
+                if (scale.X <= 0f || scale.Y <= 0f) return $"expected a positive scale, got {scale}";
+                if (scale.X > 10f || scale.Y > 10f) return $"expected a plausible DPI scale (<=10x), got {scale}";
+                return null;
+            });
+
+            results.Check("WindowUtil.GetWindowScaleDPI throws ArgumentNullException for a null window", () =>
+            {
+                try { WindowUtil.GetWindowScaleDPI(null!); return "expected ArgumentNullException"; }
+                catch (ArgumentNullException) { return null; }
+            });
+
             results.Check("WindowUtil.GetMonitorInfo throws for an out-of-range index when available", () =>
             {
                 if (!WindowUtil.IsAvailable) return null;

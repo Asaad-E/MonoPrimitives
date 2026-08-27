@@ -41,6 +41,7 @@ protected override void Update(GameTime gameTime)
 | `GetMonitorCount()` | Number of connected monitors. Throws `InvalidOperationException` if `IsAvailable` is false. |
 | `GetMonitorInfo(index)` | Returns a `MonitorInfo` (`Index`, `Name`, `Bounds` — desktop position+size, `RefreshRate` in Hz, 0 if unknown) for one monitor. Throws `ArgumentOutOfRangeException` for a bad index, `InvalidOperationException` if unavailable. |
 | `GetCurrentMonitorIndex(window)` | The monitor containing most of the window. |
+| `GetWindowScaleDPI(window)` | The window's DPI scale factor (1.0 = standard 96 DPI, 2.0 = double/"retina"-style scaling) — for sizing UI/text correctly on a high-DPI display. Returns `Vector2.One` if unsupported, same fallback shape as `GetWindowOpacity`. |
 | `SetClipboardText(text)` / `GetClipboardText()` | System clipboard round-trip. `Set` no-ops if unavailable; `Get` throws `InvalidOperationException`. |
 | `DisableCursor(game)` / `EnableCursor(game)` / `GetCursorDelta(window)` | Mouse-look capture — see below. Works on every backend, not just Desktop GL. |
 
