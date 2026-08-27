@@ -42,10 +42,15 @@ public class Game1 : Game
 
     public Game1()
     {
+        // Deliberately smaller than the virtual resolution, with continuous (not pixel-perfect)
+        // viewport scaling below -- see BoidsSwarm/Game1.cs's own constructor comment and
+        // DECISIONS.md for why a window sized to match the virtual resolution exactly, combined
+        // with pixel-perfect scaling, can silently crop content near the edges instead of
+        // shrinking it to fit.
         _graphics = new GraphicsDeviceManager(this)
         {
-            PreferredBackBufferWidth = VirtualWidth,
-            PreferredBackBufferHeight = VirtualHeight,
+            PreferredBackBufferWidth = 1280,
+            PreferredBackBufferHeight = 720,
             PreferMultiSampling = true,
         };
         _graphics.PreparingDeviceSettings += (sender, e) =>
@@ -63,7 +68,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        _viewportAdapter = new BoxingViewportAdapter2D(GraphicsDevice, VirtualWidth, VirtualHeight, pixelPerfect: true);
+        _viewportAdapter = new BoxingViewportAdapter2D(GraphicsDevice, VirtualWidth, VirtualHeight);
         _camera = new Camera2D(_viewportAdapter) { Offset = Vector2.Zero };
         _input = new PrimitiveInput(Window);
 

@@ -44,14 +44,18 @@ public class Game1 : Game
 
     public Game1()
     {
-        // Starts at the virtual resolution itself (not a smaller window like most of the other
-        // demos) -- pixelPerfect below refuses to scale the world down below 1x, only up, so a
-        // starting window smaller than VirtualWidth/Height would crop content (including the
-        // stats text in the corner) instead of shrinking it to fit.
+        // Deliberately smaller than the virtual resolution, and no pixelPerfect on the viewport
+        // adapter below: a window sized to exactly match VirtualWidth/Height sounds crisper, but
+        // depends on the OS actually granting that size -- a title bar and taskbar can force a
+        // smaller real window than requested, and pixelPerfect never scales *below* 1x, only up,
+        // so the excess gets silently cropped instead of shrunk to fit (caught here: a settled
+        // fluid pool sitting near the bottom edge was invisible on a screen where the window
+        // couldn't actually reach the full 1080px tall). Continuous scaling has no such failure
+        // mode -- worth a little softness over content that can silently vanish.
         _graphics = new GraphicsDeviceManager(this)
         {
-            PreferredBackBufferWidth = VirtualWidth,
-            PreferredBackBufferHeight = VirtualHeight,
+            PreferredBackBufferWidth = 1280,
+            PreferredBackBufferHeight = 720,
             PreferMultiSampling = true,
         };
         _graphics.PreparingDeviceSettings += (sender, e) =>
@@ -72,7 +76,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        _viewportAdapter = new BoxingViewportAdapter2D(GraphicsDevice, VirtualWidth, VirtualHeight, pixelPerfect: true);
+        _viewportAdapter = new BoxingViewportAdapter2D(GraphicsDevice, VirtualWidth, VirtualHeight);
         _camera = new Camera2D(_viewportAdapter) { Offset = Vector2.Zero };
         _input = new PrimitiveInput(Window);
         _swarm = new BoidSwarm(VirtualWidth, VirtualHeight, InitialBoidCount);

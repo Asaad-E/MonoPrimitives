@@ -14,7 +14,6 @@
     <Project Path="examples/demos/BoidsSwarm/BoidsSwarm.csproj" />
     <Project Path="examples/demos/NBodies2D/NBodies2D.csproj" />
     <Project Path="examples/demos/NBodies3D/NBodies3D.csproj" />
-    <Project Path="examples/demos/FluidSPH/FluidSPH.csproj" />
     <Project Path="examples/demos/Fire/Fire.csproj" />
     <Project Path="examples/demos/Ants/Ants.csproj" />
     <Project Path="examples/demos/Breakout/Breakout.csproj" />
