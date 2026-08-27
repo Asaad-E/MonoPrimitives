@@ -43,6 +43,7 @@ namespace MonoPrimitives.Tests
             Camera3DTests.Run(results);
             Vector2ExtensionsTests.Run(results);
             Vector3ExtensionsTests.Run(results);
+            QuaternionExtensionsTests.Run(results);
             FrameLimiterTests.Run(this, results);
             RectangleFTests.Run(results);
             FpsCounterTests.Run(results);

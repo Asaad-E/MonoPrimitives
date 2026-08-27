@@ -80,6 +80,21 @@ Vector3 clamped = velocity.ClampMagnitude(maxSpeed);      // cap length, keep di
 
 **Still no `Angle()`** (a bare heading with no reference) — a 2D vector has one canonical "heading" (its angle from +X); a 3D vector genuinely doesn't without naming a plane, which is exactly what `AngleToSigned`'s `axis` parameter is for.
 
+---
+
+## QuaternionExtensions
+
+`QuaternionExtensions` (namespace `MonoPrimitives.Primitives3D`, file [`src/3D/QuaternionExtensions.cs`](../src/3D/QuaternionExtensions.cs)) is one method: `ToEuler()`, the missing inverse of MonoGame's own native `Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll)`.
+
+```csharp
+using MonoPrimitives.Primitives3D;
+
+Quaternion rotation = ship.Orientation;
+Vector3 euler = rotation.ToEuler(); // X = pitch, Y = yaw, Z = roll, radians
+```
+
+Like any Euler-angle extraction, this loses a degree of freedom (gimbal lock) when pitch is at or near ±90° — yaw and roll become indistinguishable there, though the reconstructed rotation is still correct. Verified by round-tripping 20000 random angle triples through `CreateFromYawPitchRoll` → `ToEuler` → `CreateFromYawPitchRoll` and confirming the reconstructed quaternion matches — see `Design/DECISIONS.md`.
+
 ## See also
 
 - [`Design/DECISIONS.md`](../Design/DECISIONS.md) — how the `Rotate`/`Rotated` naming collision was found (a numeric test caught a `void` where a `Vector2` was expected), the `atan2` branch-cut behavior at `Angle(-X)`, and why `Vector3Extensions` has no bare `Angle()`/`PerpendicularClockwise`-style members despite otherwise matching `Vector2Extensions` closely.

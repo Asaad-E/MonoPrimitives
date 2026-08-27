@@ -27,7 +27,7 @@ These five are kept short on purpose — current state only, no narrative. Deepe
   - **[Collision2D_Guide.md](../Guide/Collision2D_Guide.md)** — `Collision2D`: every overlap/ray check by shape, and which ones need convex input (SAT) vs. work on any simple polygon.
   - **[PolygonUtil_Guide.md](../Guide/PolygonUtil_Guide.md)** — `PolygonUtil`: `IsConvex`/`Triangulate` (ear clipping), promoted from `Primitive2DBatch`'s own internal `FillPolygon` machinery.
   - **[Collision3D_Guide.md](../Guide/Collision3D_Guide.md)** — `Collision3D`: sphere/box/capsule/plane/triangle/quad overlap and raycasts, and the `RayCollision3D` result struct every raycast returns.
-  - **[Vector2Extensions_Guide.md](../Guide/Vector2Extensions_Guide.md)** — `Vector2Extensions`: `Angle`/`AngleTo`/`AngleToSigned`/`Rotated`/`Approach`/`ClampMagnitude`/etc., why `Rotated` isn't named `Rotate`, and `Vector3Extensions` (3D) in the same guide.
+  - **[Vector2Extensions_Guide.md](../Guide/Vector2Extensions_Guide.md)** — `Vector2Extensions`: `Angle`/`AngleTo`/`AngleToSigned`/`Rotated`/`Approach`/`ClampMagnitude`/etc., why `Rotated` isn't named `Rotate`, `Vector3Extensions` (3D), and `QuaternionExtensions.ToEuler` — all in the same guide.
   - **[FrameLimiter_Guide.md](../Guide/FrameLimiter_Guide.md)** — `FrameLimiter`: sleep+spin frame pacing, why it disables `IsFixedTimeStep`/vsync, and the measured Sleep-jitter limitation.
   - **[FastTexture_Guide.md](../Guide/FastTexture_Guide.md)** — `FastTexture`: raw-GL texture upload with a safe `SetData` fallback, mip/RenderTarget2D caveats, and the texture-slot cache gotcha.
   - **[RectangleF_Guide.md](../Guide/RectangleF_Guide.md)** — `RectangleF`: float-precision counterpart to MonoGame's integer-only `Rectangle`, same member shape.
