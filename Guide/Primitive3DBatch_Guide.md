@@ -140,6 +140,19 @@ A donut shape, lying flat on XZ (hole facing `+Y`) unless `rotation` tilts it. `
 | `BorderPlane(centerPos, size, color, thickness)` / `(centerPos, size, rotation, color, thickness)` | The plane's 4 edges only — the default-XZ and `Quaternion` forms (no separate `normal` overload). |
 | `DrawPlane(centerPos, size, fillColor, borderColor = null, thickness)` / `(centerPos, size, rotation, fillColor, borderColor = null, thickness)` | Fill + border, same two forms. |
 
+## Billboard
+
+A quad that always faces the active camera (cylindrical billboarding — stays upright around world +Y, same convention as `DrawString3D`) — for markers, particles, or sprite-like effects that shouldn't foreshorten as the camera orbits.
+
+| Method | What it does |
+|---|---|
+| `FillBillboard(position, size, color)` | A filled camera-facing quad. |
+| `BorderBillboard(position, size, color, thickness)` | The quad's 4 edges only. |
+| `DrawBillboard(position, size, fillColor, borderColor = null, thickness)` | Fill + border. |
+| `GetBillboardAxes(position, out right, out up)` | The right/up basis every billboard method above is built on — call it directly if you need the axes for your own quad (e.g. a textured `SpriteBatch` sprite projected via `Camera3D.WorldToScreen`, since this batch itself is vertex-color only, no textures). |
+
+Always unlit regardless of `LightingEnabled` — same reasoning as billboarded text: a camera-facing normal has no fixed relationship to the light direction, so shading it would flicker as the camera orbits instead of looking like a real lit surface.
+
 ## Lighting (flat shading, opt-in)
 
 ```csharp

@@ -61,6 +61,12 @@ namespace MonoPrimitives.Tests
             Check(results, "BorderPlane", batch, camera, () =>
                 batch.BorderPlane(Vector3.Zero, new Vector2(4f, 4f), Color.Black), expectTriangles: true);
 
+            Check(results, "FillBillboard", batch, camera, () =>
+                batch.FillBillboard(Vector3.Zero, new Vector2(2f, 2f), Color.Magenta), expectTriangles: true);
+
+            Check(results, "BorderBillboard", batch, camera, () =>
+                batch.BorderBillboard(Vector3.Zero, new Vector2(2f, 2f), Color.Black), expectTriangles: true);
+
             Check(results, "FillCircle3D", batch, camera, () =>
                 batch.FillCircle3D(Vector3.Zero, 2f, Vector3.UnitX, 0f, Color.Orange), expectTriangles: true);
 

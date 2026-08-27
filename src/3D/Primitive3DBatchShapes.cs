@@ -1291,6 +1291,54 @@ namespace MonoPrimitives.Primitives3D
         }
 
         // =====================================================================
+        // BILLBOARD
+        // =====================================================================
+
+        /// <summary>Draws a filled quad at <paramref name="position"/> that always faces the active camera (cylindrical billboarding, same convention as <see cref="GetBillboardAxes"/>/<see cref="DrawString3D(string,Vector3,float,Color,float,float,float)"/>).</summary>
+        /// <remarks>Always unlit, like billboarded text -- a camera-facing normal has no fixed relationship to the scene's light direction, so shading it would flicker as the camera orbits rather than looking like a real lit surface.</remarks>
+        public void FillBillboard(Vector3 position, Vector2 size, Color color)
+        {
+            ThrowIfNotBegun();
+            GetBillboardCorners(position, size, out Vector3 a, out Vector3 b, out Vector3 c, out Vector3 d);
+            PushQuad(a, b, c, d, color);
+        }
+
+        /// <summary>Draws the wireframe (4 edges) of a camera-facing billboard quad at <paramref name="position"/>.</summary>
+        /// <param name="position">Billboard center.</param>
+        /// <param name="size">Billboard width/height along its own billboard-space right/up axes.</param>
+        /// <param name="color">Line color.</param>
+        /// <param name="thickness">Line thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
+        public void BorderBillboard(Vector3 position, Vector2 size, Color color, float thickness = -1f)
+        {
+            ThrowIfNotBegun();
+            float w = thickness > 0f ? thickness : DefaultLineThickness;
+            GetBillboardCorners(position, size, out Vector3 a, out Vector3 b, out Vector3 c, out Vector3 d);
+            DrawLine3D(a, b, w, color); DrawLine3D(b, c, w, color); DrawLine3D(c, d, w, color); DrawLine3D(d, a, w, color);
+        }
+
+        /// <summary>Draws a camera-facing billboard quad with fill and wireframe border. Omit <paramref name="borderColor"/> for the same color on both.</summary>
+        /// <param name="position">Billboard center.</param>
+        /// <param name="size">Billboard width/height along its own billboard-space right/up axes.</param>
+        /// <param name="fillColor">Fill color.</param>
+        /// <param name="borderColor">Border color; same as <paramref name="fillColor"/> if null.</param>
+        /// <param name="thickness">Border thickness; &lt;= 0 (the default) uses <see cref="DefaultLineThickness"/>.</param>
+        public void DrawBillboard(Vector3 position, Vector2 size, Color fillColor, Color? borderColor = null, float thickness = -1f)
+        {
+            FillBillboard(position, size, fillColor);
+            BorderBillboard(position, size, borderColor ?? fillColor, thickness);
+        }
+
+        private void GetBillboardCorners(in Vector3 position, in Vector2 size, out Vector3 a, out Vector3 b, out Vector3 c, out Vector3 d)
+        {
+            GetBillboardAxes(position, out Vector3 right, out Vector3 up);
+            float hx = size.X * 0.5f, hy = size.Y * 0.5f;
+            a = position - right * hx - up * hy;
+            b = position + right * hx - up * hy;
+            c = position + right * hx + up * hy;
+            d = position - right * hx + up * hy;
+        }
+
+        // =====================================================================
         // GRID
         // =====================================================================
         // Three explicitly-named methods (one per axis pair) instead of a single

@@ -68,6 +68,7 @@ namespace MonoPrimitives.Tests
                 FastTextureTests.Run(GraphicsDevice, spriteBatch, results);
 
             LineStrip3DJoinTests.Run(GraphicsDevice, results);
+            BillboardTests.Run(GraphicsDevice, results);
             RectangleGradient4ColorTests.Run(GraphicsDevice, results);
 
             Vector2Benchmark.Run(results);
