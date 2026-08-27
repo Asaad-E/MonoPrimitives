@@ -66,6 +66,7 @@ Then, whichever you picked, add a camera ([`Camera2D_Guide.md`](Camera2D_Guide.m
 - [`FastTexture_Guide.md`](FastTexture_Guide.md) — raw-GL texture upload, 2.5-2.7x faster than `SetData` for frequent updates.
 - [`FpsCounter_Guide.md`](FpsCounter_Guide.md) — rolling-average FPS measurement.
 - [`ScreenshotUtil_Guide.md`](ScreenshotUtil_Guide.md) — one-call back-buffer capture to `.png`/`.jpg`.
+- [`TextureUtil_Guide.md`](TextureUtil_Guide.md) — procedural texture generation (solid/gradient/checkerboard/from `Noise`) plus resize/crop/flip/tint/combine transforms.
 - [`Cooldown_Guide.md`](Cooldown_Guide.md) — a simple countdown struct for attack cooldowns, spawn timers, input debouncing.
 - [`WindowUtil_Guide.md`](WindowUtil_Guide.md) — minimize/maximize/restore, opacity, window icon, multi-monitor info, clipboard text, and captured-cursor mouse-look.
 

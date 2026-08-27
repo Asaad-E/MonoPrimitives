@@ -25,6 +25,7 @@ Shared (`Core/`, namespace `MonoPrimitives`):
 | Float rectangle | `RectangleF` |
 | Frame pacing | `FrameLimiter` |
 | Fast texture upload | `FastTexture` |
+| Texture generation & transforms | `TextureUtil` |
 | FPS measurement | `FpsCounter` |
 | Screenshot capture | `ScreenshotUtil` |
 | Object pooling | `ObjectPool<T>` |

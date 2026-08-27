@@ -32,6 +32,7 @@ These five are kept short on purpose — current state only, no narrative. Deepe
   - **[RectangleF_Guide.md](../Guide/RectangleF_Guide.md)** — `RectangleF`: float-precision counterpart to MonoGame's integer-only `Rectangle`, same member shape.
   - **[FpsCounter_Guide.md](../Guide/FpsCounter_Guide.md)** — `FpsCounter`: rolling-average FPS measurement, pairs with your own `DrawString` call.
   - **[ScreenshotUtil_Guide.md](../Guide/ScreenshotUtil_Guide.md)** — `ScreenshotUtil`: one-call back-buffer capture to `.png`/`.jpg`.
+  - **[TextureUtil_Guide.md](../Guide/TextureUtil_Guide.md)** — `TextureUtil`: procedural generation (solid/gradient/checkerboard/from `Noise`) plus resize/crop/flip/tint/combine transforms, and the CPU-vs-GPU split behind which is which.
   - **[ObjectPool_Guide.md](../Guide/ObjectPool_Guide.md)** — `ObjectPool<T>`: `Get`/`Return`, `onGet`/`onReturn` hooks, `maxSize`, and the utility-vs-system filter that decided it belonged here.
   - **[RingBuffer_Guide.md](../Guide/RingBuffer_Guide.md)** — `RingBuffer<T>`: the same ring-buffer logic `Trail2D`/`Trail3D`/`FpsCounter` each already hand-roll privately, generalized and public.
   - **[Cooldown_Guide.md](../Guide/Cooldown_Guide.md)** — `Cooldown`: a countdown struct, `TryUse()`, and the mutable-struct-as-a-field caveat.
