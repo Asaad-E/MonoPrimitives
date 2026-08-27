@@ -87,6 +87,7 @@ namespace MonoPrimitives
         private static readonly WindowAction? _restoreWindow;
         private static readonly WindowAction? _showWindow;
         private static readonly WindowAction? _hideWindow;
+        private static readonly WindowAction? _raiseWindow;
         private static readonly GetWindowFlags? _getWindowFlags;
         private static readonly SetWindowOpacityNative? _setWindowOpacity;
         private static readonly GetWindowOpacityNative? _getWindowOpacity;
@@ -139,6 +140,7 @@ namespace MonoPrimitives
                 TryGet("SDL_RestoreWindow", out _restoreWindow);
                 TryGet("SDL_ShowWindow", out _showWindow);
                 TryGet("SDL_HideWindow", out _hideWindow);
+                TryGet("SDL_RaiseWindow", out _raiseWindow);
                 TryGet("SDL_GetWindowFlags", out _getWindowFlags);
                 TryGet("SDL_SetWindowOpacity", out _setWindowOpacity);
                 TryGet("SDL_GetWindowOpacity", out _getWindowOpacity);
@@ -211,6 +213,13 @@ namespace MonoPrimitives
         {
             IntPtr handle = RequireHandle(window);
             _hideWindow?.Invoke(handle);
+        }
+
+        /// <summary>Raises the window above other windows and gives it input focus. No-op if <see cref="IsAvailable"/> is false.</summary>
+        public static void SetWindowFocused(GameWindow window)
+        {
+            IntPtr handle = RequireHandle(window);
+            _raiseWindow?.Invoke(handle);
         }
 
         /// <summary>True if the window is currently hidden (via <see cref="HideWindow"/>). Always false if <see cref="IsAvailable"/> is false.</summary>

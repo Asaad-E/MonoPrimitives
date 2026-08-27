@@ -37,6 +37,7 @@ protected override void Update(GameTime gameTime)
 | `MinimizeWindow(window)` / `MaximizeWindow(window)` / `RestoreWindow(window)` | Minimize, maximize, or restore. No-op if `IsAvailable` is false. |
 | `IsWindowMinimized(window)` / `IsWindowMaximized(window)` | Current state. Always false if `IsAvailable` is false. |
 | `ShowWindow(window)` / `HideWindow(window)` / `IsWindowHidden(window)` | Show/hide the window without closing it — e.g. hide during slow startup work, then show once the first frame is ready. Unlike Minimize/Maximize, reliably round-trips even without a real window manager present. |
+| `SetWindowFocused(window)` | Raises the window above other windows and gives it input focus. |
 | `SetWindowMinSize(window, w, h)` / `SetWindowMaxSize(window, w, h)` | Constrains how far the window can be resized. `0` on an axis means no constraint on that axis. **A best-effort OS hint, not a guarantee** — see Notes. |
 | `SetWindowOpacity(window, opacity)` / `GetWindowOpacity(window)` | 0 (transparent) to 1 (opaque), clamped on set. `Get` returns 1 if unsupported. |
 | `SetWindowIcon(window, icon)` | Sets the title-bar/taskbar icon from a texture's current pixels. `icon` must be `SurfaceFormat.Color` (throws `ArgumentException` otherwise) — the format images loaded via `Texture2D.FromStream` or the content pipeline already use. |

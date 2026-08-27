@@ -33,7 +33,15 @@ namespace MonoPrimitives.Tests
 
                 using var icon = new Texture2D(game.GraphicsDevice, 4, 4, false, SurfaceFormat.Color);
                 WindowUtil.SetWindowIcon(window, icon);
+
+                WindowUtil.SetWindowFocused(window);
                 return null;
+            });
+
+            results.Check("WindowUtil.SetWindowFocused throws ArgumentNullException for a null window", () =>
+            {
+                try { WindowUtil.SetWindowFocused(null!); return "expected ArgumentNullException"; }
+                catch (ArgumentNullException) { return null; }
             });
 
             results.Check("WindowUtil.ShowWindow/HideWindow/IsWindowHidden round-trip when available (window mapping is WM-independent, unlike Minimize/Maximize)", () =>
