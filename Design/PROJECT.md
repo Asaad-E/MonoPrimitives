@@ -41,10 +41,11 @@ Per-namespace (not shared — genuinely different code):
 | Shape drawing | `Primitive2DBatch` | `Primitive3DBatch` |
 | Camera + viewport | `Camera2D`, `ViewportAdapter2D` family | `Camera3D` (reuses `ViewportAdapter2D`) |
 | Collision & raycasts | `Collision2D` | `Collision3D` |
+| Polygon geometry | `PolygonUtil` (`IsConvex`/`Triangulate`) | — |
 | Trail | `Trail2D` | `Trail3D` |
 | Debug text rendering | `DebugFont5x7` | `DebugFont5x7` (billboarded) |
 | Fast-trig LUT | `UnitCircleLut` | `TrigLut` |
-| Vector helpers | (`Vector2Extensions` is shared, see above) | `Vector3Extensions` |
+| Vector/rotation helpers | (`Vector2Extensions` is shared, see above) | `Vector3Extensions`, `QuaternionExtensions` |
 
 See DECISIONS.md for the Core-vs-duplicated rule.
 
