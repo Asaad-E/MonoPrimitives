@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning follows [SemVer](https://semver.org/), with the pre-1.0 caveat that the API can still change between minor versions — see [ROADMAP.md](Design/ROADMAP.md).
 
+## [0.8.4] - 2026-08-26
+
+### Added
+- `WindowUtil` — minimize/maximize/restore, window opacity, window icon, multi-monitor enumeration, clipboard text (all resolved directly from SDL2, DesktopGL only), plus `DisableCursor`/`EnableCursor`/`GetCursorDelta` for FPS-style mouse-look capture (works on every backend).
+- `MathUtil` — `Remap`, `DeltaAngle`, `LerpAngle`, `PingPong`: scalar helpers confirmed missing from `MathHelper`.
+- `Primitive3DBatch.FillBillboard`/`BorderBillboard`/`DrawBillboard` — a camera-facing quad built on the existing `GetBillboardAxes`.
+- `TextureUtil` — procedural texture generation (`CreateSolid`/`CreateGradientLinear`/`CreateGradientRadial`/`CreateCheckerboard`/`CreateFromNoise`) plus `Crop`/`FlipHorizontal`/`FlipVertical`/`Tint`/`Resize`/`Combine`/`ToTexture2D` transforms.
+
 ## [0.8.3] - 2026-08-25
 
 ### Added
