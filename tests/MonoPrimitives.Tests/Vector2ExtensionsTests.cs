@@ -180,6 +180,12 @@ namespace MonoPrimitives.Tests
                 var gt = new GameTime(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(0.016));
                 return CloseF(gt.GetElapsedTimeSeconds(), 0.016f, 1e-4f) ? null : $"GetElapsedTimeSeconds returned {gt.GetElapsedTimeSeconds()}, expected ~0.016";
             });
+
+            results.Check("GameTimeExtensions.GetTotalTimeSeconds matches TotalGameTime.TotalSeconds", () =>
+            {
+                var gt = new GameTime(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(0.016));
+                return CloseF(gt.GetTotalTimeSeconds(), 10f, 1e-4f) ? null : $"GetTotalTimeSeconds returned {gt.GetTotalTimeSeconds()}, expected ~10";
+            });
         }
     }
 }

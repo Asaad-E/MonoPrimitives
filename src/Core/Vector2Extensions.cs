@@ -163,5 +163,8 @@ namespace MonoPrimitives
     {
         /// <summary>Shorthand for <c>(float)gameTime.ElapsedGameTime.TotalSeconds</c> — the delta-time value almost every <c>Update(GameTime)</c> ends up computing by hand.</summary>
         public static float GetElapsedTimeSeconds(this GameTime gameTime) => (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+        /// <summary>Shorthand for <c>(float)gameTime.TotalGameTime.TotalSeconds</c> — total elapsed time since the game started, the same shorthand <see cref="GetElapsedTimeSeconds"/> gives the per-frame delta. Matches raylib's <c>GetTime()</c>.</summary>
+        public static float GetTotalTimeSeconds(this GameTime gameTime) => (float)gameTime.TotalGameTime.TotalSeconds;
     }
 }

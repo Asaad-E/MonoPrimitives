@@ -32,6 +32,7 @@ position = position.Approach(target, speed * dt); // move toward target, landing
 | `Cross(other)` | The 2D cross product (the scalar Z a 3D cross product would have) — positive when `other` is counter-clockwise from `this`, negative when clockwise, `0` when parallel. A cheap "which side"/turn-direction/signed-area test; Godot's `Vector2.cross`. |
 | `SmoothDamp(target, ref velocity, smoothTime, deltaTime)` (`Vector2` and `float` overloads) | Critically-damped spring smoothing — eases `this` toward `target` over roughly `smoothTime` seconds with no overshoot, independent of frame rate (same algorithm as Unity's `Mathf.SmoothDamp`). `velocity` is state you own and pass back in every call (start it at `0`). What `Camera2D`/`Camera3D`'s `FollowTarget`/`SmoothZoom` are built on — see `Guide/Camera2D_Guide.md`. |
 | `GameTimeExtensions.GetElapsedTimeSeconds()` | Shorthand for `(float)gameTime.ElapsedGameTime.TotalSeconds`. |
+| `GameTimeExtensions.GetTotalTimeSeconds()` | Shorthand for `(float)gameTime.TotalGameTime.TotalSeconds` — total elapsed time since the game started, matching raylib's `GetTime()`. |
 
 ## Rotated, not Rotate
 
