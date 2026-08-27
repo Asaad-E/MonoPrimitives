@@ -15,6 +15,7 @@ Shared (`Core/`, namespace `MonoPrimitives`):
 | | |
 |---|---|
 | Input | `PrimitiveInput` |
+| Scalar math | `MathUtil` |
 | Easing | `Easing` |
 | Color | `Palette`, `ColorUtil` |
 | Noise | `Noise` |

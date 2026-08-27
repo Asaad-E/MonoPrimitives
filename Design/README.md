@@ -35,6 +35,7 @@ These five are kept short on purpose — current state only, no narrative. Deepe
   - **[ObjectPool_Guide.md](../Guide/ObjectPool_Guide.md)** — `ObjectPool<T>`: `Get`/`Return`, `onGet`/`onReturn` hooks, `maxSize`, and the utility-vs-system filter that decided it belonged here.
   - **[RingBuffer_Guide.md](../Guide/RingBuffer_Guide.md)** — `RingBuffer<T>`: the same ring-buffer logic `Trail2D`/`Trail3D`/`FpsCounter` each already hand-roll privately, generalized and public.
   - **[Cooldown_Guide.md](../Guide/Cooldown_Guide.md)** — `Cooldown`: a countdown struct, `TryUse()`, and the mutable-struct-as-a-field caveat.
+  - **[MathUtil_Guide.md](../Guide/MathUtil_Guide.md)** — `MathUtil`: `Remap`/`DeltaAngle`/`LerpAngle`/`PingPong`, confirmed missing from `MathHelper` by reflection.
   - **[WindowUtil_Guide.md](../Guide/WindowUtil_Guide.md)** — `WindowUtil`: minimize/maximize/restore, opacity, window icon, multi-monitor info, clipboard text, and the `DisableCursor`/`GetCursorDelta`/`EnableCursor` mouse-look capture trick, plus the `MaximizeWindow`+`AllowUserResizing` gotcha.
 - **[archive/2D/Primitives2D_Audit_Report.md](archive/2D/Primitives2D_Audit_Report.md)**, **[archive/2D/Overnight_Changes_2026-08-19.md](archive/2D/Overnight_Changes_2026-08-19.md)**, **[archive/3D/Primitive3D_Changes.md](archive/3D/Primitive3D_Changes.md)** — historical session logs. Archaeology only ("why does this bug fix exist") — the five docs above already capture current state. Long; don't load by default.
 

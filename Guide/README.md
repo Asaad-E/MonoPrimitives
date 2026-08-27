@@ -49,6 +49,7 @@ Then, whichever you picked, add a camera ([`Camera2D_Guide.md`](Camera2D_Guide.m
 - [`Collision3D_Guide.md`](Collision3D_Guide.md) — sphere/box/capsule/plane/triangle/quad overlap and raycasts.
 
 **Math & utilities**
+- [`MathUtil_Guide.md`](MathUtil_Guide.md) — `Remap`/`DeltaAngle`/`LerpAngle`/`PingPong`, the scalar helpers `MathHelper` doesn't have.
 - [`Easing_Guide.md`](Easing_Guide.md) — 31 tweening curves for one-shot animations with a known duration.
 - [`Noise_Guide.md`](Noise_Guide.md) — seedable Perlin noise, fBm, ridge, and turbulence, for terrain/organic variation.
 - [`RandomUtil_Guide.md`](RandomUtil_Guide.md) — seedable distribution sampling (Gaussian, Poisson, Binomial, uniform disc/sphere, weighted picks) for simulations.
