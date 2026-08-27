@@ -50,6 +50,7 @@ namespace MonoPrimitives.Tests
             CooldownTests.Run(results);
             DebugTimerTests.Run(results);
             ScreenshotUtilTests.Run(GraphicsDevice, results);
+            WindowUtilTests.Run(this, results);
             ShapeTests2D.Run(GraphicsDevice, results);
             Primitive2DBatchLifecycleTests.Run(GraphicsDevice, results);
             PolygonInsetRegressionTests.Run(GraphicsDevice, results);

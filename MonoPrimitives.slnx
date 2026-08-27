@@ -28,5 +28,6 @@
     <Project Path="examples/test/ParticleTrailTest/ParticleTrailTest.csproj" />
     <Project Path="examples/test/TextReadabilityTest/TextReadabilityTest.csproj" />
     <Project Path="examples/test/ViewportTest/ViewportTest.csproj" />
+    <Project Path="examples/test/WindowUtilTest/WindowUtilTest.csproj" />
   </Folder>
 </Solution>

@@ -17,7 +17,10 @@ namespace ViewportTest;
 /// screen&lt;-&gt;world conversion both ways — a crosshair follows the mouse via ScreenToWorld,
 /// and a fixed world marker's WorldToScreen position is drawn as a HUD dot, so any drift
 /// between the two is immediately visible. Same content for 3D via a raycast against the
-/// ground plane instead of a 2D transform. Keys 1-5 switch adapter mode, Tab switches 2D/3D.
+/// ground plane instead of a 2D transform. Keys 1-5 switch adapter mode, Tab switches 2D/3D,
+/// P toggles Boxing's <c>pixelPerfect</c> option (bars are drawn in a visibly different color via
+/// <c>ClearLetterboxed</c> so you can actually see them, all 4 sides once pixelPerfect floors the
+/// scale).
 /// </summary>
 public class Game1 : Game
 {
@@ -35,6 +38,8 @@ public class Game1 : Game
     private Mode _mode = Mode.Boxing;
     private bool _show3D;
     private bool _tabWasDown;
+    private bool _pixelPerfect;
+    private bool _pWasDown;
 
     private ViewportAdapter2D? _adapter;
     private Camera2D _camera2d = Camera2D.CreateDefault();
@@ -63,7 +68,7 @@ public class Game1 : Game
             Mode.None => null,
             Mode.Default => new DefaultViewportAdapter2D(GraphicsDevice),
             Mode.Window => new WindowViewportAdapter2D(GraphicsDevice, Window),
-            Mode.Boxing => new BoxingViewportAdapter2D(GraphicsDevice, VirtualWidth, VirtualHeight),
+            Mode.Boxing => new BoxingViewportAdapter2D(GraphicsDevice, VirtualWidth, VirtualHeight, _pixelPerfect),
             Mode.Scaling => new ScalingViewportAdapter2D(GraphicsDevice, VirtualWidth, VirtualHeight),
             _ => null,
         };
@@ -90,14 +95,21 @@ public class Game1 : Game
         if (tabDown && !_tabWasDown) _show3D = !_show3D;
         _tabWasDown = tabDown;
 
+        bool pDown = kb.IsKeyDown(Keys.P);
+        if (pDown && !_pWasDown && _mode == Mode.Boxing) { _pixelPerfect = !_pixelPerfect; RebuildForMode(); }
+        _pWasDown = pDown;
+
         _input.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
-        _adapter?.Reset(); // start from the full window; the scene draw narrows it again if boxed
-        GraphicsDevice.Clear(Palette.Background);
+        // ClearLetterboxed paints the bars a different color than the inside so Boxing's bars --
+        // both sides under Scaling/Window/Default (which have none), all 4 under pixelPerfect --
+        // are actually visible instead of blending into the background.
+        if (_adapter is not null) _batch2d.ClearLetterboxed(_adapter, Color.Black, Palette.Background);
+        else GraphicsDevice.Clear(Palette.Background);
 
         Vector2 rawMouse = _input.MousePosition;
 
@@ -172,7 +184,12 @@ public class Game1 : Game
 
         int modeIndex = (int)_mode;
         _batch2d.DrawString($"MODE {ModeInfo[modeIndex].Name} ({ModeInfo[modeIndex].Desc})", new Vector2(16, 16), 2f, Color.White);
-        _batch2d.DrawString("1-5: switch adapter   Tab: switch 2D/3D scene", new Vector2(16, 44), 1.5f, Palette.Silver);
+        _batch2d.DrawString("1-5: switch adapter   Tab: switch 2D/3D scene   P: toggle pixelPerfect (Boxing only)", new Vector2(16, 44), 1.5f, Palette.Silver);
+        if (_mode == Mode.Boxing)
+        {
+            var boxing = (BoxingViewportAdapter2D)_adapter!;
+            _batch2d.DrawString($"PixelPerfect: {_pixelPerfect}   Scale: {boxing.Scale.X:F2}   Offset: {boxing.Offset.X:F1},{boxing.Offset.Y:F1}", new Vector2(16, 176), 1.4f, _pixelPerfect ? Palette.Sunflower : Palette.Concrete);
+        }
         _batch2d.DrawString($"Scene: {(_show3D ? "3D" : "2D")}", new Vector2(16, 66), 1.5f, Palette.Silver);
         _batch2d.DrawString($"Raw mouse (screen px): {rawMouse.X:F0}, {rawMouse.Y:F0}", new Vector2(16, 90), 1.5f, Palette.Concrete);
 

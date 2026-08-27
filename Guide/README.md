@@ -66,6 +66,7 @@ Then, whichever you picked, add a camera ([`Camera2D_Guide.md`](Camera2D_Guide.m
 - [`FpsCounter_Guide.md`](FpsCounter_Guide.md) — rolling-average FPS measurement.
 - [`ScreenshotUtil_Guide.md`](ScreenshotUtil_Guide.md) — one-call back-buffer capture to `.png`/`.jpg`.
 - [`Cooldown_Guide.md`](Cooldown_Guide.md) — a simple countdown struct for attack cooldowns, spawn timers, input debouncing.
+- [`WindowUtil_Guide.md`](WindowUtil_Guide.md) — minimize/maximize/restore, opacity, window icon, multi-monitor info, clipboard text, and captured-cursor mouse-look.
 
 ## Something not working the way a guide says it should?
 

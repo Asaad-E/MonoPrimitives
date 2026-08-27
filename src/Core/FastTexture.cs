@@ -447,7 +447,8 @@ namespace MonoPrimitives
             _glPixelStorei = (delegate* unmanaged[Cdecl]<uint, int, void>)store;
         }
 
-        private static string[] GetSdlCandidates()
+        // Shared with WindowUtil, which also talks to the same in-process SDL2 library.
+        internal static string[] GetSdlCandidates()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return new[] { "SDL2.dll", "SDL2" };

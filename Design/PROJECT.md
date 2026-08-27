@@ -30,6 +30,7 @@ Shared (`Core/`, namespace `MonoPrimitives`):
 | Fixed-capacity history | `RingBuffer<T>` |
 | Countdown timer | `Cooldown` (struct) |
 | Debug timing | `DebugTimer` (struct) |
+| Window/monitor/clipboard/cursor-capture | `WindowUtil` |
 
 Per-namespace (not shared — genuinely different code):
 
@@ -48,7 +49,7 @@ See DECISIONS.md for the Core-vs-duplicated rule.
 ## What this is *not*
 
 - **No physics resolution** — `Collision2D`/`Collision3D` detect, never resolve.
-- **No texture/model loading, no window management** — MonoGame's own `Game`/content pipeline handles that.
+- **No texture/model loading, no window creation/ownership** — MonoGame's own `Game`/content pipeline handles that. `WindowUtil` is the one exception to "no window management," and a narrow one: it only *operates on* a `GameWindow`/`Game` the caller already owns (minimize/maximize, opacity, icon, monitor info, clipboard) — it never creates, owns, or replaces one, same boundary `ScreenshotUtil` draws around `GraphicsDevice`.
 
 ## Design philosophy
 
