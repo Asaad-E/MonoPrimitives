@@ -34,13 +34,17 @@ _terrain = TextureUtil.CreateFromNoise(GraphicsDevice, 512, 512, noise, scale: 0
 |---|---|
 | `Crop(device, source, sourceRectangle)` | Extracts a sub-rectangle. Throws `ArgumentOutOfRangeException` if it doesn't lie within `source`. |
 | `FlipHorizontal(device, source)` / `FlipVertical(device, source)` | Mirrors the pixels. |
+| `Rotate90(device, source, clockwise)` | Exact quarter turn, swapping width/height — no resampling. |
+| `Rotate(device, source, radians, smooth, backgroundColor)` | Arbitrary-angle rotation. The canvas grows to fit the whole rotated image (no cropping); `backgroundColor` (transparent by default) fills the corners the rotated image doesn't cover. |
 | `Tint(device, source, tintColor)` | Multiplies every pixel by `tintColor` (`ColorUtil.Multiply`). |
+| `Map(device, source, map)` | Applies any `Func<Color,Color>` to every pixel — grayscale/invert/brightness/contrast/color-remap, all the same shape. Compose with `ColorUtil`: `TextureUtil.Map(device, src, ColorUtil.Invert)`. |
+| `Blur(device, source, radius)` | Separable Gaussian blur. Blurs in premultiplied-alpha space so a blurred transparent edge doesn't pick up color bleed from fully-transparent neighbors. `O(width * height * radius)` — real work at a large radius, not a per-frame operation. |
 | `Resize(device, source, newWidth, newHeight, smooth)` | Resamples to a new size — bilinear (`smooth: true`, the default) or nearest-neighbor (`false`, for pixel art). |
 | `Combine(device, background, overlay, offset)` | Draws `overlay` onto a copy of `background` at `offset`, alpha-blended. Result is `background`'s size. |
 | `ToTexture2D(device, renderTarget)` | Snapshots a `RenderTarget2D`'s current contents into a plain, independent `Texture2D` — survives the render target being cleared, resized, or disposed. |
 
 ## Notes
 
-- `Crop`/`FlipHorizontal`/`FlipVertical`/`Tint` (and every generator) are CPU-only — they build a `Color[]` and upload it once via `SetData`. `Resize`/`Combine` render through a temporary `RenderTarget2D` instead, since resampling and alpha-blending are what the GPU already does correctly.
-- `Resize`/`Combine` save and restore the device's currently-active render target, so calling either mid-frame (e.g. lazily generating a texture inside your own `Draw()`) won't redirect the rest of that frame's rendering somewhere unexpected.
-- None of this is meant for a per-frame hot path — generate once at startup (or lazily, the first time you need a given texture) and keep the result, the same way you'd treat any other `Texture2D` you loaded from disk.
+- `Crop`/`FlipHorizontal`/`FlipVertical`/`Rotate90`/`Tint`/`Map`/`Blur` (and every generator) are CPU-only — they build a `Color[]` and upload it once via `SetData`. `Resize`/`Rotate`/`Combine` render through a temporary `RenderTarget2D` instead, since resampling and alpha-blending are what the GPU already does correctly.
+- `Resize`/`Rotate`/`Combine` save and restore the device's currently-active render target, so calling any of them mid-frame (e.g. lazily generating a texture inside your own `Draw()`) won't redirect the rest of that frame's rendering somewhere unexpected.
+- None of this is meant for a per-frame hot path — generate once at startup (or lazily, the first time you need a given texture) and keep the result, the same way you'd treat any other `Texture2D` you loaded from disk. `Blur` in particular is real per-pixel-per-kernel-tap work; don't call it every frame on a large texture.

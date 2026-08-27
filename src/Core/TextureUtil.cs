@@ -175,6 +175,124 @@ namespace MonoPrimitives
             return Upload(device, width, height, dst);
         }
 
+        /// <summary>Rotates <paramref name="source"/> by a quarter turn (90 degrees), swapping width and height, into a new texture.</summary>
+        /// <remarks>Exact -- every source pixel maps to exactly one destination pixel, no resampling. For an arbitrary angle, see <see cref="Rotate"/>.</remarks>
+        public static Texture2D Rotate90(GraphicsDevice device, Texture2D source, bool clockwise = true)
+        {
+            GetPixels(source, out Color[] src, out int width, out int height);
+            int newWidth = height, newHeight = width;
+            var dst = new Color[src.Length];
+
+            if (clockwise)
+            {
+                for (int dy = 0; dy < newHeight; dy++)
+                    for (int dx = 0; dx < newWidth; dx++)
+                        dst[dy * newWidth + dx] = src[(height - 1 - dx) * width + dy];
+            }
+            else
+            {
+                for (int dy = 0; dy < newHeight; dy++)
+                    for (int dx = 0; dx < newWidth; dx++)
+                        dst[dy * newWidth + dx] = src[dx * width + (width - 1 - dy)];
+            }
+            return Upload(device, newWidth, newHeight, dst);
+        }
+
+        /// <summary>Applies <paramref name="map"/> to every pixel of <paramref name="source"/> into a new texture.</summary>
+        /// <remarks>One general per-pixel transform covering grayscale/invert/brightness/contrast/color-remap all at once -- compose with <see cref="ColorUtil"/>'s existing functions, e.g. <c>TextureUtil.Map(device, src, ColorUtil.Invert)</c>.</remarks>
+        public static Texture2D Map(GraphicsDevice device, Texture2D source, Func<Color, Color> map)
+        {
+            ArgumentNullException.ThrowIfNull(map);
+            GetPixels(source, out Color[] src, out int width, out int height);
+            var dst = new Color[src.Length];
+            for (int i = 0; i < src.Length; i++) dst[i] = map(src[i]);
+            return Upload(device, width, height, dst);
+        }
+
+        /// <summary>Applies a separable Gaussian blur with the given pixel <paramref name="radius"/> into a new texture.</summary>
+        /// <remarks>Blurs in premultiplied-alpha space and un-premultiplies the result, so a blurred semi-transparent edge doesn't pick up color bleed from fully-transparent neighboring pixels. Cost is roughly <c>O(width * height * radius)</c> -- a large radius on a large texture is real work, not something to do every frame.</remarks>
+        public static Texture2D Blur(GraphicsDevice device, Texture2D source, int radius)
+        {
+            if (radius < 1) throw new ArgumentOutOfRangeException(nameof(radius), "must be at least 1.");
+            GetPixels(source, out Color[] src, out int width, out int height);
+
+            float sigma = MathF.Max(radius / 2f, 0.6f);
+            float[] kernel = BuildGaussianKernel(radius, sigma);
+
+            var pr = new float[src.Length];
+            var pg = new float[src.Length];
+            var pb = new float[src.Length];
+            var pa = new float[src.Length];
+            for (int i = 0; i < src.Length; i++)
+            {
+                float a = src[i].A / 255f;
+                pr[i] = src[i].R / 255f * a;
+                pg[i] = src[i].G / 255f * a;
+                pb[i] = src[i].B / 255f * a;
+                pa[i] = a;
+            }
+
+            var hr = new float[src.Length];
+            var hg = new float[src.Length];
+            var hb = new float[src.Length];
+            var ha = new float[src.Length];
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float r = 0f, g = 0f, b = 0f, a = 0f;
+                    for (int k = -radius; k <= radius; k++)
+                    {
+                        int sx = Math.Clamp(x + k, 0, width - 1);
+                        float w = kernel[k + radius];
+                        int idx = y * width + sx;
+                        r += pr[idx] * w; g += pg[idx] * w; b += pb[idx] * w; a += pa[idx] * w;
+                    }
+                    int di = y * width + x;
+                    hr[di] = r; hg[di] = g; hb[di] = b; ha[di] = a;
+                }
+            }
+
+            var dst = new Color[src.Length];
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float r = 0f, g = 0f, b = 0f, a = 0f;
+                    for (int k = -radius; k <= radius; k++)
+                    {
+                        int sy = Math.Clamp(y + k, 0, height - 1);
+                        float w = kernel[k + radius];
+                        int idx = sy * width + x;
+                        r += hr[idx] * w; g += hg[idx] * w; b += hb[idx] * w; a += ha[idx] * w;
+                    }
+                    int di = y * width + x;
+                    float outA = MathHelper.Clamp(a, 0f, 1f);
+                    float outR = outA > 1e-5f ? MathHelper.Clamp(r / outA, 0f, 1f) : 0f;
+                    float outG = outA > 1e-5f ? MathHelper.Clamp(g / outA, 0f, 1f) : 0f;
+                    float outB = outA > 1e-5f ? MathHelper.Clamp(b / outA, 0f, 1f) : 0f;
+                    dst[di] = new Color(outR, outG, outB, outA);
+                }
+            }
+
+            return Upload(device, width, height, dst);
+        }
+
+        private static float[] BuildGaussianKernel(int radius, float sigma)
+        {
+            var kernel = new float[radius * 2 + 1];
+            float sum = 0f;
+            float twoSigmaSq = 2f * sigma * sigma;
+            for (int i = -radius; i <= radius; i++)
+            {
+                float v = MathF.Exp(-(i * i) / twoSigmaSq);
+                kernel[i + radius] = v;
+                sum += v;
+            }
+            for (int i = 0; i < kernel.Length; i++) kernel[i] /= sum;
+            return kernel;
+        }
+
         // ==================================================================
         // GPU-side transforms (temporary render target, saved/restored)
         // ==================================================================
@@ -197,6 +315,33 @@ namespace MonoPrimitives
                 spriteBatch.Draw(source, new Rectangle(0, 0, newWidth, newHeight), Color.White);
                 spriteBatch.End();
             });
+        }
+
+        /// <summary>Rotates <paramref name="source"/> by an arbitrary <paramref name="radians"/> into a new, larger-as-needed texture that fits the whole rotated image (no cropping).</summary>
+        /// <param name="device">Device the new texture is created on.</param>
+        /// <param name="source">Texture to rotate.</param>
+        /// <param name="radians">Rotation angle, clockwise.</param>
+        /// <param name="smooth">True (default) for bilinear filtering; false for nearest-neighbor.</param>
+        /// <param name="backgroundColor">Fills the corners the rotated image doesn't cover. Transparent if omitted.</param>
+        /// <remarks>For an exact quarter turn with no resampling, use <see cref="Rotate90"/> instead.</remarks>
+        public static Texture2D Rotate(GraphicsDevice device, Texture2D source, float radians, bool smooth = true, Color? backgroundColor = null)
+        {
+            ArgumentNullException.ThrowIfNull(device);
+            ArgumentNullException.ThrowIfNull(source);
+
+            float cos = MathF.Abs(MathF.Cos(radians));
+            float sin = MathF.Abs(MathF.Sin(radians));
+            int newWidth = Math.Max(1, (int)MathF.Ceiling(source.Width * cos + source.Height * sin));
+            int newHeight = Math.Max(1, (int)MathF.Ceiling(source.Width * sin + source.Height * cos));
+
+            return RenderToTexture(device, newWidth, newHeight, spriteBatch =>
+            {
+                spriteBatch.Begin(samplerState: smooth ? SamplerState.LinearClamp : SamplerState.PointClamp);
+                Vector2 origin = new(source.Width * 0.5f, source.Height * 0.5f);
+                Vector2 center = new(newWidth * 0.5f, newHeight * 0.5f);
+                spriteBatch.Draw(source, center, null, Color.White, radians, origin, 1f, SpriteEffects.None, 0f);
+                spriteBatch.End();
+            }, backgroundColor);
         }
 
         /// <summary>Draws <paramref name="overlay"/> onto a copy of <paramref name="background"/> at <paramref name="offset"/>, alpha-blended, into a new texture the size of <paramref name="background"/>.</summary>
@@ -258,7 +403,7 @@ namespace MonoPrimitives
         // Renders into a same-sized-as-requested RenderTarget2D via a throwaway SpriteBatch, reads
         // it back into a plain Texture2D, and restores whatever the device was already rendering to
         // -- so this is safe to call mid-frame without disturbing the caller's own render target.
-        private static Texture2D RenderToTexture(GraphicsDevice device, int width, int height, Action<SpriteBatch> draw)
+        private static Texture2D RenderToTexture(GraphicsDevice device, int width, int height, Action<SpriteBatch> draw, Color? clearColor = null)
         {
             RenderTargetBinding[] previous = device.GetRenderTargets();
             try
@@ -267,7 +412,7 @@ namespace MonoPrimitives
                 using var spriteBatch = new SpriteBatch(device);
 
                 device.SetRenderTarget(rt);
-                device.Clear(Color.Transparent);
+                device.Clear(clearColor ?? Color.Transparent);
                 draw(spriteBatch);
 
                 return ToTexture2D(device, rt);

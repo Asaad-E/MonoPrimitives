@@ -123,6 +123,84 @@ namespace MonoPrimitives.Tests
                 return null;
             });
 
+            results.Check("TextureUtil.Rotate90: clockwise and counter-clockwise both move corners to the physically correct side", () =>
+            {
+                // 2 wide x 3 tall, distinct corner colors -- physical reasoning about what
+                // "rotate 90 degrees clockwise" visually does, independent of the implementation.
+                var pixels = new Color[6];
+                pixels[0 * 2 + 0] = Color.Red; pixels[0 * 2 + 1] = Color.Lime;   // row 0: TL, TR
+                pixels[2 * 2 + 0] = Color.Blue; pixels[2 * 2 + 1] = Color.Yellow; // row 2: BL, BR
+                using var source = new Texture2D(device, 2, 3, false, SurfaceFormat.Color);
+                source.SetData(pixels);
+
+                using var cw = TextureUtil.Rotate90(device, source, clockwise: true);
+                if (cw.Width != 3 || cw.Height != 2) return $"expected dimensions swapped to 3x2, got {cw.Width}x{cw.Height}";
+                Color[] c = Read(cw);
+                if (c[0 * 3 + 2] != Color.Red) return $"CW: expected source TL (Red) at dest top-right, got {c[0 * 3 + 2]}";
+                if (c[0 * 3 + 0] != Color.Blue) return $"CW: expected source BL (Blue) at dest top-left, got {c[0 * 3 + 0]}";
+                if (c[1 * 3 + 2] != Color.Lime) return $"CW: expected source TR (Lime) at dest bottom-right, got {c[1 * 3 + 2]}";
+                if (c[1 * 3 + 0] != Color.Yellow) return $"CW: expected source BR (Yellow) at dest bottom-left, got {c[1 * 3 + 0]}";
+
+                using var ccw = TextureUtil.Rotate90(device, source, clockwise: false);
+                Color[] cc = Read(ccw);
+                if (cc[0 * 3 + 0] != Color.Lime) return $"CCW: expected source TR (Lime) at dest top-left, got {cc[0 * 3 + 0]}";
+                if (cc[1 * 3 + 0] != Color.Red) return $"CCW: expected source TL (Red) at dest bottom-left, got {cc[1 * 3 + 0]}";
+                if (cc[0 * 3 + 2] != Color.Yellow) return $"CCW: expected source BR (Yellow) at dest top-right, got {cc[0 * 3 + 2]}";
+                if (cc[1 * 3 + 2] != Color.Blue) return $"CCW: expected source BL (Blue) at dest bottom-right, got {cc[1 * 3 + 2]}";
+                return null;
+            });
+
+            results.Check("TextureUtil.Rotate: a zero-radian rotation is a no-op (same size, same content); a 45-degree rotation grows the canvas", () =>
+            {
+                using var source = TextureUtil.CreateSolid(device, 20, 10, Color.CornflowerBlue);
+
+                using var unrotated = TextureUtil.Rotate(device, source, 0f);
+                if (unrotated.Width != 20 || unrotated.Height != 10) return $"expected 0-radian rotation to keep the same size, got {unrotated.Width}x{unrotated.Height}";
+
+                using var rotated45 = TextureUtil.Rotate(device, source, MathHelper.PiOver4);
+                // A 20x10 rect rotated 45 degrees has a bounding box of (20+10)*cos(45) on each axis.
+                int expected = (int)MathF.Ceiling((20 + 10) * MathF.Cos(MathHelper.PiOver4));
+                if (Math.Abs(rotated45.Width - expected) > 1 || Math.Abs(rotated45.Height - expected) > 1)
+                    return $"expected the 45-degree rotation to grow the canvas to ~{expected}x{expected}, got {rotated45.Width}x{rotated45.Height}";
+                return null;
+            });
+
+            results.Check("TextureUtil.Map: composes with ColorUtil.Invert for an exact per-pixel inversion", () =>
+            {
+                using var source = TextureUtil.CreateSolid(device, 4, 4, new Color(10, 200, 50));
+                using var mapped = TextureUtil.Map(device, source, ColorUtil.Invert);
+                Color expected = ColorUtil.Invert(new Color(10, 200, 50));
+                foreach (Color p in Read(mapped))
+                    if (p != expected) return $"expected every pixel inverted to {expected}, got {p}";
+                return null;
+            });
+
+            results.Check("TextureUtil.Blur: softens a hard edge near the boundary, leaves pixels far from it alone", () =>
+            {
+                const int size = 40;
+                var pixels = new Color[size * size];
+                for (int y = 0; y < size; y++)
+                    for (int x = 0; x < size; x++)
+                        pixels[y * size + x] = x < size / 2 ? Color.Black : Color.White;
+                using var source = new Texture2D(device, size, size, false, SurfaceFormat.Color);
+                source.SetData(pixels);
+
+                using var blurred = TextureUtil.Blur(device, source, radius: 5);
+                Color[] b = Read(blurred);
+                Color At(int x, int y) => b[y * size + x];
+
+                Color nearEdge = At(size / 2, size / 2);
+                if (nearEdge.R < 20 || nearEdge.R > 235) return $"expected a blended gray near the hard edge after blurring, got {nearEdge}";
+
+                Color farLeft = At(2, size / 2);
+                Color farRight = At(size - 3, size / 2);
+                if (farLeft.R > 20) return $"expected far-from-the-edge pixels to stay close to black, got {farLeft}";
+                if (farRight.R < 235) return $"expected far-from-the-edge pixels to stay close to white, got {farRight}";
+
+                try { TextureUtil.Blur(device, source, 0); return "expected ArgumentOutOfRangeException for radius=0"; }
+                catch (ArgumentOutOfRangeException) { return null; }
+            });
+
             results.Check("TextureUtil.Tint: multiplies a white source exactly to the tint color", () =>
             {
                 using var white = TextureUtil.CreateSolid(device, 4, 4, Color.White);
