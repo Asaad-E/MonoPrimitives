@@ -984,7 +984,7 @@ namespace MonoPrimitives.Primitives2D
             // built from a concave polygon (a rounded star, say) is still concave, so the
             // plain fan-from-boundary[0] this used unconditionally can produce the same
             // wrong/overlapping triangles FillPolygon's own fan did before that fix.
-            if (n == 3 || IsConvex(boundary))
+            if (n == 3 || PolygonUtil.IsConvex(boundary))
             {
                 for (int i = 1; i < n - 1; i++)
                     PushTriangleIndices(b, b + i, b + i + 1);
@@ -993,7 +993,7 @@ namespace MonoPrimitives.Primitives2D
 
             int triIndexCount = (n - 2) * 3;
             Span<int> localIndices = triIndexCount <= MaxStackAllocElements ? stackalloc int[triIndexCount] : new int[triIndexCount];
-            int written = TriangulateEarClipping(boundary, localIndices);
+            int written = PolygonUtil.Triangulate(boundary, localIndices);
             if (written > 0)
             {
                 for (int i = 0; i < written; i += 3)
@@ -3182,7 +3182,7 @@ namespace MonoPrimitives.Primitives2D
             int n = points.Length;
             if (n < 3) return;
 
-            if (n == 3 || IsConvex(points))
+            if (n == 3 || PolygonUtil.IsConvex(points))
             {
                 int b = Reserve(n, (n - 2) * 3);
                 for (int i = 0; i < n; i++)
@@ -3194,7 +3194,7 @@ namespace MonoPrimitives.Primitives2D
 
             int triIndexCount = (n - 2) * 3;
             Span<int> localIndices = triIndexCount <= MaxStackAllocElements ? stackalloc int[triIndexCount] : new int[triIndexCount];
-            int written = TriangulateEarClipping(points, localIndices);
+            int written = PolygonUtil.Triangulate(points, localIndices);
 
             int baseIdx = Reserve(n, (n - 2) * 3);
             for (int i = 0; i < n; i++)
@@ -3213,126 +3213,6 @@ namespace MonoPrimitives.Primitives2D
                     PushTriangleIndices(baseIdx, baseIdx + i, baseIdx + i + 1);
             }
         }
-
-        /// <summary>
-        /// True if walking <paramref name="points"/> in order always turns the same rotational
-        /// way (allowing near-collinear runs) — the condition under which a plain triangle fan
-        /// from <c>points[0]</c> is always correct, convex or not.
-        /// </summary>
-        private static bool IsConvex(ReadOnlySpan<Vector2> points)
-        {
-            int n = points.Length;
-            if (n < 4) return true;
-
-            float sign = 0f;
-            for (int i = 0; i < n; i++)
-            {
-                Vector2 a = points[i];
-                Vector2 b = points[(i + 1) % n];
-                Vector2 c = points[(i + 2) % n];
-                float cross = (b.X - a.X) * (c.Y - b.Y) - (b.Y - a.Y) * (c.X - b.X);
-                if (MathF.Abs(cross) < 1e-7f) continue; // near-collinear: doesn't determine turn direction
-                if (sign == 0f) sign = MathF.Sign(cross);
-                else if (MathF.Sign(cross) != sign) return false;
-            }
-            return true;
-        }
-
-        /// <summary>Ear-clipping triangulation for an arbitrary simple polygon (concave allowed; must not self-intersect) — <see cref="FillPolygon"/>'s fallback once <see cref="IsConvex"/> says the fast fan isn't safe.</summary>
-        /// <remarks>
-        /// Writes up to <c>(points.Length - 2) * 3</c> LOCAL indices (0-based into
-        /// <paramref name="points"/>) into <paramref name="outIndices"/> and returns how many were
-        /// written, or 0 if triangulation got stuck (degenerate or self-intersecting input — the
-        /// caller falls back to the plain fan in that case).
-        /// </remarks>
-        private static int TriangulateEarClipping(ReadOnlySpan<Vector2> points, Span<int> outIndices)
-        {
-            int n = points.Length;
-            if (n < 3) return 0;
-            if (n == 3) { outIndices[0] = 0; outIndices[1] = 1; outIndices[2] = 2; return 3; }
-
-            // Overall winding decides which triangle orientation counts as a clippable "ear"
-            // versus a reflex (concave) vertex while clipping.
-            float area2 = 0f;
-            for (int i = 0; i < n; i++)
-            {
-                Vector2 a = points[i];
-                Vector2 b = points[(i + 1) % n];
-                area2 += a.X * b.Y - b.X * a.Y;
-            }
-            bool ccw = area2 > 0f;
-
-            Span<int> prevIdx = n <= MaxStackAllocElements ? stackalloc int[n] : new int[n];
-            Span<int> nextIdx = n <= MaxStackAllocElements ? stackalloc int[n] : new int[n];
-            for (int i = 0; i < n; i++)
-            {
-                prevIdx[i] = (i - 1 + n) % n;
-                nextIdx[i] = (i + 1) % n;
-            }
-
-            int remaining = n;
-            int outCount = 0;
-            int current = 0;
-            int guard = 0;
-            int maxGuard = n * n + n; // generous bound for legitimate simple polygons; only degenerate input exhausts it
-
-            while (remaining > 3 && guard < maxGuard)
-            {
-                guard++;
-                int ip = prevIdx[current], inx = nextIdx[current];
-                Vector2 a = points[ip], b = points[current], c = points[inx];
-
-                float cross = (b.X - a.X) * (c.Y - b.Y) - (b.Y - a.Y) * (c.X - b.X);
-                bool isConvexVertex = ccw ? cross > 0f : cross < 0f;
-
-                if (isConvexVertex && !AnyRemainingPointInTriangle(points, nextIdx, inx, ip, a, b, c))
-                {
-                    outIndices[outCount++] = ip;
-                    outIndices[outCount++] = current;
-                    outIndices[outCount++] = inx;
-
-                    nextIdx[ip] = inx;
-                    prevIdx[inx] = ip;
-                    remaining--;
-                    current = ip; // re-check the vertex before the one just clipped
-                }
-                else
-                {
-                    current = inx;
-                }
-            }
-
-            if (remaining != 3)
-                return 0; // stuck — degenerate/self-intersecting input
-
-            outIndices[outCount++] = prevIdx[current];
-            outIndices[outCount++] = current;
-            outIndices[outCount++] = nextIdx[current];
-            return outCount;
-        }
-
-        /// <summary>Any still-remaining vertex (other than the candidate ear's own 3 corners) strictly inside triangle (a,b,c)? Used to reject a topologically-convex ear that another vertex still pokes into.</summary>
-        private static bool AnyRemainingPointInTriangle(ReadOnlySpan<Vector2> points, Span<int> nextIdx, int inx, int ip, in Vector2 a, in Vector2 b, in Vector2 c)
-        {
-            for (int i = nextIdx[inx]; i != ip; i = nextIdx[i])
-            {
-                if (PointInTriangle(points[i], a, b, c)) return true;
-            }
-            return false;
-        }
-
-        private static bool PointInTriangle(in Vector2 p, in Vector2 a, in Vector2 b, in Vector2 c)
-        {
-            float d1 = EdgeCross(p, a, b);
-            float d2 = EdgeCross(p, b, c);
-            float d3 = EdgeCross(p, c, a);
-            bool hasNeg = d1 < 0f || d2 < 0f || d3 < 0f;
-            bool hasPos = d1 > 0f || d2 > 0f || d3 > 0f;
-            return !(hasNeg && hasPos);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static float EdgeCross(in Vector2 p, in Vector2 a, in Vector2 b) => (a.X - p.X) * (b.Y - p.Y) - (a.Y - p.Y) * (b.X - p.X);
 
         /// <summary>Draws an arbitrary closed polygon's border only, growing inward from its own edges via <see cref="InsetConvexPolygon"/>.</summary>
         /// <remarks>Despite the name, correct for concave (reflex-vertex) input too (see DECISIONS.md).</remarks>
@@ -3417,7 +3297,7 @@ namespace MonoPrimitives.Primitives2D
             for (int i = 0; i < n; i++)
                 PushVertex(points[i], vertexColors[i]);
 
-            if (n == 3 || IsConvex(points))
+            if (n == 3 || PolygonUtil.IsConvex(points))
             {
                 for (int i = 1; i < n - 1; i++)
                     PushTriangleIndices(b, b + i, b + i + 1);
@@ -3426,7 +3306,7 @@ namespace MonoPrimitives.Primitives2D
 
             int triIndexCount = (n - 2) * 3;
             Span<int> localIndices = triIndexCount <= MaxStackAllocElements ? stackalloc int[triIndexCount] : new int[triIndexCount];
-            int written = TriangulateEarClipping(points, localIndices);
+            int written = PolygonUtil.Triangulate(points, localIndices);
             if (written > 0)
             {
                 for (int i = 0; i < written; i += 3)

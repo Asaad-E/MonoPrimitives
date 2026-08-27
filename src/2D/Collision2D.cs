@@ -131,6 +131,7 @@ namespace MonoPrimitives.Primitives2D
         // =====================================================================
 
         /// <summary>Convex polygon vs convex polygon overlap. Requires both polygons to be convex.</summary>
+        /// <remarks>Not checked here — verify with <see cref="MonoPrimitives.Primitives2D.PolygonUtil.IsConvex"/> first if you're not sure a polygon qualifies.</remarks>
         public static bool CheckCollisionPolyPoly(ReadOnlySpan<Vector2> poly1, ReadOnlySpan<Vector2> poly2)
         {
             if (poly1.Length < 3 || poly2.Length < 3) return false;

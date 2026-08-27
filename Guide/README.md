@@ -46,6 +46,7 @@ Then, whichever you picked, add a camera ([`Camera2D_Guide.md`](Camera2D_Guide.m
 
 **Collision**
 - [`Collision2D_Guide.md`](Collision2D_Guide.md) — every 2D overlap/ray check by shape, and which ones need convex input.
+- [`PolygonUtil_Guide.md`](PolygonUtil_Guide.md) — `IsConvex` (does my polygon qualify for SAT?) and `Triangulate` (ear clipping, for your own mesh/collision/nav data).
 - [`Collision3D_Guide.md`](Collision3D_Guide.md) — sphere/box/capsule/plane/triangle/quad overlap and raycasts.
 
 **Math & utilities**

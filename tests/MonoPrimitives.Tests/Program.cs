@@ -35,6 +35,7 @@ namespace MonoPrimitives.Tests
             ColorUtilTests.Run(results);
             EasingTests.Run(results);
             MathUtilTests.Run(results);
+            PolygonUtilTests.Run(results);
             UnitCircleLutTests.Run(results);
             FontGlyphs5x7Tests.Run(results);
             RandomUtilTests.Run(results);
