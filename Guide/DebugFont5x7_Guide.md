@@ -4,6 +4,8 @@
 
 Covers full basic ASCII (32–126) plus Spanish characters (`ñ Ñ á é í ó ú Á É Í Ó Ú ü Ü ¿ ¡`). Intended for debug/test text — HUD counters, labels, on-screen values — not production typography.
 
+![The 5x7 font at several sizes, plus a word-wrapped paragraph](../img/debugfont_2d.png)
+
 ## Quick start
 
 ```csharp
@@ -51,6 +53,9 @@ batch.DrawString(wrapped, panelCenter - size / 2f, pixelSize: 2, Color.White); /
 ## 3D: `DrawString3D` / `GetBillboardAxes`
 
 3D's own `DebugFont5x7.cs` ([`src/3D/DebugFont5x7.cs`](../src/3D/DebugFont5x7.cs), methods on `Primitive3DBatch`) draws the exact same `FontGlyphs5x7` bitmap data as camera-facing quads in world space instead of flat screen-space rectangles:
+
+![Billboarded text staying frontal vs fixed-orientation text foreshortened from an angle](../img/debugfont_3d.png)
+<br><sub>Same camera, viewed from the side rather than straight-on: BILLBOARDED rotates to keep facing it, FIXED doesn't and reads visibly narrower.</sub>
 
 ```csharp
 using MonoPrimitives.Primitives3D;

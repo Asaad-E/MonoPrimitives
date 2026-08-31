@@ -98,9 +98,11 @@ Each class has its own guide — start with whichever one covers what you're tou
 
 **Collision**
 - [`Collision2D`](Guide/Collision2D_Guide.md) — every 2D overlap/ray check by shape.
+- [`PolygonUtil`](Guide/PolygonUtil_Guide.md) — `IsConvex` (does my polygon qualify for SAT?) and `Triangulate` (ear clipping, for your own mesh/collision/nav data).
 - [`Collision3D`](Guide/Collision3D_Guide.md) — sphere/box/capsule/plane/triangle/quad overlap and raycasts.
 
 **Math & utilities**
+- [`MathUtil`](Guide/MathUtil_Guide.md) — `Remap`/`DeltaAngle`/`LerpAngle`/`PingPong`, the scalar helpers `MathHelper` doesn't have.
 - [`Easing`](Guide/Easing_Guide.md) — 31 tweening curves for one-shot animations with a known duration.
 - [`Noise`](Guide/Noise_Guide.md) — seedable Perlin noise, fBm, ridge, and turbulence.
 - [`RandomUtil`](Guide/RandomUtil_Guide.md) — seedable distribution sampling (Gaussian, Poisson, Binomial, uniform disc/sphere, weighted picks).
@@ -117,7 +119,9 @@ Each class has its own guide — start with whichever one covers what you're tou
 - [`FastTexture`](Guide/FastTexture_Guide.md) — raw-GL texture upload, 2.5-2.7x faster than `SetData` for frequent updates.
 - [`FpsCounter`](Guide/FpsCounter_Guide.md) — rolling-average FPS measurement.
 - [`ScreenshotUtil`](Guide/ScreenshotUtil_Guide.md) — one-call back-buffer capture to `.png`/`.jpg`.
+- [`TextureUtil`](Guide/TextureUtil_Guide.md) — procedural texture generation (solid/gradient/checkerboard/from `Noise`) plus resize/crop/flip/tint/combine transforms.
 - [`Cooldown`](Guide/Cooldown_Guide.md) — a simple countdown struct for attack cooldowns, spawn timers, input debouncing.
+- [`WindowUtil`](Guide/WindowUtil_Guide.md) — minimize/maximize/restore, opacity, window icon, multi-monitor info, clipboard text, and captured-cursor mouse-look.
 
 For the project's own internals (architecture map, conventions, the reasoning behind non-obvious choices), see [`Design/README.md`](Design/README.md).
 
