@@ -6,12 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versio
 
 ## [0.9.0] - 2026-08-31
 
-Pre-1.0 API-freeze pass: an audit of the public surface for naming/parameter-order mistakes worth fixing while it's still cheap, before 1.0 locks the API in.
+Pre-1.0 API-freeze pass: an audit of the public surface for naming/parameter-order mistakes and coverage gaps worth fixing while it's still cheap, before 1.0 locks the API in.
+
+### Added
+- `Collision2D.CheckCollisionRayPoly`/`CheckCollisionRayTriangle`/`CheckCollisionRayCapsule` — 2D's raycasts covered only Circle/Rectangle/Line while 3D covered six shapes; this closes the gap for Poly/Triangle/Capsule (mouse-picking against arbitrary 2D shapes).
 
 ### Changed
 - **Breaking:** `Camera3D.Zoom(delta, min, max)` renamed to `AdjustZoom` — as a bare method name it collided with `Camera2D.Zoom`, a field holding the stored scale, not a delta-adjustment verb.
 - **Breaking:** `Collision2D.CheckCollisionPolyPoly`/`CheckCollisionTriangleTriangle`/`CheckCollisionCapsuleCapsule` renamed to `CheckCollisionPolys`/`CheckCollisionTriangles`/`CheckCollisionCapsules` — same-shape-pair checks now consistently use the plural form `CheckCollisionCircles`/`Spheres`/`Boxes`/`Capsules` already established, instead of a doubled shape name.
 - **Breaking:** `Primitive2DBatch.BorderCircleSector(center, radius, startAngle, endAngle, thickness, color)` reordered to `(..., color, thickness = 1f)` — it was the one `Border*` overload putting `thickness` before `color` with no default.
+- `Primitive2DBatch.DrawGrid`/`DrawAxis` now treat a non-positive `lineThickness`/`thickness` as "fall back to a plain 1px line" instead of drawing a literal (invisible) zero-width line — 3D's equivalent methods use `<= 0` as a fast-path sentinel, and porting that convention's `0f` into 2D used to silently break.
 - `templates/PrimitiveBase` bumped to reference the published `0.8.5` package.
 
 ## [0.8.5] - 2026-08-27

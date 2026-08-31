@@ -64,6 +64,9 @@ Origin + direction (not a segment) — direction need not be pre-normalized, the
 | `CheckCollisionRayCircle(origin, direction, center, radius, out hitPoint, out distance)` | `distance` is `0` if `origin` starts inside the circle. |
 | `CheckCollisionRayRec(origin, direction, rec, out hitPoint, out distance)` | Slab method. `distance` is `0` if `origin` starts inside the rectangle. |
 | `CheckCollisionRayLine(origin, direction, p1, p2, out hitPoint, out distance)` | Same parametric solve as `CheckCollisionLines`, except the ray's own parameter is only clamped `>= 0` (a ray has no far end) while the segment's stays clamped to `[0,1]`. |
+| `CheckCollisionRayPoly(origin, direction, points, out hitPoint, out distance)` | Tests every edge, keeps the nearest crossing. Correct for any simple polygon, convex or not (unlike the SAT-based overlap checks above). |
+| `CheckCollisionRayTriangle(origin, direction, p1, p2, p3, out hitPoint, out distance)` | `CheckCollisionRayPoly` on a 3-point span. |
+| `CheckCollisionRayCapsule(origin, direction, capsuleStart, capsuleEnd, capsuleRadius, out hitPoint, out distance)` | Checked against the two end circles and the two straight sides; `distance` is `0` if `origin` starts inside. |
 
 ## Other
 

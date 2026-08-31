@@ -116,6 +116,52 @@ namespace MonoPrimitives.Tests
                 return null;
             });
 
+            results.Check("CheckCollisionRayPoly: ray hits the near edge of a concave (star) polygon, not the far one", () =>
+            {
+                Span<Vector2> square = stackalloc Vector2[] { new(5, -5), new(15, -5), new(15, 5), new(5, 5) };
+                bool hit = Collision2D.CheckCollisionRayPoly(Vector2.Zero, Vector2.UnitX, square, out Vector2 point, out float dist);
+                if (!hit) return "expected a hit";
+                if (Vector2.Distance(point, new Vector2(5, 0)) > 0.01f) return $"expected the nearest edge crossing near (5,0), got {point}";
+                if (MathF.Abs(dist - 5f) > 0.01f) return $"expected distance 5, got {dist}";
+                if (Collision2D.CheckCollisionRayPoly(new Vector2(-20, 20), Vector2.UnitX, square, out _, out _))
+                    return "expected no hit for a ray passing above the polygon";
+                return null;
+            });
+
+            results.Check("CheckCollisionRayTriangle: ray hits triangle (see CheckCollisionRayPoly)", () =>
+            {
+                if (!Collision2D.CheckCollisionRayTriangle(Vector2.Zero, Vector2.UnitX, new Vector2(5, -5), new Vector2(5, 5), new Vector2(15, 0), out _, out float dist))
+                    return "expected a hit";
+                if (MathF.Abs(dist - 5f) > 0.01f) return $"expected distance 5, got {dist}";
+                return null;
+            });
+
+            results.Check("CheckCollisionRayCapsule: end caps, side, starts-inside, and a clean miss", () =>
+            {
+                Vector2 capStart = new(0, 0), capEnd = new(20, 0);
+                const float radius = 3f;
+
+                // Ray along the capsule's own axis should hit the near end cap, not the flat side.
+                bool hitAxis = Collision2D.CheckCollisionRayCapsule(new Vector2(-20, 0), Vector2.UnitX, capStart, capEnd, radius, out Vector2 axisPoint, out float axisDist);
+                if (!hitAxis) return "expected a hit along the capsule's axis";
+                if (MathF.Abs(axisDist - 17f) > 0.01f) return $"expected distance 17 (hits the near end cap's front), got {axisDist}";
+
+                // Perpendicular ray into the middle of the capsule's straight side.
+                bool hitSide = Collision2D.CheckCollisionRayCapsule(new Vector2(10, -20), Vector2.UnitY, capStart, capEnd, radius, out Vector2 sidePoint, out float sideDist);
+                if (!hitSide) return "expected a hit on the capsule's straight side";
+                if (Vector2.Distance(sidePoint, new Vector2(10, -radius)) > 0.01f) return $"expected the side hit near (10,{-radius}), got {sidePoint}";
+                if (MathF.Abs(sideDist - (20f - radius)) > 0.01f) return $"expected distance {20f - radius}, got {sideDist}";
+
+                // Origin already inside the capsule: distance 0, hitPoint == origin.
+                bool hitInside = Collision2D.CheckCollisionRayCapsule(new Vector2(10, 0), Vector2.UnitX, capStart, capEnd, radius, out Vector2 insidePoint, out float insideDist);
+                if (!hitInside || insideDist != 0f || insidePoint != new Vector2(10, 0))
+                    return $"expected an inside-start hit at distance 0, got hit={hitInside} dist={insideDist} point={insidePoint}";
+
+                if (Collision2D.CheckCollisionRayCapsule(new Vector2(-20, 20), Vector2.UnitX, capStart, capEnd, radius, out _, out _))
+                    return "expected no hit for a ray passing well above the capsule";
+                return null;
+            });
+
             results.Check("CheckCollisionPolys / Triangles / RecPoly / RecTriangle (SAT, convex shapes)", () =>
             {
                 Span<Vector2> squareA = stackalloc Vector2[] { new(0, 0), new(10, 0), new(10, 10), new(0, 10) };

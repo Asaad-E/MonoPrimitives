@@ -64,20 +64,16 @@ namespace MonoPrimitives.Primitives2D
 
         /// <summary>Point within <paramref name="threshold"/> world units of a line segment.</summary>
         public static bool CheckCollisionPointLine(Vector2 point, Vector2 p1, Vector2 p2, float threshold = 1f)
+            => PointSegmentDistanceSquared(point, p1, p2) <= threshold * threshold;
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        private static float PointSegmentDistanceSquared(Vector2 point, Vector2 p1, Vector2 p2)
         {
             Vector2 d = p2 - p1;
             float lenSq = d.LengthSquared();
-            float distSq;
-            if (lenSq < 1e-12f)
-            {
-                distSq = Vector2.DistanceSquared(point, p1);
-            }
-            else
-            {
-                float t = Math.Clamp(Vector2.Dot(point - p1, d) / lenSq, 0f, 1f);
-                distSq = Vector2.DistanceSquared(point, p1 + d * t);
-            }
-            return distSq <= threshold * threshold;
+            if (lenSq < 1e-12f) return Vector2.DistanceSquared(point, p1);
+            float t = Math.Clamp(Vector2.Dot(point - p1, d) / lenSq, 0f, 1f);
+            return Vector2.DistanceSquared(point, p1 + d * t);
         }
 
         /// <summary>Point inside an arbitrary (possibly non-convex) polygon. Correct for any simple polygon, not just the convex/star-shaped input this library's own <c>FillPolygon</c> assumes.</summary>
@@ -379,6 +375,74 @@ namespace MonoPrimitives.Primitives2D
 
             distance = t;
             hitPoint = origin + dir * t;
+            return true;
+        }
+
+        /// <summary>Ray vs arbitrary (possibly non-convex) polygon boundary. Correct for any simple polygon, unlike the SAT-based overlap checks. <paramref name="distance"/> is the nearest edge crossing in front of the ray.</summary>
+        public static bool CheckCollisionRayPoly(Vector2 origin, Vector2 direction, ReadOnlySpan<Vector2> points, out Vector2 hitPoint, out float distance)
+        {
+            hitPoint = default; distance = 0f;
+            if (points.Length < 2) return false;
+
+            bool found = false;
+            float bestT = float.MaxValue;
+            Vector2 bestPoint = default;
+
+            int n = points.Length;
+            for (int i = 0, j = n - 1; i < n; j = i++)
+            {
+                if (CheckCollisionRayLine(origin, direction, points[j], points[i], out Vector2 hit, out float t) && t < bestT)
+                {
+                    bestT = t;
+                    bestPoint = hit;
+                    found = true;
+                }
+            }
+
+            if (!found) return false;
+            distance = bestT;
+            hitPoint = bestPoint;
+            return true;
+        }
+
+        /// <summary>Ray vs triangle (see <see cref="CheckCollisionRayPoly"/>).</summary>
+        public static bool CheckCollisionRayTriangle(Vector2 origin, Vector2 direction, Vector2 p1, Vector2 p2, Vector2 p3, out Vector2 hitPoint, out float distance)
+            => CheckCollisionRayPoly(origin, direction, [p1, p2, p3], out hitPoint, out distance);
+
+        /// <summary>Ray vs capsule (a segment expanded by <paramref name="capsuleRadius"/>): checked against the two end circles and the two side segments. <paramref name="distance"/> is 0 if <paramref name="origin"/> starts inside.</summary>
+        public static bool CheckCollisionRayCapsule(Vector2 origin, Vector2 direction, Vector2 capsuleStart, Vector2 capsuleEnd, float capsuleRadius, out Vector2 hitPoint, out float distance)
+        {
+            hitPoint = default; distance = 0f;
+            if (PointSegmentDistanceSquared(origin, capsuleStart, capsuleEnd) <= capsuleRadius * capsuleRadius)
+            {
+                hitPoint = origin;
+                return true;
+            }
+
+            bool found = false;
+            float bestT = float.MaxValue;
+            Vector2 bestPoint = default;
+
+            void Consider(bool hit, Vector2 point, float t)
+            {
+                if (hit && t < bestT) { bestT = t; bestPoint = point; found = true; }
+            }
+
+            Consider(CheckCollisionRayCircle(origin, direction, capsuleStart, capsuleRadius, out Vector2 p1, out float t1), p1, t1);
+            Consider(CheckCollisionRayCircle(origin, direction, capsuleEnd, capsuleRadius, out Vector2 p2, out float t2), p2, t2);
+
+            Vector2 axis = capsuleEnd - capsuleStart;
+            float axisLenSq = axis.LengthSquared();
+            if (axisLenSq > 1e-12f)
+            {
+                Vector2 perp = new Vector2(-axis.Y, axis.X) / MathF.Sqrt(axisLenSq) * capsuleRadius;
+                Consider(CheckCollisionRayLine(origin, direction, capsuleStart + perp, capsuleEnd + perp, out Vector2 p3, out float t3), p3, t3);
+                Consider(CheckCollisionRayLine(origin, direction, capsuleStart - perp, capsuleEnd - perp, out Vector2 p4, out float t4), p4, t4);
+            }
+
+            if (!found) return false;
+            distance = bestT;
+            hitPoint = bestPoint;
             return true;
         }
     }

@@ -4296,13 +4296,14 @@ namespace MonoPrimitives.Primitives2D
         /// uniformly with <paramref name="lineColor"/> — <paramref name="majorLineColor"/> is
         /// ignored.
         /// </param>
-        /// <param name="lineThickness">Minor line thickness; major lines are always 1 thicker.</param>
+        /// <param name="lineThickness">Minor line thickness; major lines are always 1 thicker. A non-positive value (matching 3D's <c>DrawGrid</c> sentinel convention) falls back to a plain 1px line — unlike 3D, 2D has no separate fast-line path to redirect to, so this is a safe default rather than a performance path.</param>
         public void DrawGrid(int slices, float spacing, Vector2? origin = null, Color? lineColor = null, Color? majorLineColor = null, bool showMajorLines = true, float lineThickness = 1f)
         {
             ThrowIfNotBegun();
             Vector2 o = origin ?? Vector2.Zero;
             Color line = lineColor ?? DefaultGridLineColor;
             Color majorLine = majorLineColor ?? DefaultGridMajorLineColor;
+            float baseThickness = lineThickness > 0f ? lineThickness : 1f;
             int halfSlices = slices / 2;
             float extent = halfSlices * spacing;
 
@@ -4310,7 +4311,7 @@ namespace MonoPrimitives.Primitives2D
             {
                 bool major = showMajorLines && i % MajorGridLineInterval == 0;
                 float offset = i * spacing;
-                float thickness = major ? lineThickness + 1f : lineThickness;
+                float thickness = major ? baseThickness + 1f : baseThickness;
                 Color color = major ? majorLine : line;
 
                 DrawLine(o + new Vector2(offset, -extent), o + new Vector2(offset, extent), thickness, color);
@@ -4323,13 +4324,18 @@ namespace MonoPrimitives.Primitives2D
         /// parameter past <paramref name="size"/> is optional — omit any of them for a cross
         /// through the origin, using a dark, grid-like default color.
         /// </summary>
+        /// <param name="size">Length of each half-axis from <paramref name="origin"/>.</param>
+        /// <param name="origin">Center of the cross; defaults to the world origin.</param>
+        /// <param name="color">Line color; defaults to a dark, grid-like color.</param>
+        /// <param name="thickness">Line thickness. A non-positive value (matching 3D's <c>DrawAxis</c> sentinel convention) falls back to a plain 1px line — unlike 3D, 2D has no separate fast-line path to redirect to.</param>
         public void DrawAxis(float size, Vector2? origin = null, Color? color = null, float thickness = 1f)
         {
             ThrowIfNotBegun();
             Vector2 o = origin ?? Vector2.Zero;
             Color c = color ?? DefaultAxisColor;
-            DrawLine(o - Vector2.UnitX * size, o + Vector2.UnitX * size, thickness, c);
-            DrawLine(o - Vector2.UnitY * size, o + Vector2.UnitY * size, thickness, c);
+            float t = thickness > 0f ? thickness : 1f;
+            DrawLine(o - Vector2.UnitX * size, o + Vector2.UnitX * size, t, c);
+            DrawLine(o - Vector2.UnitY * size, o + Vector2.UnitY * size, t, c);
         }
 
         // ------------------------------------------------------------------
