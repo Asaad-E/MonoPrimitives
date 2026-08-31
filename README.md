@@ -121,6 +121,8 @@ Each class has its own guide — start with whichever one covers what you're tou
 
 For the project's own internals (architecture map, conventions, the reasoning behind non-obvious choices), see [`Design/README.md`](Design/README.md).
 
+![Every Palette color as a labeled swatch](img/palette.png)
+
 ## Examples
 
 - [`samples/MonoPrimitives.Sample`](samples/MonoPrimitives.Sample) — a visual-regression gallery of every 2D and 3D shape, camera-controlled.
