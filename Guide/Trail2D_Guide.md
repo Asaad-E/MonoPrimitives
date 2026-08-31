@@ -2,6 +2,8 @@
 
 `Trail2D` (namespace `MonoPrimitives.Primitives2D`, file [`src/2D/Trail2D.cs`](../src/2D/Trail2D.cs)) is a fixed-capacity history of recent positions, drawn as a line that fades out toward the oldest point — a moving particle/agent's own trail. It's a fixed-size ring buffer under the hood: `Add` never allocates once warmed up, and old points are simply overwritten rather than shifted.
 
+![Three Trail2D paths -- an arc, a wave, and a spiral -- each fading from a solid head to nothing](../img/trail_2d.png)
+
 ## Quick start
 
 ```csharp
@@ -46,6 +48,8 @@ Each segment's color comes from its own *midpoint* position along the trail (not
 
 `Trail3D` (namespace `MonoPrimitives.Primitives3D`, file [`src/3D/Trail3D.cs`](../src/3D/Trail3D.cs)) is the same ring-buffer trail, one dimension higher:
 
+![A Trail3D following a helical path, fading from a solid head to nothing](../img/trail_3d.png)
+
 ```csharp
 using MonoPrimitives.Primitives3D;
 
@@ -77,5 +81,5 @@ protected override void Draw(GameTime gameTime)
 
 ## See also
 
-- [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) / [`Guide/Primitive3DBatch_Guide.md`](Primitive3DBatch_Guide.md) — `DrawLine`/`DrawLine3D`, which `Trail2D.Draw`/`Trail3D.Draw` are built on.
+- [`Primitive2DBatch`](Primitive2DBatch_Guide.md) / [`Primitive3DBatch`](Primitive3DBatch_Guide.md) — `DrawLine`/`DrawLine3D`, which `Trail2D.Draw`/`Trail3D.Draw` are built on.
 - `examples/test/ParticleTrailTest` — several `Trail2D`s with different capacity/thickness/fade styles, dragged behind particles that bounce off the window edges and each other.
