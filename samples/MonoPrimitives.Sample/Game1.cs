@@ -71,9 +71,6 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        // TODO: Add your initialization logic here
-
-
         base.Initialize();
     }
 
@@ -107,7 +104,6 @@ public class Game1 : Game
         // design (see UpdateGallery2DCamera) wants Target itself to be the world point drawn at
         // the screen's top-left corner instead.
         _camera2d = new Camera2D(_viewportAdapter2d, target: Vector2.Zero, zoom: 1f) { Offset = Vector2.Zero };
-        // TODO: use this.Content to load your game content here
     }
 
     public Vector2 Pos;
@@ -184,7 +180,6 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        // TODO: Add your drawing code here
         Pos = Mouse.GetState().Position.ToVector2();
 
         if (_show2DGallery)
