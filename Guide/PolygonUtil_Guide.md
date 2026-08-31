@@ -6,7 +6,7 @@
 
 | Member | What it does |
 |---|---|
-| `IsConvex(points)` | True if every interior angle is ≤ 180 degrees (no reflex vertices). This is exactly the condition `Collision2D`'s SAT-based checks (`CheckCollisionPolyPoly`/`RecPoly`/`RecTriangle`/`TriangleTriangle`) require of their input — check here first if you're not sure a polygon qualifies. |
+| `IsConvex(points)` | True if every interior angle is ≤ 180 degrees (no reflex vertices). This is exactly the condition `Collision2D`'s SAT-based checks (`CheckCollisionPolys`/`RecPoly`/`RecTriangle`/`Triangles`) require of their input — check here first if you're not sure a polygon qualifies. |
 | `Triangulate(points, outIndices)` | Ear-clipping triangulation for an arbitrary simple polygon (concave allowed; must not self-intersect). Writes up to `(points.Length - 2) * 3` local indices (0-based into `points`, 3 per triangle) into `outIndices` and returns how many were written — or `0` if triangulation got stuck on degenerate/self-intersecting input. |
 
 ## Quick start

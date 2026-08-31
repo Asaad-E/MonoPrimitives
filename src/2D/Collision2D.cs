@@ -121,7 +121,7 @@ namespace MonoPrimitives.Primitives2D
         // =====================================================================
         // POLYGON / MIXED-SHAPE OVERLAPS
         //
-        // CheckCollisionPolyPoly/RecPoly/RecTriangle/TriangleTriangle all go through the same
+        // CheckCollisionPolys/RecPoly/RecTriangle/Triangles all go through the same
         // Separating Axis Theorem (SAT) core, which REQUIRES both shapes to be convex to give a
         // correct answer (a rectangle and a triangle always are; an arbitrary "poly" span here is
         // NOT checked for convexity — pass a convex one). CheckCollisionCirclePoly/CircleTriangle
@@ -132,28 +132,28 @@ namespace MonoPrimitives.Primitives2D
 
         /// <summary>Convex polygon vs convex polygon overlap. Requires both polygons to be convex.</summary>
         /// <remarks>Not checked here — verify with <see cref="MonoPrimitives.Primitives2D.PolygonUtil.IsConvex"/> first if you're not sure a polygon qualifies.</remarks>
-        public static bool CheckCollisionPolyPoly(ReadOnlySpan<Vector2> poly1, ReadOnlySpan<Vector2> poly2)
+        public static bool CheckCollisionPolys(ReadOnlySpan<Vector2> poly1, ReadOnlySpan<Vector2> poly2)
         {
             if (poly1.Length < 3 || poly2.Length < 3) return false;
             return !HasSeparatingAxis(poly1, poly2) && !HasSeparatingAxis(poly2, poly1);
         }
 
-        /// <summary>Triangle vs triangle overlap (every triangle is convex, so this is exactly <see cref="CheckCollisionPolyPoly"/> on two 3-point spans).</summary>
-        public static bool CheckCollisionTriangleTriangle(Vector2 a1, Vector2 a2, Vector2 a3, Vector2 b1, Vector2 b2, Vector2 b3)
-            => CheckCollisionPolyPoly([a1, a2, a3], [b1, b2, b3]);
+        /// <summary>Triangle vs triangle overlap (every triangle is convex, so this is exactly <see cref="CheckCollisionPolys"/> on two 3-point spans).</summary>
+        public static bool CheckCollisionTriangles(Vector2 a1, Vector2 a2, Vector2 a3, Vector2 b1, Vector2 b2, Vector2 b3)
+            => CheckCollisionPolys([a1, a2, a3], [b1, b2, b3]);
 
-        /// <summary>Rectangle vs convex polygon overlap (SAT — see <see cref="CheckCollisionPolyPoly"/>).</summary>
+        /// <summary>Rectangle vs convex polygon overlap (SAT — see <see cref="CheckCollisionPolys"/>).</summary>
         public static bool CheckCollisionRecPoly(Rectangle rec, ReadOnlySpan<Vector2> points)
         {
             Span<Vector2> rectPts = stackalloc Vector2[4] { new(rec.Left, rec.Top), new(rec.Right, rec.Top), new(rec.Right, rec.Bottom), new(rec.Left, rec.Bottom) };
-            return CheckCollisionPolyPoly(rectPts, points);
+            return CheckCollisionPolys(rectPts, points);
         }
 
-        /// <summary>Rectangle vs triangle overlap (SAT — see <see cref="CheckCollisionPolyPoly"/>).</summary>
+        /// <summary>Rectangle vs triangle overlap (SAT — see <see cref="CheckCollisionPolys"/>).</summary>
         public static bool CheckCollisionRecTriangle(Rectangle rec, Vector2 p1, Vector2 p2, Vector2 p3)
         {
             Span<Vector2> rectPts = stackalloc Vector2[4] { new(rec.Left, rec.Top), new(rec.Right, rec.Top), new(rec.Right, rec.Bottom), new(rec.Left, rec.Bottom) };
-            return CheckCollisionPolyPoly(rectPts, [p1, p2, p3]);
+            return CheckCollisionPolys(rectPts, [p1, p2, p3]);
         }
 
         // Separating Axis Theorem: tries each polygon's own edge normals in turn as a candidate
@@ -231,7 +231,7 @@ namespace MonoPrimitives.Primitives2D
             => CheckCollisionCapsulePoly(capsuleStart, capsuleEnd, capsuleRadius, [p1, p2, p3]);
 
         /// <summary>Capsule vs capsule overlap: distance between their two axis segments (not points), compared against the sum of both radii.</summary>
-        public static bool CheckCollisionCapsuleCapsule(Vector2 aStart, Vector2 aEnd, float aRadius, Vector2 bStart, Vector2 bEnd, float bRadius)
+        public static bool CheckCollisionCapsules(Vector2 aStart, Vector2 aEnd, float aRadius, Vector2 bStart, Vector2 bEnd, float bRadius)
         {
             float radiusSum = aRadius + bRadius;
             return SegmentSegmentDistanceSquared(aStart, aEnd, bStart, bEnd) <= radiusSum * radiusSum;

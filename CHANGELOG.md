@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning follows [SemVer](https://semver.org/), with the pre-1.0 caveat that the API can still change between minor versions — see [ROADMAP.md](Design/ROADMAP.md).
 
+## [0.9.0] - 2026-08-31
+
+Pre-1.0 API-freeze pass: an audit of the public surface for naming/parameter-order mistakes worth fixing while it's still cheap, before 1.0 locks the API in.
+
+### Changed
+- **Breaking:** `Camera3D.Zoom(delta, min, max)` renamed to `AdjustZoom` — as a bare method name it collided with `Camera2D.Zoom`, a field holding the stored scale, not a delta-adjustment verb.
+- **Breaking:** `Collision2D.CheckCollisionPolyPoly`/`CheckCollisionTriangleTriangle`/`CheckCollisionCapsuleCapsule` renamed to `CheckCollisionPolys`/`CheckCollisionTriangles`/`CheckCollisionCapsules` — same-shape-pair checks now consistently use the plural form `CheckCollisionCircles`/`Spheres`/`Boxes`/`Capsules` already established, instead of a doubled shape name.
+- **Breaking:** `Primitive2DBatch.BorderCircleSector(center, radius, startAngle, endAngle, thickness, color)` reordered to `(..., color, thickness = 1f)` — it was the one `Border*` overload putting `thickness` before `color` with no default.
+- `templates/PrimitiveBase` bumped to reference the published `0.8.5` package.
+
 ## [0.8.5] - 2026-08-27
 
 ### Added

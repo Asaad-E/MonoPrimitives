@@ -12,10 +12,10 @@ namespace CollisionTest;
 
 /// <summary>
 /// Visual test for every <see cref="Collision2D"/> overlap/ray check, including the polygon and
-/// mixed-shape ones (PolyPoly/RecPoly/RecTriangle/TriangleTriangle via SAT, CirclePoly/CircleTriangle
+/// mixed-shape ones (Polys/RecPoly/RecTriangle/Triangles via SAT, CirclePoly/CircleTriangle
 /// via the non-SAT closest-point approach — the star-shaped polygon in modes 9/I is deliberately
 /// concave, to show those still work where SAT wouldn't) and every Capsule check (CircleCapsule,
-/// CapsuleCapsule, CapsuleRectangle/Triangle/Polygon, all via closest-point-between-segments): two
+/// Capsules, CapsuleRectangle/Triangle/Polygon, all via closest-point-between-segments): two
 /// controllable points, A and B, reinterpreted per mode as a circle/rectangle/line/triangle/
 /// polygon/capsule/ray-origin. One of the two always follows the mouse; the other is nudged with
 /// W/A/S/D. Space swaps which is which, so "the fixed one you move with the keyboard" and "the one
@@ -109,10 +109,10 @@ public class Game1 : Game
             Mode.PointTriangle => Collision2D.CheckCollisionPointTriangle(_posA, _posB + new Vector2(0, -70), _posB + new Vector2(-70, 60), _posB + new Vector2(70, 60)),
             Mode.PointPolygon => Collision2D.CheckCollisionPointPoly(_posA, StarAround(_posB, 90f, 38f)),
             Mode.RayCircle => Collision2D.CheckCollisionRayCircle(_posA, Vector2.UnitX, _posB, 40f, out _, out _),
-            Mode.PolygonPolygon => Collision2D.CheckCollisionPolyPoly(QuadAround(_posA, 60f), PentagonAround(_posB, 70f)),
+            Mode.PolygonPolygon => Collision2D.CheckCollisionPolys(QuadAround(_posA, 60f), PentagonAround(_posB, 70f)),
             Mode.RectanglePolygon => Collision2D.CheckCollisionRecPoly(RectAround(_posA, 140f, 90f), PentagonAround(_posB, 70f)),
             Mode.CirclePolygon => Collision2D.CheckCollisionCirclePoly(_posA, 40f, StarAround(_posB, 90f, 38f)),
-            Mode.TriangleTriangle => Collision2D.CheckCollisionTriangleTriangle(
+            Mode.TriangleTriangle => Collision2D.CheckCollisionTriangles(
                 _posA + new Vector2(0, -60), _posA + new Vector2(-51, 42), _posA + new Vector2(51, 42),
                 _posB + new Vector2(0, -60), _posB + new Vector2(-51, 42), _posB + new Vector2(51, 42)),
             Mode.RectangleTriangle => Collision2D.CheckCollisionRecTriangle(RectAround(_posA, 140f, 90f),
@@ -121,7 +121,7 @@ public class Game1 : Game
                 _posB + new Vector2(0, -60), _posB + new Vector2(-51, 42), _posB + new Vector2(51, 42)),
             Mode.CircleCapsule => Collision2D.CheckCollisionCircleCapsule(_posA, 30f,
                 _posB + new Vector2(-50, 0), _posB + new Vector2(50, 0), 25f),
-            Mode.CapsuleCapsule => Collision2D.CheckCollisionCapsuleCapsule(
+            Mode.CapsuleCapsule => Collision2D.CheckCollisionCapsules(
                 _posA + new Vector2(-45, -25), _posA + new Vector2(45, 25), 28f,
                 _posB + new Vector2(-45, 25), _posB + new Vector2(45, -25), 28f),
             Mode.CapsuleRectangle => Collision2D.CheckCollisionCapsuleRec(

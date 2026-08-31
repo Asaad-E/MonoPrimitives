@@ -33,16 +33,16 @@ if (Collision2D.CheckCollisionCircles(playerPos, playerRadius, enemyPos, enemyRa
 | `CheckCollisionCircleLine(center, radius, p1, p2)` | Circle vs line segment. |
 | `CheckCollisionCircleCapsule(circleCenter, circleRadius, capsuleStart, capsuleEnd, capsuleRadius)` | Circle vs capsule. |
 | `CheckCollisionLines(startPos1, endPos1, startPos2, endPos2, out collisionPoint)` | Segment vs segment, with the actual crossing point (not just the infinite lines' intersection). |
-| `CheckCollisionCapsuleCapsule(aStart, aEnd, aRadius, bStart, bEnd, bRadius)` | Capsule vs capsule — distance between the two axis *segments* (not points), via the standard closest-point-between-segments algorithm (Ericson, *Real-Time Collision Detection*), correctly handling every degenerate case (either/both collapsed to a point, parallel segments) without branching on them. |
+| `CheckCollisionCapsules(aStart, aEnd, aRadius, bStart, bEnd, bRadius)` | Capsule vs capsule — distance between the two axis *segments* (not points), via the standard closest-point-between-segments algorithm (Ericson, *Real-Time Collision Detection*), correctly handling every degenerate case (either/both collapsed to a point, parallel segments) without branching on them. |
 
 ## Polygon and mixed-shape overlaps — SAT vs. non-SAT, and why it matters
 
-`CheckCollisionPolyPoly`/`RecPoly`/`RecTriangle`/`TriangleTriangle` all go through the **Separating Axis Theorem (SAT)**: try each polygon's own edge normals as a candidate separating axis; no gap on any of them means the shapes overlap. **This requires both shapes to be convex.** A rectangle and a triangle always are; an arbitrary `points` span is *not* checked for convexity — pass a convex one, or you'll get a wrong answer silently, not an exception.
+`CheckCollisionPolys`/`RecPoly`/`RecTriangle`/`CheckCollisionTriangles` all go through the **Separating Axis Theorem (SAT)**: try each polygon's own edge normals as a candidate separating axis; no gap on any of them means the shapes overlap. **This requires both shapes to be convex.** A rectangle and a triangle always are; an arbitrary `points` span is *not* checked for convexity — pass a convex one, or you'll get a wrong answer silently, not an exception.
 
 | Method | Convexity required? |
 |---|---|
-| `CheckCollisionPolyPoly(poly1, poly2)` | Yes (both) |
-| `CheckCollisionTriangleTriangle(...)` | No — every triangle is convex |
+| `CheckCollisionPolys(poly1, poly2)` | Yes (both) |
+| `CheckCollisionTriangles(...)` | No — every triangle is convex |
 | `CheckCollisionRecPoly(rec, points)` | Yes (`points`) |
 | `CheckCollisionRecTriangle(rec, p1, p2, p3)` | No — every triangle is convex |
 | `CheckCollisionCirclePoly(center, radius, points)` | **No — correct for any simple polygon** |

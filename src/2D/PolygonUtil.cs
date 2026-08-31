@@ -13,7 +13,7 @@ namespace MonoPrimitives.Primitives2D
         private const int MaxStackAllocElements = 4096;
 
         /// <summary>True if walking <paramref name="points"/> in order always turns the same rotational way (allowing near-collinear runs).</summary>
-        /// <remarks>This is exactly the condition <see cref="MonoPrimitives.Primitives2D.Collision2D"/>'s SAT-based checks (<c>PolyPoly</c>/<c>RecPoly</c>/<c>RecTriangle</c>/<c>TriangleTriangle</c>) require of their input -- check this first if you're not sure a polygon qualifies.</remarks>
+        /// <remarks>This is exactly the condition <see cref="MonoPrimitives.Primitives2D.Collision2D"/>'s SAT-based checks (<c>Polys</c>/<c>RecPoly</c>/<c>RecTriangle</c>/<c>Triangles</c>) require of their input -- check this first if you're not sure a polygon qualifies.</remarks>
         public static bool IsConvex(ReadOnlySpan<Vector2> points)
         {
             int n = points.Length;

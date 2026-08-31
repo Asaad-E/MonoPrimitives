@@ -92,15 +92,15 @@ namespace MonoPrimitives.Tests
                 return null;
             });
 
-            results.Check("CheckCollisionCapsuleCapsule: crossing, T-junction clamping, and far apart", () =>
+            results.Check("CheckCollisionCapsules: crossing, T-junction clamping, and far apart", () =>
             {
                 // Two capsules crossing like a plus sign -- their axes intersect, so any positive radii overlap.
-                if (!Collision2D.CheckCollisionCapsuleCapsule(new Vector2(-5, 0), new Vector2(5, 0), 1f, new Vector2(0, -5), new Vector2(0, 5), 1f))
+                if (!Collision2D.CheckCollisionCapsules(new Vector2(-5, 0), new Vector2(5, 0), 1f, new Vector2(0, -5), new Vector2(0, 5), 1f))
                     return "expected crossing capsules to collide";
                 // T-junction: b's segment endpoint sits right next to a's segment, closest point must clamp correctly.
-                if (!Collision2D.CheckCollisionCapsuleCapsule(new Vector2(0, 0), new Vector2(10, 0), 1f, new Vector2(5, 1.5f), new Vector2(5, 10), 1f))
+                if (!Collision2D.CheckCollisionCapsules(new Vector2(0, 0), new Vector2(10, 0), 1f, new Vector2(5, 1.5f), new Vector2(5, 10), 1f))
                     return "expected a T-junction within combined radius to collide";
-                if (Collision2D.CheckCollisionCapsuleCapsule(new Vector2(0, 0), new Vector2(10, 0), 1f, new Vector2(5, 50), new Vector2(5, 60), 1f))
+                if (Collision2D.CheckCollisionCapsules(new Vector2(0, 0), new Vector2(10, 0), 1f, new Vector2(5, 50), new Vector2(5, 60), 1f))
                     return "expected far-apart capsules to not collide";
                 return null;
             });
@@ -116,18 +116,18 @@ namespace MonoPrimitives.Tests
                 return null;
             });
 
-            results.Check("CheckCollisionPolyPoly / TriangleTriangle / RecPoly / RecTriangle (SAT, convex shapes)", () =>
+            results.Check("CheckCollisionPolys / Triangles / RecPoly / RecTriangle (SAT, convex shapes)", () =>
             {
                 Span<Vector2> squareA = stackalloc Vector2[] { new(0, 0), new(10, 0), new(10, 10), new(0, 10) };
                 Span<Vector2> squareB = stackalloc Vector2[] { new(5, 5), new(15, 5), new(15, 15), new(5, 15) };
                 Span<Vector2> squareFar = stackalloc Vector2[] { new(100, 100), new(110, 100), new(110, 110), new(100, 110) };
-                if (!Collision2D.CheckCollisionPolyPoly(squareA, squareB)) return "CheckCollisionPolyPoly: expected overlapping squares to collide";
-                if (Collision2D.CheckCollisionPolyPoly(squareA, squareFar)) return "CheckCollisionPolyPoly: expected far squares to not collide";
+                if (!Collision2D.CheckCollisionPolys(squareA, squareB)) return "CheckCollisionPolys: expected overlapping squares to collide";
+                if (Collision2D.CheckCollisionPolys(squareA, squareFar)) return "CheckCollisionPolys: expected far squares to not collide";
 
-                if (!Collision2D.CheckCollisionTriangleTriangle(new Vector2(0, 0), new Vector2(10, 0), new Vector2(0, 10), new Vector2(2, 2), new Vector2(12, 2), new Vector2(2, 12)))
-                    return "CheckCollisionTriangleTriangle: expected overlapping triangles to collide";
-                if (Collision2D.CheckCollisionTriangleTriangle(new Vector2(0, 0), new Vector2(10, 0), new Vector2(0, 10), new Vector2(100, 100), new Vector2(110, 100), new Vector2(100, 110)))
-                    return "CheckCollisionTriangleTriangle: expected far triangles to not collide";
+                if (!Collision2D.CheckCollisionTriangles(new Vector2(0, 0), new Vector2(10, 0), new Vector2(0, 10), new Vector2(2, 2), new Vector2(12, 2), new Vector2(2, 12)))
+                    return "CheckCollisionTriangles: expected overlapping triangles to collide";
+                if (Collision2D.CheckCollisionTriangles(new Vector2(0, 0), new Vector2(10, 0), new Vector2(0, 10), new Vector2(100, 100), new Vector2(110, 100), new Vector2(100, 110)))
+                    return "CheckCollisionTriangles: expected far triangles to not collide";
 
                 if (!Collision2D.CheckCollisionRecPoly(new Rectangle(0, 0, 10, 10), squareB)) return "CheckCollisionRecPoly: expected overlap";
                 if (Collision2D.CheckCollisionRecPoly(new Rectangle(0, 0, 10, 10), squareFar)) return "CheckCollisionRecPoly: expected no overlap";
