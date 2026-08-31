@@ -28,10 +28,20 @@ internal static class Showcase2D
         new("RECTANGLE", Palette.PeterRiver, (b, c) => b.FillRectangleRounded(c - new Vector2(75, 55), new Vector2(150, 110), 22f, Palette.PeterRiver)),
         new("CIRCLE", Palette.Sunflower, (b, c) => b.FillCircleGradient(c, 70f, Palette.Sunflower, Palette.Carrot)),
         new("ELLIPSE", Palette.Amethyst, (b, c) => b.FillEllipse(c, 80f, 52f, Palette.Amethyst)),
-        new("CAPSULE", Palette.Emerald, (b, c) => b.FillCapsule(c, 130f, 40f, Palette.Emerald, MathF.PI / 2f)),
+        // length is the straight segment only -- FillCapsule adds a radius-sized round cap past
+        // each end, so total extent is length + 2*radius (70 + 70 = 140, matching the other
+        // shapes' ~140 footprint instead of overflowing the card).
+        new("CAPSULE", Palette.Emerald, (b, c) => b.FillCapsule(c, 70f, 35f, Palette.Emerald, MathF.PI / 2f)),
         new("HEXAGON", Palette.Turquoise, (b, c) => b.FillPoly(c, 6, 72f, Palette.Turquoise)),
+        new("PENTAGON", Palette.BelizeHole, (b, c) => b.FillPoly(c, 5, 74f, Palette.BelizeHole, -MathF.PI / 2f)),
+        // FillPoly's default rotation=0 already places a 4-gon's vertices on the axes (a diamond,
+        // not a square -- that needs the extra PI/4 rotation this deliberately skips).
+        new("DIAMOND", Palette.Nephritis, (b, c) => b.FillPoly(c, 4, 80f, Palette.Nephritis)),
         new("STAR", Palette.Carrot, (b, c) => b.FillPolygon(StarPoints(c, 72f, 30f, 5), Palette.Carrot)),
         new("RING", Palette.Wisteria, (b, c) => b.FillRing(c, 42f, 70f, Palette.Wisteria)),
+        // startAngle/endAngle are turns in [0,1] (see FillCircleSector's own doc), not degrees.
+        new("SECTOR", Palette.Pomegranate, (b, c) => b.FillCircleSector(c, 74f, 0.08f, 0.72f, Palette.Pomegranate)),
+        new("ARROW", Palette.GreenSea, (b, c) => b.DrawArrow(c + new Vector2(-75, 0), c + new Vector2(75, 0), Palette.GreenSea, 14f, 34f, 34f)),
     };
 
     /// <summary>Total content size, without drawing anything -- for framing a camera before the first <see cref="Draw"/> call.</summary>

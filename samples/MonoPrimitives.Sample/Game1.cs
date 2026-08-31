@@ -35,11 +35,15 @@ public class Game1 : Game
     private Vector2 _gallery2DSize;
     private bool _tabWasDown;
 
-    // A second, curated view alongside each dev gallery -- Showcase2D/Showcase3D, toggled with S.
-    // Framed once on toggle-in via FitBounds (not every frame, so free-fly/pan still works
-    // afterward), not part of the library: exists purely to produce clean README/guide
-    // screenshots instead of the dev galleries' dense every-variant grids.
-    private bool _showcaseMode;
+    // Curated views alongside each dev gallery, cycled with S -- Showcase2D/ShowcasePalette2D in
+    // 2D (Gallery -> Showcase -> Palette -> Gallery), Showcase3D in 3D (Gallery -> Showcase ->
+    // Gallery, no palette view there). Framed once on switching in via FitBounds (not every
+    // frame, so free-fly/pan still works afterward), not part of the library: exists purely to
+    // produce clean README/guide screenshots instead of the dev galleries' dense every-variant
+    // grids.
+    private const int View2DGallery = 0, View2DShowcase = 1, View2DPalette = 2, View2DCount = 3;
+    private int _view2D;
+    private bool _showcase3D;
     private bool _sWasDown;
 
     private const int ScreenSizeX = 1280;
@@ -120,7 +124,7 @@ public class Game1 : Game
         _tabWasDown = tabDown;
 
         bool sDown = Keyboard.GetState().IsKeyDown(Keys.S);
-        if (sDown && !_sWasDown) ToggleShowcaseMode();
+        if (sDown && !_sWasDown) CycleView();
         _sWasDown = sDown;
 
         if (_show2DGallery)
@@ -141,30 +145,32 @@ public class Game1 : Game
         _camera2d.UpdateWithInput(_input, deltaTime);
     }
 
-    // FitBounds runs once here (not every Draw) so the showcase starts framed correctly but the
-    // usual pan/zoom (2D) or free-fly (3D) controls still work normally afterward.
-    private void ToggleShowcaseMode()
+    // FitBounds runs once here (not every Draw) so a view starts framed correctly but the usual
+    // pan/zoom (2D) or free-fly (3D) controls still work normally afterward.
+    private void CycleView()
     {
-        _showcaseMode = !_showcaseMode;
-
         if (_show2DGallery)
         {
+            _view2D = (_view2D + 1) % View2DCount;
+
             // FitBounds assumes the default Offset=viewport-center convention; the gallery's own
             // pan/clamp design (UpdateGallery2DCamera) instead wants Offset=Zero so Target is the
             // world point drawn at the screen's top-left corner -- swap conventions with the mode.
-            if (_showcaseMode)
-            {
-                Vector2 size = Showcase2D.GetContentSize();
-                _camera2d.Offset = new Vector2(ScreenSizeX / 2f, SCreenSizeY / 2f);
-                _camera2d.FitBounds(new MonoPrimitives.RectangleF(0, 0, size.X, size.Y), 40f, GraphicsDevice);
-            }
-            else
+            if (_view2D == View2DGallery)
             {
                 _camera2d.Offset = Vector2.Zero;
+                return;
             }
+
+            Vector2 size = _view2D == View2DShowcase ? Showcase2D.GetContentSize() : ShowcasePalette2D.GetContentSize();
+            _camera2d.Offset = new Vector2(ScreenSizeX / 2f, SCreenSizeY / 2f);
+            _camera2d.FitBounds(new MonoPrimitives.RectangleF(0, 0, size.X, size.Y), 40f, GraphicsDevice);
         }
-        else if (_showcaseMode)
+        else
         {
+            _showcase3D = !_showcase3D;
+            if (!_showcase3D) return;
+
             // Not FitBounds: its sphere-fit is conservative for a flat, wide layout like this row
             // (bounded mostly by a large horizontal diagonal, tiny vertical extent), so it leaves
             // far more margin than a manually placed camera needs to. A narrower fovy than the
@@ -172,7 +178,7 @@ public class Game1 : Game
             Vector3 center = Showcase3D.GetContentCenter();
             _camera3d.Fovy = 30f;
             _camera3d.Target = center;
-            _camera3d.Position = center + new Vector3(0f, 12f, 32f);
+            _camera3d.Position = center + new Vector3(0f, 17f, 46f);
         }
     }
 
@@ -190,15 +196,19 @@ public class Game1 : Game
             GraphicsDevice.Clear(Palette.Background);
 
             _primitiveBatch.Begin(_camera2d.GetTransformMatrix());
-            if (_showcaseMode)
+            switch (_view2D)
             {
-                _gallery2DSize = Showcase2D.Draw(_primitiveBatch);
-            }
-            else
-            {
-                _primitiveBatch.DrawGrid(80*4, 40f);
-                _primitiveBatch.DrawAxis(2000f);
-                _gallery2DSize = Gallery2D.Draw(_primitiveBatch);
+                case View2DShowcase:
+                    _gallery2DSize = Showcase2D.Draw(_primitiveBatch);
+                    break;
+                case View2DPalette:
+                    _gallery2DSize = ShowcasePalette2D.Draw(_primitiveBatch);
+                    break;
+                default:
+                    _primitiveBatch.DrawGrid(80*4, 40f);
+                    _primitiveBatch.DrawAxis(2000f);
+                    _gallery2DSize = Gallery2D.Draw(_primitiveBatch);
+                    break;
             }
             _primitiveBatch.End();
         }
@@ -206,12 +216,14 @@ public class Game1 : Game
         {
             // No manual Apply()/Reset() needed here: _camera3d was constructed with the same
             // _viewportAdapter2d instance the 2D branch uses, so Begin(_camera3d) re-applies the
-            // same boxed rect automatically (Camera3D.ViewportAdapter).
-            GraphicsDevice.Clear(Color.White);
+            // same boxed rect automatically (Camera3D.ViewportAdapter). The dev gallery clears to
+            // white (contrast for its lit shading); the showcase clears to the same dark
+            // Palette.Background the 2D showcase's cards sit on, for a consistent look between them.
+            GraphicsDevice.Clear(_showcase3D ? Palette.Background : Color.White);
 
             _primitive3DBatch.Begin(_camera3d);
 
-            if (_showcaseMode)
+            if (_showcase3D)
             {
                 Showcase3D.Draw(_primitive3DBatch);
             }

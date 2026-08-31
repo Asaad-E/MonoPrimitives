@@ -2,6 +2,9 @@
 
 `Palette` (a curated set of ready-to-use `Color`s) and `ColorUtil` (conversions and adjustments on any `Color`) both live in namespace `MonoPrimitives`, files [`src/Core/Palette.cs`](../src/Core/Palette.cs) and [`src/Core/ColorUtil.cs`](../src/Core/ColorUtil.cs). Covered together here since they're normally used together: pick a starting color from `Palette`, then adjust it with `ColorUtil`.
 
+![Every Palette color as a labeled swatch](../img/palette.png)
+<br><sub>`samples/MonoPrimitives.Sample`'s `ShowcasePalette2D` — all 21 of `Palette.All`, in its own declared order.</sub>
+
 ## Quick start
 
 ```csharp

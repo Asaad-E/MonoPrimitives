@@ -8,8 +8,8 @@ namespace MonogameLibs;
 
 /// <summary>
 /// A curated, presentation-quality shape showcase: one representative shape each, evenly spaced
-/// with a soft contact shadow and a centered label -- not Gallery3D's exhaustive per-row
-/// Fill/Border/Draw matrix. Not part of the library; exists purely to produce README/guide
+/// with a soft ground glow and a centered, color-matched label -- not Gallery3D's exhaustive
+/// per-row Fill/Border/Draw matrix. Not part of the library; exists purely to produce README/guide
 /// screenshots that read clearly at a glance instead of the dev gallery's dense grid. Content
 /// grows along +X from the origin, all in a single row (see the class remarks below for why).
 /// </summary>
@@ -18,11 +18,14 @@ internal static class Showcase3D
     private const float ColumnSpacing = 6.5f;
     private const float LabelPixelSize = 0.1f;
 
-    private static readonly Color ShadowColor = new(0, 0, 0, 60);
+    // A soft light halo instead of a dark contact shadow -- this showcase clears to the same dark
+    // Palette.Background the 2D showcase's cards sit on (see Game1.ToggleShowcaseMode), where a
+    // black shadow would be invisible.
+    private static readonly Color GlowColor = new(Palette.Clouds, 35);
 
     private readonly record struct Item(string Label, Color Color, Action<Primitive3DBatch, Vector3, Color> Draw);
 
-    // Five iconic primitives in a single row, not Gallery3D's full 14-row-deep surface. A single
+    // Seven iconic primitives in a single row, not Gallery3D's full 14-row-deep surface. A single
     // row keeps every shape at the same camera distance -- two rows at different depths made the
     // far row noticeably smaller and pushed the framing math around fighting that mismatch,
     // exactly the kind of "show less but show it well" tradeoff this class exists for. Base
@@ -34,6 +37,9 @@ internal static class Showcase3D
         new("SPHERE", Palette.Alizarin, (b, c, col) => b.FillSphere(c + Vector3.UnitY * 1.3f, 1.3f, col)),
         new("CYLINDER", Palette.Emerald, (b, c, col) => b.FillCylinder(c, 1.1f, 1.1f, 2.4f, 24, col)),
         new("CONE", Palette.Sunflower, (b, c, col) => b.FillCylinder(c, 0f, 1.2f, 2.6f, 24, col)),
+        new("CAPSULE", Palette.Amethyst, (b, c, col) => b.FillCapsule(c + Vector3.UnitY * 0.7f, c + Vector3.UnitY * 1.7f, 0.7f, 24, 12, col)),
+        // A pyramid is just a cone with 4 sides instead of a smooth 24 -- same method as CONE.
+        new("PYRAMID", Palette.Pomegranate, (b, c, col) => b.FillCylinder(c, 0f, 1.5f, 2.6f, 4, col)),
         new("TORUS", Palette.Turquoise, (b, c, col) => b.FillTorus(c + Vector3.UnitY * 0.45f, 1.2f, 0.45f, 24, 24, col)),
     };
 
@@ -59,12 +65,13 @@ internal static class Showcase3D
         {
             Vector3 baseCenter = new(i * ColumnSpacing, 0f, 0f);
 
-            batch.FillCircle3D(baseCenter + Vector3.UnitY * 0.01f, 1.5f, Vector3.UnitX, 90f, ShadowColor);
+            batch.FillCircle3D(baseCenter + Vector3.UnitY * 0.01f, 1.5f, Vector3.UnitX, 90f, GlowColor);
             Items[i].Draw(batch, baseCenter, Items[i].Color);
             // Offset toward the curated camera (see Game1.ToggleShowcaseMode, positioned on the
             // +Z side) instead of sitting directly under the shape, so the shape itself doesn't
-            // occlude its own label.
-            DrawCenteredCaption(batch, Items[i].Label, baseCenter + Vector3.UnitZ * 2f);
+            // occlude its own label. Colored to match its shape, same as the 2D showcase's
+            // accent-colored card labels, instead of one flat text color for all of them.
+            DrawCenteredCaption(batch, Items[i].Label, baseCenter + Vector3.UnitZ * 2f, Items[i].Color);
         }
 
         return GetContentBounds();
@@ -73,10 +80,10 @@ internal static class Showcase3D
     // Same centering trick Gallery3D's own caption uses: measure the billboarded text and offset
     // by half its width along the billboard's own right axis, so it centers correctly from any
     // viewing angle instead of only from straight ahead.
-    private static void DrawCenteredCaption(Primitive3DBatch batch, string text, Vector3 anchor)
+    private static void DrawCenteredCaption(Primitive3DBatch batch, string text, Vector3 anchor, Color color)
     {
         batch.GetBillboardAxes(anchor, out Vector3 right, out _);
         Vector2 size = Primitive3DBatch.MeasureText3D(text, LabelPixelSize);
-        batch.DrawString3D(text, anchor - right * (size.X * 0.5f), LabelPixelSize, Palette.MidnightBlue);
+        batch.DrawString3D(text, anchor - right * (size.X * 0.5f), LabelPixelSize, color);
     }
 }
