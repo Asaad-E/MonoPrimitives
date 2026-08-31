@@ -241,7 +241,7 @@ Same Fill/Border/Draw pattern as every other shape. Remember: `startAngle`/`endA
 |---|---|
 | `FillCircleSector(center, radius, startAngle, endAngle, [segments,] color)` | A filled pie slice. |
 | `FillCircleSectorGradient(center, radius, startAngle, endAngle, [segments,] inner, outer)` | Radial-gradient pie slice, center → rim. |
-| `BorderCircleSector(center, radius, startAngle, endAngle, thickness, color)` | The pie slice's outline (arc + the two straight radii). |
+| `BorderCircleSector(center, radius, startAngle, endAngle, color, thickness = 1f)` | The pie slice's outline (arc + the two straight radii). |
 | `DrawCircleSector(center, radius, startAngle, endAngle, [segments,] fillColor, borderColor = null, thickness = 1f)` | Fill + border together — omit `borderColor` for the same color on both. |
 | `FillCircleSectorShadow(center, radius, startAngle, endAngle, color, spread)` | Pie slice with a soft outward drop shadow. Special-cases a full-turn sweep (no center-point "spike," since a full circle has no radial cut edges to shadow). |
 | `FillRing(center, innerRadius, outerRadius, [startAngle, endAngle, segments,] color)` | A filled annulus (donut), or a partial donut wedge if you pass an angle range. `innerRadius <= 0` degenerates to a sector. |

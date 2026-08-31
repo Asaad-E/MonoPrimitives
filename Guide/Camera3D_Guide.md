@@ -68,7 +68,7 @@ Call these directly for custom bindings instead of `UpdateWithInput`:
 | `MoveToTarget(delta)` | Moves `Position` along `Forward` to change `TargetDistance` by `delta` (negative = closer) — an instant zoom for orbital-style cameras; clamps to a small positive distance instead of crossing through `Target`. |
 | `Yaw(angle, rotateAroundTarget)` / `Pitch(angle, lockView, rotateAroundTarget, rotateUp)` | Rotate around `UpNormalized`/`Right` respectively. `rotateAroundTarget: false` (default) rotates `Target` around `Position` (mouse-look style); `true` rotates `Position` around `Target` (orbit-camera style) instead — `TargetDistance` is preserved either way. `Pitch`'s `lockView` clamps so the view can't flip past straight-up/down; `rotateUp` (Free mode only) also rotates `Up` itself, for full unconstrained rotation. |
 | `Roll(angle)` | Rotates `Up` around `Forward` (barrel roll) — `Forward` itself is unaffected. |
-| `SetZoom(fovy)` / `Zoom(delta, min, max)` | Set `Fovy` directly, or nudge it by `delta` clamped to `[min, max]` (defaults `1`/`179`). |
+| `SetZoom(fovy)` / `AdjustZoom(delta, min, max)` | Set `Fovy` directly, or nudge it by `delta` clamped to `[min, max]` (defaults `1`/`179`). |
 
 ## Modes and `UpdateWithInput`
 

@@ -359,7 +359,7 @@ internal static class Gallery2D
         {
             new("Sector 1/4", (b, p) => b.FillCircleSector(p, 60f, 0f, 0.25f, FillColor)),
             new("Sector 3/4", (b, p) => b.FillCircleSector(p, 60f, 0f, 0.75f, FillColor)),
-            new("Sector lines", (b, p) => b.BorderCircleSector(p, 60f, 0f, 0.6f, 4f, BorderColor)),
+            new("Sector lines", (b, p) => b.BorderCircleSector(p, 60f, 0f, 0.6f, BorderColor, 4f)),
             new("Sector gradient", (b, p) => b.FillCircleSectorGradient(p, 60f, 0f, 0.75f, GradientFrom, GradientTo)),
             new("Sector draw", (b, p) => b.DrawCircleSector(p, 60f, 0f, 0.75f, FillColor, BorderColor, 4f)),
             new("Ring full", (b, p) => b.FillRing(p, 30f, 60f, FillColor)),

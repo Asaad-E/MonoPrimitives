@@ -2698,7 +2698,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>Draws the outline of a circle sector, including the two radii.</summary>
-        public void BorderCircleSector(Vector2 center, float radius, float startAngle, float endAngle, float thickness, Color color)
+        public void BorderCircleSector(Vector2 center, float radius, float startAngle, float endAngle, Color color, float thickness = 1f)
         {
             int segments = SegmentsForArc(radius, (endAngle - startAngle) * MathHelper.TwoPi);
             FillRing(center, radius - thickness, radius, startAngle, endAngle, segments, color);
@@ -2716,14 +2716,14 @@ namespace MonoPrimitives.Primitives2D
         public void DrawCircleSector(Vector2 center, float radius, float startAngle, float endAngle, Color fillColor, Color? borderColor = null, float thickness = 1f)
         {
             FillCircleSector(center, radius, startAngle, endAngle, fillColor);
-            BorderCircleSector(center, radius, startAngle, endAngle, thickness, borderColor ?? fillColor);
+            BorderCircleSector(center, radius, startAngle, endAngle, borderColor ?? fillColor, thickness);
         }
 
         /// <inheritdoc cref="DrawCircleSector(Vector2,float,float,float,Color,Color?,float)"/>
         public void DrawCircleSector(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color fillColor, Color? borderColor = null, float thickness = 1f)
         {
             FillCircleSector(center, radius, startAngle, endAngle, segments, fillColor);
-            BorderCircleSector(center, radius, startAngle, endAngle, thickness, borderColor ?? fillColor);
+            BorderCircleSector(center, radius, startAngle, endAngle, borderColor ?? fillColor, thickness);
         }
 
         /// <summary>
@@ -2820,7 +2820,7 @@ namespace MonoPrimitives.Primitives2D
         {
             ThrowIfNotBegun();
             if (segments < 1 || outerRadius <= 0f) return;
-            if (innerRadius <= 0f) { BorderCircleSector(center, outerRadius, startAngle, endAngle, thickness, color); return; }
+            if (innerRadius <= 0f) { BorderCircleSector(center, outerRadius, startAngle, endAngle, color, thickness); return; }
 
             // Each arc is drawn as ONE joined strip (LineJoin.Round), not one DrawLine per
             // segment: independent segments each get their own flat, perpendicular end caps,

@@ -332,7 +332,7 @@ namespace MonoPrimitives.Primitives3D
         public void SetZoom(float fovy) => Fovy = fovy;
 
         /// <summary>Adds <paramref name="delta"/> to the field of view instantly, clamped to a usable range.</summary>
-        public void Zoom(float delta, float min = 1f, float max = 179f) => Fovy = Math.Clamp(Fovy + delta, min, max);
+        public void AdjustZoom(float delta, float min = 1f, float max = 179f) => Fovy = Math.Clamp(Fovy + delta, min, max);
 
         // ---------------------------------------------------------------------
         // Projection utilities

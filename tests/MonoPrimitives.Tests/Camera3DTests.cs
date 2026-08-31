@@ -125,15 +125,15 @@ namespace MonoPrimitives.Tests
                 return null;
             });
 
-            results.Check("SetZoom/Zoom set and clamp Fovy correctly", () =>
+            results.Check("SetZoom/AdjustZoom set and clamp Fovy correctly", () =>
             {
                 var cam = new Camera3D(Vector3.Zero, Vector3.Forward, Vector3.Up, fovy: 45f);
                 cam.SetZoom(60f);
                 if (!Close(cam.Fovy, 60f)) return $"SetZoom(60) -> Fovy={cam.Fovy}";
-                cam.Zoom(-1000f, min: 10f, max: 120f);
-                if (!Close(cam.Fovy, 10f)) return $"Zoom clamped low to {cam.Fovy}, expected 10";
-                cam.Zoom(1000f, min: 10f, max: 120f);
-                if (!Close(cam.Fovy, 120f)) return $"Zoom clamped high to {cam.Fovy}, expected 120";
+                cam.AdjustZoom(-1000f, min: 10f, max: 120f);
+                if (!Close(cam.Fovy, 10f)) return $"AdjustZoom clamped low to {cam.Fovy}, expected 10";
+                cam.AdjustZoom(1000f, min: 10f, max: 120f);
+                if (!Close(cam.Fovy, 120f)) return $"AdjustZoom clamped high to {cam.Fovy}, expected 120";
                 return null;
             });
 
