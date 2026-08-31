@@ -35,6 +35,13 @@ public class Game1 : Game
     private Vector2 _gallery2DSize;
     private bool _tabWasDown;
 
+    // A second, curated view alongside each dev gallery -- Showcase2D/Showcase3D, toggled with S.
+    // Framed once on toggle-in via FitBounds (not every frame, so free-fly/pan still works
+    // afterward), not part of the library: exists purely to produce clean README/guide
+    // screenshots instead of the dev galleries' dense every-variant grids.
+    private bool _showcaseMode;
+    private bool _sWasDown;
+
     private const int ScreenSizeX = 1280;
     private const int SCreenSizeY = 720;
 
@@ -112,6 +119,10 @@ public class Game1 : Game
         if (tabDown && !_tabWasDown) _show2DGallery = !_show2DGallery;
         _tabWasDown = tabDown;
 
+        bool sDown = Keyboard.GetState().IsKeyDown(Keys.S);
+        if (sDown && !_sWasDown) ToggleShowcaseMode();
+        _sWasDown = sDown;
+
         if (_show2DGallery)
             UpdateGallery2DCamera(deltaTime);
         else
@@ -130,6 +141,41 @@ public class Game1 : Game
         _camera2d.UpdateWithInput(_input, deltaTime);
     }
 
+    // FitBounds runs once here (not every Draw) so the showcase starts framed correctly but the
+    // usual pan/zoom (2D) or free-fly (3D) controls still work normally afterward.
+    private void ToggleShowcaseMode()
+    {
+        _showcaseMode = !_showcaseMode;
+
+        if (_show2DGallery)
+        {
+            // FitBounds assumes the default Offset=viewport-center convention; the gallery's own
+            // pan/clamp design (UpdateGallery2DCamera) instead wants Offset=Zero so Target is the
+            // world point drawn at the screen's top-left corner -- swap conventions with the mode.
+            if (_showcaseMode)
+            {
+                Vector2 size = Showcase2D.GetContentSize();
+                _camera2d.Offset = new Vector2(ScreenSizeX / 2f, SCreenSizeY / 2f);
+                _camera2d.FitBounds(new MonoPrimitives.RectangleF(0, 0, size.X, size.Y), 40f, GraphicsDevice);
+            }
+            else
+            {
+                _camera2d.Offset = Vector2.Zero;
+            }
+        }
+        else if (_showcaseMode)
+        {
+            // Not FitBounds: its sphere-fit is conservative for a flat, wide layout like this row
+            // (bounded mostly by a large horizontal diagonal, tiny vertical extent), so it leaves
+            // far more margin than a manually placed camera needs to. A narrower fovy than the
+            // dev gallery's default 50 keeps the mostly-empty sky above the row out of frame.
+            Vector3 center = Showcase3D.GetContentCenter();
+            _camera3d.Fovy = 30f;
+            _camera3d.Target = center;
+            _camera3d.Position = center + new Vector3(0f, 12f, 32f);
+        }
+    }
+
     protected override void Draw(GameTime gameTime)
     {
         // TODO: Add your drawing code here
@@ -144,9 +190,16 @@ public class Game1 : Game
             GraphicsDevice.Clear(Palette.Background);
 
             _primitiveBatch.Begin(_camera2d.GetTransformMatrix());
-            _primitiveBatch.DrawGrid(80*4, 40f);
-            _primitiveBatch.DrawAxis(2000f);
-            _gallery2DSize = Gallery2D.Draw(_primitiveBatch);
+            if (_showcaseMode)
+            {
+                _gallery2DSize = Showcase2D.Draw(_primitiveBatch);
+            }
+            else
+            {
+                _primitiveBatch.DrawGrid(80*4, 40f);
+                _primitiveBatch.DrawAxis(2000f);
+                _gallery2DSize = Gallery2D.Draw(_primitiveBatch);
+            }
             _primitiveBatch.End();
         }
         else
@@ -158,13 +211,20 @@ public class Game1 : Game
 
             _primitive3DBatch.Begin(_camera3d);
 
-            // Large enough to cover Gallery3D's full extent (13 rows deep, up to 6 cells wide).
-            int slices = 140;
-            float spacing = 2f;
-            _primitive3DBatch.DrawGridXZ(slices, spacing);
-            _primitive3DBatch.DrawAxis(slices * spacing * 0.5f);
+            if (_showcaseMode)
+            {
+                Showcase3D.Draw(_primitive3DBatch);
+            }
+            else
+            {
+                // Large enough to cover Gallery3D's full extent (13 rows deep, up to 6 cells wide).
+                int slices = 140;
+                float spacing = 2f;
+                _primitive3DBatch.DrawGridXZ(slices, spacing);
+                _primitive3DBatch.DrawAxis(slices * spacing * 0.5f);
 
-            Gallery3D.Draw(_primitive3DBatch);
+                Gallery3D.Draw(_primitive3DBatch);
+            }
 
             _primitive3DBatch.End();
         }

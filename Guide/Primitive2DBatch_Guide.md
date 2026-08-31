@@ -4,8 +4,8 @@
 
 This guide covers every public method, grouped by shape family, plus the handful of conventions that apply across all of them and the non-obvious mechanics behind gradients, shadows, and segment counts. For per-parameter detail beyond what's here, the XML doc comments on each method in `Primitives2D.cs` go deeper.
 
-![Every 2D shape family, one row each with its Fill/Border/Draw variants](../img/gallery_2d.png)
-<br><sub>`samples/MonoPrimitives.Sample`'s `Gallery2D` — every shape below, rendered.</sub>
+![A curated set of 2D shapes, each in its own bordered card](../img/gallery_2d.png)
+<br><sub>`samples/MonoPrimitives.Sample`'s `Showcase2D` — a curated sample, not the exhaustive per-variant `Gallery2D` dev gallery also in that project.</sub>
 
 ## Quick start
 

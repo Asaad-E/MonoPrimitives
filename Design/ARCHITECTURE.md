@@ -60,7 +60,7 @@ Shared foundation used by both 2D and 3D — nothing here is 2D- or 3D-specific.
 
 ## `samples/MonoPrimitives.Sample/`
 
-Minimal runnable MonoGame game referencing `MonoPrimitives`, plus `MonoGame.Extended` (sample-only). Proves the package works end-to-end; not a real game. Tab toggles between two visual-regression galleries — `Gallery2D.cs` (2D, camera-controlled) and `Gallery3D.cs` (3D, free-fly camera) — both the same row-per-shape-family/cell-per-Fill-Border-Draw-variant/text-caption structure, so a change to either library can be eyeballed the same way.
+Minimal runnable MonoGame game referencing `MonoPrimitives`, plus `MonoGame.Extended` (sample-only). Proves the package works end-to-end; not a real game. Tab toggles between two visual-regression galleries — `Gallery2D.cs` (2D, camera-controlled) and `Gallery3D.cs` (3D, free-fly camera) — both the same row-per-shape-family/cell-per-Fill-Border-Draw-variant/text-caption structure, so a change to either library can be eyeballed the same way. `S` toggles a second, curated view alongside whichever gallery is active — `Showcase2D.cs`/`Showcase3D.cs`, a handful of shapes shown large and clearly labeled (bordered cards in 2D, a single depth-consistent row with contact shadows in 3D) instead of the dev galleries' exhaustive every-variant grids. Not part of the library; exists to produce the README/guide screenshots under `img/`.
 
 ## `templates/PrimitiveBase/`
 
