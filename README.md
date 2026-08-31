@@ -3,6 +3,8 @@
 [![NuGet](https://img.shields.io/nuget/v/MonoPrimitives.svg)](https://www.nuget.org/packages/MonoPrimitives)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+![MonoPrimitives 2D and 3D shape gallery](img/hero.png)
+
 Immediate-mode 2D and 3D primitive drawing for MonoGame, plus the small set of helpers a fast prototype usually needs — camera, input, easing, color, noise, and collision/raycast tests — so you don't have to pull in a handful of separate external libraries for those.
 
 Built for prototypes: simulations (boids, cellular automata, predator-prey, pandemic models, terrain), generative art, and small retro-style game demos. Not a game engine, and not aimed at shipping a full commercial game.

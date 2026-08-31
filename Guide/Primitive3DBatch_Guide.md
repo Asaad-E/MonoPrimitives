@@ -4,6 +4,9 @@
 
 This guide covers every public method, grouped by shape family. For per-parameter detail beyond what's here, the XML doc comments in `Primitive3DBatchShapes.cs` go deeper.
 
+![Cube, sphere, cylinder, cone, capsule and more, each labeled with a billboarded 3D caption](../img/gallery_3d.png)
+<br><sub>`samples/MonoPrimitives.Sample`'s `Gallery3D` — a subset of the rows, rendered.</sub>
+
 ## Quick start
 
 ```csharp
