@@ -50,6 +50,7 @@ namespace MonoPrimitives.Tests
             PrimitiveInputDeadzoneTests.Run(results);
             ObjectPoolTests.Run(results);
             RingBufferTests.Run(results);
+            Trail2DTests.Run(results);
             CooldownTests.Run(results);
             DebugTimerTests.Run(results);
             ScreenshotUtilTests.Run(GraphicsDevice, results);
@@ -61,6 +62,7 @@ namespace MonoPrimitives.Tests
             ClearLetterboxedTests.Run(GraphicsDevice, results);
             BoxingViewportAdapter2DPixelPerfectTests.Run(GraphicsDevice, results);
             CoverViewportAdapter2DTests.Run(GraphicsDevice, results);
+            ViewportAdapter2DVariantsTests.Run(this, GraphicsDevice, results);
             Camera2DTests.Run(GraphicsDevice, results);
 
             using var batch = new Primitive3DBatch(GraphicsDevice);
