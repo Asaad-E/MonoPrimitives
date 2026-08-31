@@ -38,4 +38,4 @@ Mirrors `Rectangle`'s own member shape, just with `float` fields — anything yo
 
 ## See also
 
-- [`Vector2Extensions_Guide.md`](Vector2Extensions_Guide.md) — the equivalent small-utility treatment for `Vector2`.
+- [`VectorExtensions`](Vector2Extensions_Guide.md) — the equivalent small-utility treatment for `Vector2`.

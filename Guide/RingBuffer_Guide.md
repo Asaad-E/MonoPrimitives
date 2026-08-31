@@ -36,6 +36,6 @@ void OnHit(float amount)
 
 ## See also
 
-- [`Trail2D_Guide.md`](Trail2D_Guide.md) — a `Vector2`/`Vector3`-specific ring buffer with drawing and fade built on top, if that's closer to what you need.
-- [`FpsCounter_Guide.md`](FpsCounter_Guide.md) — a `float`-specific ring buffer with rolling-average math built on top.
-- [`ObjectPool_Guide.md`](ObjectPool_Guide.md) — a different kind of reuse: a grab-bag of interchangeable instances instead of an ordered history.
+- [`Trail`](Trail2D_Guide.md) — a `Vector2`/`Vector3`-specific ring buffer with drawing and fade built on top, if that's closer to what you need.
+- [`FpsCounter`](FpsCounter_Guide.md) — a `float`-specific ring buffer with rolling-average math built on top.
+- [`ObjectPool`](ObjectPool_Guide.md) — a different kind of reuse: a grab-bag of interchangeable instances instead of an ordered history.

@@ -168,7 +168,7 @@ Each filled triangle/quad is shaded by its own face normal — a cheap, per-face
 
 ## Splines
 
-Same four spline types as 2D (see [`Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md#splines) for the shape of each curve), each drawn as a loop of `DrawLine3D` calls rather than a single joined strip.
+Same four spline types as 2D (see [`Primitive2DBatch`](Primitive2DBatch_Guide.md#splines) for the shape of each curve), each drawn as a loop of `DrawLine3D` calls rather than a single joined strip.
 
 | Method | What it does |
 |---|---|

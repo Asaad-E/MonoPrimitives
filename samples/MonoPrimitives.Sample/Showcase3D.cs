@@ -25,7 +25,7 @@ internal static class Showcase3D
 
     private readonly record struct Item(string Label, Color Color, Action<Primitive3DBatch, Vector3, Color> Draw);
 
-    // Nine iconic primitives in a single row, not Gallery3D's full 14-row-deep surface. A single
+    // Eight iconic primitives in a single row, not Gallery3D's full 14-row-deep surface. A single
     // row keeps every shape at the same camera distance -- two rows at different depths made the
     // far row noticeably smaller and pushed the framing math around fighting that mismatch,
     // exactly the kind of "show less but show it well" tradeoff this class exists for. Base
@@ -45,9 +45,9 @@ internal static class Showcase3D
         // Game1.ToggleShowcaseMode) instead of the default XZ/ground-facing orientation, which
         // would appear edge-on and unreadable from this angle.
         new("PLANE", Palette.BelizeHole, (b, c, col) => b.FillPlane(c + Vector3.UnitY * 1.3f, new Vector2(2.8f, 2.8f), Vector3.Backward, col)),
-        // Default rotation (angle=0) already lies in the XY plane -- facing the camera, same
-        // reasoning as PLANE above, no extra rotation needed.
-        new("CIRCLE3D", Palette.Carrot, (b, c, col) => b.FillCircle3D(c + Vector3.UnitY * 1.3f, 1.6f, Vector3.UnitX, 0f, col)),
+        // Circle3D was tried here too (facing the camera, same reasoning as PLANE above) but a
+        // flat disc reads as a shapeless blob merging into its own ground glow from this angle --
+        // dropped rather than kept for the sake of a round number.
     };
 
     /// <summary>World bounds of the curated grid, without drawing anything -- for framing a camera before the first <see cref="Draw"/> call.</summary>

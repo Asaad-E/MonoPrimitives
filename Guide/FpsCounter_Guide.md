@@ -35,4 +35,4 @@ Before the window fills up (fewer than `SampleCount` calls to `Update` so far), 
 
 ## See also
 
-- [`FrameLimiter_Guide.md`](FrameLimiter_Guide.md) — a related but different job: `FrameLimiter` *paces* the loop to a target FPS, `FpsCounter` just *measures* whatever FPS you're actually getting. Use one, the other, both, or neither independently.
+- [`FrameLimiter`](FrameLimiter_Guide.md) — a related but different job: `FrameLimiter` *paces* the loop to a target FPS, `FpsCounter` just *measures* whatever FPS you're actually getting. Use one, the other, both, or neither independently.

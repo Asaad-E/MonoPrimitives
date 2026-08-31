@@ -319,7 +319,7 @@ Circles/arcs/ellipses pick their own triangle-fan segment count automatically fr
 - [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the condensed rationale behind non-obvious choices (the bugs caught while building `DrawPolyGradientRounded` and `DrawRingShadow`, the Rectangle/spline naming renames, why Capsule got a second overload family, etc.).
 - [`Design/ROADMAP.md`](../Design/ROADMAP.md) — known gaps, including the reflex-vertex offsetting limitation above.
 - [`Guide/Collision2D_Guide.md`](Collision2D_Guide.md) — `CheckCollision*` methods (Rec/Circle/Triangle/Poly/Capsule, including mixed-shape pairs) for hit-testing the shapes this guide draws. A separate static class in the same namespace, not part of `Primitive2DBatch` itself.
-- [`Camera2D_Guide.md`](Camera2D_Guide.md) — `Camera2D` and the letterbox/scaling `ViewportAdapter2D` family for keeping a `Primitive2DBatch` scene correctly projected across resolutions.
-- [`Color_Guide.md`](Color_Guide.md) — `Palette`/`ColorUtil`, the colors this guide's shapes are drawn with.
-- [`Trail2D_Guide.md`](Trail2D_Guide.md) — a fading position-history trail built on `DrawLine`.
-- [`DebugFont5x7_Guide.md`](DebugFont5x7_Guide.md) — the full `DrawString`/`MeasureText` reference, word-wrap, and the 2D/3D text-rendering split.
+- [`Camera2D & Viewport`](Camera2D_Guide.md) — `Camera2D` and the letterbox/scaling `ViewportAdapter2D` family for keeping a `Primitive2DBatch` scene correctly projected across resolutions.
+- [`Color`](Color_Guide.md) — `Palette`/`ColorUtil`, the colors this guide's shapes are drawn with.
+- [`Trail`](Trail2D_Guide.md) — a fading position-history trail built on `DrawLine`.
+- [`DebugFont5x7`](DebugFont5x7_Guide.md) — the full `DrawString`/`MeasureText` reference, word-wrap, and the 2D/3D text-rendering split.
