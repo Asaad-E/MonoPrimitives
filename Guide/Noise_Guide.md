@@ -2,6 +2,9 @@
 
 `Noise` (namespace `MonoPrimitives`, file [`src/Core/Noise.cs`](../src/Core/Noise.cs)) is seedable gradient (Perlin-style) noise — smooth, deterministic pseudo-randomness for terrain heightmaps, procedural texture-like effects, or any "organic" variation that should look continuous rather than static-y. The core algorithm is a direct, line-by-line match of Ken Perlin's own "improved noise" (2002) reference implementation.
 
+![Grayscale samples of plain Perlin noise, fBm, ridged, and turbulence](../img/noise.png)
+<br><sub>Same seed and octave count throughout — the visible difference is purely each variant's own formula: fBm is smooth/cloudy, ridge traces bright veins, turbulence stays sharp and billowy.</sub>
+
 ## Quick start
 
 ```csharp

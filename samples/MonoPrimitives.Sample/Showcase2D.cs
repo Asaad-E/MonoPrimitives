@@ -32,7 +32,7 @@ internal static class Showcase2D
         // each end, so total extent is length + 2*radius (70 + 70 = 140, matching the other
         // shapes' ~140 footprint instead of overflowing the card).
         new("CAPSULE", Palette.Emerald, (b, c) => b.FillCapsule(c, 70f, 35f, Palette.Emerald, MathF.PI / 2f)),
-        new("HEXAGON", Palette.Turquoise, (b, c) => b.FillPoly(c, 6, 72f, Palette.Turquoise)),
+        new("HEXAGON", Palette.Turquoise, (b, c) => b.FillPolyRounded(c, 6, 72f, 10f, Palette.Turquoise)),
         new("PENTAGON", Palette.BelizeHole, (b, c) => b.FillPoly(c, 5, 74f, Palette.BelizeHole, -MathF.PI / 2f)),
         // FillPoly's default rotation=0 already places a 4-gon's vertices on the axes (a diamond,
         // not a square -- that needs the extra PI/4 rotation this deliberately skips).

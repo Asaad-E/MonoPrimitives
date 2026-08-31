@@ -25,7 +25,7 @@ internal static class Showcase3D
 
     private readonly record struct Item(string Label, Color Color, Action<Primitive3DBatch, Vector3, Color> Draw);
 
-    // Seven iconic primitives in a single row, not Gallery3D's full 14-row-deep surface. A single
+    // Nine iconic primitives in a single row, not Gallery3D's full 14-row-deep surface. A single
     // row keeps every shape at the same camera distance -- two rows at different depths made the
     // far row noticeably smaller and pushed the framing math around fighting that mismatch,
     // exactly the kind of "show less but show it well" tradeoff this class exists for. Base
@@ -41,6 +41,13 @@ internal static class Showcase3D
         // A pyramid is just a cone with 4 sides instead of a smooth 24 -- same method as CONE.
         new("PYRAMID", Palette.Pomegranate, (b, c, col) => b.FillCylinder(c, 0f, 1.5f, 2.6f, 4, col)),
         new("TORUS", Palette.Turquoise, (b, c, col) => b.FillTorus(c + Vector3.UnitY * 0.45f, 1.2f, 0.45f, 24, 24, col)),
+        // Backward (+Z) faces back toward the curated camera (positioned on the +Z side, see
+        // Game1.ToggleShowcaseMode) instead of the default XZ/ground-facing orientation, which
+        // would appear edge-on and unreadable from this angle.
+        new("PLANE", Palette.BelizeHole, (b, c, col) => b.FillPlane(c + Vector3.UnitY * 1.3f, new Vector2(2.8f, 2.8f), Vector3.Backward, col)),
+        // Default rotation (angle=0) already lies in the XY plane -- facing the camera, same
+        // reasoning as PLANE above, no extra rotation needed.
+        new("CIRCLE3D", Palette.Carrot, (b, c, col) => b.FillCircle3D(c + Vector3.UnitY * 1.3f, 1.6f, Vector3.UnitX, 0f, col)),
     };
 
     /// <summary>World bounds of the curated grid, without drawing anything -- for framing a camera before the first <see cref="Draw"/> call.</summary>

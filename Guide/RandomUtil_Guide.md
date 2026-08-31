@@ -4,6 +4,9 @@
 
 This guide explains what each method does, when to reach for it, how the distributions are actually computed internally, and how to use `RandomUtil` safely across single-threaded and multi-threaded code.
 
+![Scatter plots of Gaussian, inside-unit-circle, on-unit-circle, and uniform sampling, plus a weighted-pick bar chart](../img/random_util.png)
+<br><sub>500 samples each (4000 for the weighted-pick histogram) — the shape difference between "inside" and "on" a unit circle is the kind of thing easy to mix up by name alone.</sub>
+
 ## Quick start
 
 ```csharp

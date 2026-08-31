@@ -2,6 +2,9 @@
 
 `TextureUtil` (namespace `MonoPrimitives`, file [`src/Core/TextureUtil.cs`](../src/Core/TextureUtil.cs)) generates procedural textures and transforms existing ones — the CPU pixel-buffer utilities MonoGame's own `Texture2D` doesn't provide.
 
+![Every generation function and transform, before and after](../img/texture_util.png)
+<br><sub>The bottom three rows all start from the same `(BASE) RADIAL` gradient texture.</sub>
+
 ## Quick start
 
 ```csharp

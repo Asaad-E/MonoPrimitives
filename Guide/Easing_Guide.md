@@ -2,6 +2,9 @@
 
 `Easing` (namespace `MonoPrimitives`, file [`src/Core/Easing.cs`](../src/Core/Easing.cs)) is a static class of classic 0→1 tweening curves for one-shot animations with a known duration — a menu sliding in, an object scaling up, a color fading out. Every formula matches the canonical easings.net/Penner reference set.
 
+![All 31 easing curves plotted, In/Out/In-Out overlaid per family](../img/easing.png)
+<br><sub>Back and Elastic overshoot past 0 and 1 on purpose — that's the "spring past the target, settle back" look, not a bug.</sub>
+
 ## Quick start
 
 ```csharp

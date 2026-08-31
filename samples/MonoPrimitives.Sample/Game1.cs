@@ -178,7 +178,7 @@ public class Game1 : Game
             Vector3 center = Showcase3D.GetContentCenter();
             _camera3d.Fovy = 30f;
             _camera3d.Target = center;
-            _camera3d.Position = center + new Vector3(0f, 17f, 46f);
+            _camera3d.Position = center + new Vector3(0f, 22f, 60f);
         }
     }
 

@@ -187,6 +187,9 @@ All five share one surface (`VirtualWidth`/`VirtualHeight`/`Scale`/`Offset`/`Bou
 | `ScalingViewportAdapter2D` | Fixed virtual resolution, independent per-axis scale, fills the window exactly | No | Filling the window matters more than preserving the virtual resolution's aspect ratio, and non-uniform stretch is acceptable. |
 | `CoverViewportAdapter2D` | Fixed virtual resolution, uniform scale (fills the window completely), preserves aspect ratio | No (crops instead) | The inverse tradeoff from Boxing: never show bars, and cropping some content on one axis is preferable to distorting the aspect ratio. Matches CSS's `object-fit: cover`. |
 
+![The same square virtual resolution and test pattern through Boxing, Scaling, and Cover](../img/viewport_adapters.png)
+<br><sub>Left to right: **Boxing** pillarboxes (the circle stays round, bars fill the leftover width), **Scaling** stretches to fill exactly (the circle becomes an ellipse, no bars), **Cover** crops to fill (the circle stays round, the grid overflows top and bottom). Same 900×900 virtual resolution against the same wide window throughout.</sub>
+
 ```csharp
 var adapter = new BoxingViewportAdapter2D(GraphicsDevice, virtualWidth: 480, virtualHeight: 270);
 ```
