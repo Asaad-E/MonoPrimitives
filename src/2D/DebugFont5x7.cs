@@ -70,7 +70,7 @@ namespace MonoPrimitives.Primitives2D
 
         /// <summary>
         /// Total size in pixels (already scaled by <paramref name="pixelSize"/>) that
-        /// <see cref="DrawString"/> would occupy — for centering/layout before drawing.
+        /// <see cref="DrawString"/> would occupy.
         /// </summary>
         public static Vector2 MeasureText(string text, float pixelSize, float glyphSpacing = 1f, float lineSpacing = 2f)
         {

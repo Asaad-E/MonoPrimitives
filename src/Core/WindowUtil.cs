@@ -206,7 +206,6 @@ namespace MonoPrimitives
         }
 
         /// <summary>Hides the window without closing it. No-op if <see cref="IsAvailable"/> is false.</summary>
-        /// <remarks>For doing real setup work before the first frame is ever shown, instead of a blank/flashing window during that time.</remarks>
         public static void HideWindow(GameWindow window)
         {
             IntPtr handle = RequireHandle(window);
@@ -335,7 +334,7 @@ namespace MonoPrimitives
             return index < 0 ? 0 : index;
         }
 
-        /// <summary>The window's DPI scale factor (1.0 = standard 96 DPI, 2.0 = double/"retina"-style scaling) -- for sizing UI/text correctly on a high-DPI display.</summary>
+        /// <summary>The window's DPI scale factor (1.0 = standard 96 DPI, 2.0 = double/"retina"-style scaling).</summary>
         /// <remarks>Returns <see cref="Vector2.One"/> (assume standard, unscaled DPI) if unsupported, rather than throwing.</remarks>
         public static Vector2 GetWindowScaleDPI(GameWindow window)
         {
@@ -401,8 +400,8 @@ namespace MonoPrimitives
         // ==================================================================
 
         /// <summary>
-        /// Hides the cursor and centers it, the standard first step of FPS-style mouse-look input.
-        /// Call <see cref="GetCursorDelta"/> once per frame afterward to read look input.
+        /// Hides the cursor and centers it. Call <see cref="GetCursorDelta"/> once per frame
+        /// afterward to read the movement since.
         /// </summary>
         /// <remarks>MonoGame has no real relative/captured mouse mode to switch into (confirmed missing from the framework) -- this and <see cref="GetCursorDelta"/> are the manual hide-and-recenter-every-frame technique, packaged into two calls.</remarks>
         public static void DisableCursor(Game game)
@@ -422,7 +421,7 @@ namespace MonoPrimitives
 
         /// <summary>
         /// Reads how far the cursor moved since the last call, then recenters it -- call this once per
-        /// frame between <see cref="DisableCursor"/> and <see cref="EnableCursor"/> to drive a look camera.
+        /// frame between <see cref="DisableCursor"/> and <see cref="EnableCursor"/>.
         /// </summary>
         public static Point GetCursorDelta(GameWindow window)
         {

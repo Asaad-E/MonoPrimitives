@@ -18,10 +18,9 @@ namespace MonoPrimitives
 
         /// <summary>
         /// Starts timing, printed as <paramref name="label"/> once <see cref="Dispose"/> runs.
-        /// <paramref name="separator"/> prints a divider line first, for marking the start of a new
+        /// <paramref name="separator"/> prints a divider line first, marking the start of a new
         /// group of timers. <paramref name="precision"/> is the number of
-        /// decimal places printed (default <c>2</c>) — raise it for a timer short enough that
-        /// two decimal places round to <c>0.00</c>.
+        /// decimal places printed (default <c>2</c>).
         /// </summary>
         public DebugTimer(string label, bool separator = false, int precision = 2)
         {

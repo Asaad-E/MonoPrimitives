@@ -134,7 +134,7 @@ namespace MonoPrimitives
             return maxAmplitude > 1e-6f ? sum / maxAmplitude : 0f;
         }
 
-        /// <summary>Ridged multifractal noise — the standard look for mountain-ridge terrain. Roughly <c>[0,1]</c>, not <c>[-1,1]</c> like <see cref="Fbm2D"/>. Uses the same <see cref="Octaves"/>/<see cref="Lacunarity"/>/<see cref="Gain"/>.</summary>
+        /// <summary>Ridged multifractal noise — sharp creases where <see cref="Fbm2D"/> would be smooth. Roughly <c>[0,1]</c>, not <c>[-1,1]</c> like <see cref="Fbm2D"/>. Uses the same <see cref="Octaves"/>/<see cref="Lacunarity"/>/<see cref="Gain"/>.</summary>
         public float RidgeNoise2D(float x, float y)
         {
             float sum = 0f, amplitude = 1f, frequency = 1f, maxAmplitude = 0f;

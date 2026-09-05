@@ -261,7 +261,7 @@ namespace MonoPrimitives
             return (byte)Math.Clamp(result, 0, 255);
         }
 
-        /// <summary>Additive (linear dodge) blend: straight per-channel sum, clamped at 255 — brightens aggressively, the standard "glow"/particle-additive look.</summary>
+        /// <summary>Additive (linear dodge) blend: straight per-channel sum, clamped at 255 — brightens aggressively, the result never darker than either input.</summary>
         public static Color Additive(Color a, Color b)
             => new((byte)Math.Min(255, a.R + b.R), (byte)Math.Min(255, a.G + b.G), (byte)Math.Min(255, a.B + b.B), a.A);
     }

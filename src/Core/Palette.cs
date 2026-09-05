@@ -68,7 +68,7 @@ namespace MonoPrimitives
         /// <summary><see cref="Concrete"/>'s darker, more muted twin — a dim slate gray.</summary>
         public static readonly Color Asbestos = new(127, 140, 141);
 
-        /// <summary>Near-black charcoal-navy — a whole-screen backdrop for a dark dashboard/HUD, not a content color. <see cref="MidnightBlue"/>/<see cref="WetAsphalt"/> work well as panels on top of it.</summary>
+        /// <summary>Near-black charcoal-navy, darker than every other color in this palette — too low-contrast to read as foreground content, but <see cref="MidnightBlue"/>/<see cref="WetAsphalt"/> stand out clearly as panels on top of it.</summary>
         public static readonly Color Background = new(20, 22, 31);
 
         /// <summary>All 21 colors above, including <see cref="Background"/>.</summary>

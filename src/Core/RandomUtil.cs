@@ -287,7 +287,7 @@ namespace MonoPrimitives
         private static Vector3 SampleInsideUnitSphere(Random rng) => SampleOnUnitSphere(rng) * MathF.Cbrt(rng.NextSingle());
 
         /// <summary>Picks a random index into <paramref name="weights"/>, with probability proportional to each entry's own weight.</summary>
-        /// <remarks>Weights must be non-negative with at least one positive, or this throws. O(n) per call — for a large static table sampled every frame, build a cumulative-sum array once and binary-search it instead.</remarks>
+        /// <remarks>Weights must be non-negative with at least one positive, or this throws. O(n) per call.</remarks>
         private static int SampleWeightedIndex(Random rng, ReadOnlySpan<float> weights)
         {
             if (weights.IsEmpty)

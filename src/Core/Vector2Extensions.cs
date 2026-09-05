@@ -113,7 +113,7 @@ namespace MonoPrimitives
             return v * (maxLength / MathF.Sqrt(lenSq));
         }
 
-        /// <summary>Removes the component of <paramref name="v"/> along <paramref name="normal"/>, keeping only the tangential part — the direction to keep moving along a wall/floor instead of stopping dead against it.</summary>
+        /// <summary>Removes the component of <paramref name="v"/> along <paramref name="normal"/>, keeping only the tangential part.</summary>
         /// <remarks><paramref name="normal"/> must already be unit length (not renormalized here, same convention as <see cref="Vector2.Reflect(Vector2,Vector2)"/>). Different from <see cref="Vector2.Reflect(Vector2,Vector2)"/>: <c>Reflect</c> flips the normal component (a bounce), <c>Slide</c> drops it entirely (a slide).</remarks>
         public static Vector2 Slide(this Vector2 v, Vector2 normal) => v - normal * Vector2.Dot(v, normal);
 

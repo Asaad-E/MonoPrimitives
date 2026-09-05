@@ -54,7 +54,7 @@ namespace MonoPrimitives.Primitives2D
         /// at the newest point down to <paramref name="color"/> scaled by <paramref name="fadeToAlpha"/>
         /// at the oldest — the default (0) fades all the way to invisible.
         /// </summary>
-        /// <remarks>Cost is proportional to <see cref="Count"/> (one <c>DrawLine</c> call per segment) — keep <see cref="Capacity"/> no bigger than the trail actually needs to look right, especially with many trails on screen.</remarks>
+        /// <remarks>Cost is proportional to <see cref="Count"/> (one <c>DrawLine</c> call per segment).</remarks>
         public void Draw(Primitive2DBatch batch, Color color, float thickness = 2f, float fadeToAlpha = 0f)
         {
             if (Count < 2) return;

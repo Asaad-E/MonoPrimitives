@@ -84,7 +84,7 @@ namespace MonoPrimitives.Primitives3D
             return v * (maxLength / MathF.Sqrt(lenSq));
         }
 
-        /// <summary>Removes the component of <paramref name="v"/> along <paramref name="normal"/>, keeping only the tangential part — the direction to keep moving along a wall/floor/slope instead of stopping dead against it.</summary>
+        /// <summary>Removes the component of <paramref name="v"/> along <paramref name="normal"/>, keeping only the tangential part.</summary>
         /// <remarks><paramref name="normal"/> must already be unit length (not renormalized here, same convention as <see cref="Vector3.Reflect(Vector3,Vector3)"/>). Different from <see cref="Vector3.Reflect(Vector3,Vector3)"/>: <c>Reflect</c> flips the normal component (a bounce), <c>Slide</c> drops it entirely (a slide).</remarks>
         public static Vector3 Slide(this Vector3 v, Vector3 normal) => v - normal * v.Dot(normal);
 

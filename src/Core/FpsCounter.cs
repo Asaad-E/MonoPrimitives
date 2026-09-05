@@ -58,7 +58,7 @@ namespace MonoPrimitives
         }
 
         /// <summary>Average frame time in milliseconds over the window: total time divided by total frames. 0 before the first <see cref="Update(GameTime)"/> call.</summary>
-        /// <remarks>Same underlying average as <see cref="AverageFps"/>, read before the reciprocal — easier to compare against a fixed per-frame time budget than eyeballing fps deltas.</remarks>
+        /// <remarks>Same underlying average as <see cref="AverageFps"/>, read before the reciprocal.</remarks>
         public float AverageFrameTimeMs
         {
             get

@@ -18,7 +18,6 @@ namespace MonoPrimitives
         public static float LerpAngle(float a, float b, float t) => a + DeltaAngle(a, b) * t;
 
         /// <summary>Bounces <paramref name="t"/> back and forth between 0 and <paramref name="length"/> as it increases, instead of wrapping like <see cref="MathHelper.WrapAngle"/> does for angles.</summary>
-        /// <remarks>For a value that should oscillate, driven by an ever-increasing time/distance input.</remarks>
         public static float PingPong(float t, float length)
         {
             if (length <= 0f) return 0f;
