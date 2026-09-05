@@ -31,6 +31,36 @@ protected override void Draw(GameTime gameTime)
 
 Call it after your scene is fully drawn (typically near the end of `Draw`, before `base.Draw`) — it captures whatever the back buffer currently holds, so anything drawn after the call won't be in the saved image.
 
+## Just want the texture, not a file
+
+Use `Capture(device)` instead when the captured frame is only needed in memory — e.g. freezing the last frame behind a pause menu, instead of dimming it live every frame:
+
+```csharp
+private Texture2D? _pauseBackground;
+
+private void EnterPauseMenu()
+{
+    _pauseBackground?.Dispose(); // captured on the previous pause, if any
+    _pauseBackground = ScreenshotUtil.Capture(GraphicsDevice);
+}
+
+protected override void Draw(GameTime gameTime)
+{
+    if (_paused && _pauseBackground != null)
+    {
+        _spriteBatch.Begin();
+        _spriteBatch.Draw(_pauseBackground, Vector2.Zero, Color.White * 0.5f); // dimmed still frame
+        _spriteBatch.End();
+        DrawPauseMenu();
+        return;
+    }
+
+    // ... your normal drawing ...
+}
+```
+
+You own the returned `Texture2D` — dispose it once you're done (here, replaced on the next pause rather than every frame).
+
 ## API
 
 | Member | What it does |
