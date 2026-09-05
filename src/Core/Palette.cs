@@ -86,7 +86,7 @@ namespace MonoPrimitives
             Turquoise, Emerald, PeterRiver, Amethyst, WetAsphalt, Sunflower, Carrot, Alizarin, Clouds, Concrete
         };
 
-        /// <summary>A color from <see cref="Primary"/>, cycling by index — deterministic (same index always gives the same color), e.g. one color per simulation category.</summary>
+        /// <summary>A color from <see cref="Primary"/>, cycling by index — deterministic, same index always gives the same color.</summary>
         public static Color Cycle(int index)
         {
             int i = index % Primary.Length;

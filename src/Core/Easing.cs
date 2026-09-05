@@ -115,7 +115,7 @@ namespace MonoPrimitives
 
         /// <summary>Quadratic ease-in: slow start, accelerating toward the end.</summary>
         public static float QuadIn(float t) => t * t;
-        /// <summary>Quadratic ease-out: fast start, decelerating into the end — the everyday default for "settle into place."</summary>
+        /// <summary>Quadratic ease-out: fast start, decelerating into the end.</summary>
         public static float QuadOut(float t) => t * (2f - t);
         /// <summary>Quadratic ease-in-out: slow start and end, faster through the middle.</summary>
         public static float QuadInOut(float t) => t < 0.5f ? 2f * t * t : -1f + (4f - 2f * t) * t;
@@ -168,7 +168,7 @@ namespace MonoPrimitives
         public static float SineIn(float t) => 1f - MathF.Cos(t * MathF.PI * 0.5f);
         /// <summary>Sine ease-out: a gentle, smooth slow finish — softer than <see cref="QuadOut"/>.</summary>
         public static float SineOut(float t) => MathF.Sin(t * MathF.PI * 0.5f);
-        /// <summary>Sine ease-in-out: the gentlest, smoothest curve here — good as a default when you want easing to be felt rather than noticed.</summary>
+        /// <summary>Sine ease-in-out: the gentlest, smoothest curve here.</summary>
         public static float SineInOut(float t) => -(MathF.Cos(MathF.PI * t) - 1f) * 0.5f;
 
         /// <summary>Eases in with a slight pull backward first — a small "wind-up" before moving.</summary>
@@ -178,7 +178,7 @@ namespace MonoPrimitives
             return c3 * t * t * t - c1 * t * t;
         }
 
-        /// <summary>Eases out with a slight overshoot past the target before settling — a common "pop" for something appearing.</summary>
+        /// <summary>Eases out with a slight overshoot past the target before settling.</summary>
         public static float BackOut(float t)
         {
             const float c1 = 1.70158f, c3 = c1 + 1f;
@@ -196,10 +196,10 @@ namespace MonoPrimitives
             return (f * f * ((c2 + 1f) * f + c2) + 2f) * 0.5f;
         }
 
-        /// <summary>Starts with a few decaying bounces before committing to the motion — the mirror image of <see cref="BounceOut"/>, good for something launching off.</summary>
+        /// <summary>Starts with a few decaying bounces before committing to the motion — the mirror image of <see cref="BounceOut"/>.</summary>
         public static float BounceIn(float t) => 1f - BounceOut(1f - t);
 
-        /// <summary>Settles with a few decaying bounces — good for something landing.</summary>
+        /// <summary>Settles with a few decaying bounces.</summary>
         public static float BounceOut(float t)
         {
             const float n1 = 7.5625f, d1 = 2.75f;
@@ -214,7 +214,7 @@ namespace MonoPrimitives
         public static float BounceInOut(float t)
             => t < 0.5f ? (1f - BounceOut(1f - 2f * t)) * 0.5f : (1f + BounceOut(2f * t - 1f)) * 0.5f;
 
-        /// <summary>Overshoots and oscillates before committing to the motion, like a spring pulled taut — good for something launching off with a bit of character.</summary>
+        /// <summary>Overshoots and oscillates before committing to the motion, like a spring pulled taut.</summary>
         public static float ElasticIn(float t)
         {
             if (t <= 0f) return 0f;
@@ -223,7 +223,7 @@ namespace MonoPrimitives
             return -MathF.Pow(2f, 10f * t - 10f) * MathF.Sin((t * 10f - 10.75f) * c4);
         }
 
-        /// <summary>Overshoots and oscillates before settling, like a spring — good for something snapping into place with a bit of character.</summary>
+        /// <summary>Overshoots and oscillates before settling, like a spring.</summary>
         public static float ElasticOut(float t)
         {
             if (t <= 0f) return 0f;

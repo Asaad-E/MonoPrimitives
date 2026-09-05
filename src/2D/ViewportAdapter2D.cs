@@ -42,7 +42,7 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>Matrix mapping virtual coordinates to actual window pixels.</summary>
         public virtual Matrix GetScaleMatrix() => Matrix.CreateScale(Scale.X, Scale.Y, 1f) * Matrix.CreateTranslation(Offset.X, Offset.Y, 0f);
 
-        /// <summary>Converts an actual-window position (e.g. raw mouse coordinates) into virtual/game coordinates.</summary>
+        /// <summary>Converts an actual-window position into virtual/game coordinates.</summary>
         public Vector2 PointToVirtual(Vector2 windowPosition) => Vector2.Transform(windowPosition, Matrix.Invert(GetScaleMatrix()));
 
         /// <summary>Converts a virtual/game position into actual-window coordinates.</summary>

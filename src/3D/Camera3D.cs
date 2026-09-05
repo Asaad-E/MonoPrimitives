@@ -377,7 +377,7 @@ namespace MonoPrimitives.Primitives3D
             return vp.Unproject(new Vector3(screenPosition, depth), GetProjectionMatrix(vp.AspectRatio), GetViewMatrix(), Matrix.Identity);
         }
 
-        /// <summary>Builds a picking ray from a screen position (e.g. the mouse cursor).</summary>
+        /// <summary>Builds a picking ray from a screen position.</summary>
         /// <param name="screenPosition">Screen-space position (pixels, origin top-left).</param>
         /// <param name="viewport">Explicit viewport to unproject with; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
         public Ray GetScreenToWorldRay(Vector2 screenPosition, Viewport? viewport = null)
@@ -394,10 +394,10 @@ namespace MonoPrimitives.Primitives3D
             return new Ray(nearPoint, direction);
         }
 
-        /// <summary>Builds the view frustum, useful for culling before submitting primitives.</summary>
+        /// <summary>Builds the view frustum.</summary>
         public BoundingFrustum GetFrustum(float aspectRatio) => new(GetViewProjectionMatrix(aspectRatio));
 
-        /// <summary>True if <paramref name="sphere"/> is at least partially inside the view frustum — a cheap "should I bother drawing this" check before drawing many objects.</summary>
+        /// <summary>True if <paramref name="sphere"/> is at least partially inside the view frustum.</summary>
         /// <param name="sphere">World-space bounding sphere to test.</param>
         /// <param name="viewport">Explicit viewport to derive the aspect ratio from; omit to use <see cref="ViewportAdapter"/> instead (throws if neither is available).</param>
         public bool IsVisible(BoundingSphere sphere, Viewport? viewport = null) => GetFrustum(ResolveViewport(viewport).AspectRatio).Intersects(sphere);
@@ -594,7 +594,7 @@ namespace MonoPrimitives.Primitives3D
         /// <inheritdoc cref="UpdateWithInput(PrimitiveInput, float)"/>
         public void UpdateWithInput(PrimitiveInput input, GameTime gameTime) => UpdateWithInput(input, (float)gameTime.ElapsedGameTime.TotalSeconds);
 
-        /// <summary>Resets the head-bobbing phase, useful when respawning the player.</summary>
+        /// <summary>Resets the head-bobbing phase.</summary>
         public void ResetHeadBobbing() => _stepPhase = 0f;
 
         // =====================================================================
@@ -633,7 +633,7 @@ namespace MonoPrimitives.Primitives3D
         /// <summary>How fast the underlying Perlin noise is sampled while shaking is active — higher reads as a faster, more frantic shake; lower as a slower sway.</summary>
         public float ShakeNoiseSpeed { get; set; } = 20f;
 
-        /// <summary>Bumps <see cref="Trauma"/> up by <paramref name="amount"/>, clamped to [0,1] — call this on a hit/impact/explosion instead of setting <see cref="Trauma"/> directly, so stacking several hits in one frame can't overshoot.</summary>
+        /// <summary>Bumps <see cref="Trauma"/> up by <paramref name="amount"/>, clamped to [0,1] — prefer this over setting <see cref="Trauma"/> directly, so stacking several increases in one frame can't overshoot.</summary>
         public void AddTrauma(float amount) => Trauma = Math.Clamp(Trauma + MathF.Max(0f, amount), 0f, 1f);
 
         /// <summary>Stops any shake immediately.</summary>

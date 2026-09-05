@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 
 namespace MonoPrimitives.Primitives2D
 {
-    /// <summary>A fixed-capacity history of recent positions, drawn as a line that fades out toward the oldest point — a moving particle/agent's own trail.</summary>
+    /// <summary>A fixed-capacity history of recent positions, drawn as a line that fades out toward the oldest point.</summary>
     /// <remarks>Call <see cref="Add"/> once per frame with the thing's current position, then <see cref="Draw"/> it. <see cref="Add"/> never allocates once warmed up.</remarks>
     public sealed class Trail2D
     {

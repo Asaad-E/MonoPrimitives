@@ -14,7 +14,7 @@ namespace MonoPrimitives
         /// <summary>How many recent frames the average is computed over.</summary>
         public int SampleCount => _frameTimes.Length;
 
-        /// <param name="sampleCount">Window size for the rolling average — smaller reacts faster to real framerate changes, larger reads more stable. 60 (one second at 60 FPS) is a reasonable default for an on-screen counter.</param>
+        /// <param name="sampleCount">Window size for the rolling average — smaller reacts faster to real framerate changes, larger reads more stable.</param>
         public FpsCounter(int sampleCount = 60)
         {
             if (sampleCount <= 0) throw new ArgumentOutOfRangeException(nameof(sampleCount), "sampleCount must be positive.");
@@ -45,7 +45,7 @@ namespace MonoPrimitives
             }
         }
 
-        /// <summary>FPS implied by the single most recent frame alone — noisier than <see cref="AverageFps"/>, useful for spotting an isolated spike/stall.</summary>
+        /// <summary>FPS implied by the single most recent frame alone — noisier than <see cref="AverageFps"/>.</summary>
         public float CurrentFps
         {
             get
@@ -70,7 +70,7 @@ namespace MonoPrimitives
             }
         }
 
-        /// <summary>Frame time in milliseconds for the single most recent frame alone — noisier than <see cref="AverageFrameTimeMs"/>, useful for spotting an isolated spike/stall.</summary>
+        /// <summary>Frame time in milliseconds for the single most recent frame alone — noisier than <see cref="AverageFrameTimeMs"/>.</summary>
         public float CurrentFrameTimeMs
         {
             get

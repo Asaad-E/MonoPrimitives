@@ -23,8 +23,8 @@ namespace MonoPrimitives
         public int CountAll => CountActive + CountInactive;
 
         /// <param name="factory">Creates a brand-new <typeparamref name="T"/> — called only when the pool is empty and <see cref="Get"/> needs one.</param>
-        /// <param name="onGet">Optional: runs on an instance right before <see cref="Get"/> hands it back — reset it to a usable state here (position, health, whatever makes a reused <typeparamref name="T"/> look "fresh" to its caller).</param>
-        /// <param name="onReturn">Optional: runs on an instance right when <see cref="Return"/> receives it — release anything it shouldn't keep holding onto while sitting in the pool (e.g. clearing a reference to something else it pointed at).</param>
+        /// <param name="onGet">Optional: runs on an instance right before <see cref="Get"/> hands it back — reset it to a usable state here.</param>
+        /// <param name="onReturn">Optional: runs on an instance right when <see cref="Return"/> receives it — release anything it shouldn't keep holding onto while sitting in the pool.</param>
         /// <param name="initialCapacity">Pre-fills the pool with this many instances up front (each built via <paramref name="factory"/>), so the first burst of real <see cref="Get"/> calls doesn't have to construct anything.</param>
         /// <param name="maxSize">Caps how many instances <see cref="Return"/> actually keeps — a <see cref="Return"/> past this cap just lets that instance fall to the GC instead of growing the pool forever. <see cref="int.MaxValue"/> (the default) means unbounded.</param>
         public ObjectPool(Func<T> factory, Action<T>? onGet = null, Action<T>? onReturn = null, int initialCapacity = 0, int maxSize = int.MaxValue)

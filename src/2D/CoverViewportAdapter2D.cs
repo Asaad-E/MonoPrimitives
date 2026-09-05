@@ -11,7 +11,7 @@ namespace MonoPrimitives.Primitives2D
     /// letterbox/pillarbox bars, but whatever overflows the window on one axis is cropped instead
     /// of shown.
     /// </summary>
-    /// <remarks>The inverse tradeoff from <see cref="BoxingViewportAdapter2D"/> (which fits everything inside the window, with bars on the short axis instead of cropping) — matches CSS's <c>object-fit: cover</c>. Use <see cref="ScalingViewportAdapter2D"/> instead if distorting the aspect ratio is preferable to cropping.</remarks>
+    /// <remarks>The inverse tradeoff from <see cref="BoxingViewportAdapter2D"/> (which fits everything inside the window, with bars on the short axis instead of cropping). Use <see cref="ScalingViewportAdapter2D"/> instead if distorting the aspect ratio is preferable to cropping.</remarks>
     public sealed class CoverViewportAdapter2D : ViewportAdapter2D
     {
         /// <inheritdoc/>

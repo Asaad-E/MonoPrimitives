@@ -14,7 +14,7 @@ Follow these rather than re-deriving a convention or introducing an inconsistent
 
 - Rotation is **radians**, pivots on the shape's own center unless an explicit origin is given.
 - Exception: `startAngle`/`endAngle` on `DrawCircleSector`/`DrawRing` are normalized **turns** `[0,1]`, documented at each call site.
-- `thickness` defaults to `1f` on `Border*`/`Draw*`. `LineJoin.Miter` is the default join (cheapest); `Round`/`Bevel` cost more triangles.
+- `thickness` defaults to `1f` on 2D's `Border*`/`Draw*`; 3D's default to a `<= 0` sentinel meaning `DefaultLineThickness` (see line above). `LineJoin.Miter` is the default join (cheapest); `Round`/`Bevel` cost more triangles.
 
 ## Structure
 

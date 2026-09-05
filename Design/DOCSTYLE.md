@@ -27,6 +27,8 @@ Rationale, benchmarks, comparisons to other classes/libraries, "why we built it 
 
 Grade **every clause independently**, not the block's overall length — a single short sentence can still smuggle in a comparison to a sibling class, an exhaustive member list, or a usage-example snippet, and reads as "fine" if you only check line count.
 
+**A single illustrative example is not exempt.** `"(e.g. a debug overlay)"` and `"a loot table, a spawn point, a dialogue line"` are the same violation at different counts — the test is never "is this a list," it's "does this state a fact about behavior, or does it illustrate when/why you'd call this." A `(e.g. ...)` clause that names a scenario instead of a behavior always fails that test, whether it names one scenario or five.
+
 - Never name "raylib" or another design inspiration (Unity, Godot, MonoGame.Extended, etc.) in a `///` comment or `Guide/*.md` file. A plain `//` implementation comment may, if genuinely useful. Exception: root `README.md`'s "Inspiration" section is deliberate and stays as-is.
 - Don't compare one class/method to a sibling's implementation approach inside `///` ("mirroring `FastTexture`'s own below-MonoGame approach") — state this method's own behavior only.
 - Don't narrate a verification/benchmark story ("verified by round-tripping 20000 random angle triples...", "observed once not to clamp... no reliable repro found") — state the resulting behavior/guarantee, full stop. The story goes in `DECISIONS.md` if worth keeping.

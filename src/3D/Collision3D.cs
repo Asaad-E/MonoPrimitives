@@ -113,7 +113,7 @@ namespace MonoPrimitives.Primitives3D
             return new RayCollision3D(true, d.Value, point, BoxFaceNormal(point, box));
         }
 
-        /// <summary>Ray vs infinite plane (defined by a point on it and its normal) — ground planes, mirrors, cut planes.</summary>
+        /// <summary>Ray vs infinite plane, defined by a point on it and its normal.</summary>
         public static RayCollision3D GetRayCollisionPlane(Ray ray, Vector3 planePoint, Vector3 planeNormal)
         {
             Vector3 n = SafeNormalize(planeNormal, Vector3.Up);

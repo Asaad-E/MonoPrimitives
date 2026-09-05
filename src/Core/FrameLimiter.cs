@@ -35,8 +35,8 @@ namespace MonoPrimitives
         /// <summary>
         /// Upper bound <see cref="BeginFrame"/> clamps <see cref="FrameTime"/> to, in seconds.
         /// Editable at any time. <c>0</c> (default) disables clamping — a frame that actually took
-        /// longer (e.g. after a breakpoint, a GC pause, or an asset load) would otherwise report
-        /// that full duration, which can make a per-frame simulation take one huge step.
+        /// longer would otherwise report that full duration, which can make a per-frame simulation
+        /// take one huge step.
         /// </summary>
         public float MaxFrameTime { get; set; }
 
@@ -47,7 +47,7 @@ namespace MonoPrimitives
         /// </summary>
         public float FrameTime { get; private set; }
 
-        /// <summary>Time elapsed since the current frame's <see cref="BeginFrame"/> — read mid-frame (e.g. for a debug overlay) without waiting for <see cref="EndFrame"/>.</summary>
+        /// <summary>Time elapsed since the current frame's <see cref="BeginFrame"/> — read mid-frame without waiting for <see cref="EndFrame"/>.</summary>
         /// <remarks>Read-only on purpose: the internal <see cref="Stopwatch"/> is otherwise unreachable, so nothing outside this class can <c>Stop()</c>/<c>Reset()</c> it and break <see cref="EndFrame"/>'s own pacing.</remarks>
         public TimeSpan Elapsed => _stopwatch.Elapsed;
 

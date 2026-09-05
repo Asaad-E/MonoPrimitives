@@ -206,7 +206,7 @@ namespace MonoPrimitives
         }
 
         /// <summary>Hides the window without closing it. No-op if <see cref="IsAvailable"/> is false.</summary>
-        /// <remarks>For doing real setup work (spawning a large simulation's initial state, say) before the first frame is ever shown, instead of a blank/flashing window during that time.</remarks>
+        /// <remarks>For doing real setup work before the first frame is ever shown, instead of a blank/flashing window during that time.</remarks>
         public static void HideWindow(GameWindow window)
         {
             IntPtr handle = RequireHandle(window);

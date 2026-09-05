@@ -137,7 +137,7 @@ namespace MonoPrimitives.Primitives2D
                  * Matrix.CreateTranslation(Offset.X + shakeOffset.X, Offset.Y + shakeOffset.Y, 0f);
         }
 
-        /// <summary>Converts a screen-space position (e.g. mouse coordinates) to world space.</summary>
+        /// <summary>Converts a screen-space position to world space.</summary>
         /// <remarks>
         /// When <see cref="ViewportAdapter"/> is set, <paramref name="screenPosition"/> is real
         /// window pixels — mapped through the adapter into its virtual space first. Without one,
@@ -182,7 +182,7 @@ namespace MonoPrimitives.Primitives2D
             return new RectangleF(min.X, min.Y, max.X - min.X, max.Y - min.Y);
         }
 
-        /// <summary>True if <paramref name="worldPoint"/> is inside the currently visible world bounds — a cheap "should I bother drawing this" check before drawing many objects.</summary>
+        /// <summary>True if <paramref name="worldPoint"/> is inside the currently visible world bounds.</summary>
         /// <param name="worldPoint">World-space point to test.</param>
         /// <param name="device">Same fallback rule as <see cref="GetVisibleWorldBounds(GraphicsDevice?)"/>.</param>
         public bool IsVisible(Vector2 worldPoint, GraphicsDevice? device = null) => GetVisibleWorldBoundsF(device).Contains(worldPoint);
@@ -271,7 +271,7 @@ namespace MonoPrimitives.Primitives2D
             ClampToBounds();
         }
 
-        /// <summary>Same as <see cref="FollowTarget(Vector2,float)"/>, but with an axis-independent rectangular deadzone instead of <see cref="FollowPadding"/>'s circular one — the "camera box" technique (e.g. looser horizontal than vertical, common in platformers).</summary>
+        /// <summary>Same as <see cref="FollowTarget(Vector2,float)"/>, but with an axis-independent rectangular deadzone instead of <see cref="FollowPadding"/>'s circular one — the "camera box" technique.</summary>
         /// <param name="desiredTarget">World point the camera should end up looking at once outside the box.</param>
         /// <param name="deltaSeconds">Elapsed time this frame.</param>
         /// <param name="deadZoneHalfSize">Half-width/height (world units) of the box around <see cref="Target"/> that <paramref name="desiredTarget"/> can move within before the camera reacts, per axis independently.</param>
@@ -480,7 +480,7 @@ namespace MonoPrimitives.Primitives2D
         /// <summary>How fast the underlying Perlin noise is sampled while shaking is active — higher reads as a faster, more frantic shake; lower as a slower sway.</summary>
         public float ShakeNoiseSpeed { get; set; } = 20f;
 
-        /// <summary>Bumps <see cref="Trauma"/> up by <paramref name="amount"/>, clamped to [0,1] — call this on a hit/impact/explosion instead of setting <see cref="Trauma"/> directly, so stacking several hits in one frame can't overshoot.</summary>
+        /// <summary>Bumps <see cref="Trauma"/> up by <paramref name="amount"/>, clamped to [0,1] — prefer this over setting <see cref="Trauma"/> directly, so stacking several increases in one frame can't overshoot.</summary>
         public void AddTrauma(float amount) => Trauma = Math.Clamp(Trauma + MathF.Max(0f, amount), 0f, 1f);
 
         /// <summary>Stops any shake immediately.</summary>
@@ -493,7 +493,7 @@ namespace MonoPrimitives.Primitives2D
             _shakeTime += deltaSeconds * ShakeNoiseSpeed;
         }
 
-        /// <summary>The current frame's shake offset/rotation — already folded into <see cref="GetTransformMatrix"/>; exposed separately in case you want to apply it to something else (e.g. a UI element that should shake in sync).</summary>
+        /// <summary>The current frame's shake offset/rotation — already folded into <see cref="GetTransformMatrix"/>; exposed separately in case you want to apply it to something else.</summary>
         public (Vector2 Offset, float Rotation) GetShakeOffset()
         {
             if (Trauma <= 0f) return (Vector2.Zero, 0f);

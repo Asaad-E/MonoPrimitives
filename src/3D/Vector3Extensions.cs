@@ -26,9 +26,7 @@ namespace MonoPrimitives.Primitives3D
         /// <paramref name="axis"/> need not be pre-normalized. Both <paramref name="from"/> and
         /// <paramref name="to"/> are measured as their projection onto the plane perpendicular to
         /// <paramref name="axis"/> first, so a component of either vector that runs along
-        /// <paramref name="axis"/> itself doesn't skew the result — e.g. "how much yaw to face that
-        /// point" with <paramref name="axis"/> straight up stays correct even if the point is above
-        /// or below eye level.
+        /// <paramref name="axis"/> itself doesn't skew the result.
         /// </remarks>
         public static float AngleToSigned(this Vector3 from, Vector3 to, Vector3 axis)
         {

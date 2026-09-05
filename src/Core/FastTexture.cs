@@ -240,9 +240,9 @@ namespace MonoPrimitives
         }
 
         /// <summary>
-        /// Uploads from an unmanaged pointer -- for data you already hold natively (decoders,
-        /// native buffers, memory-mapped files) with no managed copy in between.
-        /// <paramref name="sizeInBytes"/> is validated against the full texture size.
+        /// Uploads from an unmanaged pointer -- for data you already hold natively, with no
+        /// managed copy in between. <paramref name="sizeInBytes"/> is validated against the full
+        /// texture size.
         /// </summary>
         public void Update(IntPtr data, int sizeInBytes)
         {

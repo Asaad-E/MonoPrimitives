@@ -46,7 +46,7 @@ namespace MonoPrimitives
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float NextLogNormal(float mean = 0f, float stdDev = 1f) => MathF.Exp(NextGaussian(mean, stdDev));
 
-        /// <summary>Gaussian-scattered point around <paramref name="mean"/> — each axis sampled independently via <see cref="NextGaussian"/>. Useful for jitter/scatter around a spawn point (denser near the center than a uniform disc).</summary>
+        /// <summary>Gaussian-scattered point around <paramref name="mean"/> — each axis sampled independently via <see cref="NextGaussian"/>, denser near the center than a uniform disc.</summary>
         public Vector2 NextGaussianVector2(Vector2 mean = default, float stdDev = 1f) =>
             new Vector2(NextGaussian(mean.X, stdDev), NextGaussian(mean.Y, stdDev));
 

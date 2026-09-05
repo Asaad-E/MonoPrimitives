@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace MonoPrimitives.Primitives2D
 {
-    /// <summary>Polygon geometry helpers <see cref="Primitive2DBatch"/> already used internally to fill arbitrary polygons, exposed for building your own mesh/collision/nav data.</summary>
+    /// <summary>Polygon geometry helpers, also used internally by <see cref="Primitive2DBatch"/> to fill arbitrary polygons.</summary>
     public static class PolygonUtil
     {
         // Same budget/rationale as Primitive2DBatch's own stackalloc-vs-heap threshold.

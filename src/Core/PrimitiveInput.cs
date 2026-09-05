@@ -180,7 +180,7 @@ namespace MonoPrimitives
 
         private static readonly Keys[] AllKeys = (Keys[])Enum.GetValues(typeof(Keys));
 
-        /// <summary>True on the frame any key went from up to down — for a "press any key to continue" prompt, one call instead of listing every key yourself.</summary>
+        /// <summary>True on the frame any key went from up to down.</summary>
         public bool IsAnyKeyPressed()
         {
             foreach (Keys key in AllKeys)
@@ -254,7 +254,7 @@ namespace MonoPrimitives
         public bool IsDragging(MouseButton button, float threshold = 4f)
             => IsMouseButtonDown(button) && DragDelta(button).LengthSquared() > threshold * threshold;
 
-        /// <summary>Point-in-rectangle test against <see cref="MousePosition"/> — hit-testing a UI panel or button without pulling in a separate UI library.</summary>
+        /// <summary>Point-in-rectangle test against <see cref="MousePosition"/>.</summary>
         public bool IsMouseOver(Rectangle screenRect) => screenRect.Contains(new Point(_mouse.X, _mouse.Y));
 
         /// <summary>Moves the OS cursor to an exact screen position.</summary>
@@ -366,7 +366,7 @@ namespace MonoPrimitives
             Buttons.DPadUp, Buttons.DPadDown, Buttons.DPadLeft, Buttons.DPadRight,
         };
 
-        /// <summary>True on the frame any face/shoulder/stick-click/D-pad/Start/Back button on <paramref name="player"/>'s gamepad went from up to down — for a "press any button to join" lobby flow, one call instead of listing every button yourself.</summary>
+        /// <summary>True on the frame any face/shoulder/stick-click/D-pad/Start/Back button on <paramref name="player"/>'s gamepad went from up to down.</summary>
         /// <remarks>See <see cref="DigitalButtons"/>'s comment for why stick/trigger movement doesn't count.</remarks>
         public bool IsAnyButtonPressed(int player = 0)
         {
@@ -388,7 +388,7 @@ namespace MonoPrimitives
             return v;
         }
 
-        /// <summary>A 2D direction from four keys in one call — WASD/arrow-style movement without writing out four separate <c>IsKeyDown</c> checks yourself.</summary>
+        /// <summary>A 2D direction from four keys in one call — WASD/arrow-style movement.</summary>
         /// <remarks><paramref name="normalize"/> (default true) keeps diagonal movement the same speed as axis-aligned movement; pass false for the raw, un-normalized per-axis [-1,1] pair instead.</remarks>
         public Vector2 GetVector2(Keys negativeX, Keys positiveX, Keys negativeY, Keys positiveY, bool normalize = true)
         {
@@ -403,7 +403,7 @@ namespace MonoPrimitives
         /// <summary>Arrow-key movement direction — same shape and Y convention as <see cref="GetWASD"/>.</summary>
         public Vector2 GetArrowKeys(bool normalize = true) => GetVector2(Keys.Left, Keys.Right, Keys.Up, Keys.Down, normalize);
 
-        /// <summary>Combined movement direction from every source at once — WASD, arrow keys, the left thumbstick (deadzoned), and the D-pad — so you don't have to pick one input method or merge them by hand.</summary>
+        /// <summary>Combined movement direction from every source at once — WASD, arrow keys, the left thumbstick (deadzoned), and the D-pad.</summary>
         /// <remarks>Every source shares this library's Y-down convention; the thumbstick's own raw Y (hardware convention: up is positive) is flipped before summing to match. <paramref name="normalize"/> caps the combined magnitude at 1 without flattening a slower analog push into a full-speed digital one — same behavior as <see cref="GetVector2"/>.</remarks>
         public Vector2 GetInputDirection(int player = 0, bool normalize = true)
         {

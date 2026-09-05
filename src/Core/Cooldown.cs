@@ -18,7 +18,7 @@ namespace MonoPrimitives
         /// <summary>Seconds left before <see cref="IsReady"/> — never negative, even if the last <see cref="Update(float)"/> overshot past zero.</summary>
         public readonly float Remaining => MathF.Max(_remaining, 0f);
 
-        /// <summary>How far through the countdown this is: <c>0</c> just after a <see cref="Reset"/>/<see cref="TryUse"/>, <c>1</c> once <see cref="IsReady"/> — a cooldown bar's fill amount. <c>1</c> if <see cref="Duration"/> is zero or negative (nothing to wait through).</summary>
+        /// <summary>How far through the countdown this is: <c>0</c> just after a <see cref="Reset"/>/<see cref="TryUse"/>, <c>1</c> once <see cref="IsReady"/>. <c>1</c> if <see cref="Duration"/> is zero or negative.</summary>
         public readonly float Progress => Duration > 0f ? 1f - Remaining / Duration : 1f;
 
         /// <summary>Creates a cooldown of <paramref name="duration"/> seconds, starting already <see cref="IsReady"/>.</summary>
