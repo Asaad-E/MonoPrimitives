@@ -7,7 +7,7 @@ namespace MonoPrimitives
     /// <summary>
     /// Procedural <see cref="Texture2D"/> generation (solid/gradient/checkerboard/from <see cref="Noise"/>)
     /// plus transform utilities (resize/crop/flip/tint/combine) that MonoGame's own <see cref="Texture2D"/>
-    /// doesn't provide -- the CPU-pixel-buffer half of what raylib's <c>Image*</c> functions cover.
+    /// doesn't provide.
     /// </summary>
     /// <remarks>
     /// Generation and the CPU-side transforms (<see cref="Crop"/>/<see cref="FlipHorizontal"/>/

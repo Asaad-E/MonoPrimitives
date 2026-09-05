@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning follows [SemVer](https://semver.org/), with the pre-1.0 caveat that the API can still change between minor versions — see [ROADMAP.md](Design/ROADMAP.md).
 
+## [0.9.2] - 2026-09-01
+
+### Changed
+- Cut remaining XML doc-comment violations across `src/` (design-inspiration name-drops, sibling-class comparisons, verification/benchmark narratives, rhetorical "rather than silently guessing"-style filler) down to the IDE-tooltip-only standard — see the new [`Design/DOCSTYLE.md`](Design/DOCSTYLE.md). No functional change.
+
 ## [0.9.1] - 2026-09-01
 
 ### Added

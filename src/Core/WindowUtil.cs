@@ -38,9 +38,7 @@ namespace MonoPrimitives
     /// </summary>
     /// <remarks>
     /// The window/monitor/clipboard methods are Desktop GL only, resolved directly from the same
-    /// SDL2 library MonoGame's DesktopGL backend already loads (mirroring <see cref="FastTexture"/>'s
-    /// own below-MonoGame approach for the same reason: MonoGame's public API doesn't expose these,
-    /// even though the platform underneath already can). Check <see cref="IsAvailable"/>/<see cref="Diagnostics"/>
+    /// SDL2 library MonoGame's DesktopGL backend already loads. Check <see cref="IsAvailable"/>/<see cref="Diagnostics"/>
     /// once at startup -- action methods (Minimize/Maximize/Restore/SetWindowOpacity/SetWindowIcon/SetClipboardText)
     /// silently no-op when unavailable; query methods (GetMonitorInfo, GetClipboardText, etc.) throw
     /// <see cref="InvalidOperationException"/>, since there's no honest default value to return instead.
@@ -186,7 +184,7 @@ namespace MonoPrimitives
         }
 
         /// <summary>Maximizes the window. No-op if <see cref="IsAvailable"/> is false.</summary>
-        /// <remarks>On Windows, this silently does nothing unless <see cref="GameWindow.AllowUserResizing"/> is true -- verified directly: the OS ignores a maximize request for a window that was never given a maximize/thick-frame style in the first place, the same reason its title bar has no maximize button. <see cref="MinimizeWindow"/>/<see cref="RestoreWindow"/> have no such restriction.</remarks>
+        /// <remarks>On Windows, this silently does nothing unless <see cref="GameWindow.AllowUserResizing"/> is true. <see cref="MinimizeWindow"/>/<see cref="RestoreWindow"/> have no such restriction.</remarks>
         public static void MaximizeWindow(GameWindow window)
         {
             IntPtr handle = RequireHandle(window);
@@ -237,7 +235,7 @@ namespace MonoPrimitives
         }
 
         /// <summary>Sets the smallest size the window can be resized to. <c>0</c> on an axis means no minimum on that axis. No-op if <see cref="IsAvailable"/> is false.</summary>
-        /// <remarks>A hint to the OS/window manager, not a hard guarantee -- observed reliably honored (including on a non-resizable window, unlike <see cref="MaximizeWindow"/>) across most tested sequences, but also observed once not to clamp a same-session programmatic resize after several other window-state changes, with no reliable repro found. Don't depend on this for correctness, only for "usually keeps the window from getting uncomfortably small."</remarks>
+        /// <remarks>A hint to the OS/window manager, not a hard guarantee -- don't depend on this for correctness, only for "usually keeps the window from getting uncomfortably small."</remarks>
         public static void SetWindowMinSize(GameWindow window, int width, int height)
         {
             IntPtr handle = RequireHandle(window);
@@ -327,7 +325,7 @@ namespace MonoPrimitives
             return _getNumVideoDisplays!();
         }
 
-        /// <summary>The monitor containing most of the window, matching raylib's <c>GetCurrentMonitor</c>.</summary>
+        /// <summary>The monitor containing most of the window.</summary>
         /// <exception cref="InvalidOperationException"><see cref="IsAvailable"/> is false.</exception>
         public static int GetCurrentMonitorIndex(GameWindow window)
         {
@@ -338,7 +336,7 @@ namespace MonoPrimitives
         }
 
         /// <summary>The window's DPI scale factor (1.0 = standard 96 DPI, 2.0 = double/"retina"-style scaling) -- for sizing UI/text correctly on a high-DPI display.</summary>
-        /// <remarks>Returns <see cref="Vector2.One"/> (assume standard, unscaled DPI) if unsupported, rather than throwing -- same fallback shape as <see cref="GetWindowOpacity"/>.</remarks>
+        /// <remarks>Returns <see cref="Vector2.One"/> (assume standard, unscaled DPI) if unsupported, rather than throwing.</remarks>
         public static Vector2 GetWindowScaleDPI(GameWindow window)
         {
             IntPtr handle = RequireHandle(window);

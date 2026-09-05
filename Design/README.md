@@ -5,10 +5,11 @@ For a fresh session (AI or human) to pick up this project without reading the wh
 1. **[PROJECT.md](PROJECT.md)** — what this is, what it isn't.
 2. **[ARCHITECTURE.md](ARCHITECTURE.md)** — file-by-file map + non-obvious machinery.
 3. **[CODESTYLE.md](CODESTYLE.md)** — established conventions.
-4. **[DECISIONS.md](DECISIONS.md)** — the *why* behind non-obvious choices.
-5. **[ROADMAP.md](ROADMAP.md)** — known gaps, deliberate deferrals.
+4. **[DOCSTYLE.md](DOCSTYLE.md)** — `///` XML doc comment rules, strict and enforced on every touch.
+5. **[DECISIONS.md](DECISIONS.md)** — the *why* behind non-obvious choices.
+6. **[ROADMAP.md](ROADMAP.md)** — known gaps, deliberate deferrals.
 
-These five are kept short on purpose — current state only, no narrative. Deeper reference (pull into context only when actually working in that area):
+These six are kept short on purpose — current state only, no narrative. Deeper reference (pull into context only when actually working in that area):
 
 - **[../Guide/](../Guide/)** ([`Guide/README.md`](../Guide/README.md) is its index) — the current, actively-maintained per-topic guides, one file per topic, covering every public class in `Core/`/`2D/`/`3D`. Start here for anything it covers before reading source.
   - **[RandomUtil_Guide.md](../Guide/RandomUtil_Guide.md)** — `RandomUtil`: every method, what it computes and when to reach for it, the algorithms behind Gaussian/Poisson/Binomial sampling, and single-threaded vs. multi-threaded usage.

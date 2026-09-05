@@ -160,11 +160,7 @@ namespace MonoPrimitives.Primitives2D
         /// The world-space rectangle currently visible on screen, as its (min, max) corners —
         /// ignoring <see cref="Rotation"/> (an axis-aligned bound around the rotated view).
         /// </summary>
-        /// <remarks>
-        /// Useful for culling before drawing many objects (boids, cellular-automata cells, plot
-        /// points) that are off-screen. Returns corners rather than a framework <c>Rectangle</c>
-        /// (whose fields are integers) since world space is floating-point.
-        /// </remarks>
+        /// <remarks>Returns corners rather than a framework <c>Rectangle</c> since world space is floating-point.</remarks>
         /// <param name="device">
         /// Only used as a fallback when this camera has no <see cref="ViewportAdapter"/> — pass
         /// <c>null</c> (or omit) when constructed with one, since its virtual resolution is used
@@ -262,11 +258,7 @@ namespace MonoPrimitives.Primitives2D
         private Vector2 _followVelocity;
 
         /// <summary>Smoothly moves <see cref="Target"/> toward <paramref name="desiredTarget"/> instead of snapping.</summary>
-        /// <remarks>
-        /// E.g. follow a player character with a bit of lag instead of the camera being rigidly
-        /// locked to it. Within <see cref="FollowPadding"/> world units of the goal, the camera
-        /// holds still (a deadzone) rather than chasing tiny jitter.
-        /// </remarks>
+        /// <remarks>Within <see cref="FollowPadding"/> world units of the goal, the camera holds still (a deadzone) rather than chasing tiny jitter.</remarks>
         public void FollowTarget(Vector2 desiredTarget, float deltaSeconds)
         {
             if (Vector2.Distance(Target, desiredTarget) <= FollowPadding)
@@ -338,14 +330,7 @@ namespace MonoPrimitives.Primitives2D
         /// <see cref="ZoomSmoothTime"/> seconds and clamped to [<see cref="MinZoom"/>,
         /// <see cref="MaxZoom"/>], instead of changing it instantly.
         /// </summary>
-        /// <remarks>
-        /// For discrete input (a mouse wheel tick) where <paramref name="delta"/> is naturally 0
-        /// most frames: call every frame, most calls no-op. For continuous input (a key held to
-        /// zoom), don't call this every frame with a small nonzero <paramref name="delta"/> — each
-        /// call adds onto the target immediately, so a delta repeated every frame races the
-        /// target ahead rather than climbing smoothly. Adjust <see cref="Zoom"/> directly by
-        /// <c>rate * deltaSeconds</c> for that case instead.
-        /// </remarks>
+        /// <remarks>Don't call this every frame with the same small nonzero <paramref name="delta"/> for continuous input (a key held to zoom) — each call adds onto the target immediately, so a delta repeated every frame races the target ahead rather than climbing smoothly. Adjust <see cref="Zoom"/> directly by <c>rate * deltaSeconds</c> for that case instead.</remarks>
         public void SmoothZoom(float delta, float deltaSeconds)
         {
             if (delta == 0f && float.IsNaN(_pendingZoomTarget))
@@ -395,10 +380,10 @@ namespace MonoPrimitives.Primitives2D
         /// </summary>
         /// <remarks>
         /// Call this every frame when you're driving <see cref="Target"/>/<see cref="Zoom"/>/
-        /// <see cref="Rotation"/> yourself (a fixed prototype camera, a cutscene) and just want
-        /// shake/easing to keep working. For a built-in WASD-pan/drag-pan/wheel-zoom controller
-        /// driven by your own <see cref="PrimitiveInput"/>, use
-        /// <see cref="UpdateWithInput(PrimitiveInput, float)"/> instead.
+        /// <see cref="Rotation"/> yourself and just want shake/easing to keep working. For a
+        /// built-in WASD-pan/drag-pan/wheel-zoom controller driven by your own
+        /// <see cref="PrimitiveInput"/>, use <see cref="UpdateWithInput(PrimitiveInput, float)"/>
+        /// instead.
         /// </remarks>
         public void Update(float deltaSeconds) => UpdateShake(deltaSeconds);
 
@@ -411,7 +396,7 @@ namespace MonoPrimitives.Primitives2D
         /// input code of your own. <c>R</c> calls <see cref="Reset"/> directly and skips movement
         /// for that frame, so a same-frame WASD/mouse delta doesn't immediately fight the reset.
         /// </summary>
-        /// <remarks>This is a prototyping convenience — use the plain <see cref="Update(float)"/> if you're driving the camera from your own logic, or query <paramref name="input"/> yourself for custom bindings. Doesn't call <see cref="PrimitiveInput.Update(GameTime)"/> itself — <paramref name="input"/> is expected to already be current for this frame.</remarks>
+        /// <remarks>Use the plain <see cref="Update(float)"/> instead if you're driving the camera from your own logic, or query <paramref name="input"/> yourself for custom bindings. Doesn't call <see cref="PrimitiveInput.Update(GameTime)"/> itself — <paramref name="input"/> is expected to already be current for this frame.</remarks>
         public void UpdateWithInput(PrimitiveInput input, float deltaSeconds)
         {
             if (input.IsKeyPressed(Keys.R))

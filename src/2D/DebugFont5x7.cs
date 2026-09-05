@@ -27,7 +27,7 @@ namespace MonoPrimitives.Primitives2D
         /// <remarks>
         /// <paramref name="pixelSize"/> is the screen size of one font pixel (a glyph is
         /// therefore <c>5*pixelSize</c> wide, <c>7*pixelSize</c> tall). <c>'\n'</c> starts a new
-        /// line. Characters with no glyph draw as a hollow box instead of silently vanishing.
+        /// line. Characters with no glyph draw as a hollow box.
         /// <paramref name="maxWidth"/> greater than 0 word-wraps <paramref name="text"/> first
         /// (see <see cref="FontGlyphs5x7.WrapText"/>) — 0 (the default) draws exactly as given,
         /// no wrapping.

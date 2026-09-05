@@ -9,7 +9,7 @@ namespace MonoPrimitives
     /// <remarks>
     /// Not production typography: lowercase letters have no true descenders (g, j, p, q, y are
     /// compressed to fit the same 7-row cell as everything else), and unknown characters fall
-    /// back to a hollow box instead of silently vanishing.
+    /// back to a hollow box.
     /// </remarks>
     public static class FontGlyphs5x7
     {

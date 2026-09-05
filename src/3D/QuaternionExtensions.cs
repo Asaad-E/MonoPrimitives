@@ -8,13 +8,10 @@ namespace MonoPrimitives.Primitives3D
     {
         /// <summary>Decomposes <paramref name="q"/> back into pitch (X), yaw (Y), and roll (Z) radians — the inverse of <see cref="Quaternion.CreateFromYawPitchRoll(float,float,float)"/>.</summary>
         /// <remarks>
-        /// Verified by round-tripping 20000 random angle triples through <c>CreateFromYawPitchRoll</c>
-        /// then this method then back through <c>CreateFromYawPitchRoll</c> and confirming the
-        /// reconstructed quaternion matches (worst-case dot product 0.9999997) -- not assumed correct
-        /// from the formula alone. Like any Euler-angle extraction, this loses a degree of freedom
-        /// (gimbal lock) when pitch is at or near +/-90 degrees -- yaw and roll become
-        /// indistinguishable there, and the specific values returned aren't meaningful, though the
-        /// reconstructed rotation is still correct.
+        /// Like any Euler-angle extraction, this loses a degree of freedom (gimbal lock) when pitch
+        /// is at or near +/-90 degrees -- yaw and roll become indistinguishable there, and the
+        /// specific values returned aren't meaningful, though the reconstructed rotation is still
+        /// correct.
         /// </remarks>
         public static Vector3 ToEuler(this Quaternion q)
         {
