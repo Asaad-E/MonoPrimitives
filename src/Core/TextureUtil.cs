@@ -199,7 +199,7 @@ namespace MonoPrimitives
         }
 
         /// <summary>Applies <paramref name="map"/> to every pixel of <paramref name="source"/> into a new texture.</summary>
-        /// <remarks>One general per-pixel transform covering grayscale/invert/brightness/contrast/color-remap all at once -- compose with <see cref="ColorUtil"/>'s existing functions.</remarks>
+        /// <remarks>One general per-pixel transform — compose with <see cref="ColorUtil"/>'s existing functions.</remarks>
         public static Texture2D Map(GraphicsDevice device, Texture2D source, Func<Color, Color> map)
         {
             ArgumentNullException.ThrowIfNull(map);
