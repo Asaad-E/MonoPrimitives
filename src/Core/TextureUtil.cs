@@ -387,7 +387,8 @@ namespace MonoPrimitives
         {
             ArgumentNullException.ThrowIfNull(device);
             var texture = new Texture2D(device, width, height, false, SurfaceFormat.Color);
-            texture.SetData(pixels);
+            using var fast = new FastTexture(device, texture);
+            fast.Update(pixels);
             return texture;
         }
 

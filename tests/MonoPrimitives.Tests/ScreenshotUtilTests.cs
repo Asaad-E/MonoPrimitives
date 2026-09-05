@@ -88,6 +88,27 @@ namespace MonoPrimitives.Tests
                 }
             });
 
+            results.Check("ScreenshotUtil.Capture(device): returns an owned Texture2D matching the real back buffer content, with no file involved", () =>
+            {
+                device.SetRenderTarget(null);
+                device.Clear(Color.OrangeRed);
+
+                using Texture2D texture = ScreenshotUtil.Capture(device);
+                if (texture.Width != device.PresentationParameters.BackBufferWidth || texture.Height != device.PresentationParameters.BackBufferHeight)
+                    return $"captured texture is {texture.Width}x{texture.Height}, expected {device.PresentationParameters.BackBufferWidth}x{device.PresentationParameters.BackBufferHeight}";
+
+                var pixels = new Color[texture.Width * texture.Height];
+                texture.GetData(pixels);
+                Color center = pixels[pixels.Length / 2];
+                return center == Color.OrangeRed ? null : $"expected {Color.OrangeRed} at the center of the captured texture, got {center}";
+            });
+
+            results.Check("ScreenshotUtil.Capture(device): null device throws", () =>
+            {
+                try { ScreenshotUtil.Capture(null); return "expected an exception for a null device"; }
+                catch (ArgumentNullException) { return null; }
+            });
+
             results.Check("ScreenshotUtil.Capture: null device / null-or-empty path throw", () =>
             {
                 try

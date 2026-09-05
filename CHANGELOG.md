@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning follows [SemVer](https://semver.org/), with the pre-1.0 caveat that the API can still change between minor versions — see [ROADMAP.md](Design/ROADMAP.md).
 
+## [0.9.1] - 2026-09-01
+
+### Added
+- `ScreenshotUtil.Capture(device)` — captures the back buffer into a caller-owned `Texture2D` instead of only saving straight to a file; `Capture(device, filePath)` is now built on top of it.
+- `DebugTimer(label, separator, precision = 2)` — controls the number of decimal places printed, for a timed block short enough that 2 decimals round to `0.00`.
+
+### Changed
+- `ScreenshotUtil`/`TextureUtil` now upload pixel data through `FastTexture` instead of a raw `Texture2D.SetData`, so the raw-GL fast path applies there too when available.
+
 ## [0.9.0] - 2026-08-31
 
 Pre-1.0 API-freeze pass: an audit of the public surface for naming/parameter-order mistakes and coverage gaps worth fixing while it's still cheap, before 1.0 locks the API in.

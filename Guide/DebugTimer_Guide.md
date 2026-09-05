@@ -37,7 +37,7 @@ protected override void Draw(GameTime gameTime)
 
 | Member | What it does |
 |---|---|
-| `new DebugTimer(label, separator = false)` | Starts timing. `label` is required — printed as-is on `Dispose()`. `separator: true` prints a divider line first, for marking the start of a new group of timers (e.g. once per frame). |
+| `new DebugTimer(label, separator = false, precision = 2)` | Starts timing. `label` is required — printed as-is on `Dispose()`. `separator: true` prints a divider line first, for marking the start of a new group of timers (e.g. once per frame). `precision` is the number of decimal places printed — raise it for a block short enough that 2 decimal places round to `0.00`. |
 | `Dispose()` | Prints `[label] X.XX ms` for the time elapsed since construction — call via a `using` block/statement, not directly. |
 
 ## Why `label` is required, not `[CallerMemberName]`-optional

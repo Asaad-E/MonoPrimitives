@@ -36,10 +36,11 @@ Call it after your scene is fully drawn (typically near the end of `Draw`, befor
 | Member | What it does |
 |---|---|
 | `Capture(device, filePath)` | Captures the current back buffer and saves it to `filePath`. Format is inferred from the extension — `.png`, or `.jpg`/`.jpeg` — anything else throws `ArgumentException` rather than silently guessing a format. Creates the destination directory if it doesn't exist yet. Throws on a null `device` or a null/empty `filePath`. |
+| `Capture(device)` | Captures the current back buffer into a new `Texture2D` you own (and must dispose) instead of saving it — for an in-game preview, uploading it somewhere, or further processing via `TextureUtil`. `Capture(device, filePath)` is built on top of this. |
 
-That's the whole surface — one method, no state to manage.
+Both overloads upload through `FastTexture` internally, so the raw-GL fast path applies here too when available — see [`Guide/FastTexture_Guide.md`](FastTexture_Guide.md).
 
 ## Notes
 
 - PNG is lossless; JPEG is not — expect small color shifts on a `.jpg` capture, same as any JPEG.
-- This reads `GraphicsDevice.PresentationParameters.BackBufferWidth`/`Height` and `GetBackBufferData`, so the saved image is exactly the window's current resolution — no separate size parameter.
+- This reads `GraphicsDevice.PresentationParameters.BackBufferWidth`/`Height` and `GetBackBufferData`, so the captured image is exactly the window's current resolution — no separate size parameter.

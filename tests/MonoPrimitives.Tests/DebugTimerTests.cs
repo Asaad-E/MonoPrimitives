@@ -59,6 +59,37 @@ namespace MonoPrimitives.Tests
                 timer.Dispose();
                 return null;
             });
+
+            results.Check("DebugTimer: precision controls the printed decimal places, default 2", () =>
+            {
+                string defaultOutput = Capture(() => { using (new DebugTimer("C")) { } });
+                int defaultDecimals = CountDecimals(defaultOutput, "[C]");
+                if (defaultDecimals != 2) return $"expected 2 decimal places by default, got {defaultDecimals} in: {defaultOutput}";
+
+                string zeroOutput = Capture(() => { using (new DebugTimer("D", precision: 0)) { } });
+                if (CountDecimals(zeroOutput, "[D]") != 0) return $"expected 0 decimal places for precision:0, got: {zeroOutput}";
+
+                string fiveOutput = Capture(() => { using (new DebugTimer("E", precision: 5)) { } });
+                if (CountDecimals(fiveOutput, "[E]") != 5) return $"expected 5 decimal places for precision:5, got: {fiveOutput}";
+
+                return null;
+            });
+
+            results.Check("DebugTimer: a negative precision throws", () =>
+            {
+                try { _ = new DebugTimer("F", precision: -1); return "expected ArgumentOutOfRangeException for precision:-1"; }
+                catch (ArgumentOutOfRangeException) { return null; }
+            });
+        }
+
+        private static int CountDecimals(string output, string label)
+        {
+            float _ = ParseMs(output, label); // reuse ParseMs's own label/"ms" bounds-finding, just re-slice for the decimal count
+            int labelIndex = output.IndexOf(label, StringComparison.Ordinal);
+            int msIndex = output.IndexOf("ms", labelIndex, StringComparison.Ordinal);
+            string numberPart = output.Substring(labelIndex + label.Length, msIndex - (labelIndex + label.Length)).Trim();
+            int dot = numberPart.IndexOf('.');
+            return dot < 0 ? 0 : numberPart.Length - dot - 1;
         }
 
         private static float ParseMs(string output, string label)

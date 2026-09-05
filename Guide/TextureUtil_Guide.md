@@ -48,6 +48,6 @@ _terrain = TextureUtil.CreateFromNoise(GraphicsDevice, 512, 512, noise, scale: 0
 
 ## Notes
 
-- `Crop`/`FlipHorizontal`/`FlipVertical`/`Rotate90`/`Tint`/`Map`/`Blur` (and every generator) are CPU-only — they build a `Color[]` and upload it once via `SetData`. `Resize`/`Rotate`/`Combine` render through a temporary `RenderTarget2D` instead, since resampling and alpha-blending are what the GPU already does correctly.
+- `Crop`/`FlipHorizontal`/`FlipVertical`/`Rotate90`/`Tint`/`Map`/`Blur` (and every generator) are CPU-only — they build a `Color[]` and upload it once via `FastTexture` (the raw-GL fast path when available, `SetData` otherwise — see [`Guide/FastTexture_Guide.md`](FastTexture_Guide.md)). `Resize`/`Rotate`/`Combine` render through a temporary `RenderTarget2D` instead, since resampling and alpha-blending are what the GPU already does correctly.
 - `Resize`/`Rotate`/`Combine` save and restore the device's currently-active render target, so calling any of them mid-frame (e.g. lazily generating a texture inside your own `Draw()`) won't redirect the rest of that frame's rendering somewhere unexpected.
 - None of this is meant for a per-frame hot path — generate once at startup (or lazily, the first time you need a given texture) and keep the result, the same way you'd treat any other `Texture2D` you loaded from disk. `Blur` in particular is real per-pixel-per-kernel-tap work; don't call it every frame on a large texture.
