@@ -89,7 +89,7 @@ namespace MonoPrimitives.Primitives3D
                 PushQuad(points[i] - offsets[i], points[i + 1] - offsets[i + 1], points[i + 1] + offsets[i + 1], points[i] + offsets[i], color);
         }
 
-        /// <summary>Same as <see cref="DrawLineStrip3D(ReadOnlySpan{Vector3},Color,float)"/>, but each segment gets its own flat color from <paramref name="segmentColors"/> (length <c>points.Length - 1</c>) — e.g. <see cref="Trail3D"/>'s own fade-along-length.</summary>
+        /// <summary>Same as <see cref="DrawLineStrip3D(ReadOnlySpan{Vector3},Color,float)"/>, but each segment gets its own flat color from <paramref name="segmentColors"/> (length <c>points.Length - 1</c>).</summary>
         /// <remarks>Corner positions at a shared interior vertex are still the one joined offset either of its two segments uses, so two differently-colored segments still meet without a gap.</remarks>
         /// <param name="points">Vertices of the polyline, in order.</param>
         /// <param name="segmentColors">Per-segment flat color, length <c>points.Length - 1</c>.</param>
@@ -244,7 +244,6 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Draws an arrow with a fixed shaft width (<see cref="DefaultLineThickness"/>) and a head sized purely from <paramref name="headRadius"/> (length <c>headRadius * 3</c>, capped so a short arrow doesn't grow a head bigger than the arrow itself).</summary>
-        /// <remarks>A simpler, fewer-argument overload for when you don't need control over the shaft width or head length independently.</remarks>
         public void DrawArrow(Vector3 start, Vector3 end, float headRadius, int sides, Color color)
         {
             ThrowIfNotBegun();
@@ -422,7 +421,7 @@ namespace MonoPrimitives.Primitives3D
             BorderTriangle3D(v1, v2, v3, borderColor ?? fillColor, rotation, origin, thickness);
         }
 
-        /// <summary>Draws a triangle strip as a raw mesh (no Fill/Border split — like the 2D library's own <c>DrawTriangleStrip</c>, this submits vertices as given, with no triangulation).</summary>
+        /// <summary>Draws a triangle strip as a raw mesh (no Fill/Border split — submits vertices as given, with no triangulation).</summary>
         public void DrawTriangleStrip3D(Vector3[] points, Color color) => DrawTriangleStrip3D(points.AsSpan(), color);
 
         /// <summary>Draws a triangle strip from a span of points, alternating winding to keep a consistent facing direction.</summary>
@@ -1472,7 +1471,7 @@ namespace MonoPrimitives.Primitives3D
         // DASHED LINE (2D library parity)
         // =====================================================================
 
-        /// <summary>Draws a dashed line using <see cref="DefaultLineThickness"/> — useful for predicted paths, ranges, or any "not solid" debug indicator.</summary>
+        /// <summary>Draws a dashed line using <see cref="DefaultLineThickness"/>.</summary>
         public void DrawLine3DDashed(Vector3 start, Vector3 end, float dashLength, float gapLength, Color color)
             => DrawLine3DDashed(start, end, dashLength, gapLength, DefaultLineThickness, color);
 
@@ -1670,7 +1669,7 @@ namespace MonoPrimitives.Primitives3D
             }
         }
 
-        /// <summary>Draws a filled terrain mesh with an independent color per grid vertex — e.g. a biome/temperature/elevation-band map from a simulation. <paramref name="colors"/> must be the same size as <paramref name="heights"/>.</summary>
+        /// <summary>Draws a filled terrain mesh with an independent color per grid vertex. <paramref name="colors"/> must be the same size as <paramref name="heights"/>.</summary>
         /// <remarks>Not a gradient (no interpolation is added beyond the GPU's own vertex-color blending inside each triangle, same as <see cref="FillTriangle3D(Vector3,Vector3,Vector3,Color,Quaternion,Vector3?)"/>'s implicit per-vertex color blending).</remarks>
         public void FillHeightmap(float[,] heights, Color[,] colors, Vector3 origin, Vector2 cellSize)
         {
@@ -1694,7 +1693,7 @@ namespace MonoPrimitives.Primitives3D
             }
         }
 
-        /// <summary>Draws a heightmap's wireframe (each grid cell's 4 edges) — useful for seeing the underlying mesh resolution while prototyping.</summary>
+        /// <summary>Draws a heightmap's wireframe (each grid cell's 4 edges).</summary>
         /// <param name="heights">Grid of vertex heights; <c>heights[x, z]</c> is the Y coordinate of that grid vertex.</param>
         /// <param name="origin">World position of grid vertex (0, 0).</param>
         /// <param name="cellSize">World-space spacing between adjacent grid vertices along X/Z.</param>
@@ -1766,7 +1765,7 @@ namespace MonoPrimitives.Primitives3D
             DrawLine3D(origin, origin + Vector3.UnitZ * length, Color.Blue);
         }
 
-        /// <summary>Draws the wireframe of a view frustum, useful for debugging cameras.</summary>
+        /// <summary>Draws the wireframe of a view frustum.</summary>
         public void BorderFrustum(BoundingFrustum frustum, Color color)
         {
             Vector3[] corners = new Vector3[8]; // corner order documented by MonoGame: near 0..3 then far 4..7

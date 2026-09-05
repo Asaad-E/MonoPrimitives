@@ -103,7 +103,7 @@ namespace MonoPrimitives.Primitives3D
         // ---------------------------------------------------------------------
 
         /// <summary>The <see cref="BasicEffect"/> this batch draws with — constructed internally, so this is the only way to reach it.</summary>
-        /// <remarks>Tweak parameters this batch's own API has no dedicated call for — <see cref="BasicEffect.Alpha"/> for a global fade, a custom <see cref="BasicEffect.FogEnabled"/> setup, etc. Don't change <see cref="BasicEffect.VertexColorEnabled"/>, <see cref="BasicEffect.TextureEnabled"/>, or <see cref="BasicEffect.World"/> — this batch depends on those staying exactly as constructed. <see cref="LightingEnabled"/> is this batch's own opt-in flat-shading switch, not the same thing as this effect's own (always-off) built-in lighting.</remarks>
+        /// <remarks>Don't change <see cref="BasicEffect.VertexColorEnabled"/>, <see cref="BasicEffect.TextureEnabled"/>, or <see cref="BasicEffect.World"/> — this batch depends on those staying exactly as constructed. <see cref="LightingEnabled"/> is this batch's own opt-in flat-shading switch, not the same thing as this effect's own (always-off) built-in lighting.</remarks>
         public BasicEffect Effect => _effect;
 
         /// <summary>Vertices currently buffered and not yet flushed.</summary>
@@ -210,7 +210,7 @@ namespace MonoPrimitives.Primitives3D
         // ---------------------------------------------------------------------
 
         /// <summary>Starts a batch using a <see cref="Camera3D"/>.</summary>
-        /// <remarks>If <paramref name="camera"/> was constructed with a <see cref="ViewportAdapter2D"/> (<see cref="Camera3D.ViewportAdapter"/>), it's applied first — letterboxing/pillarboxing the 3D projection into <see cref="ViewportAdapter2D.BoundingRectangle"/> instead of the full backbuffer. Without one, this always projects using the full window's aspect ratio — if the window is letterboxed (e.g. a fixed-aspect game inside a resizable window, sharing an adapter with 2D content), an adapter-less 3D scene would stretch into the bars instead of matching them.</remarks>
+        /// <remarks>If <paramref name="camera"/> was constructed with a <see cref="ViewportAdapter2D"/> (<see cref="Camera3D.ViewportAdapter"/>), it's applied first — letterboxing/pillarboxing the 3D projection into <see cref="ViewportAdapter2D.BoundingRectangle"/> instead of the full backbuffer. Without one, this always projects using the full window's aspect ratio, regardless of any letterboxing already applied elsewhere.</remarks>
         /// <param name="camera">Camera providing view and projection matrices.</param>
         /// <param name="blendState">Blend state, defaults to <see cref="BlendState.NonPremultiplied"/> — every color here is straight (non-premultiplied) RGBA, so this is the blend state that actually matches them.</param>
         /// <param name="depthStencilState">Depth state, defaults to <see cref="DepthStencilState.Default"/>.</param>
@@ -235,10 +235,7 @@ namespace MonoPrimitives.Primitives3D
                           blendState, depthStencilState, rasterizerState, transform);
         }
 
-        /// <summary>
-        /// Starts a batch with explicit matrices, for interop with engines that
-        /// already manage their own camera representation.
-        /// </summary>
+        /// <summary>Starts a batch with explicit view and projection matrices, bypassing <see cref="Camera3D"/>.</summary>
         public void Begin(
             in Matrix view,
             in Matrix projection,
@@ -456,7 +453,7 @@ namespace MonoPrimitives.Primitives3D
             return Math.Clamp(segments, AutoSegmentsMin, AutoSegmentsMax);
         }
 
-        /// <summary>Same as above, but measures the automatic-LOD distance from the world origin instead of an explicit center — for a primitive whose exact center doesn't matter, or isn't known yet.</summary>
+        /// <summary>Same as above, but measures the automatic-LOD distance from the world origin instead of an explicit center.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int ResolveSegments(int requested, float radius, int fallback)
             => ResolveSegments(requested, radius, Vector3.Zero, fallback);

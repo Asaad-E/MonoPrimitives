@@ -228,8 +228,7 @@ namespace MonoPrimitives.Primitives2D
         /// <param name="initialVertexCapacity">
         /// Fixed vertex/index buffer capacity. This does NOT grow automatically: once
         /// full, the batch flushes what it already has, but a single shape that alone
-        /// needs more vertices/indices than this capacity will still fail. Raise this
-        /// value if you draw very large single shapes (e.g. big polygons or splines).
+        /// needs more vertices/indices than this capacity will still fail.
         /// </param>
         public Primitive2DBatch(GraphicsDevice device, int initialVertexCapacity = 32768)
         {
@@ -255,7 +254,7 @@ namespace MonoPrimitives.Primitives2D
         }
 
         /// <summary>The <see cref="BasicEffect"/> this batch draws with — constructed internally, so this is the only way to reach it.</summary>
-        /// <remarks>Tweak parameters this batch's own API has no dedicated call for — <see cref="BasicEffect.Alpha"/> for a global fade, <see cref="BasicEffect.FogEnabled"/>, etc. Don't change <see cref="BasicEffect.VertexColorEnabled"/>, <see cref="BasicEffect.TextureEnabled"/>, or <see cref="BasicEffect.World"/> — this batch depends on those staying exactly as constructed. For swapping the effect entirely, pass your own via <see cref="Begin(Matrix?,BlendState?,DepthStencilState?,RasterizerState?,Effect?)"/>'s <c>effect</c> parameter instead.</remarks>
+        /// <remarks>Don't change <see cref="BasicEffect.VertexColorEnabled"/>, <see cref="BasicEffect.TextureEnabled"/>, or <see cref="BasicEffect.World"/> — this batch depends on those staying exactly as constructed. To swap the effect entirely, pass your own via <see cref="Begin(Matrix?,BlendState?,DepthStencilState?,RasterizerState?,Effect?)"/>'s <c>effect</c> parameter instead.</remarks>
         public BasicEffect Effect => _effect;
 
         // ------------------------------------------------------------------
@@ -1140,8 +1139,8 @@ namespace MonoPrimitives.Primitives2D
 
         /// <summary>
         /// Draws a filled rectangle with four independently colored corners — for a gradient that
-        /// isn't a plain two-stop linear fade (see <see cref="FillRectangleGradient(float,float,float,float,Color,Color,bool,float,Vector2?,float,float)"/>
-        /// for that simpler case), e.g. all 4 corners distinct, or a warm-to-cool diagonal.
+        /// isn't a plain two-stop linear fade, see <see cref="FillRectangleGradient(float,float,float,float,Color,Color,bool,float,Vector2?,float,float)"/>
+        /// for that simpler case.
         /// </summary>
         /// <remarks>
         /// The quad
@@ -1833,7 +1832,7 @@ namespace MonoPrimitives.Primitives2D
         public void FillRectangleShadow(Vector2 position, Vector2 size, RectCorners radius, Color color, float spread = 20f, float rotation = 0f, Vector2? origin = null)
             => FillRectangleShadow(new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), radius, color, spread, rotation, origin);
 
-        /// <summary>Sharp-cornered rectangle drop shadow — same as the <see cref="RectCorners"/> overload with a radius of 0, for when you don't want rounding and don't want to think about corners at all.</summary>
+        /// <summary>Sharp-cornered rectangle drop shadow — same as the <see cref="RectCorners"/> overload with a radius of 0.</summary>
         public void FillRectangleShadow(Rectangle rect, Color color, float spread = 20f, float rotation = 0f, Vector2? origin = null)
             => FillRectangleShadow(rect, default, color, spread, rotation, origin);
 
@@ -2381,8 +2380,7 @@ namespace MonoPrimitives.Primitives2D
         /// <remarks>
         /// The gradient's own <paramref name="radius"/> is <c>radius - thickness</c> — it stops
         /// exactly where the border begins — and <paramref name="innerOffset"/>/<paramref name="outerOffset"/>
-        /// are then measured from that inner boundary, not the full radius: e.g. radius 100,
-        /// thickness 10, outerOffset 20 → the gradient's outer solid margin starts at 70.
+        /// are then measured from that inner boundary, not the full radius.
         /// </remarks>
         public void DrawCircleGradient(Vector2 center, float radius, Color innerFill, Color outerFill, Color borderColor, float thickness = 1f, float innerOffset = 0f, float outerOffset = 0f)
         {
@@ -3362,8 +3360,7 @@ namespace MonoPrimitives.Primitives2D
 
         /// <summary>Draws a filled ribbon between two aligned point lists — <paramref name="bottomPoints"/>[i] connects to <paramref name="topPoints"/>[i] for each i — fading from <paramref name="bottomColor"/> at the bottom list to <paramref name="topColor"/> at the top list, no border.</summary>
         /// <remarks>
-        /// Useful for a gradient that follows an arbitrary profile (e.g. a terrain silhouette)
-        /// instead of a straight axis like
+        /// The gradient follows the shape of the two point lists rather than a straight axis like
         /// <see cref="FillRectangleGradient(float,float,float,float,Color,Color,bool,float,Vector2?,float,float)"/>.
         /// If the two lists differ in length, only the shorter length is used.
         /// </remarks>
