@@ -19,9 +19,7 @@ namespace MonoPrimitives.Primitives3D
 
         /// <summary>Draws 3D debug text with a caller-supplied, fixed <paramref name="right"/>/<paramref name="up"/> basis instead of always facing the camera — the opt-out for when billboarding isn't wanted.</summary>
         /// <remarks>
-        /// Useful for a label painted onto a specific surface, text that should visibly rotate
-        /// away as the camera orbits past it, or matching a fixed HUD-in-world panel. Same glyph
-        /// data and world-space <paramref name="pixelSize"/> as the billboarded overload;
+        /// Same glyph data and world-space <paramref name="pixelSize"/> as the billboarded overload;
         /// <paramref name="right"/>/<paramref name="up"/> need not be unit length or exactly
         /// orthogonal — each glyph pixel is simply offset by <c>col * pixelSize</c> along
         /// <paramref name="right"/> and <c>row * pixelSize</c> along <paramref name="up"/>, so a
@@ -84,7 +82,7 @@ namespace MonoPrimitives.Primitives3D
         }
 
         /// <summary>Right/up axes for a cylindrical billboard at <paramref name="position"/> facing the active camera.</summary>
-        /// <remarks>Shared by <see cref="DrawString3D(string,Vector3,float,Color,float,float,float)"/> and available for your own billboarded quads (particles, sprites) that want the same "always upright, rotates to face camera" behavior instead of full spherical billboarding.</remarks>
+        /// <remarks>Shared by <see cref="DrawString3D(string,Vector3,float,Color,float,float,float)"/> and available for your own billboarded quads that want the same "always upright, rotates to face camera" behavior instead of full spherical billboarding.</remarks>
         public void GetBillboardAxes(Vector3 position, out Vector3 right, out Vector3 up)
         {
             Vector3 toCamera = _cameraPosition - position;

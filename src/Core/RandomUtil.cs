@@ -79,7 +79,7 @@ namespace MonoPrimitives
         /// <inheritdoc cref="SampleWeightedIndex(Random, ReadOnlySpan{float})"/>
         public int NextWeightedIndex(ReadOnlySpan<float> weights) => SampleWeightedIndex(_rng, weights);
 
-        /// <summary>Picks a uniformly-random element from <paramref name="items"/> — a loot table, a random spawn point, a dialogue line. Throws if <paramref name="items"/> is empty.</summary>
+        /// <summary>Picks a uniformly-random element from <paramref name="items"/>. Throws if <paramref name="items"/> is empty.</summary>
         public T NextItem<T>(ReadOnlySpan<T> items) => SampleItem(_rng, items);
 
         // ------------------------------------------------------------------
@@ -286,7 +286,7 @@ namespace MonoPrimitives
         // radius rather than a rejection loop against a unit cube, so cost stays fixed per sample.
         private static Vector3 SampleInsideUnitSphere(Random rng) => SampleOnUnitSphere(rng) * MathF.Cbrt(rng.NextSingle());
 
-        /// <summary>Picks a random index into <paramref name="weights"/>, with probability proportional to each entry's own weight — a loot table, a weighted spawn/decision table.</summary>
+        /// <summary>Picks a random index into <paramref name="weights"/>, with probability proportional to each entry's own weight.</summary>
         /// <remarks>Weights must be non-negative with at least one positive, or this throws. O(n) per call — for a large static table sampled every frame, build a cumulative-sum array once and binary-search it instead.</remarks>
         private static int SampleWeightedIndex(Random rng, ReadOnlySpan<float> weights)
         {

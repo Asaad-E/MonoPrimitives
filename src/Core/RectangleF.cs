@@ -3,11 +3,7 @@ using Microsoft.Xna.Framework;
 
 namespace MonoPrimitives
 {
-    /// <summary>
-    /// Float-precision counterpart to MonoGame's own <see cref="Rectangle"/> (integer-only) — for
-    /// anything that needs sub-pixel positions/sizes (a zoomed camera's visible bounds, a smoothly
-    /// scaling UI panel, a hitbox that shouldn't snap to whole pixels) without truncating them.
-    /// </summary>
+    /// <summary>Float-precision counterpart to MonoGame's own <see cref="Rectangle"/> (integer-only).</summary>
     public struct RectangleF : IEquatable<RectangleF>
     {
         /// <summary>X position of the rectangle's left edge.</summary>

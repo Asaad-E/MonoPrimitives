@@ -11,7 +11,6 @@ namespace MonoPrimitives.Primitives2D
     /// larger of the two axes' fit), preserving aspect ratio — black bars on the short axis
     /// instead of stretching.
     /// </summary>
-    /// <remarks>The common choice for pixel-art or fixed-composition prototypes.</remarks>
     public sealed class BoxingViewportAdapter2D : ViewportAdapter2D
     {
         /// <inheritdoc/>

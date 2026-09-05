@@ -10,11 +10,7 @@ namespace MonoPrimitives.Primitives2D
     /// fixed <see cref="VirtualWidth"/>/<see cref="VirtualHeight"/> to set up). Scale is always
     /// (1,1) and offset always zero.
     /// </summary>
-    /// <remarks>
-    /// Exists so code written against <see cref="ViewportAdapter2D"/> works unchanged whether or
-    /// not the caller actually wants resolution independence — swap in a
-    /// <see cref="BoxingViewportAdapter2D"/> later without touching anything downstream.
-    /// </remarks>
+    /// <remarks>Code written against <see cref="ViewportAdapter2D"/> works unchanged if swapped for a <see cref="BoxingViewportAdapter2D"/> later.</remarks>
     public sealed class DefaultViewportAdapter2D : ViewportAdapter2D
     {
         /// <summary>Wraps <paramref name="device"/> — no virtual resolution to configure, since this adapter always tracks the device's own viewport.</summary>

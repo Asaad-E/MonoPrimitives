@@ -2,7 +2,7 @@ using System;
 
 namespace MonoPrimitives
 {
-    /// <summary>Seedable gradient (Perlin-style) noise for smooth, deterministic pseudo-randomness — terrain, procedural texture, organic motion.</summary>
+    /// <summary>Seedable gradient (Perlin-style) noise for smooth, deterministic pseudo-randomness.</summary>
     /// <remarks>Output is roughly <c>[-1, 1]</c>, not hard-clamped — it can slightly overshoot at some inputs.</remarks>
     public sealed class Noise
     {
@@ -80,7 +80,7 @@ namespace MonoPrimitives
         /// <summary>2D Perlin noise at (x, y) — a z=0 slice of <see cref="Sample3D"/>.</summary>
         public float Sample2D(float x, float y) => Sample3D(x, y, 0f);
 
-        /// <summary>1D Perlin noise at x — a smooth, deterministic "wander" over one variable (a steering angle, wind gust strength, camera shake) instead of a jittery random walk.</summary>
+        /// <summary>1D Perlin noise at x — a smooth, deterministic "wander" over one variable instead of a jittery random walk.</summary>
         public float Sample1D(float x)
         {
             int xi = (int)MathF.Floor(x) & 255;

@@ -154,7 +154,7 @@ namespace MonoPrimitives
         // ---------------------------------------------------------------------
 
         /// <summary>This frame's raw <see cref="KeyboardState"/>, exactly as captured by the last <see cref="Update(GameTime)"/> — for anything this class doesn't wrap itself (e.g. <see cref="KeyboardState.GetPressedKeys()"/>).</summary>
-        /// <remarks>Reach here instead of calling <see cref="Keyboard.GetState()"/> yourself, which would return a second, independent snapshot that can desync from this frame's — same reasoning as <see cref="RandomUtil.UnderlyingRandom"/>.</remarks>
+        /// <remarks>Reach here instead of calling <see cref="Keyboard.GetState()"/> yourself, which would return a second, independent snapshot that can desync from this frame's.</remarks>
         public KeyboardState CurrentKeyboardState => _keyboard;
 
         /// <summary>The previous frame's raw <see cref="KeyboardState"/> — for building your own custom transition check (pressed/released/held-for-N-frames) beyond what <see cref="IsKeyPressed"/>/<see cref="IsKeyReleased"/> already cover.</summary>
@@ -172,7 +172,7 @@ namespace MonoPrimitives
         /// <summary>True on the frame <paramref name="key"/> went from down to up.</summary>
         public bool IsKeyReleased(Keys key) => _keyboard.IsKeyUp(key) && _prevKeyboard.IsKeyDown(key);
 
-        /// <summary>Whether Caps Lock is currently toggled on — the lock state itself, not whether the key is physically held. Useful for a custom on-screen keyboard, or warning next to a password field.</summary>
+        /// <summary>Whether Caps Lock is currently toggled on — the lock state itself, not whether the key is physically held.</summary>
         public bool CapsLock => _keyboard.CapsLock;
 
         /// <summary>Whether Num Lock is currently toggled on, same idea as <see cref="CapsLock"/>.</summary>
@@ -258,11 +258,11 @@ namespace MonoPrimitives
         public bool IsMouseOver(Rectangle screenRect) => screenRect.Contains(new Point(_mouse.X, _mouse.Y));
 
         /// <summary>Moves the OS cursor to an exact screen position.</summary>
-        /// <remarks>E.g. re-centering it every frame for an FPS-style "infinite" mouse-look that never hits the window edge. Call <see cref="ResetMouseDelta"/> alongside this (or accept one frame of a large delta from the jump) since the cursor didn't actually travel there by user motion.</remarks>
+        /// <remarks>Call <see cref="ResetMouseDelta"/> alongside this (or accept one frame of a large delta from the jump) since the cursor didn't actually travel there by user motion.</remarks>
         public void SetMousePosition(int x, int y) => Mouse.SetPosition(x, y);
 
         /// <summary>Sets the OS cursor's shape — one of <see cref="MouseCursor"/>'s built-in system shapes (<c>Arrow</c>, <c>IBeam</c>, <c>Hand</c>, <c>Crosshair</c>, the resize arrows, etc.) or a fully custom one via <see cref="MouseCursor.FromTexture2D(Microsoft.Xna.Framework.Graphics.Texture2D,int,int)"/>.</summary>
-        /// <remarks>A thin passthrough to <see cref="Mouse.SetCursor(MouseCursor)"/>, kept here so mouse commands live alongside the mouse queries above.</remarks>
+        /// <remarks>A thin passthrough to <see cref="Mouse.SetCursor(MouseCursor)"/>.</remarks>
         public void SetCursor(MouseCursor cursor) => Mouse.SetCursor(cursor);
 
         private static ButtonState GetMouseButtonState(in MouseState state, MouseButton button) => button switch

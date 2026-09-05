@@ -21,7 +21,7 @@ namespace MonoPrimitives
         /// <summary>How far through the countdown this is: <c>0</c> just after a <see cref="Reset"/>/<see cref="TryUse"/>, <c>1</c> once <see cref="IsReady"/> — a cooldown bar's fill amount. <c>1</c> if <see cref="Duration"/> is zero or negative (nothing to wait through).</summary>
         public readonly float Progress => Duration > 0f ? 1f - Remaining / Duration : 1f;
 
-        /// <summary>Creates a cooldown of <paramref name="duration"/> seconds, starting already <see cref="IsReady"/> — the usual expectation for something you should be able to use right away the first time.</summary>
+        /// <summary>Creates a cooldown of <paramref name="duration"/> seconds, starting already <see cref="IsReady"/>.</summary>
         public Cooldown(float duration)
         {
             Duration = duration;
@@ -34,7 +34,7 @@ namespace MonoPrimitives
         /// <summary>Same as <see cref="Update(float)"/>, from a <see cref="GameTime"/> directly.</summary>
         public void Update(GameTime gameTime) => Update((float)gameTime.ElapsedGameTime.TotalSeconds);
 
-        /// <summary>If <see cref="IsReady"/>, restarts the countdown at <see cref="Duration"/> and returns <c>true</c>; otherwise does nothing and returns <c>false</c> — the whole "can I fire, and if so start the cooldown" check in one call, e.g. <c>if (cooldown.TryUse()) Fire();</c>.</summary>
+        /// <summary>If <see cref="IsReady"/>, restarts the countdown at <see cref="Duration"/> and returns <c>true</c>; otherwise does nothing and returns <c>false</c> — the whole "can I fire, and if so start the cooldown" check in one call.</summary>
         public bool TryUse()
         {
             if (!IsReady) return false;
@@ -45,7 +45,7 @@ namespace MonoPrimitives
         /// <summary>Restarts the countdown at <see cref="Duration"/> — not <see cref="IsReady"/> again until it fully counts down.</summary>
         public void Reset() => _remaining = Duration;
 
-        /// <summary>Forces <see cref="IsReady"/> immediately, skipping whatever time was left — e.g. to undo a <see cref="Reset"/>, or let something fire right away the first time despite a nonzero <see cref="Duration"/> already set at construction.</summary>
+        /// <summary>Forces <see cref="IsReady"/> immediately, skipping whatever time was left.</summary>
         public void ResetReady() => _remaining = 0f;
     }
 }

@@ -4,10 +4,8 @@ namespace MonoPrimitives
 {
     /// <summary>
     /// A curated, ready-to-use set of vibrant, harmonious colors, each hue paired with a
-    /// slightly darker shade (e.g. <see cref="Emerald"/>/<see cref="Nephritis"/>) for a
-    /// border, shadow, or pressed state without hand-picking a second color.
+    /// slightly darker shade (e.g. <see cref="Emerald"/>/<see cref="Nephritis"/>).
     /// </summary>
-    /// <remarks>For prototypes and demos where the point is the simulation or the gameplay, not a color pass.</remarks>
     public static class Palette
     {
         /// <summary>Bright teal — green and cyan meeting halfway, like shallow tropical water.</summary>
@@ -105,7 +103,7 @@ namespace MonoPrimitives
         // building a separate one-off array elsewhere.
         // ---------------------------------------------------------------------
 
-        /// <summary>Paired inner (highlight)/outer (edge) colors for a glossy radial-gradient ball — e.g. <c>batch.FillCircleGradient(center, radius, GradientPairs[i].Inner, GradientPairs[i].Outer)</c>.</summary>
+        /// <summary>Paired inner (highlight)/outer (edge) colors for a glossy radial-gradient ball, for use with <see cref="MonoPrimitives.Primitives2D.Primitive2DBatch.FillCircleGradient(Vector2,float,Color,Color,float,float)"/>.</summary>
         public static readonly (Color Inner, Color Outer)[] GradientPairs =
         {
             (new Color(255, 120, 140), new Color(215, 20, 45)),   // Cherry — red

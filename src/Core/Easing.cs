@@ -2,7 +2,7 @@ using System;
 
 namespace MonoPrimitives
 {
-    /// <summary>Names every curve <see cref="Easing"/> exposes, for picking one as data (a level/config file, a debug UI dropdown) instead of a function reference.</summary>
+    /// <summary>Names every curve <see cref="Easing"/> exposes, for picking one as data instead of a function reference.</summary>
     public enum EasingType
     {
         /// <summary>See <see cref="Easing.Linear"/>.</summary>
@@ -69,7 +69,7 @@ namespace MonoPrimitives
         ElasticInOut,
     }
 
-    /// <summary>Classic 0→1 tweening curves for one-shot animations with a known duration — a menu sliding in, an object scaling up, a color fading out.</summary>
+    /// <summary>Classic 0→1 tweening curves for one-shot animations with a known duration.</summary>
     public static class Easing
     {
         /// <summary>Evaluates the curve named by <paramref name="type"/> at <paramref name="t"/> — dispatches to the matching method below.</summary>

@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 namespace MonoPrimitives.Primitives2D
 {
     /// <summary>Pure geometry overlap/intersection tests (circle, rectangle, triangle, polygon, line).</summary>
-    /// <remarks>Static utilities, not <see cref="Primitive2DBatch"/> methods — plain math you can call any time, not just mid-draw. Useful for hit detection, platformer collision, or neighbor/separation checks in a simulation.</remarks>
+    /// <remarks>Static utilities, not <see cref="Primitive2DBatch"/> methods — plain math you can call any time, not just mid-draw.</remarks>
     public static class Collision2D
     {
         /// <summary>Rectangle vs rectangle overlap. Thin wrapper over <see cref="Rectangle.Intersects(Rectangle)"/>.</summary>

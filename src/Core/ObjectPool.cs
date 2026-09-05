@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MonoPrimitives
 {
-    /// <summary>A generic object pool: reuses instances instead of letting them fall to the GC — bullets, particles, agents in a large simulation.</summary>
+    /// <summary>A generic object pool: reuses instances instead of letting them fall to the GC.</summary>
     /// <typeparam name="T">The pooled type. Constrained to a reference type — pooling exists to avoid heap allocation, which a value type doesn't need help avoiding.</typeparam>
     public sealed class ObjectPool<T> where T : class
     {

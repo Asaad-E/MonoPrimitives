@@ -127,7 +127,7 @@ namespace MonoPrimitives.Primitives3D
             return new RayCollision3D(true, t, point, denom < 0f ? n : -n); // normal faces back toward the ray origin
         }
 
-        /// <summary>Ray vs triangle. Useful for mesh/terrain picking against triangles you already have on hand (e.g. one cell of a heightmap).</summary>
+        /// <summary>Ray vs triangle.</summary>
         public static RayCollision3D GetRayCollisionTriangle(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3)
         {
             // Möller-Trumbore algorithm.
