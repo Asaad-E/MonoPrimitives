@@ -29,7 +29,7 @@ Vector2 point = center + direction * radius;
 
 ## Testing
 
-[`tests/MonoPrimitives.Tests/UnitCircleLutTests.cs`](../tests/MonoPrimitives.Tests/UnitCircleLutTests.cs) checks the four cardinal points, that every sample stays on the unit circle (length `~1`, within the small chord-vs-arc error linear interpolation between two lattice points necessarily introduces), continuity across the `t01 = 0/1` wrap seam, that negative/large `t01` wraps to *exactly* (float-precision) the same result as the mathematically-wrapped equivalent — a regression test for a real, if small, imprecision this class used to have (see `Design/DECISIONS.md`) — and that `SampleRadians`/`SampleDegrees` agree with the equivalent `Sample(t01)` call and with `Math.Sin`/`Cos` (within the table's lattice-spacing error bound) across a wide range of angles, including negative ones. Run with:
+[`tests/MonoPrimitives.Tests/UnitCircleLutTests.cs`](../tests/MonoPrimitives.Tests/UnitCircleLutTests.cs) covers the four cardinal points, that samples stay on the unit circle, wrap continuity (including negative/large `t01` — a past bug, see `Design/DECISIONS.md`), and that `SampleRadians`/`SampleDegrees` agree with `Sample` and with `Math.Sin`/`Cos`. Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj

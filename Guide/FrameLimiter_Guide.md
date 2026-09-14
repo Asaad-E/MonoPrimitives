@@ -48,11 +48,11 @@ Call `BeginFrame()`/`EndFrame()` once per real frame — typically the first lin
 
 ## Why disable `IsFixedTimeStep` and vsync
 
-Both are their own frame-pacing mechanisms. Leaving either on means two different systems trying to control the same frame timing at once — `IsFixedTimeStep` would keep calling `Update` at its own fixed cadence regardless of what `FrameLimiter` decides, and vsync would additionally block `Present()` until the next monitor refresh, capping the framerate at the display's own refresh rate no matter what `TargetFps` asks for. `FrameLimiter` takes over both jobs itself, so it disables the built-in ones at construction rather than fighting them every frame.
+Both are frame-pacing mechanisms in their own right, and leaving either on just means two systems fighting over the same job — `IsFixedTimeStep` calling `Update` on its own cadence regardless of what `FrameLimiter` wants, vsync capping the framerate at the monitor's refresh rate no matter what `TargetFps` says. So `FrameLimiter` turns both off at construction and takes over.
 
 ## A real limitation, not a bug
 
-On Windows, any single call to `Thread.Sleep` — which `EndFrame()` uses for most of the wait — has a real (measured, roughly 1-5%) chance of running for nearly a full extra frame, regardless of how the remaining time is split between sleeping and a precise busy-spin tail. This is OS scheduler jitter, not something under this class's control; a pure busy-spin loop the whole frame would avoid it entirely, at the cost of pinning a full CPU core for the whole frame — the wrong tradeoff for a general-purpose prototyping library, so `FrameLimiter` accepts the rare jitter instead. If your game needs frame timing free of any such hiccup, that's a different (and much more involved) problem than this class solves. See [`Design/DECISIONS.md`](../Design/DECISIONS.md) for the measurements behind this.
+`EndFrame()` waits out most of the frame with `Thread.Sleep`, and on Windows a single `Sleep` call has a small but real chance (measured around 1-5%) of running nearly a full extra frame — OS scheduler jitter, outside this class's control. A pure busy-spin the whole frame would dodge it, but pins a full CPU core the entire time, which isn't the right tradeoff for a general prototyping library. If you need frame timing with zero jitter at all, that's a bigger problem than this class is trying to solve. See [`Design/DECISIONS.md`](../Design/DECISIONS.md) for the numbers.
 
 ## See also
 

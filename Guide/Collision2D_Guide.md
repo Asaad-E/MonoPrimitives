@@ -76,7 +76,7 @@ Origin + direction (not a segment) — direction need not be pre-normalized, the
 
 ## Testing
 
-[`tests/MonoPrimitives.Tests/Collision2DTests.cs`](../tests/MonoPrimitives.Tests/Collision2DTests.cs) covers every method above, including the L-shaped concave-polygon fixture described above (exercised against `PointPoly`/`CirclePoly`/`CapsulePoly` specifically, including both the "capsule entirely inside the notch" and "capsule passing through solid material with both endpoints outside" cases), T-junction clamping for `CapsuleCapsule`, and a ray that must *not* hit a segment behind its own origin. Run with:
+[`tests/MonoPrimitives.Tests/Collision2DTests.cs`](../tests/MonoPrimitives.Tests/Collision2DTests.cs) covers every method above, including the L-shaped concave-polygon fixture from above, T-junction clamping for `CapsuleCapsule`, and a ray that must *not* hit a segment behind its own origin. Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj

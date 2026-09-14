@@ -66,7 +66,7 @@ Use this when the curve itself is data — chosen from a config/level file, expo
 
 ## Testing
 
-Every function has a permanent regression check in [`tests/MonoPrimitives.Tests/EasingTests.cs`](../tests/MonoPrimitives.Tests/EasingTests.cs): the two properties above, boundary conditions (`f(0)=0`/`f(1)=1`) across all 31 functions, monotonicity for the 7 smooth families, ease-in-lags/ease-out-leads-linear-pace at `t=0.25`, the defining overshoot/oscillation behavior for `Back`/`Elastic`/`Bounce`, and that `Evaluate(EasingType, t)` matches its named function exactly for every curve. Run with:
+Every function has a permanent regression check in [`tests/MonoPrimitives.Tests/EasingTests.cs`](../tests/MonoPrimitives.Tests/EasingTests.cs) — boundary conditions, monotonicity where it applies, the two properties above, and that `Evaluate` matches its named function for every curve. Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj

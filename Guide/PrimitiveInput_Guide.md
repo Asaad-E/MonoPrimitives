@@ -82,7 +82,7 @@ Call `Update` exactly once per frame, before reading anything else — every `Is
 
 ## Typed text (`GetCharPressed`)
 
-Everything above is `Keys`/`Buttons` **polling** — and polling fundamentally cannot produce correct typed text. `Keys` is physical key identity, not the character a keyboard layout/shift/dead-key combination actually produces (`Keys.Q` is `'A'` on AZERTY; this library's own `DebugFont5x7` supports Spanish accents like `'á'`, which are typically composed from a dead-key sequence only the OS can resolve), and OS key-repeat timing can't be reconstructed by guessing at settings the OS already knows. Even raylib's own `GetCharPressed` — despite its "call it in a loop" polling *feel* — is backed by a real OS/GLFW character-composition event under the hood, not raw key-state polling.
+Everything above is `Keys`/`Buttons` **polling** — and polling fundamentally cannot produce correct typed text. `Keys` is physical key identity, not the character a keyboard layout/shift/dead-key combination actually produces (`Keys.Q` is `'A'` on AZERTY; an accented character like `'á'` is typically composed from a dead-key sequence only the OS can resolve), and OS key-repeat timing can't be reconstructed by guessing at settings the OS already knows.
 
 So `PrimitiveInput` has a second constructor for this:
 
@@ -110,10 +110,10 @@ if (_input.IsKeyPressed(Keys.Back) && typedText.Length > 0)
 
 Two things worth knowing before you go looking for them:
 
-- **A true "relative/captured" mouse mode** (like love2d's `setRelativeMode`, Godot's `MOUSE_MODE_CAPTURED`, Unity's `Cursor.lockState`) — MonoGame's own `Mouse` class doesn't expose this at all (it only has `GetState`/`SetPosition`/`SetCursor`/`WindowHandle`). The manual re-center-every-frame trick `SetMousePosition`/`ResetMouseDelta` already support is the actual ceiling here, not a missing convenience wrapper — there's no lower-level toggle in MonoGame's public API to wrap.
-- **Correct typed text from key polling alone** — see `GetCharPressed` above; this needs the `GameWindow` constructor, there's no way around it.
+- **A true "relative/captured" mouse mode** — MonoGame's own `Mouse` class has no such toggle (just `GetState`/`SetPosition`/`SetCursor`/`WindowHandle`), so the manual re-center-every-frame trick `SetMousePosition`/`ResetMouseDelta` support is the actual ceiling here, not a missing wrapper.
+- **Correct typed text from key polling alone** — see `GetCharPressed` above; needs the `GameWindow` constructor, no way around it.
 
-Deliberately **not** in scope, regardless of what other engines offer: an input *action*/binding-map system (Unity's Input System package, Godot's named actions). This library hands you the poll, not a rebindable-action layer on top of it — building that yourself with `GetAxis`/`GetVector2` as the last mile is the point of reaching for a toolkit instead of a framework.
+Also not in scope: an input action/binding-map layer. This hands you the poll, not a rebindable-action system on top of it — that's the last mile you'd build yourself with `GetAxis`/`GetVector2`.
 
 ## See also
 

@@ -5,9 +5,9 @@
 
 ![MonoPrimitives 2D and 3D shape gallery](img/hero.png)
 
-Immediate-mode 2D and 3D primitive drawing for MonoGame, plus the small set of helpers a fast prototype usually needs — camera, input, easing, color, noise, and collision/raycast tests — so you don't have to pull in a handful of separate external libraries for those.
+Immediate-mode 2D and 3D primitive drawing for MonoGame, plus the handful of things every prototype ends up needing anyway — camera, input, easing, color, noise, collision checks. One package instead of stitching together five.
 
-Built for prototypes: simulations (boids, cellular automata, predator-prey, pandemic models, terrain), generative art, and small retro-style game demos. Not a game engine, and not aimed at shipping a full commercial game.
+Built for prototypes and small games: boids, cellular automata, terrain, generative art, retro-style demos. It's not a game engine and it's not trying to ship your next commercial title.
 
 ## Install
 
@@ -15,14 +15,14 @@ Built for prototypes: simulations (boids, cellular automata, predator-prey, pand
 dotnet add package MonoPrimitives
 ```
 
-Or scaffold a whole starter project (`Camera2D`, letterboxed 1080p virtual resolution, MSAA, input, a `RenderContext` bundle) with the `dotnet new` template — not yet published as its own package, so install it from a clone of this repo for now:
+Or grab the starter template — letterboxed 1080p, MSAA, input, a camera, all wired up already. It's not on NuGet yet, so install it from a clone of this repo for now:
 
 ```bash
 dotnet new install ./templates/PrimitiveBase
 dotnet new primitivebase -n YourGame
 ```
 
-One NuGet package, one assembly, one DLL — 2D and 3D both come with it, no separate sub-packages to resolve. Internally it's still organized into three namespaces so nothing is duplicated between them:
+It's one package and one DLL, 2D and 3D both included. Under the hood it's split into three namespaces so nothing overlaps:
 
 | Namespace | Source folder | What's there |
 |---|---|---|
@@ -78,11 +78,11 @@ protected override void Draw(GameTime gameTime)
 }
 ```
 
-Every shape follows the same `Fill<Shape>` (solid) / `Border<Shape>` (outline, grows inward) / `Draw<Shape>` (both) pattern, in both 2D and 3D.
+Every shape follows the same pattern, 2D and 3D alike: `Fill<Shape>` for solid, `Border<Shape>` for an outline (grows inward), `Draw<Shape>` for both.
 
 ## Documentation
 
-Each class has its own guide — start with whichever one covers what you're touching, or see [`Guide/README.md`](Guide/README.md) for a "brand new here" reading order:
+Each class has its own guide. Start with whichever covers what you're building, or check [`Guide/README.md`](Guide/README.md) if you want a suggested reading order.
 
 **Drawing**
 - [`Primitive2DBatch`](Guide/Primitive2DBatch_Guide.md) — every 2D shape (rectangles, circles, ellipses, capsules, polygons, sectors/rings, splines), gradients, shadows, rounded/chamfered corners.
@@ -90,11 +90,11 @@ Each class has its own guide — start with whichever one covers what you're tou
 - [`DebugFont5x7`](Guide/DebugFont5x7_Guide.md) — a built-in bitmap debug font, 2D and 3D (billboarded).
 
 **Camera & viewport**
-- [`Camera2D & Viewport`](Guide/Camera2D_Guide.md) — pan/rotate/zoom, bounds, follow, shake, and the `ViewportAdapter2D` family (letterboxing/scaling for resolution independence).
+- [`Camera2D & Viewport`](Guide/Camera2D_Guide.md) — pan/rotate/zoom, bounds, follow, shake, and the `ViewportAdapter2D` family for resolution-independent letterboxing/scaling.
 - [`Camera3D`](Guide/Camera3D_Guide.md) — the 3D counterpart: 5 behaviour modes, free-fly/orbit/first-/third-person controllers.
 
 **Input**
-- [`PrimitiveInput`](Guide/PrimitiveInput_Guide.md) — keyboard/mouse/gamepad polling, vibration, typed text, and raw `KeyboardState`/`MouseState`/`GamePadState` access for anything not wrapped.
+- [`PrimitiveInput`](Guide/PrimitiveInput_Guide.md) — keyboard/mouse/gamepad polling, vibration, typed text, and raw `KeyboardState`/`MouseState`/`GamePadState` access for whatever isn't wrapped.
 
 **Collision**
 - [`Collision2D`](Guide/Collision2D_Guide.md) — every 2D overlap/ray check by shape.
@@ -108,11 +108,11 @@ Each class has its own guide — start with whichever one covers what you're tou
 - [`RandomUtil`](Guide/RandomUtil_Guide.md) — seedable distribution sampling (Gaussian, Poisson, Binomial, uniform disc/sphere, weighted picks).
 - [`Color`](Guide/Color_Guide.md) — a curated color palette plus hex/HSV conversion and adjustment.
 - [`Trail`](Guide/Trail2D_Guide.md) — a fading position-history trail, 2D and 3D.
-- [`UnitCircleLut`](Guide/UnitCircleLut_Guide.md) / [`TrigLut`](Guide/TrigLut_Guide.md) — the trig-free lookup tables the shape batches are themselves built on, for your own curved geometry.
+- [`UnitCircleLut`](Guide/UnitCircleLut_Guide.md) / [`TrigLut`](Guide/TrigLut_Guide.md) — trig-free lookup tables, the same ones the shape batches use internally, for your own curved geometry.
 - [`VectorExtensions`](Guide/Vector2Extensions_Guide.md) — angle/rotation/approach/clamp helpers on MonoGame's own `Vector2`, plus `Vector3Extensions` (3D) in the same guide.
 - [`RectangleF`](Guide/RectangleF_Guide.md) — a float-precision counterpart to MonoGame's integer-only `Rectangle`.
-- [`RingBuffer`](Guide/RingBuffer_Guide.md) — a generic fixed-capacity ring buffer for your own history/log/sample-window need.
-- [`ObjectPool`](Guide/ObjectPool_Guide.md) — a generic object pool for anything spawned/discarded often enough to want reuse over reallocation.
+- [`RingBuffer`](Guide/RingBuffer_Guide.md) — a generic fixed-capacity ring buffer for a history, log, or sample window.
+- [`ObjectPool`](Guide/ObjectPool_Guide.md) — a generic object pool for anything spawned and discarded often enough to want reuse over reallocation.
 
 **App helpers**
 - [`FrameLimiter`](Guide/FrameLimiter_Guide.md) — sleep+spin frame pacing, more precise than `IsFixedTimeStep` alone.
@@ -123,7 +123,7 @@ Each class has its own guide — start with whichever one covers what you're tou
 - [`Cooldown`](Guide/Cooldown_Guide.md) — a simple countdown struct for attack cooldowns, spawn timers, input debouncing.
 - [`WindowUtil`](Guide/WindowUtil_Guide.md) — minimize/maximize/restore, opacity, window icon, multi-monitor info, clipboard text, and captured-cursor mouse-look.
 
-For the project's own internals (architecture map, conventions, the reasoning behind non-obvious choices), see [`Design/README.md`](Design/README.md).
+Curious about the internals — architecture, conventions, why something works the way it does? That's in [`Design/README.md`](Design/README.md).
 
 ![Every Palette color as a labeled swatch](img/palette.png)
 
@@ -141,21 +141,21 @@ For the project's own internals (architecture map, conventions, the reasoning be
 
 ## Inspiration
 
-This library borrows ideas from several places rather than inventing its own conventions from scratch:
+A few places this borrows from directly, credit where it's due:
 
-- **[Apos.Shapes](https://github.com/Apostolique/Apos.Shapes)** — `Fill`/`Border`/`Draw` per shape, the core naming convention the whole drawing API is built on, comes from here: Apos.Shapes uses that exact three-verb split (`FillCircle`/`BorderCircle`/`DrawCircle`, and so on for every shape it has).
-- **[raylib](https://www.raylib.com/)** — the other biggest influence, drawn on more than the rest: `Camera3D`'s movement/rotation math is a direct port of `rcamera.h`, and `Collision3D`'s `GetRayCollision*` naming and result struct follow raylib's own collision module.
-- **[raylib-cs](https://github.com/raylib-cs/raylib-cs)** — its C# bindings keep raylib's own function names as-is (`DrawCircleV`, `DrawRectangleV`) but swap raylib's custom math types for .NET's own `System.Numerics.Vector2`/`Vector3` — the same instinct behind this library using MonoGame's own `Vector2`/`Vector3`/`Color` rather than defining its own.
-- **[MonoGame.Extended](https://github.com/craftworkgames/MonoGame.Extended)** — `Camera2D`/`ViewportAdapter2D`'s design (letterbox/scaling viewport adapters composed with a camera) follows its `OrthographicCamera`/`ViewportAdapter` shape.
-- **[Godot](https://godotengine.org/)** — several individual methods are confirmed against Godot's own equivalents where raylib has no answer: `PrimitiveInput.GetAxis`'s tie-to-zero behavior matches `Input.get_axis`, `DebugFont5x7`'s cylindrical text billboarding matches `Label3D`'s default billboard mode, `RandomUtil.NextWeightedIndex` matches `RandomNumberGenerator.rand_weighted_pick`.
-- **[libGDX](https://libgdx.com/)** — `PolygonUtil.Triangulate` matches its `EarClippingTriangulator`, and `CoverViewportAdapter2D` fills the same gap as its `Scaling.fill` mode (uniform scale, crop the overflow, never show bars) — a real third viewport-fit option neither raylib nor MonoGame.Extended's own adapters covered.
-- **[Processing](https://processing.org/) / [p5.js](https://p5js.org/)** — the underlying philosophy: draw a shape with one call, no setup ceremony, fast enough to iterate on an idea in a sketch rather than a project. `Noise`'s API shape (seedable, sample-anywhere) is the same idea as Processing's own `noise()`.
+- **[Apos.Shapes](https://github.com/Apostolique/Apos.Shapes)** — where the `Fill`/`Border`/`Draw` naming came from.
+- **[raylib](https://www.raylib.com/)** — the biggest influence overall. `Camera3D` is basically a C# port of `rcamera.h`, and `Collision3D` follows raylib's collision module pretty closely (naming included).
+- **[raylib-cs](https://github.com/raylib-cs/raylib-cs)** — the reason this uses MonoGame's own `Vector2`/`Vector3`/`Color` instead of rolling its own math types, same call raylib-cs made for raylib's C bindings.
+- **[MonoGame.Extended](https://github.com/craftworkgames/MonoGame.Extended)** — `Camera2D`/`ViewportAdapter2D` follows its `OrthographicCamera`/`ViewportAdapter` split.
+- **[Godot](https://godotengine.org/)** — a few specific methods are checked against it where raylib doesn't have an answer: `PrimitiveInput.GetAxis`, the debug font's billboard behavior, `RandomUtil.NextWeightedIndex`.
+- **[libGDX](https://libgdx.com/)** — `PolygonUtil.Triangulate` matches its ear-clipping triangulator, and `CoverViewportAdapter2D` is the same idea as its `Scaling.fill`.
+- **[Processing](https://processing.org/) / [p5.js](https://p5js.org/)** — the underlying philosophy: one call, no setup, fast enough to try an idea in a sketch instead of a project.
 
-None of the above are dependencies — MonoPrimitives only depends on MonoGame itself. They're referenced here as the design lineage, not as libraries this one wraps or requires.
+None of these are dependencies — MonoPrimitives only needs MonoGame itself.
 
 ## Status
 
-Published on NuGet, pre-1.0 — the API can still change between minor versions as gaps get closed. See [`Design/ROADMAP.md`](Design/ROADMAP.md) for known gaps and deliberate deferrals, and [`CHANGELOG.md`](CHANGELOG.md) for what changed in each version.
+Published on NuGet, pre-1.0 — expect some API churn until the gaps close. [`Design/ROADMAP.md`](Design/ROADMAP.md) has what's known-missing and deliberately deferred; [`CHANGELOG.md`](CHANGELOG.md) has what changed in each version.
 
 ## License
 

@@ -112,7 +112,7 @@ Restores `Position`/`Target`/`Up`/`Fovy`/`Projection`/`NearPlane`/`FarPlane` to 
 
 ## Testing
 
-[`tests/MonoPrimitives.Tests/Camera3DTests.cs`](../tests/MonoPrimitives.Tests/Camera3DTests.cs) covers the basis vectors, movement/rotation (including `Pitch`'s pole-lock), zoom/follow/bounds clamping, screen shake, matrix/projection correctness (a `WorldToScreen`↔`ScreenToWorld` round-trip, `GetScreenToWorldRay`'s direction), `IsVisible` against direct frustum intersection tests, the box-deadzone `FollowTarget` overload, `FitBounds` (checked against `BoundingFrustum.Contains`, including that halving the fitted distance breaks full containment), and `Reset()`'s full state restoration. Run with:
+[`tests/MonoPrimitives.Tests/Camera3DTests.cs`](../tests/MonoPrimitives.Tests/Camera3DTests.cs) covers the basis vectors, movement/rotation (including `Pitch`'s pole-lock), zoom/follow/bounds clamping, screen shake, a `WorldToScreen`↔`ScreenToWorld` round-trip, `IsVisible` against direct frustum tests, `FitBounds` (checked against `BoundingFrustum.Contains`), and `Reset()`'s full state restoration. Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj

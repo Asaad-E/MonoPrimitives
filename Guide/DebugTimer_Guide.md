@@ -42,7 +42,7 @@ protected override void Draw(GameTime gameTime)
 
 ## Why `label` is required, not `[CallerMemberName]`-optional
 
-An earlier draft let `label` default to the calling member's name via `[CallerMemberName]`, so `new DebugTimer()` at the top of a method would auto-label itself. That's broken for a `struct`: `new DebugTimer()` — literally empty parens — never calls a user-defined constructor whose parameters are merely optional; C# specifically treats the zero-argument `new S()` form as "the all-fields-default value of `S`" for value types, regardless of what constructors exist, unless one is truly parameter-less (which can't carry `[CallerMemberName]`, since there'd be nothing to attribute). The result would have been a silently broken timer — `null` label, a zero timestamp read back as an hours-long "elapsed" time — for exactly the call style the feature was meant to make convenient, with no compiler error. See [`Design/DECISIONS.md`](../Design/DECISIONS.md) for the isolated repro that caught this.
+An earlier version let `label` default to the calling method's name via `[CallerMemberName]`, so `new DebugTimer()` would auto-label itself. Turns out that's broken for a struct: `new DebugTimer()` with empty parens never calls a constructor at all, even one with optional parameters — C# treats bare `new S()` on a value type as "just give me the default value," full stop. The result was a silently broken timer (null label, elapsed time read back as hours) for exactly the shorthand the feature was supposed to enable. See [`Design/DECISIONS.md`](../Design/DECISIONS.md) for the repro.
 
 ## Console output and MonoGame
 

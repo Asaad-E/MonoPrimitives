@@ -59,7 +59,7 @@ These are set once (at construction or afterward) rather than passed to every `F
 
 ## Testing
 
-Every method above has a permanent regression check in [`tests/MonoPrimitives.Tests/NoiseTests.cs`](../tests/MonoPrimitives.Tests/NoiseTests.cs): determinism (same seed → same output), range, the `Sample1D` degeneracy fix above (a dedicated regression test), **continuity** (a tiny step in the input changes the output by only a bounded amount — the entire point of gradient noise over raw random, and the one property that took an explicit test rather than being assumed), continuity across the negative-coordinate boundary specifically (protects the `(int)Floor(x) & 255` lattice-wrap trick, which only behaves like a true modulo for negative `x` because of two's-complement bit patterns — a future "simplify to `% 256`" refactor would silently reintroduce a seam at every integer), `Fbm` determinism and the `Octaves = 0` edge case, and Ridge/Turbulence's range plus a check that Ridge's squaring is actually firing. Run with:
+Every method above has a permanent regression check in [`tests/MonoPrimitives.Tests/NoiseTests.cs`](../tests/MonoPrimitives.Tests/NoiseTests.cs): determinism, range, the `Sample1D` fix above, **continuity** (a tiny input step should only change the output by a bounded amount — the whole point of gradient noise), and continuity specifically across negative coordinates, where the lattice-wrap trick is easy to break with an "obvious" simplification. Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
@@ -67,7 +67,7 @@ dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 
 ## What's deliberately not here
 
-Godot's `FastNoiseLite` (the closest well-known reference for this exact scope) offers several alternate noise *types* — Simplex, Cellular/Worley, Value — plus domain warping and weighted-strength/ping-pong fractal modes. None of that is here: it's a whole multi-algorithm noise engine, out of scope for this library. `RidgeNoise`/`Turbulence` above are the one addition made, and they're not a new algorithm — just alternate ways to combine the existing `Sample1D/2D/3D` octaves, the same shape `Fbm*` itself already has.
+No Simplex, Cellular/Worley, or Value noise, no domain warping, no alternate fractal modes — that's a whole multi-algorithm noise engine, out of scope here. `RidgeNoise`/`Turbulence` are the one addition, and they're not a new algorithm, just different ways of combining the same `Sample1D/2D/3D` octaves `Fbm*` already uses.
 
 ## See also
 

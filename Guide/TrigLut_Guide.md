@@ -41,7 +41,7 @@ Same error-vs-radius tradeoff as 2D's table, just tuned for 3D shapes that can b
 
 ## Testing
 
-[`tests/MonoPrimitives.Tests/TrigLutTests.cs`](../tests/MonoPrimitives.Tests/TrigLutTests.cs) checks `SinIndex`/`CosIndex`'s cardinal points and negative/out-of-range wrapping, `SinCosStep`'s exact-division fast path against real trig across several divisor counts, its interpolated generic path against real trig including negative `step` (a regression test for a real, if small, imprecision this had — see `Design/DECISIONS.md`), `Sample`/`SampleRadians`/`SampleDegrees`'s mutual agreement and agreement with `Math.Sin`/`Cos` across a wide range of angles including negative ones, and continuity across the `t01=0/1` wrap boundary. Run with:
+[`tests/MonoPrimitives.Tests/TrigLutTests.cs`](../tests/MonoPrimitives.Tests/TrigLutTests.cs) covers the cardinal points, negative/out-of-range wrapping, the interpolated path against real trig (including negative `step` — a past bug, see `Design/DECISIONS.md`), and that `Sample`/`SampleRadians`/`SampleDegrees` all agree with each other and with `Math.Sin`/`Cos`. Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj

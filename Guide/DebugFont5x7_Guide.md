@@ -74,7 +74,7 @@ batch.End();
 
 **Billboarding is cylindrical** (stays upright relative to world `+Y`, rotating only to face the camera around that axis) — the usual choice for labels, matching Godot's `Label3D` default billboard mode and Unity's `TextMesh`. It falls back to a full camera-facing basis (`Primitive3DBatch.BuildBasis`, an orthonormal-basis-from-one-vector construction) only when looking almost straight up or down world `+Y`, where the cylindrical axis is undefined. The resulting `right`/`up` always match the camera's own on-screen right/up, so text never reads mirrored or upside-down regardless of which side the camera approaches from.
 
-A full spherical billboard (tilting with camera pitch, not just yaw) was deliberately not added as an alternative mode — unusual for readable text specifically (most engines reserve that for particles/sprites, not labels), and not something any peer's text-billboard API defaults to either.
+A full spherical billboard (tilting with camera pitch too, not just yaw) isn't offered as an option — it reads badly on text specifically, which is why most engines reserve it for particles and sprites instead.
 
 ## Why it's not production typography
 
@@ -83,7 +83,7 @@ A full spherical billboard (tilting with camera pitch, not just yaw) was deliber
 
 ## Testing
 
-[`tests/MonoPrimitives.Tests/FontGlyphs5x7Tests.cs`](../tests/MonoPrimitives.Tests/FontGlyphs5x7Tests.cs) locks in the row-span convention above as a permanent check per letter class (x-height, ascender, dotted, uppercase/digit), plus the fallback hollow-box glyph, `AdvanceFor`'s scaling, `MeasureText`'s multi-line behavior, and `WrapText` (every wrapped line actually fits within `maxWidth`, breaks land on word boundaries not mid-word, a too-long single word hard-breaks without losing/adding characters, and existing `'\n'` survive as independent forced breaks). [`ShapeTests2D.cs`](../tests/MonoPrimitives.Tests/ShapeTests2D.cs) renders `DrawString(..., maxWidth:)` to confirm no glyph pixel actually crosses the boundary, and that `maxWidth = 0` really does mean "off." [`tests/MonoPrimitives.Tests/DebugFont3DTests.cs`](../tests/MonoPrimitives.Tests/DebugFont3DTests.cs) covers 3D's own surface: `GetBillboardAxes`'s orthonormality and match against the camera's own view-space axes, the straight-up/down pole fallback, `DrawString3D` emitting geometry only for non-space glyphs, `MeasureText3D` agreeing with `FontGlyphs5x7.MeasureText`, and the not-begun/null/empty/zero-size no-op paths. Run with:
+[`tests/MonoPrimitives.Tests/FontGlyphs5x7Tests.cs`](../tests/MonoPrimitives.Tests/FontGlyphs5x7Tests.cs) locks in the row-span convention per letter class, the fallback glyph, and `WrapText`'s behavior (fits within `maxWidth`, breaks on word boundaries, hard-breaks an overlong word, respects existing `'\n'`). [`ShapeTests2D.cs`](../tests/MonoPrimitives.Tests/ShapeTests2D.cs) renders `DrawString(..., maxWidth:)` and checks no glyph pixel crosses the boundary. [`DebugFont3DTests.cs`](../tests/MonoPrimitives.Tests/DebugFont3DTests.cs) covers the 3D side: `GetBillboardAxes`'s orthonormality against the camera's real axes, the straight-up/down pole fallback, and the various no-op paths. Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj

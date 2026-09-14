@@ -58,7 +58,7 @@ A capsule with `start == end` behaves exactly like a sphere in every one of the 
 
 ## Testing
 
-[`tests/MonoPrimitives.Tests/Collision3DTests.cs`](../tests/MonoPrimitives.Tests/Collision3DTests.cs) covers every method above: each overlap test's overlapping/far-apart cases (plus degenerate-capsule and exact-touching-boundary edge cases for `CheckCollisionCapsuleBox`), and each raycast's hit/miss cases (including a ray behind its own origin, a ray parallel to a plane/triangle, and `GetRayCollisionCapsule`'s body-hit vs. cap-hit vs. degenerate-to-sphere cases). Run with:
+[`tests/MonoPrimitives.Tests/Collision3DTests.cs`](../tests/MonoPrimitives.Tests/Collision3DTests.cs) covers every method above: overlapping/far-apart cases, degenerate capsules, and each raycast's hit/miss behavior (a ray behind its own origin, one parallel to a plane/triangle, and so on). Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj

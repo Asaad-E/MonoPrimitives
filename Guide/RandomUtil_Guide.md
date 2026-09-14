@@ -103,13 +103,9 @@ Parallel.For(0, agentCount, i =>
 });
 ```
 
-Walking through why this works:
+The `() => new RandomUtil(...)` factory only runs the first time a given thread asks for `.Value` — after that, the same thread keeps getting the same instance back. `Environment.CurrentManagedThreadId` in the seed offset just makes sure two threads don't accidentally start from the same seed.
 
-- `new(() => new RandomUtil(...))` passes a *factory* to `ThreadLocal<T>`'s constructor: "the first time some thread asks for `.Value` and doesn't have one yet, run this to build it."
-- `Environment.CurrentManagedThreadId` gives each thread a different seed offset, so threads don't coincidentally start from the same seed and produce correlated (not actually independent) streams.
-- The first time thread #7 calls `.Value`, the factory runs once and thread #7 keeps that same instance for every later call — no thread ever touches another thread's `RandomUtil`.
-
-Note that "reproducible" here means the *set* of values drawn is deterministic given the base seed — which thread happens to process which agent, and in what order, is still up to the thread pool's scheduling, so this does not guarantee byte-identical output across runs the way a single-threaded seeded run would.
+"Reproducible" here means the *set* of values drawn is deterministic for a given base seed — which thread ends up processing which agent is still up to the thread pool's scheduling, so this isn't byte-identical across runs the way a single-threaded seeded run is.
 
 ### Option B — `RandomUtil.Shared` (thread-safe, not reproducible)
 
@@ -137,7 +133,7 @@ Parallel.For(0, agentCount, i =>
 
 ## Testing
 
-[`tests/MonoPrimitives.Tests/RandomUtilTests.cs`](../tests/MonoPrimitives.Tests/RandomUtilTests.cs) checks determinism (same seed → same sequence), every distribution's sample mean/variance against its theoretical value over large sample counts (including all three `Poisson`/`Binomial` regimes separately), the circle/sphere sampling's area/volume-uniformity specifically (`E[r²] ≈ 0.5` for the disc, `E[z²] ≈ 1/3` and `E[r³] ≈ 0.5` for the sphere — chosen because a regression back to a naive uniform-radius or uniform-latitude approach would visibly miss these exact numbers), `NextWeightedIndex`'s proportions and error handling, `NextItem`'s coverage/empty-input error, `NextGaussianVector2`/`3`'s per-axis mean/stddev, that `UnderlyingRandom` shares `RandomUtil`'s own stream rather than a separate one, and a 16-thread concurrent stress test of `Shared`. Run with:
+[`tests/MonoPrimitives.Tests/RandomUtilTests.cs`](../tests/MonoPrimitives.Tests/RandomUtilTests.cs) checks determinism, every distribution's sample mean/variance against its theoretical value, the circle/sphere sampling's area/volume uniformity specifically (a regression back to naive uniform-radius or uniform-latitude sampling would visibly fail this), `NextWeightedIndex`/`NextItem`'s error handling, and a concurrent stress test of `Shared`. Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj

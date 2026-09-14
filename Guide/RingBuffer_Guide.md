@@ -30,10 +30,6 @@ void OnHit(float amount)
 | `Newest` / `Oldest` | Shorthand for `this[Count - 1]` / `this[0]`. Throws on an empty buffer. |
 | `foreach` (`IEnumerable<T>`) | Enumerates oldest-first to newest-last, matching the indexer's own order — allocation-free when used as `foreach (var x in ringBuffer)` against the concrete type (a custom struct enumerator, the same trick `List<T>` itself uses, not a boxed `yield return` iterator). |
 
-## Why this exists as its own type
-
-`Trail2D`, `Trail3D`, and `FpsCounter` all privately implement the exact same "fixed array, wrap the write index, evict the oldest" logic for their own internal history — `RingBuffer<T>` is that logic, generalized and made public, so a fourth (your own) use of the same pattern doesn't need to be written from scratch again. It has no drawing, no frame-time semantics, no opinion about what `T` is — just the buffer.
-
 ## See also
 
 - [`Trail`](Trail2D_Guide.md) — a `Vector2`/`Vector3`-specific ring buffer with drawing and fade built on top, if that's closer to what you need.

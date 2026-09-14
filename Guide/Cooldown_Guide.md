@@ -21,7 +21,7 @@ protected override void Update(GameTime gameTime)
 
 | Member | What it does |
 |---|---|
-| `new Cooldown(duration)` | A cooldown of `duration` seconds, starting already `IsReady` — the usual expectation for something usable right away the first time. |
+| `new Cooldown(duration)` | A cooldown of `duration` seconds, starting already `IsReady` — usable right away the first time. |
 | `Duration` | The full duration `Reset()`/a successful `TryUse()` restarts the countdown to. Settable. |
 | `Update(deltaSeconds)` / `Update(GameTime)` | Counts the cooldown down. Call once per frame. |
 | `IsReady` | True once the countdown has reached zero. |
@@ -31,11 +31,11 @@ protected override void Update(GameTime gameTime)
 | `Reset()` | Restarts the countdown at `Duration` — forces *not* ready. |
 | `ResetReady()` | Forces `IsReady` immediately, skipping whatever was left — e.g. to undo a `Reset()`. |
 
-## A struct, not a class — and the one thing to know about that
+## A struct, not a class — and the one gotcha that comes with it
 
-`Cooldown` is a plain `struct`, not a class, on purpose: it's meant to be a field on potentially hundreds of entities in a simulation (an enemy's attack cooldown, a spawner's timer), and as a struct it costs nothing beyond the entity's own memory — no separate heap allocation per instance the way a class field would need.
+`Cooldown` is a plain `struct`, not a class. It's meant to sit as a field on potentially hundreds of entities (an enemy's attack cooldown, a spawner's timer), and as a struct it costs nothing beyond the entity's own memory — no heap allocation per instance.
 
-The one thing this asks of you in return is the standard mutable-struct rule: **store it as a field, not a local you reassign each frame.** `cooldown.Update(dt)` correctly mutates a `Cooldown` stored as a field on `this`. It does *not* correctly mutate a copy pulled out into a local variable, an array element read by value into a local, or a `foreach` loop variable — those all operate on a copy, and the mutation is lost the moment the copy goes out of scope. This is the same caveat that applies to any mutable struct in C# (not specific to `Cooldown`), just worth naming explicitly since a `Cooldown` ticking down "for no reason" is exactly the symptom this mistake produces.
+That means the usual mutable-struct rule applies: **store it as a field, not a local you reassign each frame.** `cooldown.Update(dt)` mutates it correctly when it's a field on `this`. It won't work on a copy pulled into a local variable, an array element read by value, or a `foreach` variable — those are all copies, and the update just gets thrown away. Nothing `Cooldown`-specific here, but it's worth calling out: a cooldown that seems to tick down "for no reason" is usually exactly this.
 
 ## See also
 

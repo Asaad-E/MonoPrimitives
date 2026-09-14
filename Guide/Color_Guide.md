@@ -87,13 +87,13 @@ Pure `Color x Color -> Color` functions computing a blended color *value* to dra
 
 ## What's deliberately not here
 
-- **A "readable text color" / auto-contrast helper** (pick black or white text based on a background's luminance) — a genuinely common UI utility elsewhere, but not something raylib/love2d/Godot/Unity ship as a core color function either, so it wasn't added speculatively.
-- **Proper alpha-compositing** (raylib's `ColorAlphaBlend`, a Porter-Duff "over" operator accounting for both colors' own alpha) — lower value here specifically, since `Primitive2DBatch` already composites layered draws via its GPU blend state; a CPU-side compositor would mostly duplicate that.
-- **Per-color alpha replacement, normalized/packed-int conversion** — already covered directly by MonoGame's own `Color` struct (`new Color(color, alpha)`, `.ToVector3()`/`.ToVector4()`, `.PackedValue`, `new Color(uint)`), so wrapping them here would be pure, redundant sugar.
+- **A "readable text color" helper** (pick black or white text based on background luminance) — common enough elsewhere, just not added here without a real need for it.
+- **Proper alpha-compositing** (a Porter-Duff "over" operator) — `Primitive2DBatch` already composites layered draws through its GPU blend state, so a CPU-side version would mostly duplicate that.
+- **Per-color alpha replacement, normalized/packed-int conversion** — already on MonoGame's own `Color` (`new Color(color, alpha)`, `.ToVector3()`/`.ToVector4()`, `.PackedValue`), no need to wrap it again.
 
 ## Testing
 
-Every method above has a permanent regression check in [`tests/MonoPrimitives.Tests/ColorUtilTests.cs`](../tests/MonoPrimitives.Tests/ColorUtilTests.cs) — round-trips (`Color`↔HSV, hex↔`Color`), each blend mode's defining identity, direction checks for the HSV adjustments, `FromTemperature`'s red→white→blue progression and range clamping, and `Palette`'s wraparound/opacity invariants. Run with:
+Every method above has a permanent regression check in [`tests/MonoPrimitives.Tests/ColorUtilTests.cs`](../tests/MonoPrimitives.Tests/ColorUtilTests.cs) — round-trips, each blend mode's defining identity, direction checks for the HSV adjustments, and `Palette`'s wraparound/opacity invariants. Run with:
 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
