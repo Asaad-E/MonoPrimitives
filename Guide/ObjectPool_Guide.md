@@ -38,13 +38,8 @@ void OnBulletExpired(Bullet b) => _bullets.Return(b);
 
 A reused instance still has whatever state it had the last time it was returned — `ObjectPool<T>` doesn't know how to "clean" a `T` for you. `onGet` is where you put it back into a usable state (position, health, whatever makes it look fresh to its next caller); `onReturn` is where you release anything it shouldn't keep holding onto while sitting idle (e.g. clearing a reference to something else it pointed at, so that object isn't kept alive by a pooled instance nobody's using). Both are optional — a pool of something genuinely stateless (or that resets itself on next use anyway) doesn't need either.
 
-## What this doesn't do
+## Limitations
 
 - **Doesn't validate double-`Return()` or returning something never `Get()`'d.** Both are caller misuse, not guarded against — the same trust-the-caller boundary this library draws everywhere else (adding a tracking check would cost real overhead on every `Get`/`Return` to catch a bug you control by just not doing it).
 - **Doesn't know what `T` is.** No update loop, no rendering, no ownership of your game logic — it's a building block, not a system. You still own deciding when something is spawned/expired; this only handles not reallocating it every time.
 - **`maxSize`** exists so a caller that forgets to ever call `Get()` again after a burst of `Return()`s doesn't leave the pool holding an unbounded number of idle instances forever — past the cap, a `Return()` just lets that instance fall to the GC instead.
-
-## See also
-
-- [`Guide/RingBuffer_Guide.md`](RingBuffer_Guide.md) — a different kind of reuse: a fixed-size history instead of a grab-bag of interchangeable instances.
-- [`Guide/Cooldown_Guide.md`](Cooldown_Guide.md) — pairs naturally with a pool for a spawner (`if (cooldown.TryUse()) Fire();`).

@@ -44,7 +44,7 @@ Every function takes `t` in `[0,1]` and returns a (usually, see below) `[0,1]`-i
 Every curve above is also a value of the `EasingType` enum, dispatched through `Easing.Evaluate(EasingType, t)`:
 
 ```csharp
-EasingType curve = LoadCurveChoiceFromLevelFile(); // or a debug-UI dropdown
+EasingType curve = Enum.Parse<EasingType>(levelConfig["easingCurve"]); // e.g. "CubicOut" from a JSON/level file
 float eased = Easing.Evaluate(curve, t);
 ```
 
@@ -59,7 +59,7 @@ Use this when the curve itself is data — chosen from a config/level file, expo
 - **A distinctly rounder feel than the polynomial curves**: `Circ*`.
 - **Need it to feel more dramatic than `Quart` allows**: `Quint*`.
 
-## Two properties worth knowing (both are permanent regression tests, not just claims)
+## Two properties worth knowing
 
 - **Every `InOut` variant passes through exactly `f(0.5) = 0.5`.** The `In` and `Out` halves are constructed to meet exactly at the midpoint — true even for `Back`/`Bounce`/`Elastic`'s `InOut` variants.
 - **Every family's `Out` is `1 - In(1 - t)`.** This is how an ease-out is always derived from its ease-in — reverse time, flip the result. True universally, even though only `BounceIn` is literally implemented that way in the source (`BounceIn(t) => 1 - BounceOut(1 - t)`); the rest just happen to satisfy the same identity by construction.
@@ -71,8 +71,3 @@ Every function has a permanent regression check in [`tests/MonoPrimitives.Tests/
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 ```
-
-## See also
-
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the audit that added `Quint`/`Circ` (confirmed against raylib's `reasings.h`, Godot's `Tween.TransitionType`, and DOTween's `Ease` enum) and built out the test suite from nothing.
-- [`Guide/Camera2D_Guide.md`](Camera2D_Guide.md) — `SmoothDamp`, the spring-based alternative for open-ended following/zoom instead of a fixed-duration tween.

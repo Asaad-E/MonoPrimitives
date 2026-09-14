@@ -83,8 +83,3 @@ dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 ```
 
 `examples/test/CollisionTest` is the interactive counterpart — every check above, one key each (`1`-`9`, `0`, `Q`, `E`, `R`, `T`, `Y`, `U`, `I`), two controllable points (mouse + WASD, swappable with Space), shapes turning red on overlap.
-
-## See also
-
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the audit that added the `Capsule*Poly` family and closed the test-coverage gap.
-- [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) — drawing the shapes this class tests.

@@ -63,8 +63,3 @@ A capsule with `start == end` behaves exactly like a sphere in every one of the 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 ```
-
-## See also
-
-- [`Guide/Primitive3DBatch_Guide.md`](Primitive3DBatch_Guide.md) — drawing the shapes this class tests.
-- [`Guide/Collision2D_Guide.md`](Collision2D_Guide.md) — the 2D counterpart; returns `bool` + `out` params instead of a `RayCollision3D` struct, since a 2D raycast is almost always an immediate yes/no gate rather than something you compare across several candidate hits.

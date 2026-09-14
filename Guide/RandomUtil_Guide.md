@@ -138,8 +138,3 @@ Parallel.For(0, agentCount, i =>
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 ```
-
-## See also
-
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the condensed rationale behind these specific algorithm and threshold choices, plus `NextWeightedIndex`/`UnderlyingRandom`'s addition.
-- [`Noise`](../src/Core/Noise.cs) — the other seedable source of randomness in this library, for smooth/coherent (not independent-sample) variation like terrain or organic motion.

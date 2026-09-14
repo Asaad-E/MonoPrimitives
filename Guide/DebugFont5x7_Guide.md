@@ -72,7 +72,7 @@ batch.End();
 | `MeasureText3D(text, pixelSize, glyphSpacing, lineSpacing)` | Same as 2D's `MeasureText`, in world units — for centering along the billboard's own axes. |
 | `GetBillboardAxes(position, out right, out up)` | The `right`/`up` basis `DrawString3D` bills off of — exposed separately for your own billboarded quads (particles, sprites) that want the same behavior. |
 
-**Billboarding is cylindrical** (stays upright relative to world `+Y`, rotating only to face the camera around that axis) — the usual choice for labels, matching Godot's `Label3D` default billboard mode and Unity's `TextMesh`. It falls back to a full camera-facing basis (`Primitive3DBatch.BuildBasis`, an orthonormal-basis-from-one-vector construction) only when looking almost straight up or down world `+Y`, where the cylindrical axis is undefined. The resulting `right`/`up` always match the camera's own on-screen right/up, so text never reads mirrored or upside-down regardless of which side the camera approaches from.
+**Billboarding is cylindrical** — it stays upright relative to world `+Y` and only rotates to face the camera around that axis, the usual choice for labels. It falls back to a full camera-facing basis only when looking almost straight up or down world `+Y`, where the cylindrical axis breaks down. The resulting `right`/`up` always match the camera's own on-screen right/up, so text never reads mirrored or upside-down no matter which side the camera approaches from.
 
 A full spherical billboard (tilting with camera pitch too, not just yaw) isn't offered as an option — it reads badly on text specifically, which is why most engines reserve it for particles and sprites instead.
 
@@ -88,10 +88,3 @@ A full spherical billboard (tilting with camera pitch too, not just yaw) isn't o
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 ```
-
-## See also
-
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — both 2D bug write-ups in full (including the visual renders that caught them), and the 3D billboard-axis verification.
-- `examples/test/TextReadabilityTest` — every printable glyph plus a pangram at reading size, pannable/zoomable via `Camera2D`.
-- `samples/MonoPrimitives.Sample/Gallery3D.cs` — `DrawString3D` used for every shape's caption in the 3D gallery.
-- [`Guide/Camera3D_Guide.md`](Camera3D_Guide.md) — the camera `GetBillboardAxes` faces.

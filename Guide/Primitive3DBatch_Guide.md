@@ -203,11 +203,3 @@ Only `Sphere` and `Circle3D` have a no-tessellation-arguments overload, and both
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 ```
-
-## See also
-
-- [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) — the 2D sibling; most conventions here carry over directly.
-- [`Guide/Camera3D_Guide.md`](Camera3D_Guide.md) — the camera `Begin(camera)` takes.
-- [`Guide/TrigLut_Guide.md`](TrigLut_Guide.md) — the trig table every curved shape here samples from.
-- [`Guide/Collision3D_Guide.md`](Collision3D_Guide.md) — hit-testing the shapes this guide draws.
-- `samples/MonoPrimitives.Sample/Gallery3D.cs` — every shape family, one row each, Fill/Border/Draw per cell.

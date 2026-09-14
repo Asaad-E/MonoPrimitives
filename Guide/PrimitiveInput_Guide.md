@@ -49,7 +49,7 @@ Call `Update` exactly once per frame, before reading anything else — every `Is
 | `DragDelta(button)` | Total movement since `button` was last pressed. Live-tracks `MousePosition` while held; once released, keeps reporting the drag's final distance (not a stale zero) for the rest of that frame and after, until the next press starts a new drag — so checking it from inside `if (IsMouseButtonReleased(button))` (a swipe/flick gesture) sees the real distance. |
 | `IsDragging(button, threshold = 4f)` | True while held **and** moved more than `threshold` px from the press point — lets a click handler and a drag handler share one button without the click firing on every tiny press-time jitter. Unlike `DragDelta`, always false once released. |
 | `IsMouseOver(rect)` | Point-in-rectangle test against `MousePosition` — hit-testing a panel/button without a UI library. |
-| `SetMousePosition(x, y)` | Moves the OS cursor — e.g. re-centering every frame for an FPS-style mouse-look that never hits the window edge (see "What this can't do" below). Pair with `ResetMouseDelta()` or accept one frame of a large jump-delta. |
+| `SetMousePosition(x, y)` | Moves the OS cursor — e.g. re-centering every frame for an FPS-style mouse-look that never hits the window edge (see "Limitations" below). Pair with `ResetMouseDelta()` or accept one frame of a large jump-delta. |
 | `SetCursor(cursor)` | Sets the OS cursor's shape — one of `MouseCursor`'s built-ins (`Arrow`, `IBeam`, `Hand`, `Crosshair`, the resize arrows, `SizeAll`, `No`, `WaitArrow`, `Wait`) or a fully custom one via `MouseCursor.FromTexture2D(texture, originX, originY)`. |
 | `ResetMouseDelta()` | Zeroes delta tracking for the next `Update` — call after teleporting the cursor or regaining window focus, so `MouseDelta` doesn't report a one-frame snap. |
 
@@ -104,9 +104,13 @@ if (_input.IsKeyPressed(Keys.Back) && typedText.Length > 0)
 
 ## Raw state (for anything this class doesn't wrap)
 
-`CurrentKeyboardState`/`CurrentMouseState`/`GetCurrentGamePadState` (and their `Previous*` counterparts) expose the exact `KeyboardState`/`MouseState`/`GamePadState` snapshot this instance's own `Update` already captured this frame — the same "reach the underlying thing instead of only what got wrapped" escape hatch [`RandomUtil.UnderlyingRandom`](RandomUtil_Guide.md) offers. Reach for these instead of calling `Keyboard.GetState()`/`Mouse.GetState()`/`GamePad.GetState()` yourself: a fresh call returns a **second, independent** snapshot, which can genuinely disagree with what this instance is reporting elsewhere in the same frame (e.g. right after an OS focus change or a mid-frame poll) — reading the one `Update` already took keeps everything consistent. Use these for anything this class has no named query for yet — every currently-held key at once (`KeyboardState.GetPressedKeys()`), a packed `GamePadState.Buttons` check, or your own custom pressed/released/held-for-N-frames logic built from `Current`/`Previous` together.
+`CurrentKeyboardState`/`CurrentMouseState`/`GetCurrentGamePadState` (and their `Previous*` counterparts) expose the exact snapshot this instance's own `Update` already captured this frame.
 
-## What this can't do (and why)
+Reach for these instead of calling `Keyboard.GetState()`/`Mouse.GetState()`/`GamePad.GetState()` yourself. A fresh call returns a second, independent snapshot that can genuinely disagree with what this instance reports elsewhere in the same frame — right after an OS focus change, say. Reading the one `Update` already took keeps everything consistent.
+
+Use these for anything this class has no named query for: every currently-held key at once (`KeyboardState.GetPressedKeys()`), a packed `GamePadState.Buttons` check, or your own pressed/released/held-for-N-frames logic built from `Current`/`Previous` together.
+
+## Limitations
 
 Two things worth knowing before you go looking for them:
 
@@ -114,8 +118,3 @@ Two things worth knowing before you go looking for them:
 - **Correct typed text from key polling alone** — see `GetCharPressed` above; needs the `GameWindow` constructor, no way around it.
 
 Also not in scope: an input action/binding-map layer. This hands you the poll, not a rebindable-action system on top of it — that's the last mile you'd build yourself with `GetAxis`/`GetVector2`.
-
-## See also
-
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the audit trail behind each addition here (why `SetVibration` has no duration, why `IsAnyButtonPressed` excludes analog-as-digital flags, the `GetCharPressed`/`TextInput` verification).
-- [`Guide/Camera2D_Guide.md`](Camera2D_Guide.md) — `Camera2D.UpdateWithInput`, the built-in WASD/drag/wheel controller built on top of this class.

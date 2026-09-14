@@ -35,7 +35,3 @@ Mirrors `Rectangle`'s own member shape, just with `float` fields — anything yo
 | `ToRectangle()` | Rounds to the nearest integer `Rectangle` (`MathF.Round`, banker's rounding at exact `.5` values). |
 | `(RectangleF)rectangle` / implicit from `Rectangle` | A `Rectangle`'s integer values widen to `RectangleF` for free — exact, no rounding. |
 | `Empty` | A static zero-sized rectangle at the origin. |
-
-## See also
-
-- [`VectorExtensions`](Vector2Extensions_Guide.md) — the equivalent small-utility treatment for `Vector2`.

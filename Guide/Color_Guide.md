@@ -85,7 +85,7 @@ Pure `Color x Color -> Color` functions computing a blended color *value* to dra
 | `Overlay(a, b)` | `Multiply` where `a` is dark, `Screen` where `a` is light — boosts contrast instead of uniformly shifting brightness. `a` is the base, `b` is overlaid on it — the two aren't interchangeable, unlike `Multiply`/`Screen`. |
 | `Additive(a, b)` | Straight per-channel sum, clamped at 255 — the standard "glow"/particle-additive look. |
 
-## What's deliberately not here
+## Limitations
 
 - **A "readable text color" helper** (pick black or white text based on background luminance) — common enough elsewhere, just not added here without a real need for it.
 - **Proper alpha-compositing** (a Porter-Duff "over" operator) — `Primitive2DBatch` already composites layered draws through its GPU blend state, so a CPU-side version would mostly duplicate that.
@@ -98,8 +98,3 @@ Every method above has a permanent regression check in [`tests/MonoPrimitives.Te
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 ```
-
-## See also
-
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the audit that added `Invert`/`Contrast` and the missing test coverage, including exactly what was checked and ruled out against raylib/love2d/Godot/Unity.
-- [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) — where these colors actually get drawn.

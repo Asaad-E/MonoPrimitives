@@ -46,8 +46,3 @@ Same error-vs-radius tradeoff as 2D's table, just tuned for 3D shapes that can b
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 ```
-
-## See also
-
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the negative-`step` imprecision found and fixed, and the `Sample`/`SampleRadians`/`SampleDegrees` additions.
-- [`Guide/UnitCircleLut_Guide.md`](UnitCircleLut_Guide.md) — the 2D counterpart, `Vector2`-shaped instead of `out float` pairs.

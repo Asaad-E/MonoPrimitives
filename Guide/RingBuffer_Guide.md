@@ -29,9 +29,3 @@ void OnHit(float amount)
 | `this[indexFromOldest]` | Element at that index — `0` is the oldest recorded element, `Count - 1` is the newest. Throws outside `[0, Count)`. |
 | `Newest` / `Oldest` | Shorthand for `this[Count - 1]` / `this[0]`. Throws on an empty buffer. |
 | `foreach` (`IEnumerable<T>`) | Enumerates oldest-first to newest-last, matching the indexer's own order — allocation-free when used as `foreach (var x in ringBuffer)` against the concrete type (a custom struct enumerator, the same trick `List<T>` itself uses, not a boxed `yield return` iterator). |
-
-## See also
-
-- [`Trail`](Trail2D_Guide.md) — a `Vector2`/`Vector3`-specific ring buffer with drawing and fade built on top, if that's closer to what you need.
-- [`FpsCounter`](FpsCounter_Guide.md) — a `float`-specific ring buffer with rolling-average math built on top.
-- [`ObjectPool`](ObjectPool_Guide.md) — a different kind of reuse: a grab-bag of interchangeable instances instead of an ordered history.

@@ -47,7 +47,3 @@ An earlier version let `label` default to the calling method's name via `[Caller
 ## Console output and MonoGame
 
 `Console.WriteLine` only reaches an attached console. A MonoGame Windows executable normally has none — run via a terminal (`dotnet run`, or a console attached to the built `.exe`) to actually see the output.
-
-## See also
-
-- [`Guide/FrameLimiter_Guide.md`](FrameLimiter_Guide.md) — a different timing concern: pacing the whole game loop and reading rolling-average FPS, not printing one block's duration.

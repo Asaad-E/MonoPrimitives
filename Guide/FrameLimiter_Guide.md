@@ -53,7 +53,3 @@ Both are frame-pacing mechanisms in their own right, and leaving either on just 
 ## A real limitation, not a bug
 
 `EndFrame()` waits out most of the frame with `Thread.Sleep`, and on Windows a single `Sleep` call has a small but real chance (measured around 1-5%) of running nearly a full extra frame — OS scheduler jitter, outside this class's control. A pure busy-spin the whole frame would dodge it, but pins a full CPU core the entire time, which isn't the right tradeoff for a general prototyping library. If you need frame timing with zero jitter at all, that's a bigger problem than this class is trying to solve. See [`Design/DECISIONS.md`](../Design/DECISIONS.md) for the numbers.
-
-## See also
-
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — why the busy-spin "tail" strategy (plain spin vs. `Thread.Yield`/`Thread.SpinWait`) turned out not to matter, and the Sleep-jitter measurements above.

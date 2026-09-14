@@ -117,9 +117,3 @@ Restores `Position`/`Target`/`Up`/`Fovy`/`Projection`/`NearPlane`/`FarPlane` to 
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 ```
-
-## See also
-
-- [`Guide/Camera2D_Guide.md`](Camera2D_Guide.md) — the 2D counterpart; bounds/follow/zoom/shake are the same shape, and it covers `ViewportAdapter2D` usage shared by both.
-- `samples/MonoPrimitives.Sample/Gallery3D.cs` — a free-fly camera driving the 3D shape gallery.
-- `examples/demos/Asteroids3D/` — `Camera3D.FollowTarget` driving a lag-behind chase cam, with yaw/pitch flight kept relative to world `Up` for predictable turning.

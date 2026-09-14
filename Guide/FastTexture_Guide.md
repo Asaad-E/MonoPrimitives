@@ -54,7 +54,3 @@ Call `Update` only from the thread that owns the GL context — `Update`/`Draw`,
 ## The texture-slot cache
 
 `GraphicsDevice` keeps a per-slot cache of which texture it believes is bound, skipping a redundant GL bind when it thinks nothing changed. The raw upload here bypasses that cache entirely, so `GraphicsDevice` has no way to know the binding moved underneath it. `AutoInvalidateDeviceCache` (on by default) clears the cache after every raw upload so the next draw re-binds for real; it's cheap, and safe to leave on. Turn it off only if you've measured your own draw path always re-binds anyway.
-
-## See also
-
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the benchmark-methodology story: an early synthetic benchmark found the raw path *slower*, which turned out to be an artifact of measuring it with no real per-frame boundary between calls, not a real result.

@@ -24,19 +24,19 @@ position = position.Approach(target, speed * dt); // move toward target, landing
 | `PerpendicularClockwise()` / `PerpendicularCounterClockwise()` | Exact, trig-free 90° turns (a swap and a negate) — cheaper than `Rotated` when you only need a quarter turn. |
 | `DirectionTo(other)` | Normalized direction from `this` to `other`. Returns `Vector2.Zero` if the two points coincide, instead of `NaN`. |
 | `SafeNormalize(fallback = default)` | Like `Vector2.Normalize()`, but returns `fallback` (default `Vector2.Zero`) instead of `NaN` for a zero-length vector. |
-| `Approach(target, maxDistance)` (`Vector2` and `float` overloads) | Moves toward `target` by at most `maxDistance`, landing exactly on it instead of overshooting — Godot's `move_toward`/Unity's `MoveTowards`. Negative `maxDistance` moves away from `target` instead. |
+| `Approach(target, maxDistance)` (`Vector2` and `float` overloads) | Moves toward `target` by at most `maxDistance`, landing exactly on it instead of overshooting. Negative `maxDistance` moves away from `target` instead. |
 | `ClampMagnitude(maxLength)` | Shrinks a vector to at most `maxLength`, preserving direction — a no-op if it's already shorter. |
 | `Slide(normal)` | Drops the component of `this` along `normal` (which must already be unit length), keeping only the tangential part — the classic "keep moving along the wall/floor you just hit" instead of stopping dead. Different from `Vector2.Reflect`: `Reflect` bounces (flips the normal component), `Slide` slides (drops it entirely). |
 | `Project(onto)` | The component of `this` parallel to `onto` — `Slide`'s complement (`v.Project(onto) + v.Slide(onto)` reconstructs `v` when `onto` is unit length). Unlike `Slide`, `onto` needn't be unit length. `Vector2.Zero` if `onto` is at or near zero. |
 | `Dot(other)` | Fluent shorthand for `Vector2.Dot(this, other)` — MonoGame only exposes `Dot` as a static call, not an instance method. |
-| `Cross(other)` | The 2D cross product (the scalar Z a 3D cross product would have) — positive when `other` is counter-clockwise from `this`, negative when clockwise, `0` when parallel. A cheap "which side"/turn-direction/signed-area test; Godot's `Vector2.cross`. |
-| `SmoothDamp(target, ref velocity, smoothTime, deltaTime)` (`Vector2` and `float` overloads) | Critically-damped spring smoothing — eases `this` toward `target` over roughly `smoothTime` seconds with no overshoot, independent of frame rate (same algorithm as Unity's `Mathf.SmoothDamp`). `velocity` is state you own and pass back in every call (start it at `0`). What `Camera2D`/`Camera3D`'s `FollowTarget`/`SmoothZoom` are built on — see `Guide/Camera2D_Guide.md`. |
+| `Cross(other)` | The 2D cross product (the scalar Z a 3D cross product would have) — positive when `other` is counter-clockwise from `this`, negative when clockwise, `0` when parallel. A cheap "which side"/turn-direction/signed-area test. |
+| `SmoothDamp(target, ref velocity, smoothTime, deltaTime)` (`Vector2` and `float` overloads) | Critically-damped spring smoothing — eases `this` toward `target` over roughly `smoothTime` seconds with no overshoot, independent of frame rate. `velocity` is state you own and pass back in every call (start it at `0`). What `Camera2D`/`Camera3D`'s `FollowTarget`/`SmoothZoom` are built on — see `Guide/Camera2D_Guide.md`. |
 | `GameTimeExtensions.GetElapsedTimeSeconds()` | Shorthand for `(float)gameTime.ElapsedGameTime.TotalSeconds`. |
-| `GameTimeExtensions.GetTotalTimeSeconds()` | Shorthand for `(float)gameTime.TotalGameTime.TotalSeconds` — total elapsed time since the game started, matching raylib's `GetTime()`. |
+| `GameTimeExtensions.GetTotalTimeSeconds()` | Shorthand for `(float)gameTime.TotalGameTime.TotalSeconds` — total elapsed time since the game started. |
 
 ## Rotated, not Rotate
 
-MonoGame's own `Vector2` already has instance methods `Rotate(float)`/`RotateAround(Vector2, float)` — both **mutating** (`void`, in place). An extension method named `Rotate` would be silently unreachable: a same-named instance method always wins over an extension method in C#, so `v.Rotate(angle)` would just call MonoGame's own mutating version, not this one — no compile error, no warning, just the wrong behavior. Named `Rotated` instead (Godot's own convention for the same "give me a rotated copy" shape) to sidestep the collision entirely.
+MonoGame's own `Vector2` already has instance methods `Rotate(float)`/`RotateAround(Vector2, float)`, both mutating in place. An extension method named `Rotate` would've been silently unreachable — a same-named instance method always wins over an extension method in C#, so `v.Rotate(angle)` would just call MonoGame's own version instead, no compile error or warning, just the wrong behavior. `Rotated` sidesteps the collision entirely.
 
 ---
 
@@ -57,26 +57,28 @@ Vector3 clamped = velocity.ClampMagnitude(maxSpeed);      // cap length, keep di
 | Member | What it does |
 |---|---|
 | `AngleTo(other)` | Unsigned angle in `[0, PI]` between two vectors — how far apart they are, no turning direction. |
-| `AngleToSigned(other, axis)` | Signed angle in `[-PI, PI]` to rotate `this` by **around `axis`** to face `other` — positive is counter-clockwise looking down `axis` toward the origin (the right-hand rule), matching `Rotated`'s convention and Unity's `Vector3.SignedAngle`. `axis` needs naming explicitly — see "Why `AngleToSigned`/`Rotated` need an axis" below. |
+| `AngleToSigned(other, axis)` | Signed angle in `[-PI, PI]` to rotate `this` by **around `axis`** to face `other` — positive is counter-clockwise looking down `axis` toward the origin (the right-hand rule), matching `Rotated`'s convention. `axis` needs naming explicitly — see "Why `AngleToSigned`/`Rotated` need an axis" below. |
 | `Rotated(axis, radians)` | Returns a **copy** of `this` rotated around `axis` by `radians` (right-hand rule) — a thin wrapper over `Quaternion.CreateFromAxisAngle` + `Vector3.Transform`, so you don't build the quaternion by hand for a one-off rotation. |
 | `DirectionTo(other)` | Normalized direction from `this` to `other`. Returns `Vector3.Zero` if the two points coincide, instead of `NaN`. |
 | `SafeNormalize(fallback = default)` | Like `Vector3.Normalize()`, but returns `fallback` (default `Vector3.Zero`) instead of `NaN` for a zero-length vector. |
-| `Approach(target, maxDistance)` | Moves toward `target` by at most `maxDistance`, landing exactly on it instead of overshooting — Godot's `move_toward`/Unity's `Vector3.MoveTowards`. Negative `maxDistance` moves away from `target` instead. |
+| `Approach(target, maxDistance)` | Moves toward `target` by at most `maxDistance`, landing exactly on it instead of overshooting. Negative `maxDistance` moves away from `target` instead. |
 | `ClampMagnitude(maxLength)` | Shrinks a vector to at most `maxLength`, preserving direction — a no-op if it's already shorter. |
 | `Slide(normal)` | Drops the component of `this` along `normal` (unit length), keeping only the tangential part — sliding along a wall/floor/slope instead of stopping dead against it. Same `Reflect` vs. `Slide` distinction as the 2D version. |
 | `Project(onto)` | The component of `this` parallel to `onto` — `Slide`'s complement. Unlike `Slide`, `onto` needn't be unit length. `Vector3.Zero` if `onto` is at or near zero. |
 | `Dot(other)` | Fluent shorthand for `Vector3.Dot(this, other)` — MonoGame only exposes `Dot` as a static call, not an instance method. |
-| `SmoothDamp(target, ref velocity, smoothTime, deltaTime)` | Critically-damped spring smoothing — eases `this` toward `target` over roughly `smoothTime` seconds with no overshoot, independent of frame rate (same algorithm as Unity's `Mathf.SmoothDamp`). `velocity` is state you own and pass back in every call (start it at `0`). What `Camera3D`'s `FollowTarget`/`SmoothZoom` are built on — see `Guide/Camera3D_Guide.md`. |
+| `SmoothDamp(target, ref velocity, smoothTime, deltaTime)` | Critically-damped spring smoothing — eases `this` toward `target` over roughly `smoothTime` seconds with no overshoot, independent of frame rate. `velocity` is state you own and pass back in every call (start it at `0`). What `Camera3D`'s `FollowTarget`/`SmoothZoom` are built on — see `Guide/Camera3D_Guide.md`. |
 
 **No `float` overload of `Approach`/`SmoothDamp` here** — reuse `MonoPrimitives.Vector2Extensions`'s own `Approach(float, float, float)`/`SmoothDamp(float, float, ref float, float, float)` directly (`using MonoPrimitives;`); both are already dimension-agnostic (plain 1D scalar math, nothing 2D-specific about it), and duplicating them in this namespace too would make any call site with both namespaces in scope ambiguous (`CS0121`) instead of picking one.
 
 **No `Cross` here** — a 3D cross product is already a full `Vector3` (`Vector3.Cross`, native to MonoGame), unlike 2D's cross product, which collapses to a single scalar and so has no native MonoGame equivalent to call.
 
-**No `Reflect`** — MonoGame's own `Vector3.Reflect(vector, normal)` already exists natively (confirmed by inspecting the referenced assembly, not assumed), so it isn't repeated here. Same for `Clamp`/`Lerp`/`SmoothStep` and friends.
+**No `Reflect`** — MonoGame's own `Vector3.Reflect(vector, normal)` already exists natively, so it isn't repeated here. Same for `Clamp`/`Lerp`/`SmoothStep` and friends.
 
 ### Why `AngleToSigned`/`Rotated` need an axis
 
-2D's `AngleToSigned(other)` has no axis parameter because a 2D plane only has one way to rotate — "positive" unambiguously means counter-clockwise. A 3D vector has no such single default: "positive" rotation only means something once you've picked which axis you're turning around (turning `+PI/2` around `+Y` sends `+X` to `-Z`; around `-Y` it would send `+X` to `+Z` instead — genuinely different results, not a sign-flip quirk). So both methods ask for `axis` explicitly rather than picking one for you. `AngleToSigned` measures `from`/`to` as their projection onto the plane perpendicular to `axis` first — a component either vector has running *along* `axis` doesn't skew the result, so "how much yaw to face that point" (`axis = Vector3.Up`) stays correct whether the point is above or below eye level.
+2D's `AngleToSigned(other)` has no axis parameter because a 2D plane only has one way to rotate — "positive" unambiguously means counter-clockwise. A 3D vector has no such single default: "positive" only means something once you've picked which axis you're turning around. Turning `+PI/2` around `+Y` sends `+X` to `-Z`; around `-Y` it sends `+X` to `+Z` instead — a genuinely different result, not a sign-flip quirk. So both methods ask for `axis` explicitly.
+
+`AngleToSigned` projects `from`/`to` onto the plane perpendicular to `axis` first, so a component either vector has running *along* `axis` doesn't skew the result — "how much yaw to face that point" (`axis = Vector3.Up`) stays correct whether the point is above or below eye level.
 
 **Still no `Angle()`** (a bare heading with no reference) — a 2D vector has one canonical "heading" (its angle from +X); a 3D vector genuinely doesn't without naming a plane, which is exactly what `AngleToSigned`'s `axis` parameter is for.
 
@@ -93,10 +95,4 @@ Quaternion rotation = ship.Orientation;
 Vector3 euler = rotation.ToEuler(); // X = pitch, Y = yaw, Z = roll, radians
 ```
 
-Like any Euler-angle extraction, this loses a degree of freedom (gimbal lock) when pitch is at or near ±90° — yaw and roll become indistinguishable there, though the reconstructed rotation is still correct. Verified by round-tripping 20000 random angle triples through `CreateFromYawPitchRoll` → `ToEuler` → `CreateFromYawPitchRoll` and confirming the reconstructed quaternion matches — see `Design/DECISIONS.md`.
-
-## See also
-
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — how the `Rotate`/`Rotated` naming collision was found (a numeric test caught a `void` where a `Vector2` was expected), the `atan2` branch-cut behavior at `Angle(-X)`, and why `Vector3Extensions` has no bare `Angle()`/`PerpendicularClockwise`-style members despite otherwise matching `Vector2Extensions` closely.
-- [`Guide/Camera2D_Guide.md`](Camera2D_Guide.md) / [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) — `rotation` parameters elsewhere in the library use the same radians/counter-clockwise convention as `Rotated`/`AngleToSigned`.
-- [`Guide/Camera3D_Guide.md`](Camera3D_Guide.md) / [`Guide/Primitive3DBatch_Guide.md`](Primitive3DBatch_Guide.md) — where a `Vector3` built with these helpers usually ends up.
+Like any Euler-angle extraction, this loses a degree of freedom (gimbal lock) when pitch is at or near ±90° — yaw and roll become indistinguishable there, though the reconstructed rotation is still correct. See `Design/DECISIONS.md` for how that was checked.

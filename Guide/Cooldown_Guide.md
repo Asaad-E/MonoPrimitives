@@ -36,8 +36,3 @@ protected override void Update(GameTime gameTime)
 `Cooldown` is a plain `struct`, not a class. It's meant to sit as a field on potentially hundreds of entities (an enemy's attack cooldown, a spawner's timer), and as a struct it costs nothing beyond the entity's own memory — no heap allocation per instance.
 
 That means the usual mutable-struct rule applies: **store it as a field, not a local you reassign each frame.** `cooldown.Update(dt)` mutates it correctly when it's a field on `this`. It won't work on a copy pulled into a local variable, an array element read by value, or a `foreach` variable — those are all copies, and the update just gets thrown away. Nothing `Cooldown`-specific here, but it's worth calling out: a cooldown that seems to tick down "for no reason" is usually exactly this.
-
-## See also
-
-- [`Guide/ObjectPool_Guide.md`](ObjectPool_Guide.md) — pairs naturally with a `Cooldown` for a spawner (`if (cooldown.TryUse()) pool.Get();`).
-- [`Guide/FrameLimiter_Guide.md`](FrameLimiter_Guide.md) — a different timing concern: pacing the whole game loop, not counting down one specific thing.

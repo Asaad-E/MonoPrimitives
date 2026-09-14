@@ -1,6 +1,8 @@
 # Camera2D & ViewportAdapter2D — Guide
 
-`Camera2D` (namespace `MonoPrimitives.Primitives2D`, file [`src/2D/Camera2D.cs`](../src/2D/Camera2D.cs)) is a 2D camera — pan/rotate/zoom, bounds clamping, smooth-follow, smooth-zoom, trauma-based screen shake, and an optional WASD/mouse-drag/wheel controller — that hands `Primitive2DBatch.Begin` a single transform matrix. `ViewportAdapter2D` (and its five concrete adapters, same folder's siblings) maps a fixed "virtual" resolution onto the actual window, so game logic and drawing work in one resolution regardless of what size the window actually is. The two are covered together here because a `Camera2D` is normally constructed *with* an adapter and leans on it for every screen↔world conversion.
+`Camera2D` (namespace `MonoPrimitives.Primitives2D`, file [`src/2D/Camera2D.cs`](../src/2D/Camera2D.cs)) is a 2D camera: pan/rotate/zoom, bounds clamping, smooth-follow, smooth-zoom, trauma-based screen shake, and an optional WASD/mouse-drag/wheel controller, all boiling down to one transform matrix you hand `Primitive2DBatch.Begin`.
+
+`ViewportAdapter2D` (and its five concrete adapters, same folder's siblings) is a separate concern: it maps a fixed "virtual" resolution onto the actual window, so game logic and drawing work in one resolution regardless of the window's real size. The two are covered together here because a `Camera2D` is normally constructed *with* an adapter and leans on it for every screen↔world conversion.
 
 ## Quick start
 
@@ -40,7 +42,7 @@ protected override void Draw(GameTime gameTime)
 | `Offset` (`Vector2`) | Screen-space point `Target` is drawn at. See "Offset and ViewportAdapter" below — behaves differently depending on whether this camera has an adapter. |
 | `Rotation` (`float`, radians) | Camera rotation. |
 | `Zoom` (`float`, default `1`) | Scale factor: `>1` zoomed in, `<1` zoomed out. |
-| `GetTransformMatrix()` | Builds the matrix for `Primitive2DBatch.Begin`: translate by `-Target`, rotate, scale by `Zoom`, translate to `Offset` (screen shake folded in — see below), then — if constructed with a `ViewportAdapter` — the adapter's own `GetScaleMatrix()` on top. Composition order matches MonoGame.Extended's `OrthographicCamera.GetViewMatrix()`; don't multiply by the adapter's matrix again yourself. |
+| `GetTransformMatrix()` | Builds the matrix for `Primitive2DBatch.Begin`: translate by `-Target`, rotate, scale by `Zoom`, translate to `Offset` (screen shake folded in — see below), then — if constructed with a `ViewportAdapter` — the adapter's own `GetScaleMatrix()` on top. Don't multiply by the adapter's matrix again yourself. |
 | `ScreenToWorld(Vector2)` / `WorldToScreen(Vector2)` | Convert between screen pixels and world space, inverse of each other. With an adapter, `screenPosition`/the result are real window pixels — the adapter's virtual↔window mapping is applied automatically. Without one, screen space is assumed to already share the same pixel space as `Offset` (raw device/mouse coordinates). |
 | `GetVisibleWorldBounds(GraphicsDevice? device = null)` | The world-space rectangle currently visible on screen, as `(Vector2 Min, Vector2 Max)` corners (axis-aligned even under rotation) — for culling before drawing many world objects. `device` is only a fallback when there's no adapter; omit it when one is set. |
 | `GetVisibleWorldBoundsF(device)` | Same as above, as a `RectangleF` — pairs directly with `IsVisible`. |
@@ -63,9 +65,8 @@ Two constructors, no bare parameterless one — every `Camera2D` is explicit abo
 // Raw screen-space: offset is assumed to already be in the same pixel space as screen/mouse input.
 var camera = new Camera2D(target: Vector2.Zero, offset: new Vector2(400, 300), rotation: 0f, zoom: 1f);
 
-// With a ViewportAdapter2D — MonoGame.Extended's own OrthographicCamera(ViewportAdapter) shape.
-// Offset defaults to (and live-tracks) the adapter's virtual center; every screen<->world method
-// and UpdateWithInput's mouse-drag pan account for the adapter automatically.
+// With a ViewportAdapter2D — Offset defaults to (and live-tracks) the adapter's virtual center;
+// every screen<->world method and UpdateWithInput's mouse-drag pan account for the adapter automatically.
 var camera = new Camera2D(adapter, target: Vector2.Zero, rotation: 0f, zoom: 1f);
 ```
 
@@ -75,7 +76,7 @@ Prefer the adapter constructor whenever a `ViewportAdapter2D` is in play. `Camer
 
 ### Offset and ViewportAdapter: live vs. pinned
 
-This is the one genuinely non-obvious behavior in the whole class. When a camera is constructed with a `ViewportAdapter2D` and `Offset` has never been assigned directly, `Offset` **live-tracks** the adapter's virtual center — recomputed as `(VirtualWidth/2, VirtualHeight/2)` on every read, not frozen at whatever it was when the camera was built:
+When a camera is constructed with a `ViewportAdapter2D` and `Offset` has never been assigned directly, `Offset` **live-tracks** the adapter's virtual center — recomputed as `(VirtualWidth/2, VirtualHeight/2)` on every read, not frozen at whatever it was when the camera was built:
 
 - For `BoxingViewportAdapter2D`/`ScalingViewportAdapter2D`, virtual size never changes for the adapter's lifetime, so this is indistinguishable from a one-time snapshot.
 - For `DefaultViewportAdapter2D`/`WindowViewportAdapter2D`, virtual size tracks the live device/window size — so `Offset` keeps re-centering across a window resize instead of quietly drifting off-center.
@@ -103,7 +104,7 @@ camera.FollowPadding = 8f;      // deadzone radius in world units
 camera.FollowTarget(player.Position, deltaSeconds);
 ```
 
-Eases `Target` toward `desiredTarget` via critically-damped spring smoothing (`SmoothDamp`, the same algorithm as Unity's `Mathf.SmoothDamp` — no overshoot across varying frame rates) instead of snapping. Within `FollowPadding` world units of the goal, the camera holds still — a radial deadzone, not constant low-amplitude jitter. `ResetFollowVelocity()` clears the internal smoothing velocity; call it after teleporting the camera or its subject to avoid a lingering swoop.
+Eases `Target` toward `desiredTarget` via critically-damped spring smoothing (`SmoothDamp` — no overshoot across varying frame rates) instead of snapping. Within `FollowPadding` world units of the goal, the camera holds still — a radial deadzone, not constant low-amplitude jitter. `ResetFollowVelocity()` clears the internal smoothing velocity; call it after teleporting the camera or its subject to avoid a lingering swoop.
 
 For an independent per-axis deadzone instead of a radial one — the classic platformer/top-down "camera box" (e.g. wide horizontal slack, none vertical) — use the overload that takes `deadZoneHalfSize` directly instead of relying on `FollowPadding`:
 
@@ -281,11 +282,3 @@ For a 2D-only scene (no 3D layer sharing the window), `Primitive2DBatch.ClearLet
 ```bash
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 ```
-
-## See also
-
-- [`Guide/Primitive2DBatch_Guide.md`](Primitive2DBatch_Guide.md) — everything `Camera2D.GetTransformMatrix()` feeds into.
-- [`Guide/PrimitiveInput_Guide.md`](PrimitiveInput_Guide.md) — the `PrimitiveInput` instance `UpdateWithInput` reads from.
-- [`Guide/Easing_Guide.md`](Easing_Guide.md) — fixed-duration tweens, for when `SmoothDamp`'s open-ended spring isn't the right shape.
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the mouse-drag rotation fix, `Reset()` parity with `Camera3D`, the `Offset` live-tracking decision (including the direct comparison against MonoGame.Extended's actual `OrthographicCamera` source), and `BoundingRectangle`'s rounding fix.
-- `examples/test/ViewportTest` — every adapter mode, 2D and 3D, side by side.

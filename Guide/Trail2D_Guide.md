@@ -78,8 +78,3 @@ protected override void Draw(GameTime gameTime)
 | `Draw(batch, color, thickness = -1f, fadeToAlpha = 0f)` | Draws `Count - 1` `DrawLine3D` segments, same fade behavior as `Trail2D.Draw`. `thickness <= 0` (the default, `-1f`) falls back to `Primitive3DBatch.DefaultLineThickness` — the same sentinel convention as this library's other `Border*`/`Draw*` methods, unlike `Trail2D.Draw`'s fixed `2f` default. |
 
 `DrawLineStrip3D`/`Trail3D.Draw` draw a single joined camera-facing strip — adjacent segments share one miter-joined offset at each interior vertex, so a sharp bend doesn't show a gap or overlap even at non-trivial `thickness`. See [`Design/DECISIONS.md`](../Design/DECISIONS.md) for how this was verified.
-
-## See also
-
-- [`Primitive2DBatch`](Primitive2DBatch_Guide.md) / [`Primitive3DBatch`](Primitive3DBatch_Guide.md) — `DrawLine`/`DrawLine3D`, which `Trail2D.Draw`/`Trail3D.Draw` are built on.
-- `examples/test/ParticleTrailTest` — several `Trail2D`s with different capacity/thickness/fade styles, dragged behind particles that bounce off the window edges and each other.

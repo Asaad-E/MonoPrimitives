@@ -65,11 +65,6 @@ Every method above has a permanent regression check in [`tests/MonoPrimitives.Te
 dotnet run --project tests/MonoPrimitives.Tests/MonoPrimitives.Tests.csproj
 ```
 
-## What's deliberately not here
+## Limitations
 
 No Simplex, Cellular/Worley, or Value noise, no domain warping, no alternate fractal modes — that's a whole multi-algorithm noise engine, out of scope here. `RidgeNoise`/`Turbulence` are the one addition, and they're not a new algorithm, just different ways of combining the same `Sample1D/2D/3D` octaves `Fbm*` already uses.
-
-## See also
-
-- [`Design/DECISIONS.md`](../Design/DECISIONS.md) — the audit that verified the core algorithm against Perlin's reference, moved fBm's parameters to instance properties, and added Ridge/Turbulence.
-- `examples/test/NoiseTest` — all four scenes (1D curve, 2D heightmap terrain, an animated 3D-sampled field, Ridge-vs-Turbulence) running live.

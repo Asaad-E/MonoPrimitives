@@ -32,7 +32,3 @@ protected override void Draw(GameTime gameTime)
 | `CurrentFrameTimeMs` | Milliseconds for the single most recent frame alone — noisier than `AverageFrameTimeMs`, useful for spotting an isolated spike or stall. |
 
 Before the window fills up (fewer than `SampleCount` calls to `Update` so far), the averages are computed only from the samples actually recorded — they aren't diluted by empty slots.
-
-## See also
-
-- [`FrameLimiter`](FrameLimiter_Guide.md) — a related but different job: `FrameLimiter` *paces* the loop to a target FPS, `FpsCounter` just *measures* whatever FPS you're actually getting. Use one, the other, both, or neither independently.
